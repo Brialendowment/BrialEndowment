@@ -1991,7 +1991,7 @@ const ShowcasePhotoCard = ({
     }
     setUploading(true);
     try {
-      const meta = await window.BrialFiles.put(f);
+      const meta = await window.BrialFiles.put(f, { public: true });
       store.updateProfile(applicant.id, "personal", {
         showcasePhoto: meta
       });

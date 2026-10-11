@@ -37,9 +37,90 @@
     return { ok: true };
   }
 
+  // 128-bit random name: a private document's path must not be guessable.
   function newKey() {
-    return "f_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 9);
+    const a = new Uint8Array(16);
+    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(a);
+    else for (let i = 0; i < a.length; i++) a[i] = Math.floor(Math.random() * 256);
+    return Array.from(a, b => b.toString(16).padStart(2, "0")).join("");
   }
+
+  // ---------- Private documents (bucket "brial-private", paths "docs/…") ----------
+  // They have no public link. The founder signs links with her Supabase login;
+  // a scholar gets links for her own files from the be-files edge function.
+  const PRIVATE_BUCKET = "brial-private";
+  const TOKEN_KEY = "brial.applicantToken.v1";
+  const BLANK_IMG = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  const isPrivatePath = p => typeof p === "string" && p.indexOf("docs/") === 0;
+  const _signed = new Map();   // path -> { url, exp }
+  const _failed = new Map();   // path -> retry-after timestamp
+  let _queue = new Set(), _queueTimer = 0, _waiters = [];
+
+  async function signNow(paths) {
+    const sb = window.brialSupabase;
+    const out = {};
+    if (!sb || !paths.length) return out;
+    // 1. founder session
+    try {
+      const { data: s } = await sb.client.auth.getSession();
+      if (s && s.session) {
+        const { data, error } = await sb.client.storage.from(PRIVATE_BUCKET).createSignedUrls(paths, 3600);
+        if (!error) (data || []).forEach(d => { if (d && d.signedUrl && d.path) out[d.path] = { url: d.signedUrl, exp: Date.now() + 3500e3 }; });
+      }
+    } catch (e) { /* not the founder */ }
+    // 2. scholar session token (own files only — enforced on the server)
+    const rest = paths.filter(p => !out[p]);
+    let tok = null;
+    try { tok = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+    if (rest.length && tok) {
+      try {
+        const { data, error } = await sb.dataClient.functions.invoke("be-files", { body: { action: "sign", token: tok, paths: rest } });
+        if (!error && data && data.urls) Object.keys(data.urls).forEach(p => { out[p] = { url: data.urls[p], exp: Date.now() + 540e3 }; });
+      } catch (e) { /* ignore */ }
+    }
+    return out;
+  }
+  function flushQueue() {
+    const paths = [..._queue]; _queue = new Set();
+    const waiters = _waiters; _waiters = [];
+    signNow(paths).then(res => {
+      let changed = false;
+      paths.forEach(p => {
+        if (res[p]) { _signed.set(p, res[p]); _failed.delete(p); changed = true; }
+        else _failed.set(p, Date.now() + 60e3);
+      });
+      waiters.forEach(w => w());
+      if (changed) window.dispatchEvent(new CustomEvent("brial:change", { detail: { key: "signed-files" } }));
+    });
+  }
+  function requestSign(path) {
+    return new Promise(resolve => {
+      _queue.add(path); _waiters.push(resolve);
+      clearTimeout(_queueTimer); _queueTimer = setTimeout(flushQueue, 30);
+    });
+  }
+  function cachedSigned(path) {
+    const c = _signed.get(path);
+    return c && c.exp - Date.now() > 60e3 ? c.url : null;
+  }
+  // Synchronous: returns a signed link if one is ready, otherwise a blank
+  // image and fetches one in the background (re-render follows).
+  function signedUrlSync(path) {
+    const hit = cachedSigned(path);
+    if (hit) return hit;
+    const f = _failed.get(path);
+    if (!f || f < Date.now()) { _failed.set(path, Date.now() + 5e3); requestSign(path); }
+    return BLANK_IMG;
+  }
+  async function signedUrl(path) {
+    const hit = cachedSigned(path);
+    if (hit) return hit;
+    _failed.delete(path);
+    await requestSign(path);
+    return cachedSigned(path);
+  }
+  function clearSigned() { _signed.clear(); _failed.clear(); }
+  window.addEventListener("storage", e => { if (e.key === TOKEN_KEY) clearSigned(); });
   function inferMime(file) {
     if (file?.type) return file.type;
     const name = (file?.name || "").toLowerCase();
@@ -178,26 +259,34 @@
     allowedAccept: ".pdf,.png,.jpg,.jpeg,.webp,.gif,application/pdf,image/png,image/jpeg,image/webp,image/gif",
 
     // Upload a File. Returns metadata { path, name, size, type, uploadedAt, url }.
-    async put(file) {
+    // PRIVATE by default (scholar documents). Pass { public: true } only for
+    // pictures meant for the public site (showcase selfie, covers, articles).
+    async put(file, opts) {
       if (!file) return null;
       const v = validateFile(file);
       if (!v.ok) throw new Error(v.error);
       const sb = window.brialSupabase;
       if (!sb) throw new Error("Supabase client not initialized.");
+      const isPublic = !!(opts && opts.public);
 
-      const ext = (file.name.split(".").pop() || "bin").toLowerCase();
-      const path = `uploads/${newKey()}.${ext}`;
+      let ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (!ALLOWED_EXT.has(ext)) ext = "bin";
+      const path = (isPublic ? "uploads/" : "docs/") + newKey() + "." + ext;
       const dc = sb.dataClient || sb.client;
       const { error } = await dc.storage
-        .from(sb.bucket)
+        .from(isPublic ? sb.bucket : PRIVATE_BUCKET)
         .upload(path, file, {
           contentType: file.type || inferMime(file),
           cacheControl: "3600",
           upsert: false,
         });
       if (error) throw new Error("Upload failed: " + error.message);
+      // The uploader can preview her own file right away from memory
+      // (the server only signs it once the record that lists it is saved).
+      if (!isPublic) {
+        try { _signed.set(path, { url: URL.createObjectURL(file), exp: Date.now() + 3600e3 }); } catch (e) {}
+      }
 
-      const url = sb.publicUrl(path);
       return {
         path,
         key: path, // back-compat alias
@@ -205,9 +294,14 @@
         size: +(file.size / 1024 / 1024).toFixed(2),
         type: file.type || inferMime(file),
         uploadedAt: new Date().toISOString(),
-        url,
+        url: isPublic ? sb.publicUrl(path) : null,
       };
     },
+
+    isPrivatePath,
+    signedUrl,
+    signedUrlSync,
+    clearSigned,
 
     // Open a stored file in the in-page preview modal.
     async open(fileMeta) {
@@ -215,6 +309,18 @@
       const path = fileMeta.path || fileMeta.key;
       const sb = window.brialSupabase;
       let url = fileMeta.url;
+      if (isPrivatePath(path)) {
+        url = await signedUrl(path);
+        if (!url) {
+          showPreview({
+            name: fileMeta.name || fileMeta.filename,
+            size: fileMeta.size,
+            uploadedAt: fileMeta.uploadedAt,
+            html: "<!DOCTYPE html><html><body style=\"font-family:Georgia,serif;padding:60px;color:#0A1628\"><h2>This document is private.</h2><p>Sign in as the scholar who uploaded it, or open the founder console, to view it.</p></body></html>",
+          });
+          return;
+        }
+      }
       if (path && sb && !url) url = sb.publicUrl(path);
 
       if (url) {
@@ -247,7 +353,7 @@
       const sb = window.brialSupabase;
       if (!sb) return;
       const dc = sb.client || sb.dataClient;
-      try { await dc.storage.from(sb.bucket).remove([path]); } catch (e) { /* ignore */ }
+      try { await dc.storage.from(isPrivatePath(path) ? PRIVATE_BUCKET : sb.bucket).remove([path]); } catch (e) { /* ignore */ }
     },
   };
 

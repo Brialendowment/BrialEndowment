@@ -2954,7 +2954,7 @@ const EbooksTab = ({
     }
     setUploadingIdx(i);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       const url = meta.url || (window.brialSupabase && meta.path ? window.brialSupabase.publicUrl(meta.path) : "");
       update(i, {
         cover: url
@@ -6061,7 +6061,7 @@ const FoodlandTab = ({
     if (!file) return;
     setBusy(id);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       setArticle(id, { photo: { url: meta.url, path: meta.path, name: meta.name } });
     } catch (e) {
       alert(e.message || "Upload failed");
@@ -6398,7 +6398,7 @@ const WaterProgrammeTab = ({
     if (!file) return;
     setBusy(id);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       setArticle(id, { photo: { url: meta.url, path: meta.path, name: meta.name } });
     } catch (e) {
       alert(e.message || "Upload failed");
@@ -6575,7 +6575,7 @@ const WorshipProgrammeTab = ({
     if (!file) return;
     setBusy(id);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       setArticle(id, { photo: { url: meta.url, path: meta.path, name: meta.name } });
     } catch (e) {
       alert(e.message || "Upload failed");
@@ -6912,7 +6912,7 @@ const HospitalsProgrammeTab = ({
     if (!file) return;
     setBusy(id);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       setArticle(id, { photo: { url: meta.url, path: meta.path, name: meta.name } });
     } catch (e) {
       alert(e.message || "Upload failed");
@@ -7249,7 +7249,7 @@ const SchoolsProgrammeTab = ({
     if (!file) return;
     setBusy(id);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       setArticle(id, { photo: { url: meta.url, path: meta.path, name: meta.name } });
     } catch (e) {
       alert(e.message || "Upload failed");
@@ -7586,7 +7586,7 @@ const LivestockProgrammeTab = ({
     if (!file) return;
     setBusy(id);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       setArticle(id, { photo: { url: meta.url, path: meta.path, name: meta.name } });
     } catch (e) {
       alert(e.message || "Upload failed");
@@ -7923,7 +7923,7 @@ const InfraProgrammeTab = ({
     if (!file) return;
     setBusy(id);
     try {
-      const meta = await window.BrialFiles.put(file);
+      const meta = await window.BrialFiles.put(file, { public: true });
       setArticle(id, { photo: { url: meta.url, path: meta.path, name: meta.name } });
     } catch (e) {
       alert(e.message || "Upload failed");

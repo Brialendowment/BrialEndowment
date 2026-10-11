@@ -1305,6 +1305,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     getSession()    { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) { return null; } },
     setSession(s)   { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); notify({ key: SESSION_KEY }); },
     clearSession()  {
+      try { window.BrialFiles && window.BrialFiles.clearSigned && window.BrialFiles.clearSigned(); } catch (e) {}
       const tok = getToken();
       setToken(null);
       localStorage.removeItem(SESSION_KEY);
@@ -1363,6 +1364,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       return null;
     },
     async clearFounderSession() {
+      try { window.BrialFiles && window.BrialFiles.clearSigned && window.BrialFiles.clearSigned(); } catch (e) {}
       const client = sbAuth();
       if (client) { try { await client.auth.signOut(); } catch (e) {} }
       unsubscribeRealtime();

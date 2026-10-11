@@ -31,8 +31,14 @@
     dataClient,    // all table + realtime data
     bucket: BUCKET,
     url: SUPABASE_URL,
+    privateBucket: "brial-private",
     publicUrl(path) {
       if (!path) return null;
+      // Private documents have no public link: hand back a signed one
+      // (fetched in the background, the page re-renders when it arrives).
+      if (String(path).indexOf("docs/") === 0) {
+        return window.BrialFiles && window.BrialFiles.signedUrlSync ? window.BrialFiles.signedUrlSync(path) : null;
+      }
       return dataClient.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
     },
   };
