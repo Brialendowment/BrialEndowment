@@ -943,6 +943,7 @@ const ApplicantProfileView = ({
       marginBottom: 10
     }
   }, "Biometric Photo"), p.personal.photoFile ? /*#__PURE__*/React.createElement("div", {
+    key: app.id + ":" + (p.personal.photoFile.path || p.personal.photoFile.key || p.personal.photoFile.name || ""),
     style: {
       width: 150
     }
@@ -961,7 +962,7 @@ const ApplicantProfileView = ({
       alignItems: "center",
       justifyContent: "center"
     }
-  }, /*#__PURE__*/React.createElement("img", {
+  }, /^image\//i.test(p.personal.photoFile.type || "") || /\.(png|jpe?g|webp|gif)$/i.test(p.personal.photoFile.name || p.personal.photoFile.path || "") ? /*#__PURE__*/React.createElement("img", {
     src: p.personal.photoFile.url || (window.brialSupabase && (p.personal.photoFile.path || p.personal.photoFile.key) ? window.brialSupabase.publicUrl(p.personal.photoFile.path || p.personal.photoFile.key) : ""),
     alt: "Biometric",
     style: {
@@ -971,11 +972,11 @@ const ApplicantProfileView = ({
     },
     onError: e => {
       e.target.style.display = "none";
-      e.target.nextSibling.style.display = "flex";
+      if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }) : null, /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "none",
+      display: /^image\//i.test(p.personal.photoFile.type || "") || /\.(png|jpe?g|webp|gif)$/i.test(p.personal.photoFile.name || p.personal.photoFile.path || "") ? "none" : "flex",
       position: "absolute",
       inset: 0,
       alignItems: "center",
@@ -1007,7 +1008,7 @@ const ApplicantProfileView = ({
     r: "2"
   }), /*#__PURE__*/React.createElement("path", {
     d: "M3 17 L9 12 L13 15 L17 11 L21 15"
-  })), "Photo on file")), /*#__PURE__*/React.createElement("button", {
+  })), /pdf/i.test(p.personal.photoFile.type || "") ? "PDF on file \u00b7 click to open" : "Photo on file")), /*#__PURE__*/React.createElement("button", {
     onClick: () => window.BrialFiles.open(p.personal.photoFile),
     style: {
       width: "100%",

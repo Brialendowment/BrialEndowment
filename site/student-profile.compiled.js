@@ -163,7 +163,7 @@ const FileField = ({
       marginTop: 4,
       letterSpacing: "0.1em"
     }
-  }, file ? `${file.size} MB · uploaded` : hint || "PDF, PNG, JPG, WebP · max 1MB")), file && /*#__PURE__*/React.createElement("div", {
+  }, file ? `${file.size} MB · uploaded` : hint || "PDF, PNG, JPG, WebP · max 2MB")), file && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -301,7 +301,7 @@ const SectionPersonal = ({
     onChange: f => update({
       photoFile: f
     }),
-    hint: "Clear, recent passport-style photo \xB7 JPG/PNG/WebP \xB7 max 1MB"
+    hint: "Clear, recent passport-style photo \xB7 JPG/PNG/WebP \xB7 max 2MB"
   }));
 };
 

@@ -344,7 +344,7 @@
       setTimeout(function () { el.classList.remove("fx-pre-img", "fx-in-img"); el.style.removeProperty("--fx-d"); }, 2400);
     } else if (el.classList.contains("fx-pre")) {
       el.classList.add("fx-in");
-      setTimeout(function () { el.classList.remove("fx-pre", "fx-in"); el.removeAttribute("data-fxv"); el.style.removeProperty("--fx-d"); }, 1800);
+      setTimeout(function () { el.classList.remove("fx-pre", "fx-in"); el.removeAttribute("data-fxv"); el.style.removeProperty("--fx-d"); }, 2700);
     }
   }
   var io = "IntersectionObserver" in window ? new IntersectionObserver(function (entries) {
@@ -391,6 +391,9 @@
       els.forEach(function (el) {
         if (el.dataset.fxr) return;
         el.dataset.fxr = "1";
+        // never animate an element inside one that is already animating
+        // (stacked transforms made the mission headline lurch)
+        if (el.parentElement && el.parentElement.closest(".fx-pre")) return;
         var r = el.getBoundingClientRect();
         if (r.top > window.innerHeight * 0.92 && r.height > 4) {
           el.dataset.fxt = Date.now();

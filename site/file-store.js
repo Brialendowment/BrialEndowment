@@ -31,8 +31,8 @@
         error: `File type not allowed. Only PDF and images (PNG, JPG, WebP) are accepted, not .${ext || "(unknown)"}.`,
       };
     }
-    if (file.size > 1 * 1024 * 1024) {
-      return { ok: false, error: "File is larger than 1 MB. Please compress the PDF (try Smallpdf / iLovePDF) or scan at lower DPI." };
+    if (file.size > 2 * 1024 * 1024) {
+      return { ok: false, error: "File is larger than 2 MB. Please compress the PDF (try Smallpdf / iLovePDF) or scan at lower DPI." };
     }
     return { ok: true };
   }

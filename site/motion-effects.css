@@ -293,7 +293,12 @@
   @media (min-width: 900px) {
     .fx-pre { filter: blur(7px); }
   }
-  .fx-in {
+  /* .fx-pre.fx-in[data-fxv] outranks the variant rules above
+     (.fx-pre[data-fxv="l"] etc.); without it the element stayed shifted
+     during the reveal and jumped straight when the classes were removed. */
+  .fx-in,
+  .fx-pre.fx-in,
+  .fx-pre.fx-in[data-fxv] {
     opacity: 1;
     transform: none;
     filter: none;
