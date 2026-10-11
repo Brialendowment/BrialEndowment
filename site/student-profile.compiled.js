@@ -63,7 +63,8 @@ const FileField = ({
   file,
   onChange,
   accept,
-  hint
+  hint,
+  imageOnly
 }) => {
   const [uploading, setUploading] = useStateP(false);
   const [error, setError] = useStateP(null);
@@ -74,6 +75,11 @@ const FileField = ({
     const v = window.BrialFiles.validate(f);
     if (!v.ok) {
       setError(v.error);
+      e.target.value = "";
+      return;
+    }
+    if (imageOnly && !(/^image\/(jpeg|jpg|png|webp)$/i.test(f.type || "") && /\.(jpe?g|png|webp)$/i.test(f.name || ""))) {
+      setError("Please upload a photo (JPG, JPEG, PNG or WebP) \u2014 not a PDF or other document.");
       e.target.value = "";
       return;
     }
@@ -93,7 +99,7 @@ const FileField = ({
     e.stopPropagation();
     window.BrialFiles.open(file);
   };
-  const acceptAttr = accept || window.BrialFiles.allowedAccept;
+  const acceptAttr = accept || (imageOnly ? ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" : window.BrialFiles.allowedAccept);
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: fieldLabelStyle
   }, label), /*#__PURE__*/React.createElement("label", {
@@ -301,7 +307,8 @@ const SectionPersonal = ({
     onChange: f => update({
       photoFile: f
     }),
-    hint: "Clear, recent passport-style photo \xB7 JPG/PNG/WebP \xB7 max 2MB"
+    imageOnly: true,
+    hint: "Clear, recent passport-style photo \xB7 JPG/PNG/WebP only \xB7 max 2MB"
   }));
 };
 
