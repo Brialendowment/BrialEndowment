@@ -1,0 +1,12 @@
+{
+  "name": "The Brial Endowment",
+  "short_name": "Brial",
+  "description": "A perpetual philanthropic endowment — the principal remains, the returns are given forever.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A1628",
+  "theme_color": "#0A1628",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
+  ]
+}

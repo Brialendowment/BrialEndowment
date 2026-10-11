@@ -1,0 +1,361 @@
+// ============================================================
+// PILLAR PAGES — Houses of Worship & Clean Water public pages
+// Same visual language as FoodLandPage. Content founder-managed:
+//   Worship: BrialStore.getWorship() + getPillarUnits("Houses of Worship")
+//   Water:   BrialStore.getWater()   + getPillarUnits("Clean Water")
+// Partner CTA gated by getPillarLink(key) + getPillarLinkHidden(key).
+// ============================================================
+(function () {
+  const h = React.createElement;
+  const { useState, useEffect } = React;
+
+  const GOLD = "#C9A961", NAVY = "#0A1628", CREAM = "#E8E4DC";
+  const mono = "'JetBrains Mono', monospace";
+  const serif = "'Cormorant Garamond', serif";
+  const sans = "'Manrope', sans-serif";
+
+  const Seal = ({ size = 30 }) => h("svg", { width: size, height: size, viewBox: "0 0 36 36" },
+    h("g", { fill: "none", stroke: GOLD, strokeWidth: "1.2" },
+      h("path", { d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" }),
+      h("circle", { cx: "18", cy: "18", r: "4", fill: GOLD, stroke: "none" })));
+
+  const usePillar = (getContent, linkKey, pillarName) => {
+    const read = () => ({
+      content: window.BrialStore && window.BrialStore[getContent] ? window.BrialStore[getContent]() : null,
+      link: window.BrialStore && window.BrialStore.getPillarLink ? window.BrialStore.getPillarLink(linkKey) : "",
+      hidden: window.BrialStore && window.BrialStore.getPillarLinkHidden ? window.BrialStore.getPillarLinkHidden(linkKey) : false,
+      units: window.BrialStore && window.BrialStore.getPillarUnits ? window.BrialStore.getPillarUnits(pillarName) : 0
+    });
+    const [st, setSt] = useState(read);
+    useEffect(() => {
+      const f = () => setSt(read());
+      window.addEventListener("brial:change", f);
+      window.addEventListener("brial:ready", f);
+      return () => { window.removeEventListener("brial:change", f); window.removeEventListener("brial:ready", f); };
+    }, []);
+    return st;
+  };
+
+  const fmtDate = s => {
+    if (!s) return "";
+    const d = new Date(String(s).length === 7 ? s + "-01" : s);
+    if (isNaN(d)) return String(s).toUpperCase();
+    const opts = String(s).length === 7 ? { month: "long", year: "numeric" } : { day: "2-digit", month: "long", year: "numeric" };
+    return d.toLocaleDateString("en-GB", opts).toUpperCase();
+  };
+
+  // Shared page skeleton — foodland's structure, personalized per pillar
+  // Premium programme journal — shared by all pillar pages (window.BrialStories)
+  const ShareBtn = ({ url }) => {
+    const [done, setDone] = useState(false);
+    const go = () => {
+      const fin = () => { setDone(true); setTimeout(() => setDone(false), 2400); };
+      if (navigator.share) { navigator.share({ url }).then(fin).catch(() => {}); }
+      else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(fin).catch(fin);
+    };
+    return h("button", { onClick: go, title: url, style: { background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.18em", textTransform: "uppercase", color: done ? "#86E5A7" : "rgba(232,228,220,0.55)" } }, done ? "Link copied \u2713" : "Share \u2197");
+  };
+
+  // Deep links: #/<pillar>/<n> scrolls to programme entry n and rings it gold
+  const BrialDeepScroll = key => {
+    const m = (location.hash || "").match(/^#\/([a-z]+)\/(\d+)/);
+    if (!m || m[1] !== key) return;
+    const id = "prog-" + key + "-" + m[2];
+    let tries = 0;
+    const go = () => {
+      const el = document.getElementById(id);
+      if (el) {
+        const y = el.getBoundingClientRect().top + (window.scrollY || 0) - 84;
+        window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+        el.style.outline = "1px solid rgba(201,169,97,0.55)";
+        el.style.outlineOffset = "6px";
+        setTimeout(() => { el.style.outline = "none"; }, 3200);
+      } else if (++tries < 12) setTimeout(go, 250);
+    };
+    setTimeout(go, 350);
+  };
+  window.BrialDeepScroll = BrialDeepScroll;
+
+  const Stories = ({ articles, title, eyebrow, shareKey }) => {
+    const list = (articles || []).filter(a => a && (a.title || a.body) && !a.draft);
+    if (!list.length) return null;
+    return h("div", { style: { background: "rgba(232,228,220,0.02)", borderTop: "1px solid rgba(201,169,97,0.14)", borderBottom: "1px solid rgba(201,169,97,0.14)", padding: "clamp(60px, 8vw, 100px) clamp(20px, 4vw, 56px)" } },
+      h("div", { style: { maxWidth: 1160, margin: "0 auto" } },
+        h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "end", gap: 20, flexWrap: "wrap" } },
+          h("div", null,
+            h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, eyebrow || "§ Programme journal"),
+            h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(30px, 4vw, 48px)", margin: "18px 0 0", color: CREAM } }, title)),
+          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.22em", color: "rgba(232,228,220,0.45)", textTransform: "uppercase" } }, list.length + " programme" + (list.length === 1 ? "" : "s") + " · and growing")),
+        h("div", { style: { display: "flex", flexDirection: "column", gap: "clamp(26px, 4vw, 40px)", marginTop: 50 } },
+          list.map((a, i) => {
+            const img = a.photo && (a.photo.url || a.photo.path) ? (a.photo.url || (window.brialSupabase ? window.brialSupabase.publicUrl(a.photo.path) : "")) : null;
+            const rev = i % 2 === 1;
+            return h("article", { key: a.id || i, id: shareKey ? "prog-" + shareKey + "-" + (i + 1) : undefined, className: "b-story", style: { display: "grid", gridTemplateColumns: img ? (rev ? "minmax(0, 1.05fr) minmax(0, 0.95fr)" : "minmax(0, 0.95fr) minmax(0, 1.05fr)") : "1fr", background: "rgba(20,36,66,0.45)", border: "1px solid rgba(201,169,97,0.22)" } },
+              img ? h("div", { className: "b-story-photo", style: { position: "relative", minHeight: 300, order: rev ? 2 : 0 } },
+                h("img", { src: img, alt: a.title || "Programme photograph", loading: "lazy", style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" } })) : null,
+              h("div", { style: { padding: "clamp(28px, 4vw, 46px)", display: "flex", flexDirection: "column", order: 1, minWidth: 0 } },
+                h("div", { style: { display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+                  h("span", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.2em", color: GOLD } }, "No. " + String(i + 1).padStart(2, "0")),
+                  h("span", { style: { width: 26, height: 1, background: "rgba(201,169,97,0.5)", display: "inline-block" } }),
+                  h("span", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.22em", color: "rgba(232,228,220,0.5)" } }, fmtDate(a.date))),
+                h("h3", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(26px, 3vw, 36px)", lineHeight: 1.12, margin: "16px 0 0", color: CREAM } }, a.title),
+                a.partner ? h("div", { style: { display: "inline-flex", alignItems: "center", gap: 10, marginTop: 16, padding: "8px 14px", alignSelf: "flex-start", maxWidth: "100%", background: "rgba(232,228,220,0.05)", border: "1px solid rgba(201,169,97,0.28)" } },
+                  h("span", { style: { fontFamily: mono, fontSize: 9, letterSpacing: "0.2em", color: "rgba(232,228,220,0.5)", textTransform: "uppercase" } }, "With"),
+                  h("span", { style: { fontFamily: sans, fontSize: 12.5, fontWeight: 500, color: "#F2EEE4" } }, a.partner)) : null,
+                h("p", { style: { fontFamily: sans, fontSize: 14.5, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.75)", margin: "16px 0 0", maxWidth: 560, textWrap: "pretty" } }, a.body),
+                h("div", { style: { display: "flex", alignItems: "center", gap: 24, marginTop: "auto", paddingTop: 24, flexWrap: "wrap" } },
+                  a.link ? h("a", { href: a.link, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 10, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, textDecoration: "none" } }, "Programme updates \u2197") : null,
+                  shareKey ? h(ShareBtn, { url: "https://brialendowment.org/#/" + shareKey + "/" + (i + 1) }) : null)));
+          }))));
+  };
+
+  const PillarPage = ({ onExit, onDonate, cfg }) => {
+    useEffect(() => { window.scrollTo(0, 0); if (cfg.shareKey) BrialDeepScroll(cfg.shareKey); }, []);
+    const articles = (cfg.articles || []).filter(a => a && (a.title || a.body));
+    return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both" }, "data-screen-label": cfg.screenLabel },
+      h("div", { style: { position: "sticky", top: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px clamp(20px, 4vw, 56px)", background: "rgba(10,22,40,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: "1px solid rgba(201,169,97,0.15)" } },
+        h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" } }, "\u2190 Return to the Endowment"),
+        h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+          h(Seal, { size: 26 }),
+          h("span", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.26em", color: "rgba(232,228,220,0.7)" } }, cfg.topTag))),
+
+      h("div", { style: { padding: "clamp(60px, 9vw, 110px) clamp(20px, 4vw, 56px) clamp(50px, 7vw, 80px)", maxWidth: 1280, margin: "0 auto" } },
+        h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, cfg.eyebrow),
+        h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(52px, 8vw, 108px)", lineHeight: 0.98, letterSpacing: "-0.02em", margin: "26px 0 0", maxWidth: 900 } }, cfg.title + "."),
+        h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(20px, 2.4vw, 28px)", color: "rgba(232,228,220,0.75)", margin: "26px 0 0", maxWidth: 640, lineHeight: 1.45 } }, cfg.tagline),
+        cfg.lockup ? h("div", { style: { display: "inline-flex", alignItems: "center", gap: 18, marginTop: 44, padding: "16px 22px", background: "rgba(232,228,220,0.06)", border: "1px solid rgba(201,169,97,0.3)", flexWrap: "wrap" } },
+          h("span", { style: { fontFamily: serif, fontSize: 17, fontStyle: "italic", color: GOLD } }, "The Brial Endowment"),
+          h("span", { style: { color: "rgba(232,228,220,0.4)", fontSize: 16 } }, "\u00d7"),
+          cfg.lockup.logo ? h("img", { src: cfg.lockup.logo, alt: cfg.lockup.name, style: { height: 52, width: "auto", display: "block", borderRadius: 2, background: cfg.lockup.logoBg || "transparent", padding: cfg.lockup.logoBg ? 5 : 0 } }) : null,
+          h("span", { style: { fontFamily: sans, fontSize: 12, fontWeight: 500, color: "rgba(232,228,220,0.85)", lineHeight: 1.5 } }, cfg.lockup.name, h("br", null), h("span", { style: { color: "rgba(232,228,220,0.5)", fontWeight: 300 } }, cfg.lockup.sub))) : null),
+
+      h("div", { style: { background: CREAM, color: NAVY, padding: "clamp(56px, 8vw, 90px) clamp(20px, 4vw, 56px)" } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "clamp(30px, 5vw, 70px)", alignItems: "center" } },
+          h("div", null,
+            h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(10,22,40,0.55)" } }, cfg.statLabel),
+            h("div", { style: { fontFamily: serif, fontSize: "clamp(90px, 12vw, 150px)", lineHeight: 0.9, marginTop: 10, color: NAVY } }, String(cfg.statValue)),
+            h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "#8B7A4A", marginTop: 12 } }, cfg.statUnit)),
+          h("div", null,
+            h("div", { style: { width: 44, height: 1, background: "#8B7A4A", marginBottom: 22 } }),
+            h("div", { style: { fontFamily: serif, fontSize: "clamp(22px, 2.6vw, 30px)", fontStyle: "italic", lineHeight: 1.4, color: "rgba(10,22,40,0.85)" } }, cfg.location),
+            h("div", { style: { fontFamily: sans, fontSize: 13.5, fontWeight: 300, lineHeight: 1.7, color: "rgba(10,22,40,0.65)", marginTop: 18, maxWidth: 460 } }, cfg.locationNote)))),
+
+      h("div", { style: { padding: "clamp(70px, 9vw, 110px) clamp(20px, 4vw, 56px)" } },
+        h("div", { style: { maxWidth: 900, margin: "0 auto", textAlign: "center" } },
+          h(Seal, { size: 34 }),
+          h("blockquote", { style: { fontFamily: serif, fontStyle: "italic", fontWeight: 300, fontSize: "clamp(24px, 3.2vw, 38px)", lineHeight: 1.5, color: CREAM, margin: "34px 0 0" } }, ...cfg.quote),
+          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(232,228,220,0.45)", marginTop: 30 } }, cfg.quoteAttr))),
+
+      h("div", { style: { padding: "0 clamp(20px, 4vw, 56px) clamp(70px, 9vw, 100px)" } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto" } },
+          h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, "\u00a7 How the programme works"),
+          h("p", { style: { fontFamily: sans, fontSize: 15, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.75)", maxWidth: 720, margin: "22px 0 0", textWrap: "pretty" } }, cfg.intro),
+          h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginTop: 44 } },
+            cfg.steps.map(f => h("div", { key: f.n, style: { border: "1px solid rgba(201,169,97,0.22)", background: "rgba(232,228,220,0.04)", padding: "26px 24px" } },
+              h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.2em" } }, f.n),
+              h("div", { style: { fontFamily: serif, fontSize: 23, marginTop: 12 } }, f.t),
+              h("div", { style: { fontFamily: sans, fontSize: 13, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.65)", marginTop: 10 } }, f.d)))))),
+
+      h(Stories, { articles: articles, title: cfg.notesTitle, shareKey: cfg.shareKey }),
+
+      h("div", { style: { padding: "clamp(70px, 10vw, 120px) clamp(20px, 4vw, 56px)", textAlign: "center" } },
+        h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, cfg.ctaEyebrow),
+        h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(30px, 4.4vw, 52px)", margin: "20px 0 0", lineHeight: 1.1 } },
+          cfg.ctaLine1, h("br", null), h("em", { style: { fontStyle: "italic" } }, cfg.ctaLine2)),
+        h("div", { style: { display: "flex", justifyContent: "center", gap: 20, marginTop: 44, flexWrap: "wrap" } },
+          cfg.showPartner ? h("button", { onClick: () => window.open(cfg.link, "_blank", "noopener,noreferrer"), style: { background: `linear-gradient(120deg, #EAD9A8, ${GOLD} 55%, #B08F4C)`, color: "#131A33", border: "none", padding: "17px 34px", cursor: "pointer", fontFamily: sans, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Learn more about our partner \u2197") : null,
+          onDonate ? h("button", { onClick: onDonate, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "17px 34px", cursor: "pointer", fontFamily: sans, fontSize: 12.5, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Make a bequest") : null),
+        cfg.showPartner && cfg.partnerStrip ? h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", color: "rgba(232,228,220,0.4)", marginTop: 26 } }, cfg.partnerStrip) : null),
+
+      h("div", { style: { borderTop: "1px solid rgba(201,169,97,0.2)", padding: "26px clamp(20px, 4vw, 56px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+        h("span", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.22em", color: "rgba(232,228,220,0.4)" } }, "\u00a9 MMXXVI \u00b7 THE BRIAL ENDOWMENT"),
+        h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.55)" } }, cfg.proverb)));
+  };
+
+  const WorshipPage = ({ onExit, onDonate }) => {
+    const { content, link, hidden, units } = usePillar("getWorship", "worship", "Houses of Worship");
+    if (!content) return null;
+    const mosques = units > 0 ? units : (Number(content.mosques) || 0);
+    return h(PillarPage, { onExit, onDonate, cfg: {
+      screenLabel: "Houses of Worship — Programme",
+      shareKey: "worship",
+      topTag: "PILLAR \u00b7 HOUSES OF WORSHIP",
+      eyebrow: "\u00a7 The Second Pillar \u2014 Masjid",
+      title: content.programme || "Houses of Worship",
+      tagline: "Mosques raised as waqf \u2014 owned by no one, serving everyone, enduring beyond their builders.",
+      lockup: { logo: (window.BRIAL_LOGOS || {}).minang, logoBg: "#F4F1E9", name: "Minang Bandung Foundation", sub: "builder \u00b7 amal jariyah \u00b7 Bandung" },
+      statLabel: "Raised together",
+      statValue: mosques,
+      statUnit: "Mosques \u00b7 built as waqf",
+      location: content.location || "Bandung \u2014 West Java, Indonesia",
+      locationNote: (content.partnerLine || "In partnership with Minang Bandung Foundation") + " \u2014 every build documented from land to minaret, then opened for prayer in perpetuity.",
+      quote: ["\u201cWhoever builds a mosque for Allah, ", h("em", { key: 1, style: { color: GOLD } }, "Allah will build for him a house like it in Paradise"), ".\u201d"],
+      quoteAttr: "\u2014 Hadith \u00b7 Sahih al-Bukhari 450 \u00b7 Sahih Muslim 533",
+      intro: content.intro,
+      steps: [
+        { n: "01", t: "Land & niyyah", d: "A site is secured with the community it will serve \u2014 titled, permitted, and dedicated before the first stone." },
+        { n: "02", t: "Raising the walls", d: "The partner foundation builds; each milestone is documented and reported back to the endowment." },
+        { n: "03", t: "Opened as waqf", d: "The finished mosque is handed to its congregation \u2014 endowed in perpetuity, never bought or sold." }
+      ],
+      notesTitle: "Word from the site.",
+      articles: content.articles,
+      ctaEyebrow: "Walk the site",
+      ctaLine1: "Meet the people",
+      ctaLine2: "who build with us.",
+      showPartner: !!link && !hidden,
+      link,
+      partnerStrip: "MINANG BANDUNG FOUNDATION \u00b7 AMAL JARIYAH \u00b7 PEMBANGUNAN MASJID",
+      proverb: "They built so we may pray; we build so they may pray."
+    }});
+  };
+
+  const WaterPage = ({ onExit, onDonate }) => {
+    const { content, link, hidden, units } = usePillar("getWater", "water", "Clean Water");
+    if (!content) return null;
+    const wells = units > 0 ? units : (Number(content.trees) || Number(content.wells) || 0);
+    return h(PillarPage, { onExit, onDonate, cfg: {
+      screenLabel: "Clean Water — Programme",
+      shareKey: "water",
+      topTag: "PILLAR \u00b7 CLEAN WATER",
+      eyebrow: "\u00a7 The Fifth Pillar \u2014 Sumur",
+      title: content.programme || "Clean Water",
+      tagline: "Clean water, close to home \u2014 wells and springs that change a village for generations.",
+      lockup: content.partnerLine ? { logo: null, name: content.partnerLine, sub: "water partner" } : null,
+      statLabel: "Flowing today",
+      statValue: wells,
+      statUnit: "Wells \u00b7 in service",
+      location: content.location || "Sites announced as each build begins.",
+      locationNote: (content.partnerLine || "Built with local partners") + " \u2014 every point surveyed with the village it serves, and maintained so the water keeps flowing.",
+      quote: ["\u201cThe best charity is ", h("em", { key: 1, style: { color: GOLD } }, "giving water to drink"), ".\u201d"],
+      quoteAttr: "\u2014 Hadith \u00b7 Sunan Abi Dawud 1681 \u00b7 an-Nasa'i",
+      intro: content.intro,
+      steps: [
+        { n: "01", t: "Survey", d: "The need is mapped with the village \u2014 groundwater, distance walked, and who the point will serve." },
+        { n: "02", t: "Build", d: "Borehole, hand pump or spring protection \u2014 built with local partners, documented from first dig to first draw." },
+        { n: "03", t: "Maintain", d: "Local stewards keep it flowing \u2014 spares, repairs and care, so the gift outlasts its givers." }
+      ],
+      notesTitle: "Word from the wells.",
+      articles: content.articles,
+      ctaEyebrow: "Follow the water",
+      ctaLine1: "Meet the people",
+      ctaLine2: "who bring it home.",
+      showPartner: !!link && !hidden,
+      link,
+      partnerStrip: (content.partnerLine || "CLEAN WATER \u00b7 BUILT WITH LOCAL PARTNERS").toUpperCase(),
+      proverb: "They dug so we may drink; we dig so they may drink."
+    }});
+  };
+
+  // ---- Generic pillar pages (Hospitals, Schools, Livestock, Infrastructure) ----
+  const GENERIC_PAGES = {
+    hospitals: {
+      pillarName: "Hospitals", topTag: "PILLAR \u00b7 HOSPITALS", eyebrow: "\u00a7 The Pillar of Healing \u2014 Rumah Sakit",
+      tagline: "Care for those who cannot afford to be sick \u2014 clinics funded from the corpus, free at the point of need.",
+      statLabel: "Care today", statUnit: "Clinics & wards \u00b7 in service",
+      locFallback: "Sites announced as each build begins.", locTail: " \u2014 every clinic assessed with local health workers, built to last, and open free at the point of need.",
+      quote: ["\u201cThere is no disease that Allah has sent down, except that ", h("em", { key: 1, style: { color: GOLD } }, "He has also sent down its cure"), ".\u201d"],
+      quoteAttr: "\u2014 Hadith \u00b7 Sahih al-Bukhari 5678",
+      steps: [
+        { n: "01", t: "Assess", d: "Mapped with local health workers \u2014 where illness costs families the most, before a single brick is laid." },
+        { n: "02", t: "Build & equip", d: "Clinic and ward raised with the partner \u2014 documented from foundation to first patient." },
+        { n: "03", t: "Heal freely", d: "Open to all, free at the point of need \u2014 funded by the corpus so care never depends on a bill." }
+      ],
+      notesTitle: "Word from the wards.", ctaEyebrow: "Walk the wards", ctaLine1: "Meet the people", ctaLine2: "who heal with us.",
+      stripFallback: "HOSPITALS \u00b7 BUILT WITH LOCAL HEALTH PARTNERS",
+      proverb: "They healed so we may stand; we build so others may heal."
+    },
+    schools: {
+      pillarName: "Schools", topTag: "PILLAR \u00b7 SCHOOLS", eyebrow: "\u00a7 The Pillar of Knowledge \u2014 Sekolah",
+      tagline: "Classrooms raised where distance decides who learns \u2014 built once, teaching for generations.",
+      statLabel: "In session today", statUnit: "Schools \u00b7 classrooms raised",
+      locFallback: "Sites announced as each build begins.", locTail: " \u2014 every school grounded where children walk farthest, raised and staffed to teach well.",
+      quote: ["\u201cSeeking knowledge is ", h("em", { key: 1, style: { color: GOLD } }, "an obligation upon every Muslim"), ".\u201d"],
+      quoteAttr: "\u2014 Hadith \u00b7 Sunan Ibn Majah 224",
+      steps: [
+        { n: "01", t: "Ground", d: "A site is chosen where children walk farthest \u2014 secured with the village the school will serve." },
+        { n: "02", t: "Raise & staff", d: "Classrooms built and teachers placed with local partners \u2014 documented from first stone to first lesson." },
+        { n: "03", t: "Teach forever", d: "Held as an endowed school \u2014 fees never decide who sits in its classrooms." }
+      ],
+      notesTitle: "Word from the classrooms.", ctaEyebrow: "Visit the classrooms", ctaLine1: "Meet the children", ctaLine2: "who learn with us.",
+      stripFallback: "SCHOOLS \u00b7 BUILT WITH LOCAL PARTNERS",
+      proverb: "They taught so we may read; we build so they may learn."
+    },
+    livestock: {
+      pillarName: "Livestock & Enterprise", topTag: "PILLAR \u00b7 LIVESTOCK & ENTERPRISE", eyebrow: "\u00a7 The Pillar of Enterprise \u2014 Ternak",
+      tagline: "Productive capital in family hands \u2014 herds and enterprise that feed, earn, and fund the gift again.",
+      statLabel: "Working today", statUnit: "Herds & ventures \u00b7 productive",
+      locFallback: "Placements announced as each begins.", locTail: " \u2014 every placement chosen with the family who will tend it, and documented season by season.",
+      quote: ["\u201cIt is better for one of you to take a rope and ", h("em", { key: 1, style: { color: GOLD } }, "carry firewood on his back"), " than to beg from people.\u201d"],
+      quoteAttr: "\u2014 Hadith \u00b7 Sahih al-Bukhari 1471",
+      steps: [
+        { n: "01", t: "Place", d: "Herds, tools or stock placed with a family as productive capital \u2014 chosen with those who will tend it." },
+        { n: "02", t: "Tend", d: "The family raises and works the asset \u2014 supported and documented through the hard seasons." },
+        { n: "03", t: "Multiply", d: "Offspring and profits stay with the family \u2014 the gift renews itself and funds the next placement." }
+      ],
+      notesTitle: "Word from the paddocks.", ctaEyebrow: "Meet the herds", ctaLine1: "Meet the families", ctaLine2: "who tend the gift.",
+      stripFallback: "LIVESTOCK & ENTERPRISE \u00b7 PRODUCTIVE CAPITAL, FAMILY HANDS",
+      proverb: "They kept so we may eat; we place so they may keep."
+    },
+    infra: {
+      pillarName: "Sustainable Infrastructure", topTag: "PILLAR \u00b7 INFRASTRUCTURE", eyebrow: "\u00a7 The Pillar of Foundations \u2014 Prasarana",
+      tagline: "Bridges, power and public works \u2014 the quiet foundations that let a community stand on its own.",
+      statLabel: "Standing today", statUnit: "Public works \u00b7 in service",
+      locFallback: "Works announced as each survey begins.", locTail: " \u2014 every work surveyed with the community that will use it, built to endure.",
+      quote: ["\u201cAmong what reaches a believer after death: ", h("em", { key: 1, style: { color: GOLD } }, "a canal he dug, a well he sank"), ", and a mosque he built.\u201d"],
+      quoteAttr: "\u2014 Hadith \u00b7 Sunan Ibn Majah 242",
+      steps: [
+        { n: "01", t: "Survey", d: "Every work is mapped with the community that will use it \u2014 need first, monument never." },
+        { n: "02", t: "Build", d: "Bridges, water-ways and power raised with local partners \u2014 documented from first survey to first crossing." },
+        { n: "03", t: "Endure", d: "Maintained by local stewards \u2014 built once, serving for generations." }
+      ],
+      notesTitle: "Word from the works.", ctaEyebrow: "Walk the works", ctaLine1: "Meet the people", ctaLine2: "who build to endure.",
+      stripFallback: "SUSTAINABLE INFRASTRUCTURE \u00b7 BUILT WITH LOCAL PARTNERS",
+      proverb: "They laid so we may cross; we lay so they may rise."
+    }
+  };
+  const makeGenericPage = key => {
+    const g = GENERIC_PAGES[key];
+    return ({ onExit, onDonate }) => {
+      const read = () => ({
+        content: window.BrialStore && window.BrialStore.getPillarContent ? window.BrialStore.getPillarContent(key) : null,
+        link: window.BrialStore && window.BrialStore.getPillarLink ? window.BrialStore.getPillarLink(key) : "",
+        hidden: window.BrialStore && window.BrialStore.getPillarLinkHidden ? window.BrialStore.getPillarLinkHidden(key) : false,
+        units: window.BrialStore && window.BrialStore.getPillarUnits ? window.BrialStore.getPillarUnits(g.pillarName) : 0
+      });
+      const [st, setSt] = useState(read);
+      useEffect(() => {
+        const f = () => setSt(read());
+        window.addEventListener("brial:change", f);
+        window.addEventListener("brial:ready", f);
+        return () => { window.removeEventListener("brial:change", f); window.removeEventListener("brial:ready", f); };
+      }, []);
+      const c = st.content;
+      if (!c) return null;
+      const units = st.units > 0 ? st.units : Number(c.units) || 0;
+      return h(PillarPage, { onExit, onDonate, cfg: {
+        screenLabel: g.pillarName + " \u2014 Programme",
+        shareKey: key, topTag: g.topTag, eyebrow: g.eyebrow,
+        title: c.programme || g.pillarName, tagline: g.tagline,
+        lockup: c.partnerLine ? { logo: null, name: c.partnerLine, sub: "programme partner" } : null,
+        statLabel: g.statLabel, statValue: units, statUnit: g.statUnit,
+        location: c.location || g.locFallback,
+        locationNote: (c.partnerLine || "Built with local partners") + g.locTail,
+        quote: g.quote, quoteAttr: g.quoteAttr, intro: c.intro, steps: g.steps,
+        notesTitle: g.notesTitle, articles: c.articles,
+        ctaEyebrow: g.ctaEyebrow, ctaLine1: g.ctaLine1, ctaLine2: g.ctaLine2,
+        showPartner: !!st.link && !st.hidden, link: st.link,
+        partnerStrip: (c.partnerLine || g.stripFallback).toUpperCase(),
+        proverb: g.proverb
+      }});
+    };
+  };
+  const HospitalsPage = makeGenericPage("hospitals");
+  const SchoolsPage = makeGenericPage("schools");
+  const LivestockPage = makeGenericPage("livestock");
+  const InfraPage = makeGenericPage("infra");
+
+  window.BrialStories = Stories;
+  window.WorshipPage = WorshipPage;
+  window.WaterPage = WaterPage;
+  window.BrialPillarPages = { worship: WorshipPage, water: WaterPage, hospitals: HospitalsPage, schools: SchoolsPage, livestock: LivestockPage, infra: InfraPage };
+})();
