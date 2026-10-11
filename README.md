@@ -34,3 +34,14 @@ Backup data sebelum perubahan: skema privat `backup_20261011` di Supabase.
 ## Dashboard Supabase (manual)
 - Authentication → matikan *Allow new users to sign up*.
 - Authentication → Password security → nyalakan *Leaked password protection*.
+
+## Private documents (11 Oct 2026, migration 03)
+- Scholar documents live in the **private** bucket `brial-private` (paths `docs/…`, random 128-bit names).
+  They have no public link. The founder console signs links with the founder's Supabase login;
+  a scholar gets links for her own files only, through the edge function `be-files`
+  (`supabase/functions/be-files`), which checks her session token on the server.
+- Public pictures (showcase selfies, e-book covers, programme photos, og-cover) stay in `brial-files`.
+  In code: `BrialFiles.put(file)` = private, `BrialFiles.put(file, { public: true })` = public.
+- The 45 old files (16 used by scholar records + 29 unused uploads) were copied to the private bucket
+  under new names, the records were re-pointed, and the old public copies were deleted.
+  Bookkeeping: `be_private.file_moves`. Unused uploads are kept under `docs/orphans/` (founder-only).
