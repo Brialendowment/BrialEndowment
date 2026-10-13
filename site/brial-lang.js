@@ -97,6 +97,8 @@
       try { localStorage.setItem("brial-lang", mode); } catch (err) {}
       paint();
       apply();
+      // components with their own EN/ID copy (scholar portal) re-render on this
+      try { window.dispatchEvent(new CustomEvent("brial:lang", { detail: mode })); } catch (err) {}
     });
     paint();
   }
