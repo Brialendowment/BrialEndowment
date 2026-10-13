@@ -8361,6 +8361,926 @@ const PillarConsole = ({
   })), current.content);
 };
 
+// >>> FOUNDER DESK (generated from src/founder-desk.jsx — edit that file, then run scripts/build-founder-desk.py)
+const FD = (() => {
+  const { useState, useEffect, useMemo, useRef } = React;
+  const money = (n) => "$" + (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const fdate = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return isNaN(d) ? "—" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
+  const fdatetime = (iso) => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return isNaN(d) ? "—" : d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }) + ", " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  };
+  const rel = (iso) => {
+    if (!iso) return "";
+    const s = (Date.now() - new Date(iso).getTime()) / 1e3;
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.floor(s / 60) + " min ago";
+    if (s < 86400) return Math.floor(s / 3600) + " h ago";
+    if (s < 86400 * 30) return Math.floor(s / 86400) + " d ago";
+    return fdate(iso);
+  };
+  const titleCase = (s) => (s || "").toLowerCase().replace(/(^|[\s\-'])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+  const ACR = /* @__PURE__ */ new Set(["UIN", "IAIN", "STAIN", "UNAND", "UNP", "UGM", "UI", "ITB", "ITS", "IPB", "UPI", "UNY", "UNS", "UB", "UNJ", "UPN", "SMA", "SMAN", "SMK", "SMKN", "MAN", "MAS", "MA", "MTS", "MTSN", "SMP", "SMPN", "PGRI", "STIE", "STKIP", "STIKES", "STMIK", "UMSB", "UNES", "USA", "UK", "UAE", "PT"]);
+  const instCase = (s) => (s || "").split(/(\s+)/).map((w) => {
+    const u = w.toUpperCase();
+    return ACR.has(u.replace(/[^A-Z]/g, "")) && u.replace(/[^A-Z]/g, "").length === w.replace(/[^A-Za-z]/g, "").length && /^[A-Z0-9.\-]+$/.test(w) ? w : /\d/.test(w) || /^[A-Z]{2,5}$/.test(w) && !/[AEIOU]/.test(w) ? w : titleCase(w);
+  }).join("");
+  const fileUrl = (f) => {
+    if (!f) return null;
+    if (f.url) return f.url;
+    const p = f.path || f.key;
+    return p && window.brialSupabase ? window.brialSupabase.publicUrl(p) : null;
+  };
+  const isImage = (f) => !!f && (/^image\//i.test(f.type || "") || /\.(png|jpe?g|webp|gif)$/i.test(f.name || f.path || ""));
+  const today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const plural = (n, one, many) => Number(n) === 1 ? one : many;
+  const Img = ({ src, className, style, fallback = null }) => {
+    const [bad, setBad] = useState(false);
+    useEffect(() => {
+      setBad(false);
+    }, [src]);
+    return bad ? fallback : /* @__PURE__ */ React.createElement("img", { key: src, className, style, src, alt: "", onError: () => setBad(true) });
+  };
+  const CSS = `
+.fd{--bg:#0A1628;--side:#0B192F;--surface:#0F1E36;--raised:#132746;--line:rgba(239,233,220,.09);--line2:rgba(239,233,220,.16);--gilt:#C9A961;--gilt2:#E2C98E;--giltsoft:rgba(201,169,97,.13);--text:#EFE9DC;--muted:rgba(239,233,220,.66);--faint:rgba(239,233,220,.44);--sage:#8FD4A8;--amber:#E7B76A;--rose:#E58686;--sky:#8DB8E8;--accent:var(--gilt);
+  min-height:100vh;background:var(--bg);color:var(--text);font-family:'Manrope',system-ui,sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.fd *{box-sizing:border-box}
+.fd button,.fd input,.fd select,.fd textarea{font-family:inherit}
+.fd :focus-visible{outline:2px solid var(--gilt);outline-offset:2px;border-radius:6px}
+.fd a{color:inherit}
+/* top bar */
+.fd-top{position:sticky;top:0;z-index:50;height:60px;display:flex;align-items:center;gap:14px;padding:0 20px;background:rgba(10,22,40,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.fd-brand{display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;white-space:nowrap}
+.fd-crumb{display:flex;align-items:center;gap:8px;color:var(--faint);font-size:13px;min-width:0}
+.fd-crumb b{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fd-crumb button{background:none;border:0;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px;font-size:13px}
+.fd-crumb button:hover{color:var(--text);background:rgba(239,233,220,.05)}
+.fd-top-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.fd-email{font-size:12px;color:var(--faint);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* layout */
+.fd-body{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 60px)}
+.fd-side{position:sticky;top:60px;height:calc(100vh - 60px);overflow:auto;background:var(--side);border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px}
+.fd-pillar{display:flex;align-items:center;gap:10px;padding:6px 10px 16px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+.fd-pillar-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent);color:var(--accent);flex-shrink:0}
+.fd-pillar b{display:block;font-weight:600;font-size:14px;line-height:1.2}
+.fd-pillar small{display:block;font-size:12px;color:var(--faint)}
+.fd-nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:9px;border:0;background:none;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:background .15s,color .15s}
+.fd-nav:hover{background:rgba(239,233,220,.04);color:var(--text)}
+.fd-nav[aria-current=page]{background:var(--giltsoft);color:var(--text)}
+.fd-nav[aria-current=page] .fd-nav-ic{color:var(--gilt2)}
+.fd-nav-ic{display:flex;color:var(--faint)}
+.fd-count{margin-left:auto;min-width:22px;height:20px;padding:0 6px;border-radius:10px;font-size:11px;font-weight:700;line-height:20px;text-align:center;background:rgba(239,233,220,.08);color:var(--muted)}
+.fd-count.hot{background:var(--gilt);color:#0A1628}
+.fd-side-foot{margin-top:auto;padding:14px 10px 4px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+.fd-main{min-width:0;padding:30px clamp(18px,3vw,40px) 120px;max-width:1240px}
+/* page head */
+.fd-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:22px}
+.fd-h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(28px,3.2vw,36px);line-height:1.1;margin:0;font-variant-numeric:lining-nums}
+.fd-lede{color:var(--muted);margin:6px 0 0;max-width:68ch}
+.fd-h2{font-size:15px;font-weight:600;margin:0}
+.fd-h3{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:24px;margin:0;line-height:1.15;font-variant-numeric:lining-nums}
+.fd-sub{color:var(--muted);font-size:13px;margin:4px 0 0}
+/* stats */
+.fd-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;margin-bottom:22px}
+.fd-stat{padding:16px 20px;border-right:1px solid var(--line)}
+.fd-stat:last-child{border-right:0}
+.fd-stat span{display:block;font-size:12px;color:var(--muted)}
+.fd-stat b{display:block;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:30px;line-height:1.15;margin-top:4px;font-variant-numeric:lining-nums tabular-nums}
+.fd-stat small{display:block;font-size:12px;color:var(--faint)}
+.fd-stat.warn b{color:var(--amber)}.fd-stat.ok b{color:var(--sage)}
+/* cards */
+.fd-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.fd-card+.fd-card{margin-top:16px}
+.fd-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.fd-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fd-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+/* buttons */
+.fd-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s,color .15s;text-decoration:none;line-height:1.2}
+.fd-btn.primary{background:var(--gilt);color:#0A1628}.fd-btn.primary:hover{background:var(--gilt2)}
+.fd-btn.ghost{background:transparent;color:var(--text);border-color:var(--line2)}.fd-btn.ghost:hover{border-color:rgba(201,169,97,.6)}
+.fd-btn.quiet{background:transparent;color:var(--muted);padding:7px 10px}.fd-btn.quiet:hover{color:var(--text);background:rgba(239,233,220,.05)}
+.fd-btn.danger{background:transparent;color:var(--rose);border-color:rgba(229,134,134,.35)}.fd-btn.danger:hover{background:rgba(229,134,134,.08)}
+.fd-btn.danger.armed{background:var(--rose);color:#0A1628;border-color:var(--rose)}
+.fd-btn.ok{background:rgba(143,212,168,.12);color:var(--sage);border-color:rgba(143,212,168,.4)}
+.fd-btn.sm{padding:6px 11px;font-size:12px;border-radius:8px}
+.fd-btn[disabled]{opacity:.45;cursor:not-allowed}
+.fd-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* tags */
+.fd-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap;background:rgba(239,233,220,.07);color:var(--muted)}
+.fd-tag i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.fd-tag.ok{background:rgba(143,212,168,.11);color:var(--sage)}
+.fd-tag.warn{background:rgba(231,183,106,.12);color:var(--amber)}
+.fd-tag.bad{background:rgba(229,134,134,.12);color:var(--rose)}
+.fd-tag.gold{background:var(--giltsoft);color:var(--gilt2)}
+.fd-tag.sky{background:rgba(141,184,232,.12);color:var(--sky)}
+/* toolbar */
+.fd-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.fd-seg{display:flex;gap:6px;flex-wrap:wrap}
+.fd-chip{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer}
+.fd-chip em{font-style:normal;font-size:11px;font-weight:700;color:var(--faint)}
+.fd-chip[aria-pressed=true]{background:var(--giltsoft);border-color:rgba(201,169,97,.55);color:var(--text)}
+.fd-chip[aria-pressed=true] em{color:var(--gilt2)}
+.fd-search{position:relative;flex:1 1 240px;max-width:380px}
+.fd-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.fd-search input{padding-left:36px}
+/* forms */
+.fd-field{display:block;min-width:0}
+.fd-field>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.fd-field small{display:block;font-size:12px;color:var(--faint);margin-top:5px}
+.fd-input{width:100%;background:rgba(10,22,40,.6);border:1px solid var(--line2);border-radius:9px;color:var(--text);font-size:14px;padding:10px 12px;transition:border-color .15s}
+.fd-input:focus{outline:none;border-color:var(--gilt)}
+.fd-input::placeholder{color:rgba(239,233,220,.3)}
+textarea.fd-input{min-height:110px;resize:vertical;line-height:1.6}
+select.fd-input{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gilt) 50%),linear-gradient(135deg,var(--gilt) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+select.fd-input option{background:#0A1628}
+input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
+.fd-form{display:grid;gap:14px}
+.fd-money{position:relative}.fd-money::before{content:"$";position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gilt2);font-weight:600}.fd-money .fd-input{padding-left:26px}
+.fd-switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--muted);background:none;border:0;padding:0}
+.fd-switch i{position:relative;width:36px;height:20px;border-radius:10px;background:rgba(239,233,220,.15);transition:background .2s;flex-shrink:0}
+.fd-switch i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#EFE9DC;transition:transform .2s}
+.fd-switch[aria-checked=true] i{background:var(--sage)}
+.fd-switch[aria-checked=true] i::after{transform:translateX(16px)}
+.fd-msg{font-size:13px;padding:9px 12px;border-radius:9px}
+.fd-msg.ok{color:var(--sage);background:rgba(143,212,168,.08);border:1px solid rgba(143,212,168,.3)}
+.fd-msg.err{color:#F2A7A7;background:rgba(229,134,134,.08);border:1px solid rgba(229,134,134,.3)}
+.fd-msg.info{color:var(--muted);background:rgba(239,233,220,.04);border:1px solid var(--line)}
+/* table */
+.fd-table{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.fd-tr{display:grid;gap:14px;align-items:center;padding:13px 18px;border-top:1px solid var(--line)}
+.fd-tr:first-child{border-top:0}
+.fd-th{font-size:12px;color:var(--faint);font-weight:600;background:rgba(239,233,220,.025)}
+.fd-tr.dim{opacity:.55}
+.fd-td{min-width:0}
+.fd-td b{display:block;font-weight:600;overflow-wrap:anywhere}
+.fd-td small{display:block;font-size:12px;color:var(--faint);overflow-wrap:anywhere}
+.fd-td .num{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;font-variant-numeric:lining-nums tabular-nums;color:var(--gilt2)}
+.fd-td[data-l]::before{display:none}
+.fd-mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.fd-empty{padding:42px 20px;text-align:center;color:var(--faint)}
+.fd-empty b{display:block;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--muted);margin-bottom:4px}
+/* master-detail */
+.fd-md{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;align-items:start}
+.fd-list{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;position:sticky;top:76px;max-height:calc(100vh - 96px);overflow-y:auto}
+.fd-li{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:13px 16px;color:var(--text);cursor:pointer;transition:background .15s}
+.fd-li:first-child{border-top:0}
+.fd-li:hover{background:rgba(239,233,220,.03)}
+.fd-li[aria-current=true]{background:var(--giltsoft);box-shadow:inset 3px 0 0 var(--gilt)}
+.fd-li-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.fd-li b{font-weight:600}
+.fd-li small{display:block;color:var(--faint);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-li-bot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+.fd-back{display:none}
+/* detail */
+.fd-dhead{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.fd-avatar{width:56px;height:70px;border-radius:10px;object-fit:cover;object-position:50% 25%;border:1px solid rgba(201,169,97,.45);background:#0A1628;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gilt);flex-shrink:0}
+.fd-dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px 22px;margin:0}
+.fd-dl dt{font-size:12px;color:var(--faint)}
+.fd-dl dd{margin:2px 0 0;font-weight:500;overflow-wrap:anywhere}
+.fd-dl dd.none{color:var(--faint);font-weight:400}
+.fd-dl .wide{grid-column:1/-1}
+.fd-stage{border:1px solid rgba(201,169,97,.32);background:linear-gradient(160deg,#122646,#0F1E36 70%);border-radius:14px;padding:18px 20px}
+.fd-stage-k{font-size:12px;font-weight:600;color:var(--gilt2)}
+.fd-details{border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-top:16px}
+.fd-details>summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.fd-details>summary::-webkit-details-marker{display:none}
+.fd-details>summary::after{content:"";width:8px;height:8px;border-right:1.5px solid var(--gilt);border-bottom:1.5px solid var(--gilt);transform:rotate(45deg);transition:transform .2s;margin-right:4px}
+.fd-details[open]>summary::after{transform:rotate(225deg)}
+.fd-details>div{padding:0 20px 20px}
+.fd-file{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.fd-file:first-child{border-top:0}
+/* modal */
+.fd-scrim{position:fixed;inset:0;z-index:300;background:rgba(5,11,22,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;animation:fdFade .18s ease-out}
+.fd-modal{width:100%;max-width:560px;max-height:calc(100vh - 36px);overflow:auto;background:#10213D;border:1px solid rgba(201,169,97,.3);border-radius:16px;padding:24px 24px 22px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9);animation:fdRise .25s cubic-bezier(.22,1,.36,1) both}
+.fd-modal.wide{max-width:760px}
+.fd-modal-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
+.fd-x{background:none;border:1px solid var(--line2);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:17px;line-height:1;flex-shrink:0}
+.fd-savebar{position:sticky;bottom:16px;z-index:20;margin-top:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;border-radius:12px;background:#132746;border:1px solid rgba(201,169,97,.4);box-shadow:0 18px 50px -20px rgba(0,0,0,.9)}
+.fd-thumb{width:84px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--line2);background:#0A1628}
+.fd-cover{width:64px;height:88px;border-radius:6px;object-fit:cover;border:1px solid var(--line2);background:#0A1628;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:11px}
+.fd-upload{position:relative;display:inline-flex}
+.fd-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.fd-qr{background:#F8F4EB;padding:6px;border-radius:6px;line-height:0;display:inline-block}
+@keyframes fdRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fdFade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.fd *{animation:none!important;transition:none!important}}
+@media (max-width:1100px){.fd-md{grid-template-columns:290px minmax(0,1fr)}}
+.fd-mvis{display:none}
+@media (max-width:900px){
+  .fd-mvis{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:28px}
+  .fd-body{grid-template-columns:1fr}
+  .fd-side{position:sticky;top:56px;z-index:40;height:auto;flex-direction:row;overflow-x:auto;padding:8px 10px;gap:6px;border-right:0;border-bottom:1px solid var(--line);scrollbar-width:none}
+  .fd-side::-webkit-scrollbar{display:none}
+  .fd-pillar,.fd-side-foot{display:none}
+  .fd-nav{width:auto;flex-shrink:0;padding:8px 12px}
+  .fd-top{height:56px;padding:0 14px}
+  .fd-email,.fd-brand span{display:none}
+  .fd-main{padding:22px 14px 120px}
+  .fd-md{grid-template-columns:1fr}
+  .fd-list{position:static;max-height:none}
+  .fd-md.has-sel .fd-list,.fd-tools.has-sel{display:none}
+  .fd-md:not(.has-sel) .fd-detail{display:none}
+  .fd-back{display:inline-flex;margin-bottom:12px}
+  .fd-grid2,.fd-grid3{grid-template-columns:1fr}
+  .fd-th{display:none}
+  .fd-tr{grid-template-columns:1fr 1fr!important;gap:10px 14px;padding:14px 16px}
+  .fd-tr .fd-td.full{grid-column:1/-1}
+  .fd-td[data-l]::before{content:attr(data-l);display:block;font-size:11px;color:var(--faint);margin-bottom:2px}
+  .fd-stat{border-right:0;border-bottom:1px solid var(--line)}
+  .fd-stats{grid-template-columns:1fr 1fr}
+  .fd-stat:nth-child(odd){border-right:1px solid var(--line)}
+  .fd-modal{padding:20px 18px}
+  .fd-savebar{bottom:10px}
+}
+`;
+  function useStyles() {
+    useEffect(() => {
+      if (document.getElementById("fd-css")) return;
+      const s = document.createElement("style");
+      s.id = "fd-css";
+      s.textContent = CSS;
+      document.head.appendChild(s);
+    }, []);
+  }
+  const I = (d, s = 18) => /* @__PURE__ */ React.createElement("svg", { width: s, height: s, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.6", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, d);
+  const ICON = {
+    inbox: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 13h5l1.5 3h5L16 13h5" }), /* @__PURE__ */ React.createElement("path", { d: "M5 5h14l2 8v6H3v-6z" }))),
+    pay: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "6", width: "18", height: "13", rx: "2" }), /* @__PURE__ */ React.createElement("path", { d: "M3 10h18M7 15h3" }))),
+    cap: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M2 9l10-5 10 5-10 5z" }), /* @__PURE__ */ React.createElement("path", { d: "M6 11v5c3 2 9 2 12 0v-5" }))),
+    gift: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "9", width: "18", height: "12", rx: "1" }), /* @__PURE__ */ React.createElement("path", { d: "M3 13h18M12 9v12M12 9C9 9 7 7 8.5 5.5S12 6 12 9zm0 0c3 0 5-2 3.5-3.5S12 6 12 9z" }))),
+    help: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 5h16v11H9l-5 4z" }), /* @__PURE__ */ React.createElement("path", { d: "M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.7-.9 1.2" }), /* @__PURE__ */ React.createElement("path", { d: "M12 14.5h.01" }))),
+    users: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "9", cy: "8", r: "3.2" }), /* @__PURE__ */ React.createElement("path", { d: "M3 20c.6-3.3 3-5 6-5s5.4 1.7 6 5" }), /* @__PURE__ */ React.createElement("circle", { cx: "17", cy: "9", r: "2.4" }), /* @__PURE__ */ React.createElement("path", { d: "M16 14.5c2.5 0 4.4 1.6 5 4.5" }))),
+    grant: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 20V10M10 20V6M16 20v-8M22 20H2" }))),
+    story: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M5 4h11l3 3v13H5z" }), /* @__PURE__ */ React.createElement("path", { d: "M9 10h6M9 14h6M9 18h3" }))),
+    link: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" }), /* @__PURE__ */ React.createElement("path", { d: "M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" }))),
+    book: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" }), /* @__PURE__ */ React.createElement("path", { d: "M12 6v14" }))),
+    sale: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 12l9-9h8v8l-9 9z" }), /* @__PURE__ */ React.createElement("circle", { cx: "15.5", cy: "8.5", r: "1.4" }))),
+    search: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "11", cy: "11", r: "6.5" }), /* @__PURE__ */ React.createElement("path", { d: "M16 16l4.5 4.5" })), 16),
+    up: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M12 16V4M7 9l5-5 5 5M5 20h14" })), 16),
+    ext: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" })), 14),
+    star: /* @__PURE__ */ React.createElement("svg", { width: "26", height: "26", viewBox: "0 0 36 36", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("g", { fill: "none", stroke: "#C9A961", strokeWidth: "1.2" }, /* @__PURE__ */ React.createElement("path", { d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "18", r: "4", fill: "#C9A961", stroke: "none" }))),
+    worship: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M12 3c-2 2-4 3.5-4 6h8c0-2.5-2-4-4-6z" }), /* @__PURE__ */ React.createElement("path", { d: "M6 21V12h12v9M10 21v-4h4v4M4 21h16" }))),
+    library: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" }), /* @__PURE__ */ React.createElement("path", { d: "M12 6v14" }))),
+    foodland: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M12 21v-9" }), /* @__PURE__ */ React.createElement("path", { d: "M12 12c0-4 3-7 7-7 0 4-3 7-7 7zM12 14c0-3-2.5-5.5-6-5.5 0 3.5 2.5 5.5 6 5.5z" }))),
+    water: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M12 3c3.5 4.5 6 7.8 6 11a6 6 0 0 1-12 0c0-3.2 2.5-6.5 6-11z" }))),
+    hospitals: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("rect", { x: "4", y: "4", width: "16", height: "16", rx: "2" }), /* @__PURE__ */ React.createElement("path", { d: "M12 8v8M8 12h8" }))),
+    schools: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 10l9-6 9 6" }), /* @__PURE__ */ React.createElement("path", { d: "M5 9.5V20h14V9.5M10 20v-5h4v5" }))),
+    livestock: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M6 8c-2 0-3-2-3-3 2 0 4 1 4 2M18 8c2 0 3-2 3-3-2 0-4 1-4 2" }), /* @__PURE__ */ React.createElement("path", { d: "M7 8h10l-1 7a4 4 0 0 1-8 0z" }), /* @__PURE__ */ React.createElement("path", { d: "M10 13h.01M14 13h.01" }))),
+    infra: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M2 18h20M4 18c2-6 14-6 16 0M8 18v-4M12 18v-5M16 18v-4" }))),
+    scholarships: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M2 9l10-5 10 5-10 5z" }), /* @__PURE__ */ React.createElement("path", { d: "M6 11v5c3 2 9 2 12 0v-5" })))
+  };
+  function Modal({ title, sub, onClose, wide, children }) {
+    useEffect(() => {
+      const k = (e) => {
+        if (e.key === "Escape") onClose();
+      };
+      document.addEventListener("keydown", k);
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.removeEventListener("keydown", k);
+        document.body.style.overflow = prev;
+      };
+    }, []);
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-scrim", onMouseDown: (e) => {
+      if (e.target === e.currentTarget) onClose();
+    } }, /* @__PURE__ */ React.createElement("div", { className: "fd-modal" + (wide ? " wide" : ""), role: "dialog", "aria-modal": "true", "aria-label": title }, /* @__PURE__ */ React.createElement("div", { className: "fd-modal-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h3" }, title), sub && /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, sub)), /* @__PURE__ */ React.createElement("button", { className: "fd-x", onClick: onClose, "aria-label": "Close" }, "×")), children));
+  }
+  function Confirm({ onConfirm, children, armedLabel = "Click again to confirm", className = "fd-btn danger sm", disabled }) {
+    const [armed, setArmed] = useState(false);
+    useEffect(() => {
+      if (!armed) return;
+      const t = setTimeout(() => setArmed(false), 3500);
+      return () => clearTimeout(t);
+    }, [armed]);
+    return /* @__PURE__ */ React.createElement("button", { className: className + (armed ? " armed" : ""), disabled, onClick: (e) => {
+      e.stopPropagation();
+      if (armed) {
+        setArmed(false);
+        onConfirm();
+      } else setArmed(true);
+    } }, armed ? armedLabel : children);
+  }
+  const Field = ({ label, hint, children, style }) => /* @__PURE__ */ React.createElement("label", { className: "fd-field", style }, /* @__PURE__ */ React.createElement("span", null, label), children, hint && /* @__PURE__ */ React.createElement("small", null, hint));
+  const Tag = ({ tone, dot, children }) => /* @__PURE__ */ React.createElement("span", { className: "fd-tag " + (tone || "") }, dot && /* @__PURE__ */ React.createElement("i", null), children);
+  function Seg({ items, value, onChange }) {
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-seg", role: "group" }, items.map(([id, label, count]) => /* @__PURE__ */ React.createElement("button", { key: id, className: "fd-chip", "aria-pressed": value === id, onClick: () => onChange(id) }, label, typeof count === "number" && /* @__PURE__ */ React.createElement("em", null, count))));
+  }
+  const Search = ({ value, onChange, placeholder }) => /* @__PURE__ */ React.createElement("div", { className: "fd-search" }, ICON.search, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value, onChange: (e) => onChange(e.target.value), placeholder, "aria-label": placeholder }));
+  const Stats = ({ items }) => /* @__PURE__ */ React.createElement("div", { className: "fd-stats" }, items.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "fd-stat " + (s.tone || "") }, /* @__PURE__ */ React.createElement("span", null, s.label), /* @__PURE__ */ React.createElement("b", null, s.value), s.sub && /* @__PURE__ */ React.createElement("small", null, s.sub))));
+  const Empty = ({ title, children }) => /* @__PURE__ */ React.createElement("div", { className: "fd-empty" }, /* @__PURE__ */ React.createElement("b", null, title), children);
+  const Switch = ({ on, onChange, children }) => /* @__PURE__ */ React.createElement("button", { className: "fd-switch", role: "switch", "aria-checked": !!on, onClick: () => onChange(!on) }, /* @__PURE__ */ React.createElement("i", null), children);
+  function useFlash() {
+    const [m, setM] = useState(null);
+    const t = useRef(0);
+    const flash = (text, tone = "ok") => {
+      setM({ text, tone });
+      clearTimeout(t.current);
+      t.current = setTimeout(() => setM(null), 2600);
+    };
+    return [m, flash];
+  }
+  const Flash = ({ m }) => m ? /* @__PURE__ */ React.createElement("div", { className: "fd-msg " + m.tone, role: "status" }, m.text) : null;
+  const FileBtn = ({ file, label = "Open" }) => file ? /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => window.BrialFiles.open(file) }, label) : null;
+  const copy = (t) => window.BrialClipboard && window.BrialClipboard.copy(t);
+  function PhotoUpload({ onUploaded, children, accept = "image/png,image/jpeg,image/webp" }) {
+    const [busy, setBusy] = useState(false);
+    const pick = async (e) => {
+      const f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      const v = window.BrialFiles.validate(f);
+      if (!v.ok) {
+        alert(v.error);
+        return;
+      }
+      if (!/^image\//i.test(f.type || "")) {
+        alert("Please choose an image (JPG, PNG or WebP).");
+        return;
+      }
+      setBusy(true);
+      try {
+        const meta = await window.BrialFiles.put(f, { public: true });
+        onUploaded(meta);
+      } catch (x) {
+        alert("Upload failed: " + (x.message || x));
+      } finally {
+        setBusy(false);
+      }
+    };
+    return /* @__PURE__ */ React.createElement("span", { className: "fd-upload" }, /* @__PURE__ */ React.createElement("span", { className: "fd-btn ghost sm" }, ICON.up, busy ? "Uploading…" : children), /* @__PURE__ */ React.createElement("input", { type: "file", accept, onChange: pick, disabled: busy, "aria-label": children }));
+  }
+  function Shell({ store, pillarKey, meta, nav, active, onNav, onBack, onExit, founderEmail, onLogout, children }) {
+    const visible = store.getPillarActive ? store.getPillarActive(pillarKey) : true;
+    return /* @__PURE__ */ React.createElement("div", { className: "fd", style: { "--accent": meta.accent } }, /* @__PURE__ */ React.createElement("header", { className: "fd-top" }, /* @__PURE__ */ React.createElement("div", { className: "fd-brand" }, ICON.star, /* @__PURE__ */ React.createElement("span", null, "Founder Portal")), /* @__PURE__ */ React.createElement("nav", { className: "fd-crumb", "aria-label": "Breadcrumb" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("button", { onClick: onBack }, "Pillars"), /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("b", null, meta.name)), /* @__PURE__ */ React.createElement("div", { className: "fd-top-r" }, /* @__PURE__ */ React.createElement("span", { className: "fd-email" }, founderEmail), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: onExit }, "Public site"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: onLogout }, "Sign out"))), /* @__PURE__ */ React.createElement("div", { className: "fd-body" }, /* @__PURE__ */ React.createElement("aside", { className: "fd-side", "aria-label": meta.name + " sections" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar-ic" }, ICON[pillarKey] || ICON.grant), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, meta.name), /* @__PURE__ */ React.createElement("small", null, visible ? "Live on the public site" : "Hidden from the public site"))), nav.map((n) => /* @__PURE__ */ React.createElement("button", { key: n.id, className: "fd-nav", "aria-current": active === n.id ? "page" : void 0, onClick: () => onNav(n.id) }, /* @__PURE__ */ React.createElement("span", { className: "fd-nav-ic" }, n.icon), n.label, typeof n.count === "number" && /* @__PURE__ */ React.createElement("span", { className: "fd-count" + (n.hot ? " hot" : "") }, n.count))), /* @__PURE__ */ React.createElement("div", { className: "fd-side-foot" }, /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show pillar on public site"))), /* @__PURE__ */ React.createElement("main", { className: "fd-main" }, children, /* @__PURE__ */ React.createElement("div", { className: "fd-mvis fd-card" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, meta.name), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, visible ? "Live on the public site" : "Hidden from the public site")), /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show")))));
+  }
+  const Head = ({ title, lede, children }) => /* @__PURE__ */ React.createElement("div", { className: "fd-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "fd-h1" }, title), lede && /* @__PURE__ */ React.createElement("p", { className: "fd-lede" }, lede)), children && /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, children));
+  const PILLARS = {
+    worship: { name: "Houses of Worship", grantName: "Houses of Worship", accent: "#C9A961", unit: ["mosque", "mosques"], unitLabel: "Mosques built", get: (s) => s.getWorship(), save: (s, v) => s.saveWorship(v), unitField: "mosques", partner: "Minang Bandung Foundation", project: "e.g. Masjid Al-Ikhlas — construction", note: "the site", firstEntry: "The first mosque", linkMode: "pillar", linkHelp: "Usually the partner foundation's construction or donation page (for example, Minang Bandung's mosque project page)." },
+    foodland: { name: "Food & Land", grantName: "Food & Land", accent: "#A8C97F", unit: ["tree", "trees"], unitLabel: "Trees planted", get: (s) => s.getFoodland(), save: (s, v) => s.saveFoodland(v), unitField: "trees", partner: "", project: "e.g. Trees for Life — olive saplings", firstEntry: "The first five trees", linkMode: "partner", linkHelp: "Usually Zaytoun's Trees for Life page (https://zaytoun.uk/plant-a-tree/)." },
+    water: { name: "Clean Water", grantName: "Clean Water", accent: "#7FB8C9", unit: ["well", "wells"], unitLabel: "Wells built", get: (s) => s.getWater(), save: (s, v) => s.saveWater(v), unitField: "trees", partner: "", project: "e.g. Village well — phase I", firstEntry: "The first well", linkMode: "partner", linkHelp: "The drilling or water partner's programme page. Hide the button while there is no active partner." },
+    hospitals: { name: "Hospitals", grantName: "Hospitals", accent: "#C9847F", unit: ["clinic", "clinics"], unitLabel: "Clinics opened", get: (s) => s.getPillarContent("hospitals"), save: (s, v) => s.savePillarContent("hospitals", v), unitField: "units", partner: "", project: "e.g. Village clinic — phase I", firstEntry: "The first clinic", linkMode: "partner", linkHelp: "The health partner's programme page. Hide the button while there is no active partner." },
+    schools: { name: "Schools", grantName: "Schools", accent: "#C9BC7F", unit: ["school", "schools"], unitLabel: "Schools raised", get: (s) => s.getPillarContent("schools"), save: (s, v) => s.savePillarContent("schools", v), unitField: "units", partner: "", project: "e.g. Primary school — phase I", firstEntry: "The first school", linkMode: "partner", linkHelp: "The education partner's programme page. Hide the button while there is no active partner." },
+    livestock: { name: "Livestock & Enterprise", grantName: "Livestock & Enterprise", accent: "#C9A07F", unit: ["placement", "placements"], unitLabel: "Placements", get: (s) => s.getPillarContent("livestock"), save: (s, v) => s.savePillarContent("livestock", v), unitField: "units", partner: "", project: "e.g. Goat herd — family batch I", firstEntry: "The first herd", linkMode: "partner", linkHelp: "The enterprise partner's programme page. Hide the button while there is no active partner." },
+    infra: { name: "Sustainable Infrastructure", grantName: "Sustainable Infrastructure", accent: "#9FA8B8", unit: ["work", "works"], unitLabel: "Works completed", get: (s) => s.getPillarContent("infra"), save: (s, v) => s.savePillarContent("infra", v), unitField: "units", partner: "", project: "e.g. Footbridge — phase I", firstEntry: "The first bridge", linkMode: "partner", linkHelp: "The works partner's programme page. Hide the button while there is no active partner." },
+    library: { name: "The Library", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
+    scholarships: { name: "Scholarships", accent: "#C9A961" }
+  };
+  function GrantForm({ cfg, initial, onSave, onClose }) {
+    const [f, setF] = useState(() => initial || { partner: cfg.partner || "", project: "", country: "", amount: "", units: "", note: "", date: today() });
+    const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+    const ok = parseFloat(f.amount) > 0 && f.project.trim();
+    return /* @__PURE__ */ React.createElement(Modal, { title: initial ? "Edit grant" : "Record a grant", sub: `Funds sent to a ${cfg.name} partner. Totals feed the public "Total distributed" figure.`, onClose }, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Field, { label: "Project" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.project, onChange: (e) => set("project", e.target.value), placeholder: cfg.project, autoFocus: true })), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Partner" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.partner, onChange: (e) => set("partner", e.target.value), placeholder: "Organisation that carries out the work" })), /* @__PURE__ */ React.createElement(Field, { label: "Country" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.country, onChange: (e) => set("country", e.target.value), placeholder: "e.g. Indonesia" }))), /* @__PURE__ */ React.createElement("div", { className: "fd-grid3" }, /* @__PURE__ */ React.createElement(Field, { label: "Amount (USD)" }, /* @__PURE__ */ React.createElement("div", { className: "fd-money" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: f.amount, onChange: (e) => set("amount", e.target.value), placeholder: "0" }))), /* @__PURE__ */ React.createElement(Field, { label: cfg.unitLabel + " (this grant)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "number", min: "0", value: f.units, onChange: (e) => set("units", e.target.value), placeholder: "0" })), /* @__PURE__ */ React.createElement(Field, { label: "Date" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "date", value: f.date, onChange: (e) => set("date", e.target.value) }))), /* @__PURE__ */ React.createElement(Field, { label: "Note (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.note, onChange: (e) => set("note", e.target.value), placeholder: "Short description" }))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !ok, onClick: () => {
+      onSave(f);
+      onClose();
+    } }, initial ? "Save changes" : "Record grant"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
+  }
+  function GrantsView({ store, cfg }) {
+    const all = store.getPillarGrants().filter((g) => g.pillar === cfg.grantName).slice().sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const live = all.filter((g) => !g.archived);
+    const [filter, setFilter] = useState("live");
+    const [edit, setEdit] = useState(null);
+    const [m, flash] = useFlash();
+    const total = live.reduce((a, g) => a + (Number(g.amount) || 0), 0);
+    const units = live.reduce((a, g) => a + (Number(g.units) || 0), 0);
+    const nations = new Set(live.map((g) => (g.country || "").trim().toLowerCase()).filter(Boolean)).size;
+    const shown = filter === "live" ? live : filter === "archived" ? all.filter((g) => g.archived) : all;
+    const save = (f) => {
+      const payload = { pillar: cfg.grantName, partner: f.partner, project: f.project, country: f.country, amount: parseFloat(f.amount), units: f.units, note: f.note, date: new Date(f.date).toISOString() };
+      if (edit && edit !== "new") {
+        store.updatePillarGrant(edit.id, payload);
+        flash("Grant updated.");
+      } else {
+        store.addPillarGrant(payload);
+        flash("Grant recorded.");
+      }
+    };
+    const G = "minmax(0,2fr) minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr) auto";
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Grants", lede: `Every payment to a ${cfg.name} partner. Archived grants stay on record but leave the public totals.` }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => setEdit("new") }, "Record a grant")), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Total granted", value: money(total) }, { label: cfg.unitLabel, value: units }, { label: "Countries", value: nations }, { label: "Grants on record", value: all.length, sub: all.length - live.length ? `${all.length - live.length} archived` : null }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: setFilter, items: [["live", "Counted", live.length], ["archived", "Archived", all.length - live.length], ["all", "All", all.length]] }), /* @__PURE__ */ React.createElement("div", { style: { marginLeft: "auto" } }, /* @__PURE__ */ React.createElement(Flash, { m }))), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Project"), /* @__PURE__ */ React.createElement("div", null, "Partner"), /* @__PURE__ */ React.createElement("div", null, "Country"), /* @__PURE__ */ React.createElement("div", null, "Amount"), /* @__PURE__ */ React.createElement("div", null, "Reference · date"), /* @__PURE__ */ React.createElement("div", null)), shown.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "No grants here yet." }, "Record the first grant to start this pillar's ledger.") : shown.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, className: "fd-tr" + (g.archived ? " dim" : ""), style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, g.project || "Untitled grant"), g.note && /* @__PURE__ */ React.createElement("small", null, g.note), Number(g.units) > 0 && /* @__PURE__ */ React.createElement("small", { style: { color: cfg.accent } }, g.units, " ", plural(g.units, cfg.unit[0], cfg.unit[1])), g.archived && /* @__PURE__ */ React.createElement(Tag, null, "Archived")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Partner" }, g.partner || "—"), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Country" }, g.country || "—"), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Amount" }, /* @__PURE__ */ React.createElement("span", { className: "num" }, money(g.amount))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Reference" }, /* @__PURE__ */ React.createElement("span", { className: "fd-mono" }, g.txRef || "—"), /* @__PURE__ */ React.createElement("small", null, fdate(g.date))), /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setEdit({ ...g, initial: { partner: g.partner || "", project: g.project || "", country: g.country || "", amount: String(g.amount || ""), units: String(g.units || ""), note: g.note || "", date: g.date ? String(g.date).slice(0, 10) : today() } }) }, "Edit"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => store.updatePillarGrant(g.id, { archived: !g.archived }) }, g.archived ? "Restore" : "Archive"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => store.deletePillarGrant(g.id) }, "Delete")))))), edit && /* @__PURE__ */ React.createElement(GrantForm, { cfg, initial: edit === "new" ? null : edit.initial, onSave: save, onClose: () => setEdit(null) }));
+  }
+  function ProgrammeView({ store, cfg }) {
+    var _a;
+    const [f, setF] = useState(() => cfg.get(store));
+    const [saved, setSaved] = useState(() => JSON.stringify(cfg.get(store)));
+    const [busy, setBusy] = useState(null);
+    const [m, flash] = useFlash();
+    const dirty = JSON.stringify(f) !== saved;
+    const set = (patch) => setF((p) => ({ ...p, ...patch }));
+    const setA = (id, patch) => setF((p) => ({ ...p, articles: p.articles.map((a) => a.id === id ? { ...a, ...patch } : a) }));
+    const add = () => setF((p) => ({ ...p, articles: [{ id: "note-" + Date.now(), date: today(), title: "", body: "", partner: "", link: "", photo: null, draft: true }, ...p.articles || []] }));
+    const del = (id) => setF((p) => ({ ...p, articles: p.articles.filter((a) => a.id !== id) }));
+    const save = () => {
+      cfg.save(store, f);
+      setSaved(JSON.stringify(f));
+      flash("Saved — the public page is updated.");
+    };
+    const unitsFromGrants = store.getPillarUnits ? store.getPillarUnits(cfg.grantName) : 0;
+    useEffect(() => {
+      const h = (e) => {
+        if (dirty) {
+          e.preventDefault();
+          e.returnValue = "";
+        }
+      };
+      window.addEventListener("beforeunload", h);
+      return () => window.removeEventListener("beforeunload", h);
+    }, [dirty]);
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Programme page", lede: `What visitors read on the public ${cfg.name} page: the summary at the top and the journal below it.` }), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Page summary")), /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Location line" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.location || "", onChange: (e) => set({ location: e.target.value }), placeholder: "Village · District — Country" })), /* @__PURE__ */ React.createElement(Field, { label: "Partner line" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.partnerLine || "", onChange: (e) => set({ partnerLine: e.target.value }), placeholder: "In partnership with …" }))), /* @__PURE__ */ React.createElement(Field, { label: "Introduction", hint: "How the programme works, in two or three sentences." }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: f.intro || "", onChange: (e) => set({ intro: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: cfg.unitLabel + " shown on the page", hint: unitsFromGrants > 0 ? `The page currently shows ${unitsFromGrants}, counted from your grants. This number is only used when no grant has a count.` : "Used until a grant records a count.", style: { maxWidth: 260 } }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "number", min: "0", value: (_a = f[cfg.unitField]) != null ? _a : 0, onChange: (e) => set({ [cfg.unitField]: Math.max(0, parseInt(e.target.value || "0", 10)) }) })))), /* @__PURE__ */ React.createElement("div", { className: "fd-head", style: { marginTop: 32, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h3" }, "Journal"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Field notes with photos. Drafts stay hidden until you publish them.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: add }, "Add entry")), (f.articles || []).length === 0 && /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement(Empty, { title: "No journal entries yet." }, "Add the first word from ", cfg.note || "the field", ".")), (f.articles || []).map((a) => {
+      const img = a.photo && (a.photo.url || a.photo.path) ? a.photo.url || window.brialSupabase.publicUrl(a.photo.path) : null;
+      return /* @__PURE__ */ React.createElement("div", { className: "fd-card", key: a.id }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement(Tag, { tone: a.draft ? "" : "ok", dot: true }, a.draft ? "Draft" : "Published"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn sm " + (a.draft ? "ok" : "ghost"), onClick: () => setA(a.id, { draft: !a.draft }) }, a.draft ? "Publish" : "Move to drafts"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => del(a.id) }, "Delete entry"))), /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("div", { className: "fd-grid2", style: { gridTemplateColumns: "minmax(0,1fr) 180px" } }, /* @__PURE__ */ React.createElement(Field, { label: "Title" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: a.title || "", onChange: (e) => setA(a.id, { title: e.target.value }), placeholder: cfg.firstEntry })), /* @__PURE__ */ React.createElement(Field, { label: "Date" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "date", value: a.date && a.date.length >= 10 ? a.date.slice(0, 10) : "", onChange: (e) => setA(a.id, { date: e.target.value }) }))), /* @__PURE__ */ React.createElement(Field, { label: "Story" }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: a.body || "", onChange: (e) => setA(a.id, { body: e.target.value }) })), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Partner (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: a.partner || "", onChange: (e) => setA(a.id, { partner: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: "Link (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: a.link || "", onChange: (e) => setA(a.id, { link: e.target.value }), placeholder: "https://…" }))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, img && /* @__PURE__ */ React.createElement(Img, { className: "fd-thumb", src: img }), /* @__PURE__ */ React.createElement(PhotoUpload, { onUploaded: (meta) => setA(a.id, { photo: { url: meta.url, path: meta.path, name: meta.name } }) }, img ? "Replace photo" : "Add photo"), img && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setA(a.id, { photo: null }) }, "Remove photo"))));
+    }), (dirty || m) && /* @__PURE__ */ React.createElement("div", { className: "fd-savebar" }, /* @__PURE__ */ React.createElement("span", { style: { color: dirty ? "var(--amber)" : "var(--sage)", fontWeight: 600 } }, dirty ? "You have unsaved changes" : m && m.text), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, dirty && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet", onClick: () => setF(JSON.parse(saved)) }, "Discard"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !dirty, onClick: save }, "Save and publish"))));
+  }
+  function LinkView({ store, pillarKey, cfg }) {
+    const stored = store.getPillarLink(pillarKey) || "";
+    const [url, setUrl] = useState(stored);
+    const hidden = store.getPillarLinkHidden ? store.getPillarLinkHidden(pillarKey) : false;
+    const [m, flash] = useFlash();
+    const valid = /^https?:\/\/\S+\.\S+/i.test(url.trim());
+    const dirty = url.trim() !== stored;
+    const pillarMode = cfg.linkMode === "pillar";
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: pillarMode ? "Pillar link" : "Partner button", lede: pillarMode ? `Where visitors go when they choose ${cfg.name} on the public site.` : `The "Learn more about our partner" button on the public ${cfg.name} page.` }), /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { maxWidth: 760 } }, /* @__PURE__ */ React.createElement(Field, { label: "Destination address", hint: cfg.linkHelp }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: url, onChange: (e) => setUrl(e.target.value), placeholder: "https://", spellCheck: false })), url.trim() && !valid && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 10 } }, "Use a full address that starts with https://"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !dirty || !valid, onClick: () => {
+      store.savePillarLink(pillarKey, url.trim());
+      flash("Link saved.");
+    } }, "Save link"), valid && /* @__PURE__ */ React.createElement("a", { className: "fd-btn ghost", href: url.trim(), target: "_blank", rel: "noopener noreferrer" }, "Test link ", ICON.ext), /* @__PURE__ */ React.createElement(Flash, { m }))), /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { maxWidth: 760 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, hidden ? "The button is hidden" : "The button is visible"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, hidden ? "Visitors don't see a link. Turn it back on when you have a destination." : "Hide it while you are between partners.")), /* @__PURE__ */ React.createElement(Switch, { on: !hidden, onChange: (v) => store.savePillarLinkHidden && store.savePillarLinkHidden(pillarKey, !v) }, hidden ? "Hidden" : "Visible")), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Currently saved: ", /* @__PURE__ */ React.createElement("span", { className: "fd-mono" }, stored || "not set"))));
+  }
+  const BLANK_BOOK = () => ({ id: "book-" + Date.now().toString(36), lang: "", langCode: "", title: "", subtitle: "", cover: "", link: "", getLabel: "Get the e-book", supportNote: "A portion of every sale supports Brial Endowment scholarships.", accent: "#C9A961", desc: "", points: [] });
+  function BookForm({ book, onSave, onClose }) {
+    const [b, setB] = useState(book);
+    const set = (k, v) => setB((p) => ({ ...p, [k]: v }));
+    return /* @__PURE__ */ React.createElement(Modal, { wide: true, title: book.title ? "Edit book" : "Add a book", sub: "Shown in the e-book catalogue on the public site.", onClose }, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, alignItems: "center" } }, b.cover ? /* @__PURE__ */ React.createElement(Img, { className: "fd-cover", src: b.cover, fallback: /* @__PURE__ */ React.createElement("div", { className: "fd-cover" }, "Cover") }) : /* @__PURE__ */ React.createElement("div", { className: "fd-cover" }, "No cover"), /* @__PURE__ */ React.createElement(PhotoUpload, { onUploaded: (meta) => set("cover", meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : "")) }, b.cover ? "Replace cover" : "Upload cover")), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Title" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: b.title, onChange: (e) => set("title", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Subtitle" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: b.subtitle, onChange: (e) => set("subtitle", e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "fd-grid3" }, /* @__PURE__ */ React.createElement(Field, { label: "Language" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: b.lang, onChange: (e) => set("lang", e.target.value), placeholder: "Bahasa Indonesia" })), /* @__PURE__ */ React.createElement(Field, { label: "Language code" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: b.langCode, onChange: (e) => set("langCode", e.target.value.toUpperCase().slice(0, 3)), placeholder: "ID" })), /* @__PURE__ */ React.createElement(Field, { label: "Accent colour" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "color", value: b.accent || "#C9A961", onChange: (e) => set("accent", e.target.value), style: { height: 42, padding: 4 } }))), /* @__PURE__ */ React.createElement(Field, { label: "Description" }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: b.desc, onChange: (e) => set("desc", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Key points", hint: "One per line." }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { minHeight: 90 }, value: (b.points || []).join("\n"), onChange: (e) => set("points", e.target.value.split("\n")) })), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Store link" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: b.link, onChange: (e) => set("link", e.target.value), placeholder: "https://lynk.id/…" })), /* @__PURE__ */ React.createElement(Field, { label: "Button label" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: b.getLabel, onChange: (e) => set("getLabel", e.target.value) }))), /* @__PURE__ */ React.createElement(Field, { label: "Support note" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: b.supportNote, onChange: (e) => set("supportNote", e.target.value) }))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !b.title.trim(), onClick: () => {
+      onSave({ ...b, points: (b.points || []).filter((p) => p.trim()) });
+      onClose();
+    } }, "Save book"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
+  }
+  function CatalogView({ store }) {
+    const books = store.listEbooks();
+    const [edit, setEdit] = useState(null);
+    const [m, flash] = useFlash();
+    const commit = (next, msg) => {
+      store.saveEbooks(next);
+      flash(msg);
+    };
+    const move = (i, d) => {
+      const j = i + d;
+      if (j < 0 || j >= books.length) return;
+      const n = books.slice();
+      [n[i], n[j]] = [n[j], n[i]];
+      commit(n, "Order saved.");
+    };
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Catalogue", lede: "The e-books listed on the public Library page, in this order." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => setEdit(BLANK_BOOK()) }, "Add a book")), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Flash, { m })), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, books.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "The catalogue is empty." }, "Add your first book.") : books.map((b, i) => /* @__PURE__ */ React.createElement("div", { key: b.id || i, className: "fd-tr", style: { gridTemplateColumns: "auto minmax(0,1fr) auto" } }, b.cover ? /* @__PURE__ */ React.createElement(Img, { className: "fd-cover", src: b.cover, fallback: /* @__PURE__ */ React.createElement("div", { className: "fd-cover" }, "Cover") }) : /* @__PURE__ */ React.createElement("div", { className: "fd-cover" }, "No cover"), /* @__PURE__ */ React.createElement("div", { className: "fd-td" }, /* @__PURE__ */ React.createElement("b", null, b.title || "Untitled"), /* @__PURE__ */ React.createElement("small", null, b.subtitle), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 6 } }, (b.langCode || b.lang) && /* @__PURE__ */ React.createElement(Tag, null, b.langCode || b.lang), b.link ? /* @__PURE__ */ React.createElement("a", { className: "fd-mono", href: b.link, target: "_blank", rel: "noopener noreferrer" }, b.link.replace(/^https?:\/\//, "")) : /* @__PURE__ */ React.createElement(Tag, { tone: "warn" }, "No store link"))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === 0, onClick: () => move(i, -1), "aria-label": "Move up" }, "↑"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === books.length - 1, onClick: () => move(i, 1), "aria-label": "Move down" }, "↓"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setEdit(b) }, "Edit"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => commit(books.filter((_, k) => k !== i), "Book removed.") }, "Remove"))))), edit && /* @__PURE__ */ React.createElement(BookForm, { book: edit, onClose: () => setEdit(null), onSave: (nb) => {
+      const exists = books.some((x) => x.id === nb.id);
+      commit(exists ? books.map((x) => x.id === nb.id ? nb : x) : [...books, nb], exists ? "Book updated." : "Book added.");
+    } }));
+  }
+  function SalesView({ store }) {
+    const sales = store.listLibrarySales();
+    const books = store.listEbooks();
+    const [open, setOpen] = useState(false);
+    const [f, setF] = useState({ bookId: books[0] ? books[0].id : "", qty: "1", amount: "", note: "", date: today() });
+    const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
+    const total = sales.reduce((a, s) => a + (Number(s.amount) || 0), 0);
+    const copies = sales.reduce((a, s) => a + (Number(s.qty) || 1), 0);
+    const save = () => {
+      const b = books.find((x) => x.id === f.bookId);
+      store.addLibrarySale({ bookId: f.bookId, title: b ? b.title : "Library edition", lang: b ? b.langCode || b.lang || "" : "", qty: f.qty, amount: parseFloat(f.amount), note: f.note, date: new Date(f.date).toISOString() });
+      setF({ bookId: books[0] ? books[0].id : "", qty: "1", amount: "", note: "", date: today() });
+      setOpen(false);
+    };
+    const G = "minmax(0,2fr) 70px minmax(0,.8fr) minmax(0,1fr) auto";
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Sales", lede: "Income from book sales. Each sale enters the public ledger as a verified gift." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => setOpen(true), disabled: !books.length }, "Record a sale")), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Total income", value: money(total) }, { label: "Copies sold", value: copies }, { label: "Sales recorded", value: sales.length }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Edition"), /* @__PURE__ */ React.createElement("div", null, "Copies"), /* @__PURE__ */ React.createElement("div", null, "Income"), /* @__PURE__ */ React.createElement("div", null, "Reference · date"), /* @__PURE__ */ React.createElement("div", null)), sales.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "No sales recorded yet." }) : sales.map((s) => /* @__PURE__ */ React.createElement("div", { key: s.id, className: "fd-tr", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, s.title), s.lang && /* @__PURE__ */ React.createElement("small", null, s.lang), s.note && /* @__PURE__ */ React.createElement("small", null, s.note)), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Copies" }, s.qty || 1), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Income" }, /* @__PURE__ */ React.createElement("span", { className: "num" }, money(s.amount))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Reference" }, /* @__PURE__ */ React.createElement("span", { className: "fd-mono" }, s.txRef || "—"), /* @__PURE__ */ React.createElement("small", null, fdate(s.date))), /* @__PURE__ */ React.createElement("div", { className: "fd-td" }, /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => store.deleteLibrarySale(s.id) }, "Delete"))))), open && /* @__PURE__ */ React.createElement(Modal, { title: "Record a sale", onClose: () => setOpen(false) }, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Field, { label: "Edition" }, /* @__PURE__ */ React.createElement("select", { className: "fd-input", value: f.bookId, onChange: (e) => set("bookId", e.target.value) }, books.map((b) => /* @__PURE__ */ React.createElement("option", { key: b.id, value: b.id }, b.title, b.langCode || b.lang ? ` (${b.langCode || b.lang})` : "")))), /* @__PURE__ */ React.createElement("div", { className: "fd-grid3" }, /* @__PURE__ */ React.createElement(Field, { label: "Copies" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "number", min: "1", value: f.qty, onChange: (e) => set("qty", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Income (USD)" }, /* @__PURE__ */ React.createElement("div", { className: "fd-money" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: f.amount, onChange: (e) => set("amount", e.target.value) }))), /* @__PURE__ */ React.createElement(Field, { label: "Date" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "date", value: f.date, onChange: (e) => set("date", e.target.value) }))), /* @__PURE__ */ React.createElement(Field, { label: "Note (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.note, onChange: (e) => set("note", e.target.value), placeholder: "e.g. Lynk payout, October" }))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !(parseFloat(f.amount) > 0) || !f.bookId, onClick: save }, "Record sale"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setOpen(false) }, "Cancel"))));
+  }
+  const STAGE = {
+    registered: ["", "Draft"],
+    submitted: ["gold", "To review"],
+    "interview-scheduled": ["sky", "Interview booked"],
+    "interview-done": ["warn", "Decision due"],
+    accepted: ["ok", "Granted"],
+    rejected: ["bad", "Declined"]
+  };
+  const SCH = { active: ["ok", "Active"], suspended: ["warn", "Paused"], revoked: ["bad", "Revoked"], graduated: ["gold", "Graduated"] };
+  const StageTag = ({ s }) => {
+    const m = STAGE[s] || ["", s];
+    return /* @__PURE__ */ React.createElement(Tag, { tone: m[0], dot: true }, m[1]);
+  };
+  const Avatar = ({ app, size }) => {
+    var _a;
+    const per = ((_a = app.profile) == null ? void 0 : _a.personal) || {};
+    const u = fileUrl(per.showcasePhoto || (isImage(per.photoFile) ? per.photoFile : null));
+    const st = size ? { width: size, height: size * 1.25 } : null;
+    const ph = /* @__PURE__ */ React.createElement("div", { className: "fd-avatar", style: st }, (app.name || "?").charAt(0));
+    return u ? /* @__PURE__ */ React.createElement(Img, { className: "fd-avatar", style: st, src: u, fallback: ph }) : ph;
+  };
+  const Row = ({ label, value, wide }) => /* @__PURE__ */ React.createElement("div", { className: wide ? "wide" : "" }, /* @__PURE__ */ React.createElement("dt", null, label), /* @__PURE__ */ React.createElement("dd", { className: value ? "" : "none" }, value || "Not provided"));
+  function StagePanel({ app, store }) {
+    const [date, setDate] = useState(() => new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10));
+    const [time, setTime] = useState("14:30");
+    const [link, setLink] = useState(app.meetingLink || "");
+    const first = titleCase((app.name || "").split(" ")[0]);
+    const decide = (app.status === "submitted" || app.status === "interview-scheduled" || app.status === "interview-done") && /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line)" } }, /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn primary", armedLabel: "Click again to grant", onConfirm: () => store.acceptApplication(app.id) }, "Grant scholarship"), /* @__PURE__ */ React.createElement(Confirm, { armedLabel: "Click again to decline", onConfirm: () => store.rejectApplication(app.id) }, "Decline"));
+    if (app.status === "registered") return /* @__PURE__ */ React.createElement("div", { className: "fd-msg info" }, "This applicant has an account but hasn't submitted the application yet.");
+    if (app.status === "rejected") return /* @__PURE__ */ React.createElement("div", { className: "fd-msg info" }, "Declined on ", fdate(app.rejectedAt), ".");
+    if (app.status === "accepted") return null;
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-stage" }, app.status === "submitted" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-stage-k" }, "Next step"), /* @__PURE__ */ React.createElement("h3", { className: "fd-h3", style: { marginTop: 4 } }, "Book an interview"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, first, " will see the time, the meeting link and a join button in the portal."), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement(Field, { label: "Date" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "date", value: date, onChange: (e) => setDate(e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Time (your time zone)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "time", value: time, onChange: (e) => setTime(e.target.value) }))), /* @__PURE__ */ React.createElement(Field, { label: "Meeting link", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "url", value: link, onChange: (e) => setLink(e.target.value), placeholder: "https://meet.google.com/… or https://zoom.us/j/…" })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !link.trim(), onClick: () => store.scheduleInterview(app.id, (/* @__PURE__ */ new Date(`${date}T${time}:00`)).toISOString(), link.trim()) }, "Send invitation"), !link.trim() && /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { margin: 0 } }, "Add the meeting link first."))), app.status === "interview-scheduled" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-stage-k" }, "Interview booked"), /* @__PURE__ */ React.createElement("h3", { className: "fd-h3", style: { marginTop: 4 } }, fdatetime(app.interviewAt)), app.meetingLink && /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("a", { className: "fd-btn ghost sm", href: /^https?:\/\//i.test(app.meetingLink) ? app.meetingLink : "https://" + app.meetingLink, target: "_blank", rel: "noopener noreferrer" }, "Open meeting ", ICON.ext), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => copy(app.meetingLink) }, "Copy link")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => store.markInterviewDone(app.id) }, "Mark interview as done"))), app.status === "interview-done" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-stage-k" }, "Decision due"), /* @__PURE__ */ React.createElement("h3", { className: "fd-h3", style: { marginTop: 4 } }, "Interviewed on ", fdate(app.interviewDoneAt)), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Record your decision below.")), decide);
+  }
+  function ScholarControls({ app, store }) {
+    const [action, setAction] = useState(null);
+    const [reason, setReason] = useState("");
+    const status = app.scholarStatus || "active";
+    const ipk = store.cumulativeIPK(app);
+    const apply = () => {
+      if (!reason.trim()) return;
+      if (action === "suspend") store.suspendScholarship(app.id, reason.trim());
+      if (action === "revoke") store.revokeScholarship(app.id, reason.trim());
+      if (action === "reactivate") store.reactivateScholarship(app.id, reason.trim());
+      setAction(null);
+      setReason("");
+    };
+    const copyT = { suspend: ["Pause scholarship", "The scholar sees your reason. No payments are made while paused.", "e.g. GPA for semester 3 fell below 2.75 — please explain before we continue."], revoke: ["End scholarship permanently", "The record is kept, but no further payments are made. Use only when reinstatement is not expected.", "e.g. Breach of the code of conduct: …"], reactivate: ["Reactivate scholarship", "The scholar can upload bills and transcripts again.", "e.g. Semester 4 GPA recovered to 3.20."] };
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Scholarship"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, app.scholarId, " · ", app.cohort, ipk ? ` · cumulative GPA ${ipk.value.toFixed(2)}` : "")), /* @__PURE__ */ React.createElement(Tag, { tone: (SCH[status] || SCH.active)[0], dot: true }, (SCH[status] || SCH.active)[1])), ipk && ipk.value < 2.75 && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginBottom: 12 } }, "Cumulative GPA is below the 2.75 minimum."), !action && status !== "graduated" && status !== "revoked" && /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, status === "active" && /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setAction("suspend") }, "Pause"), status === "suspended" && /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary sm", onClick: () => setAction("reactivate") }, "Reactivate"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn danger sm", onClick: () => setAction("revoke") }, "End permanently")), status === "revoked" && /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "This scholarship has ended. No further actions are available."), action && /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, copyT[action][0]), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, copyT[action][1])), /* @__PURE__ */ React.createElement(Field, { label: "Reason (shown to the scholar)" }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { minHeight: 80 }, value: reason, onChange: (e) => setReason(e.target.value), placeholder: copyT[action][2] })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn " + (action === "revoke" ? "danger" : "primary"), disabled: !reason.trim(), onClick: apply }, "Confirm"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => {
+      setAction(null);
+      setReason("");
+    } }, "Cancel"))), (app.statusHistory || []).length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, app.statusHistory.slice().reverse().map((h, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "fd-file" }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, fdate(h.at)), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, h.reason)), /* @__PURE__ */ React.createElement(Tag, { tone: (SCH[h.status] || ["", ""])[0] }, (SCH[h.status] || ["", h.status])[1])))));
+  }
+  function ChangeRequests({ app, store }) {
+    const pending = (app.changeRequests || []).filter((r) => r.status === "pending");
+    const [rej, setRej] = useState(null);
+    const [reason, setReason] = useState("");
+    if (!pending.length) return null;
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { borderColor: "rgba(231,183,106,.4)" } }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Correction requests"), /* @__PURE__ */ React.createElement(Tag, { tone: "warn" }, pending.length, " waiting")), pending.map((r) => /* @__PURE__ */ React.createElement("div", { key: r.id, className: "fd-file", style: { alignItems: "flex-start", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0, flex: "1 1 240px" } }, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, r.label), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, r.type === "password" ? "New password (hidden)" : /* @__PURE__ */ React.createElement(React.Fragment, null, "New value: ", /* @__PURE__ */ React.createElement("span", { style: { color: "var(--text)" } }, r.value))), /* @__PURE__ */ React.createElement("small", { className: "fd-sub" }, "Requested ", fdate(r.requestedAt))), rej === r.id ? /* @__PURE__ */ React.createElement("div", { className: "fd-form", style: { flex: "1 1 100%" } }, /* @__PURE__ */ React.createElement(Field, { label: "Reason (optional, shown to the scholar)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: reason, onChange: (e) => setReason(e.target.value) })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn danger sm", onClick: () => {
+      store.rejectChange(app.id, r.id, reason);
+      setRej(null);
+      setReason("");
+    } }, "Decline request"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setRej(null) }, "Cancel"))) : /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ok sm", onClick: async () => {
+      const res = await store.approveChange(app.id, r.id);
+      if (res && res.error) alert(res.error);
+    } }, "Approve"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => {
+      setRej(r.id);
+      setReason("");
+    } }, "Decline")))));
+  }
+  function ProfileBlock({ app }) {
+    const p = app.profile || {}, per = p.personal || {}, hs = p.highSchool || {}, u = p.university || {};
+    const lvl = window.BrialStore.DEGREE_LEVELS && window.BrialStore.DEGREE_LEVELS[u.degreeLevel];
+    const docs = [["Biometric photo", per.photoFile], ["Report card", hs.raporFile], ["Student card", u.studentCardFile]];
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("details", { className: "fd-details", open: true }, /* @__PURE__ */ React.createElement("summary", null, "Personal details"), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dl", { className: "fd-dl" }, /* @__PURE__ */ React.createElement(Row, { label: "Full name", value: titleCase(per.fullName || app.name) }), /* @__PURE__ */ React.createElement(Row, { label: "Date of birth", value: per.dateOfBirth ? fdate(per.dateOfBirth) : "" }), /* @__PURE__ */ React.createElement(Row, { label: "Phone", value: per.phone }), /* @__PURE__ */ React.createElement(Row, { label: "Country", value: titleCase(per.country) }), /* @__PURE__ */ React.createElement(Row, { label: "National ID", value: per.nationalId }), /* @__PURE__ */ React.createElement(Row, { label: "Email", value: app.email }), /* @__PURE__ */ React.createElement(Row, { label: "Address", value: per.address, wide: true })))), /* @__PURE__ */ React.createElement("details", { className: "fd-details" }, /* @__PURE__ */ React.createElement("summary", null, "Education"), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dl", { className: "fd-dl" }, /* @__PURE__ */ React.createElement(Row, { label: "University", value: instCase(u.name) }), /* @__PURE__ */ React.createElement(Row, { label: "Study programme", value: instCase(u.program) }), /* @__PURE__ */ React.createElement(Row, { label: "Level", value: lvl ? lvl.label : u.degreeLevel }), /* @__PURE__ */ React.createElement(Row, { label: "Current semester", value: u.currentSemester }), /* @__PURE__ */ React.createElement(Row, { label: "GPA at application", value: u.currentGPA }), /* @__PURE__ */ React.createElement(Row, { label: "Tuition per semester", value: u.uktPerSemester ? money(u.uktPerSemester) : "" }), /* @__PURE__ */ React.createElement(Row, { label: "High school", value: instCase(hs.schoolName) }), /* @__PURE__ */ React.createElement(Row, { label: "Graduation year", value: hs.graduationYear }), /* @__PURE__ */ React.createElement(Row, { label: "Final grade", value: hs.finalGPA })), Array.isArray(hs.subjects) && hs.subjects.length > 0 && /* @__PURE__ */ React.createElement("dl", { className: "fd-dl", style: { marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" } }, hs.subjects.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i }, /* @__PURE__ */ React.createElement("dt", null, s.name || "Subject"), /* @__PURE__ */ React.createElement("dd", null, s.grade || "—")))))), (p.essay || "").trim() && /* @__PURE__ */ React.createElement("details", { className: "fd-details" }, /* @__PURE__ */ React.createElement("summary", null, "Essay"), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { style: { margin: 0, whiteSpace: "pre-wrap", fontFamily: "'Cormorant Garamond',serif", fontSize: 18, lineHeight: 1.6, color: "var(--muted)", maxWidth: "70ch" } }, p.essay))), /* @__PURE__ */ React.createElement("details", { className: "fd-details", open: true }, /* @__PURE__ */ React.createElement("summary", null, "Documents"), /* @__PURE__ */ React.createElement("div", null, docs.map(([l, f]) => /* @__PURE__ */ React.createElement("div", { key: l, className: "fd-file" }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { margin: 0 } }, l), /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 500, overflowWrap: "anywhere" } }, f ? f.name || f.filename : "Not provided")), /* @__PURE__ */ React.createElement(FileBtn, { file: f }))))));
+  }
+  function SemesterSnapshot({ app }) {
+    const sems = app.semesters || [];
+    if (!sems.length) return null;
+    const G = "minmax(0,1fr) minmax(0,1.3fr) minmax(0,1.1fr) auto";
+    const tone = { completed: "ok", paid: "sky", "bill-uploaded": "warn", current: "gold", upcoming: "" };
+    const lab = { completed: "Complete", paid: "Paid", "bill-uploaded": "Bill in review", current: "Bill due", upcoming: "Upcoming" };
+    return /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2", style: { margin: "0 0 10px" } }, "Semesters"), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Semester"), /* @__PURE__ */ React.createElement("div", null, "Tuition bill"), /* @__PURE__ */ React.createElement("div", null, "Transcript"), /* @__PURE__ */ React.createElement("div", null, "Status")), sems.map((s) => /* @__PURE__ */ React.createElement("div", { key: s.id, className: "fd-tr", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, s.label)), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Tuition bill" }, s.bill ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", style: { padding: 0 }, onClick: () => window.BrialFiles.open(s.bill) }, /* @__PURE__ */ React.createElement("span", { className: "num", style: { fontSize: 17 } }, money(s.bill.amount))), /* @__PURE__ */ React.createElement("small", null, s.paidAt ? "Paid " + fdate(s.paidAt) : "Sent " + fdate(s.bill.uploadedAt))) : /* @__PURE__ */ React.createElement("small", null, "—")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Transcript" }, s.ip ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", style: { padding: 0 }, onClick: () => window.BrialFiles.open(s.ip) }, "GPA ", s.ip.gpa), parseFloat(s.ip.gpa) < 2.75 && /* @__PURE__ */ React.createElement("small", { style: { color: "var(--rose)" } }, "Below 2.75")) : /* @__PURE__ */ React.createElement("small", null, "—")), /* @__PURE__ */ React.createElement("div", { className: "fd-td" }, /* @__PURE__ */ React.createElement(Tag, { tone: tone[s.status] }, lab[s.status] || s.status))))));
+  }
+  function ApplicantDetail({ app, store, onBack }) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const [notes, setNotes] = useState(app.notes || "");
+    const [m, flash] = useFlash();
+    useEffect(() => {
+      setNotes(app.notes || "");
+    }, [app.id]);
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-detail" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet fd-back", onClick: onBack }, "← All applications"), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-dhead" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, minWidth: 0 } }, /* @__PURE__ */ React.createElement(Avatar, { app }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h3", style: { fontSize: 28 } }, titleCase(app.name)), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, instCase((_b = (_a = app.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.program), ((_d = (_c = app.profile) == null ? void 0 : _c.university) == null ? void 0 : _d.name) ? ", " + instCase(app.profile.university.name) : ""), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, app.id, " · ", app.submittedAt ? "Submitted " + fdate(app.submittedAt) : "Signed up " + fdate(app.signedUpAt)))), /* @__PURE__ */ React.createElement(StageTag, { s: app.status })), /* @__PURE__ */ React.createElement("dl", { className: "fd-dl", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement(Row, { label: "Email", value: app.email }), /* @__PURE__ */ React.createElement(Row, { label: "Country", value: titleCase((_f = (_e = app.profile) == null ? void 0 : _e.personal) == null ? void 0 : _f.country) }), /* @__PURE__ */ React.createElement(Row, { label: "GPA at application", value: (_h = (_g = app.profile) == null ? void 0 : _g.university) == null ? void 0 : _h.currentGPA }), /* @__PURE__ */ React.createElement(Row, { label: "Interview", value: app.interviewAt ? fdatetime(app.interviewAt) : "Not booked" }))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement(StagePanel, { app, store })), app.status === "accepted" && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement(ScholarControls, { app, store })), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement(ChangeRequests, { app, store })), app.status === "accepted" && /* @__PURE__ */ React.createElement(SemesterSnapshot, { app }), app.graduation && /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Graduation documents"), /* @__PURE__ */ React.createElement(Tag, { tone: "gold" }, fdate(app.graduation.graduatedAt))), [["Diploma (ijazah)", app.graduation.ijazahFile], ["Final transcript", app.graduation.transkripFile]].map(([l, f]) => /* @__PURE__ */ React.createElement("div", { key: l, className: "fd-file" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { margin: 0 } }, l), /* @__PURE__ */ React.createElement("div", null, f ? f.name || f.filename : "Not provided")), /* @__PURE__ */ React.createElement(FileBtn, { file: f })))), /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Private notes"), /* @__PURE__ */ React.createElement(Flash, { m })), /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: notes, onChange: (e) => setNotes(e.target.value), onBlur: () => {
+      if (notes !== (app.notes || "")) {
+        store.saveNotes(app.id, notes);
+        flash("Notes saved.");
+      }
+    }, placeholder: "Observations, recommendation, follow-up questions. Only you can see this." }), /* @__PURE__ */ React.createElement("small", { className: "fd-sub" }, "Saves when you click outside the box.")), /* @__PURE__ */ React.createElement(ProfileBlock, { app }));
+  }
+  function ApplicationsView({ store, apps, focus, clearFocus }) {
+    const [filter, setFilter] = useState("todo");
+    const [q, setQ] = useState("");
+    const [sel, setSel] = useState(null);
+    useEffect(() => {
+      if (focus) {
+        setFilter("all");
+        setSel(focus);
+        clearFocus && clearFocus();
+      }
+    }, [focus]);
+    const live = apps.filter((a) => a.status !== "registered");
+    const count = (s) => apps.filter((a) => a.status === s).length;
+    const items = [["todo", "To do", live.filter((a) => !["accepted", "rejected"].includes(a.status)).length], ["submitted", "To review", count("submitted")], ["interview-scheduled", "Interview booked", count("interview-scheduled")], ["interview-done", "Decision due", count("interview-done")], ["accepted", "Granted", count("accepted")], ["rejected", "Declined", count("rejected")], ["registered", "Drafts", count("registered")], ["all", "All", apps.length]];
+    const list = useMemo(() => {
+      const s = q.trim().toLowerCase();
+      return apps.filter((a) => filter === "all" ? true : filter === "todo" ? a.status !== "registered" && !["accepted", "rejected"].includes(a.status) : a.status === filter).filter((a) => {
+        var _a, _b;
+        return !s || [a.name, a.email, a.id, (_b = (_a = a.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.name].some((x) => (x || "").toLowerCase().includes(s));
+      }).sort((a, b) => new Date(b.submittedAt || b.signedUpAt || 0) - new Date(a.submittedAt || a.signedUpAt || 0));
+    }, [apps, filter, q]);
+    const selected = apps.find((a) => a.id === sel) || null;
+    const desktopSel = selected || (typeof window !== "undefined" && window.innerWidth > 900 ? list[0] : null);
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Applications", lede: "Review applicants, book interviews and record decisions." }), /* @__PURE__ */ React.createElement("div", { className: "fd-tools" + (selected ? " has-sel" : "") }, /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: (v) => {
+      setFilter(v);
+      setSel(null);
+    }, items })), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search name, email, ID or university" }))), /* @__PURE__ */ React.createElement("div", { className: "fd-md" + (selected ? " has-sel" : "") }, /* @__PURE__ */ React.createElement("div", { className: "fd-list", role: "list" }, list.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "Nothing here." }, filter === "todo" ? "No applications are waiting for you." : "No applications match.") : list.map((a) => {
+      var _a, _b;
+      return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "fd-li", role: "listitem", "aria-current": desktopSel && desktopSel.id === a.id, onClick: () => {
+        setSel(a.id);
+        if (window.innerWidth <= 900) window.scrollTo({ top: 0 });
+      } }, /* @__PURE__ */ React.createElement("div", { className: "fd-li-top" }, /* @__PURE__ */ React.createElement("b", null, titleCase(a.name)), /* @__PURE__ */ React.createElement("span", { className: "fd-sub", style: { margin: 0, fontSize: 12 } }, rel(a.submittedAt || a.signedUpAt))), /* @__PURE__ */ React.createElement("small", null, instCase((_b = (_a = a.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.name) || "—"), /* @__PURE__ */ React.createElement("div", { className: "fd-li-bot" }, /* @__PURE__ */ React.createElement(StageTag, { s: a.status }), a.isUserSubmitted && a.status === "submitted" && /* @__PURE__ */ React.createElement(Tag, { tone: "gold" }, "New")));
+    })), desktopSel ? /* @__PURE__ */ React.createElement(ApplicantDetail, { key: desktopSel.id, app: desktopSel, store, onBack: () => setSel(null) }) : /* @__PURE__ */ React.createElement("div", { className: "fd-detail fd-card" }, /* @__PURE__ */ React.createElement(Empty, { title: "Choose an application." }))));
+  }
+  function PayDialog({ row, store, onClose }) {
+    var _a, _b, _c;
+    const [ref, setRef] = useState("");
+    const { scholar: s, semester: sem } = row;
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Confirm payment", sub: "Record this only after the transfer has been sent.", onClose }, /* @__PURE__ */ React.createElement("dl", { className: "fd-dl" }, /* @__PURE__ */ React.createElement(Row, { label: "Scholar", value: titleCase(s.name) }), /* @__PURE__ */ React.createElement(Row, { label: "Semester", value: sem.label }), /* @__PURE__ */ React.createElement(Row, { label: "Amount", value: money((_a = sem.bill) == null ? void 0 : _a.amount) }), /* @__PURE__ */ React.createElement(Row, { label: "University", value: instCase((_c = (_b = s.profile) == null ? void 0 : _b.university) == null ? void 0 : _c.name) })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement(FileBtn, { file: sem.bill, label: "View bill" })), /* @__PURE__ */ React.createElement(Field, { label: "Transfer reference (optional)", hint: "Bank or transaction reference, for your records.", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: ref, onChange: (e) => setRef(e.target.value) })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => {
+      store.payBill(s.id, sem.id, ref.trim());
+      onClose();
+    } }, "Mark as paid"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
+  }
+  function LegacyDialog({ store, onClose }) {
+    const legacy = store.getLegacy();
+    const [total, setTotal] = useState(String(legacy.totalFunds || ""));
+    const [rows, setRows] = useState(() => legacy.scholars && legacy.scholars.length ? legacy.scholars.map((s) => ({ ...s, amount: s.amount ? String(s.amount) : "" })) : [{ name: "", school: "", country: "", amount: "" }]);
+    const setR = (i, p) => setRows((rs) => rs.map((r, k) => k === i ? { ...r, ...p } : r));
+    const save = () => {
+      const cleaned = rows.filter((s) => (s.school || "").trim() || (s.name || "").trim());
+      store.saveLegacy({ totalFunds: parseFloat(total) || 0, count: cleaned.length, scholars: cleaned.map((s) => ({ name: (s.name || "").trim(), school: (s.school || "").trim(), country: (s.country || "").trim(), amount: parseFloat(s.amount) || 0 })) });
+      onClose();
+    };
+    return /* @__PURE__ */ React.createElement(Modal, { wide: true, title: "Founding-era support", sub: "Scholars funded before the website existed. These count toward the public totals: funds, scholars, countries and institutions.", onClose }, /* @__PURE__ */ React.createElement(Field, { label: "Total paid before the website (USD)", style: { maxWidth: 260 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-money" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: total, onChange: (e) => setTotal(e.target.value) }))), /* @__PURE__ */ React.createElement("h3", { className: "fd-h2", style: { margin: "20px 0 8px" } }, "Scholars"), /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, rows.map((r, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "fd-grid3", style: { gridTemplateColumns: "1fr 1.3fr .9fr .7fr auto", alignItems: "end" } }, /* @__PURE__ */ React.createElement(Field, { label: i === 0 ? "Name (optional)" : "" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: r.name, onChange: (e) => setR(i, { name: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: i === 0 ? "School or university" : "" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: r.school, onChange: (e) => setR(i, { school: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: i === 0 ? "Country" : "" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: r.country, onChange: (e) => setR(i, { country: e.target.value }) })), /* @__PURE__ */ React.createElement(Field, { label: i === 0 ? "Amount" : "" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: r.amount, onChange: (e) => setR(i, { amount: e.target.value }), placeholder: "$" })), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setRows((rs) => rs.filter((_, k) => k !== i)), "aria-label": "Remove row" }, "×")))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setRows((rs) => [...rs, { name: "", school: "", country: "", amount: "" }]) }, "Add scholar")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: save }, "Save"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
+  }
+  function DisbursementsView({ store, scholars }) {
+    const [tab, setTab] = useState("due");
+    const [pay, setPay] = useState(null);
+    const [legacyOpen, setLegacyOpen] = useState(false);
+    const rows = [];
+    scholars.forEach((sc) => (sc.semesters || []).forEach((sem) => {
+      if (sem.bill) rows.push({ scholar: sc, semester: sem });
+    }));
+    const due = rows.filter((r) => r.semester.status === "bill-uploaded").sort((a, b) => {
+      var _a, _b;
+      return new Date(((_a = a.semester.bill) == null ? void 0 : _a.uploadedAt) || 0) - new Date(((_b = b.semester.bill) == null ? void 0 : _b.uploadedAt) || 0);
+    });
+    const paid = rows.filter((r) => r.semester.paidAt).sort((a, b) => new Date(b.semester.paidAt) - new Date(a.semester.paidAt));
+    const shown = tab === "due" ? due : paid;
+    const sum = (l) => l.reduce((a, r) => {
+      var _a;
+      return a + (Number((_a = r.semester.bill) == null ? void 0 : _a.amount) || 0);
+    }, 0);
+    const legacy = store.getLegacy();
+    const G = "minmax(0,1.6fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr) auto";
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Disbursements", lede: "Tuition bills sent by scholars. Pay the university, then mark the bill as paid." }), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Waiting for payment", value: money(sum(due)), sub: `${due.length} ${plural(due.length, "bill", "bills")}`, tone: due.length ? "warn" : "" }, { label: "Paid through the portal", value: money(sum(paid)), sub: `${paid.length} ${plural(paid.length, "semester", "semesters")}` }, { label: "Founding-era support", value: money(legacy.totalFunds), sub: `${legacy.count || (legacy.scholars || []).length || 0} scholars` }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: tab, onChange: setTab, items: [["due", "Waiting", due.length], ["paid", "Paid", paid.length]] }), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", style: { marginLeft: "auto" }, onClick: () => setLegacyOpen(true) }, "Founding-era support")), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Scholar"), /* @__PURE__ */ React.createElement("div", null, "Semester"), /* @__PURE__ */ React.createElement("div", null, "Amount"), /* @__PURE__ */ React.createElement("div", null, tab === "due" ? "Sent" : "Paid"), /* @__PURE__ */ React.createElement("div", null)), shown.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: tab === "due" ? "All bills are paid." : "No payments yet." }, tab === "due" ? "New bills from scholars will appear here." : "") : shown.map((r) => {
+      var _a, _b, _c, _d;
+      return /* @__PURE__ */ React.createElement("div", { key: r.scholar.id + r.semester.id, className: "fd-tr", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, titleCase(r.scholar.name)), /* @__PURE__ */ React.createElement("small", null, r.scholar.scholarId, " · ", instCase((_b = (_a = r.scholar.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.name))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Semester" }, r.semester.label), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Amount" }, /* @__PURE__ */ React.createElement("span", { className: "num" }, money((_c = r.semester.bill) == null ? void 0 : _c.amount))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": tab === "due" ? "Sent" : "Paid" }, fdate(tab === "due" ? (_d = r.semester.bill) == null ? void 0 : _d.uploadedAt : r.semester.paidAt), tab === "paid" && r.semester.txHash && /* @__PURE__ */ React.createElement("small", { className: "fd-mono" }, r.semester.txHash)), /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement(FileBtn, { file: r.semester.bill, label: "View bill" }), tab === "due" && /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary sm", onClick: () => setPay(r) }, "Mark as paid"))));
+    })), pay && /* @__PURE__ */ React.createElement(PayDialog, { row: pay, store, onClose: () => setPay(null) }), legacyOpen && /* @__PURE__ */ React.createElement(LegacyDialog, { store, onClose: () => setLegacyOpen(false) }));
+  }
+  function PasswordDialog({ app, store, onClose }) {
+    const [pw, setPw] = useState(""), [pw2, setPw2] = useState(""), [show, setShow] = useState(false), [err, setErr] = useState(null), [busy, setBusy] = useState(false), [done, setDone] = useState(false);
+    const go = async () => {
+      setErr(null);
+      if (pw.length < 8) return setErr("Use at least 8 characters.");
+      if (pw !== pw2) return setErr("The passwords don't match.");
+      setBusy(true);
+      const r = await store.updateAccount(app.id, { password: pw });
+      setBusy(false);
+      if (r && r.error) return setErr(r.error);
+      setDone(true);
+    };
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Set a new password", sub: `For ${titleCase(app.name)} (${app.email}). They will be signed out of other devices.`, onClose }, done ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-msg ok" }, "Password updated. Share it with ", titleCase(app.name).split(" ")[0], " through a private channel."), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: onClose }, "Done"))) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Field, { label: "New password", hint: "At least 8 characters." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: show ? "text" : "password", autoComplete: "new-password", value: pw, onChange: (e) => setPw(e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Repeat password" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: show ? "text" : "password", autoComplete: "new-password", value: pw2, onChange: (e) => setPw2(e.target.value) })), /* @__PURE__ */ React.createElement("label", { className: "fd-switch", style: { gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: show, onChange: (e) => setShow(e.target.checked), style: { accentColor: "#C9A961" } }), "Show passwords"), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err" }, err)), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: busy, onClick: go }, busy ? "Saving…" : "Save password"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel"))));
+  }
+  function ScholarsView({ store, scholars, openRecord }) {
+    const [pw, setPw] = useState(null);
+    const [filter, setFilter] = useState("all");
+    const by = (s) => scholars.filter((a) => (a.scholarStatus || "active") === s).length;
+    const shown = scholars.filter((a) => filter === "all" || (a.scholarStatus || "active") === filter);
+    const totalPaid = scholars.reduce((a, s) => a + (s.semesters || []).filter((x) => x.paidAt).reduce((b, x) => {
+      var _a;
+      return b + (Number((_a = x.bill) == null ? void 0 : _a.amount) || 0);
+    }, 0), 0);
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Scholars", lede: "Everyone who holds a scholarship, with their progress at a glance." }), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Active scholars", value: by("active"), tone: "ok" }, { label: "Paused", value: by("suspended"), tone: by("suspended") ? "warn" : "" }, { label: "Graduated", value: by("graduated") }, { label: "Paid to date", value: money(totalPaid) }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: setFilter, items: [["all", "All", scholars.length], ["active", "Active", by("active")], ["suspended", "Paused", by("suspended")], ["graduated", "Graduated", by("graduated")], ["revoked", "Ended", by("revoked")]] })), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2", style: { gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))" } }, shown.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement(Empty, { title: "No scholars here." })) : shown.map((sc) => {
+      var _a, _b;
+      const sems = sc.semesters || [];
+      const paidN = sems.filter((x) => x.paidAt).length;
+      const due = sems.filter((x) => x.status === "bill-uploaded").length;
+      const recv = sems.filter((x) => x.paidAt).reduce((a, x) => {
+        var _a2;
+        return a + (Number((_a2 = x.bill) == null ? void 0 : _a2.amount) || 0);
+      }, 0);
+      const ipk = store.cumulativeIPK(sc);
+      const st = SCH[sc.scholarStatus || "active"] || SCH.active;
+      return /* @__PURE__ */ React.createElement("div", { key: sc.id, className: "fd-card", style: { margin: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14 } }, /* @__PURE__ */ React.createElement(Avatar, { app: sc }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0, flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 8, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600, fontSize: 15 } }, titleCase(sc.name)), /* @__PURE__ */ React.createElement(Tag, { tone: st[0], dot: true }, st[1])), /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { display: "block", margin: "2px 0 0" } }, sc.scholarId, " · ", String(sc.cohort || "").replace(/^Class of\s*/i, "Class of ")), /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { display: "block", margin: 0 } }, instCase((_b = (_a = sc.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.name)))), /* @__PURE__ */ React.createElement("dl", { className: "fd-dl", style: { gridTemplateColumns: "repeat(3,1fr)", marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dt", null, "Received"), /* @__PURE__ */ React.createElement("dd", null, money(recv))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dt", null, "Semesters paid"), /* @__PURE__ */ React.createElement("dd", null, paidN, " / ", sems.length)), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dt", null, "GPA"), /* @__PURE__ */ React.createElement("dd", { style: { color: ipk && ipk.value < 2.75 ? "var(--rose)" : void 0 } }, ipk ? ipk.value.toFixed(2) : "—"))), due > 0 && /* @__PURE__ */ React.createElement("div", { className: "fd-msg info", style: { marginTop: 12 } }, due, " ", plural(due, "bill", "bills"), " waiting for payment"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => openRecord(sc.id) }, "Open record"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setPw(sc) }, "Set new password")));
+    })), pw && /* @__PURE__ */ React.createElement(PasswordDialog, { app: pw, store, onClose: () => setPw(null) }));
+  }
+  function QR({ value }) {
+    const qr = useMemo(() => {
+      try {
+        const lib = window.qrcode || window._qrLib;
+        if (!lib || !value || !value.trim()) return null;
+        const q = lib(0, "M");
+        q.addData(value.trim());
+        q.make();
+        const n = q.getModuleCount();
+        let d = "";
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
+        return { d, n };
+      } catch (e) {
+        return null;
+      }
+    }, [value]);
+    if (!qr) return null;
+    return /* @__PURE__ */ React.createElement("span", { className: "fd-qr" }, /* @__PURE__ */ React.createElement("svg", { width: "96", height: "96", viewBox: `0 0 ${qr.n} ${qr.n}`, shapeRendering: "crispEdges" }, /* @__PURE__ */ React.createElement("path", { d: qr.d, fill: "#0A1628" })));
+  }
+  function ChannelsDialog({ store, onClose }) {
+    const [cfg, setCfg] = useState(() => store.getPaymentConfig());
+    const set = (g, k, v) => setCfg((p) => ({ ...p, [g]: { ...p[g], [k]: v } }));
+    const on = (g) => cfg[g].enabled !== false;
+    const head = (g, title) => /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("h3", { className: "fd-h2" }, title), /* @__PURE__ */ React.createElement(Switch, { on: on(g), onChange: (v) => set(g, "enabled", v) }, on(g) ? "Shown" : "Hidden"));
+    const cardBad = cfg.card.link && !/^https?:\/\//i.test(cfg.card.link.trim());
+    return /* @__PURE__ */ React.createElement(Modal, { wide: true, title: "Payment channels", sub: "How donors can give on the public donate page.", onClose }, /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { background: "rgba(10,22,40,.4)" } }, head("usdt", "USDT (on-chain)"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { className: "fd-form", style: { flex: "1 1 300px" } }, /* @__PURE__ */ React.createElement(Field, { label: "Wallet address" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input fd-mono", value: cfg.usdt.address, onChange: (e) => set("usdt", "address", e.target.value), spellCheck: false })), /* @__PURE__ */ React.createElement("div", { className: "fd-grid3" }, /* @__PURE__ */ React.createElement(Field, { label: "Network" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: cfg.usdt.network, onChange: (e) => set("usdt", "network", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Asset" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: cfg.usdt.asset, onChange: (e) => set("usdt", "asset", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Confirmations" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "number", min: "1", value: cfg.usdt.confirmations, onChange: (e) => set("usdt", "confirmations", e.target.value) })))), /* @__PURE__ */ React.createElement(QR, { value: cfg.usdt.address }))), /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { background: "rgba(10,22,40,.4)" } }, head("bank", "Bank transfer"), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Bank" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: cfg.bank.bank, onChange: (e) => set("bank", "bank", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Account number" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: cfg.bank.account, onChange: (e) => set("bank", "account", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Account holder" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: cfg.bank.holder, onChange: (e) => set("bank", "holder", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Currency label" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: cfg.bank.currency, onChange: (e) => set("bank", "currency", e.target.value) })))), /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { background: "rgba(10,22,40,.4)" } }, head("card", "Card (Mastercard / Visa)"), /* @__PURE__ */ React.createElement(Field, { label: "Checkout page", hint: "The card button on the donate page opens this address in a new tab." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: cfg.card.link, onChange: (e) => set("card", "link", e.target.value), placeholder: "https://lynk.id/brial/s/…" })), cardBad && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 8 } }, "Use a full address that starts with https://")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: cardBad, onClick: () => {
+      store.savePaymentConfig(cfg);
+      onClose();
+    } }, "Save channels"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
+  }
+  function DonationsView({ store, donations }) {
+    const [filter, setFilter] = useState("pending");
+    const [q, setQ] = useState("");
+    const [chan, setChan] = useState(false);
+    const list = (donations || []).filter((d) => !(store.isInternalDonation && store.isInternalDonation(d))).slice().sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+    const isSale = (d) => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
+    const verified = list.filter((d) => d.verified), pending = list.filter((d) => !d.verified);
+    const sum = (l) => l.reduce((a, d) => a + (Number(d.amount) || 0), 0);
+    const shown = list.filter((d) => filter === "pending" ? !d.verified : filter === "verified" ? d.verified : filter === "anonymous" ? d.anonymous : true).filter((d) => {
+      const s = q.trim().toLowerCase();
+      return !s || [d.name, d.email, d.country, d.txHash, d.id].some((x) => (x || "").toLowerCase().includes(s));
+    });
+    const cfg = store.getPaymentConfig();
+    const G = "minmax(0,1.8fr) minmax(0,.7fr) minmax(0,1.3fr) minmax(0,.8fr) auto";
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Donations", lede: "Gifts reported through the donate page. Check each one against your wallet or bank, then verify it — only verified gifts are final." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setChan(true) }, "Payment channels")), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter((g) => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: setFilter, items: [["pending", "To verify", pending.length], ["verified", "Verified", verified.length], ["anonymous", "Anonymous", list.filter((d) => d.anonymous).length], ["all", "All", list.length]] })), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search donor, email, country or reference" })), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Donor"), /* @__PURE__ */ React.createElement("div", null, "Amount"), /* @__PURE__ */ React.createElement("div", null, "Reference"), /* @__PURE__ */ React.createElement("div", null, "Date"), /* @__PURE__ */ React.createElement("div", null)), shown.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: filter === "pending" ? "Nothing to verify." : "No donations match." }) : shown.map((d) => {
+      const eth = /^0x[0-9a-f]{10,}$/i.test(d.txHash || "");
+      return /* @__PURE__ */ React.createElement("div", { key: d.id, className: "fd-tr", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, d.anonymous ? "Anonymous" : d.name, d.anonymous && d.name && d.name !== "Anonymous patron" ? /* @__PURE__ */ React.createElement("span", { className: "fd-sub", style: { fontWeight: 400 } }, " (", d.name, ")") : null), /* @__PURE__ */ React.createElement("small", null, [d.email, d.country].filter(Boolean).join(" · ")), d.message && /* @__PURE__ */ React.createElement("small", { style: { fontStyle: "italic" } }, "“", d.message, "”"), isSale(d) && /* @__PURE__ */ React.createElement(Tag, { tone: "sky" }, "Library sale")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Amount" }, /* @__PURE__ */ React.createElement("span", { className: "num" }, money(d.amount))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Reference" }, d.txHash ? /* @__PURE__ */ React.createElement(React.Fragment, null, eth ? /* @__PURE__ */ React.createElement("a", { className: "fd-mono", href: `https://etherscan.io/tx/${d.txHash}`, target: "_blank", rel: "noopener noreferrer" }, d.txHash.slice(0, 10), "…", d.txHash.slice(-6)) : /* @__PURE__ */ React.createElement("span", { className: "fd-mono" }, d.txHash), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => copy(d.txHash) }, "Copy")) : /* @__PURE__ */ React.createElement("small", null, "—")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Date" }, fdate(d.submittedAt)), /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { justifyContent: "flex-end" } }, d.verified ? /* @__PURE__ */ React.createElement(Tag, { tone: "ok", dot: true }, "Verified") : /* @__PURE__ */ React.createElement("button", { className: "fd-btn ok sm", onClick: () => store.markDonationVerified(d.id) }, "Verify"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => store.deleteDonation(d.id) }, "Delete"))));
+    })), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 12 } }, "Grants to partners are listed under each pillar, not here."), chan && /* @__PURE__ */ React.createElement(ChannelsDialog, { store, onClose: () => setChan(false) }));
+  }
+  function HelpDeskView({ store, reports }) {
+    const [filter, setFilter] = useState("open");
+    const [reply, setReply] = useState(null);
+    const [text, setText] = useState("");
+    const c = (s) => reports.filter((r) => r.status === s).length;
+    const shown = reports.filter((r) => filter === "all" || r.status === filter).slice().sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
+    const cat = { technical: "Technical", data: "Details", payment: "Payment", other: "Other" };
+    const who = (r) => store.getApplicant(r.applicantId) || {};
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Help desk", lede: "Messages from applicants and scholars. Your reply appears in their portal straight away." }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: setFilter, items: [["open", "Open", c("open")], ["replied", "Replied", c("replied")], ["resolved", "Resolved", c("resolved")], ["all", "All", reports.length]] })), shown.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement(Empty, { title: filter === "open" ? "No open messages." : "Nothing here." })) : shown.map((r) => /* @__PURE__ */ React.createElement("div", { key: r.id, className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2", style: { fontSize: 16 } }, r.subject), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, [titleCase(r.applicantName || who(r).name), r.applicantEmail || who(r).email, r.applicantId, fdate(r.submittedAt)].filter(Boolean).join(" · "))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, r.category && /* @__PURE__ */ React.createElement(Tag, null, cat[r.category] || r.category), /* @__PURE__ */ React.createElement(Tag, { tone: r.status === "resolved" ? "ok" : r.status === "replied" ? "sky" : "warn", dot: true }, r.status === "resolved" ? "Resolved" : r.status === "replied" ? "Replied" : "Open"))), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, whiteSpace: "pre-wrap", color: "var(--muted)" } }, r.message), r.reply && reply !== r.id && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, padding: "12px 16px", borderLeft: "2px solid var(--gilt)", background: "rgba(201,169,97,.06)", borderRadius: "0 10px 10px 0" } }, /* @__PURE__ */ React.createElement("small", { style: { color: "var(--gilt2)", fontWeight: 600 } }, "Your reply · ", fdate(r.reply.at)), /* @__PURE__ */ React.createElement("p", { style: { margin: "4px 0 0", whiteSpace: "pre-wrap" } }, r.reply.text)), reply === r.id ? /* @__PURE__ */ React.createElement("div", { className: "fd-form", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement(Field, { label: `Reply to ${titleCase(r.applicantName || who(r).name || "").split(" ")[0] || "the sender"}` }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", autoFocus: true, value: text, onChange: (e) => setText(e.target.value) })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !text.trim(), onClick: () => {
+      store.replyReport(r.id, text.trim());
+      setReply(null);
+      setText("");
+    } }, "Send reply"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setReply(null) }, "Cancel"))) : /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, r.status !== "resolved" && /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary sm", onClick: () => {
+      var _a;
+      setReply(r.id);
+      setText(((_a = r.reply) == null ? void 0 : _a.text) || "");
+    } }, r.reply ? "Edit reply" : "Reply"), r.status !== "resolved" && /* @__PURE__ */ React.createElement("button", { className: "fd-btn ok sm", onClick: () => store.resolveReport(r.id) }, "Mark resolved"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => store.deleteReport(r.id) }, "Delete")))));
+  }
+  function download(name, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5e3);
+  }
+  const csv = (v) => {
+    if (v == null) return "";
+    const s = String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const stamp = (p, ext) => {
+    const d = /* @__PURE__ */ new Date(), z = (n) => String(n).padStart(2, "0");
+    return `${p}_${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}.${ext}`;
+  };
+  function accountsCSV(apps) {
+    const H = ["ID", "Name", "Email", "Status", "Scholar ID", "Cohort", "Scholar status", "Signed up", "Submitted", "Interview", "Interview done", "Accepted", "Declined", "Country", "Phone", "Date of birth", "National ID", "High school", "Graduation year", "Final grade", "Level", "University", "Programme", "Current semester", "Current GPA", "Tuition per semester (USD)", "Essay (excerpt)", "Notes"];
+    const rows = apps.map((a) => {
+      const p = a.profile || {}, per = p.personal || {}, hs = p.highSchool || {}, u = p.university || {};
+      return [a.id, a.name, a.email, a.status, a.scholarId || "", a.cohort || "", a.scholarStatus || "", a.signedUpAt || "", a.submittedAt || "", a.interviewAt || "", a.interviewDoneAt || "", a.acceptedAt || "", a.rejectedAt || "", per.country, per.phone, per.dateOfBirth, per.nationalId, hs.schoolName, hs.graduationYear, hs.finalGPA, u.degreeLevel, u.name, u.program, u.currentSemester, u.currentGPA, u.uktPerSemester, (p.essay || "").slice(0, 280), a.notes || ""].map(csv).join(",");
+    });
+    return H.map(csv).join(",") + "\n" + rows.join("\n") + "\n";
+  }
+  function BackupCard({ store, apps }) {
+    const [mode, setMode] = useState("merge");
+    const [res, setRes] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [armed, setArmed] = useState(false);
+    const ref = useRef(null);
+    const onFile = async (e) => {
+      const f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      setBusy(true);
+      setRes(null);
+      try {
+        const data = JSON.parse(await f.text());
+        const r = await store.importSnapshot(data, { mergeMode: mode });
+        setRes(r);
+      } catch (err) {
+        setRes({ ok: false, error: "This file is not a valid backup: " + (err.message || err) });
+      } finally {
+        setBusy(false);
+        setArmed(false);
+      }
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Backup and restore"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Download a copy every week. The spreadsheet opens in Excel; the backup file can restore everything."))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => download(stamp("brial_accounts", "csv"), "\uFEFF" + accountsCSV(apps), "text/csv;charset=utf-8") }, "Download spreadsheet (CSV)"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => download(stamp("brial_backup", "json"), JSON.stringify(store.exportSnapshot(), null, 2), "application/json") }, "Download backup (JSON)")), /* @__PURE__ */ React.createElement("details", { className: "fd-details", style: { background: "rgba(10,22,40,.35)" } }, /* @__PURE__ */ React.createElement("summary", null, "Restore from a backup file"), /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Seg, { value: mode, onChange: (v) => {
+      setMode(v);
+      setArmed(false);
+    }, items: [["merge", "Merge (safe)"], ["replace", "Replace everything"]] }), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: 0 } }, mode === "merge" ? "Accounts in the file overwrite accounts with the same ID; new ones are added; everything else stays." : "Every applicant and donation is deleted and replaced by the file. Use only to rebuild after a fresh install."), /* @__PURE__ */ React.createElement("input", { ref, type: "file", accept: ".json,application/json", onChange: onFile, style: { display: "none" } }), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, mode === "replace" && !armed ? /* @__PURE__ */ React.createElement("button", { className: "fd-btn danger", onClick: () => setArmed(true) }, "I understand — choose file") : /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: busy, onClick: () => ref.current && ref.current.click() }, busy ? "Restoring…" : "Choose backup file")), res && /* @__PURE__ */ React.createElement("div", { className: "fd-msg " + (res.ok ? "ok" : "err") }, res.ok ? res.mode === "replace" ? `Restored — ${res.count} accounts loaded.` : `Merged — ${res.updated} accounts updated or added.` : res.error))));
+  }
+  function AccountsView({ store, apps, deleted, openRecord }) {
+    const [q, setQ] = useState("");
+    const [filter, setFilter] = useState("all");
+    const [pw, setPw] = useState(null);
+    const [del, setDel] = useState(null);
+    const days = (d) => Math.max(0, Math.ceil((30 * 864e5 - (Date.now() - new Date(d).getTime())) / 864e5));
+    const c = (s) => apps.filter((a) => a.status === s).length;
+    const shown = apps.filter((a) => filter === "all" || a.status === filter).filter((a) => {
+      var _a, _b;
+      const s = q.trim().toLowerCase();
+      return !s || [a.name, a.email, a.id, (_b = (_a = a.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.name].some((x) => (x || "").toLowerCase().includes(s));
+    });
+    const G = "minmax(0,1.5fr) minmax(0,1.5fr) minmax(0,.9fr) auto";
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Accounts", lede: "Every portal account. Passwords are stored as secure hashes — nobody can read them, but you can set a new one." }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: setFilter, items: [["all", "All", apps.length], ["registered", "Drafts", c("registered")], ["submitted", "To review", c("submitted")], ["interview-scheduled", "Interview", c("interview-scheduled")], ["interview-done", "Decision due", c("interview-done")], ["accepted", "Granted", c("accepted")], ["rejected", "Declined", c("rejected")]] })), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search name, email, ID or university" })), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Name"), /* @__PURE__ */ React.createElement("div", null, "Email"), /* @__PURE__ */ React.createElement("div", null, "Status"), /* @__PURE__ */ React.createElement("div", null)), shown.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "No accounts match." }) : shown.map((a) => /* @__PURE__ */ React.createElement("div", { key: a.id, className: "fd-tr", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, titleCase(a.name)), /* @__PURE__ */ React.createElement("small", null, a.id, a.scholarId ? " · " + a.scholarId : "")), /* @__PURE__ */ React.createElement("div", { className: "fd-td full", "data-l": "Email" }, /* @__PURE__ */ React.createElement("span", { style: { overflowWrap: "anywhere" } }, a.email), " ", /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => copy(a.email) }, "Copy")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Status" }, /* @__PURE__ */ React.createElement(StageTag, { s: a.status })), /* @__PURE__ */ React.createElement("div", { className: "fd-td" }, /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => openRecord(a.id) }, "Open"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setPw(a) }, "New password"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn danger sm", onClick: () => setDel(a) }, "Delete")))))), /* @__PURE__ */ React.createElement("details", { className: "fd-details" }, /* @__PURE__ */ React.createElement("summary", null, "Trash (", (deleted || []).length, ")"), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 0 } }, "Deleted accounts are kept for 30 days, then removed for good."), (deleted || []).length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "The trash is empty.") : deleted.map((a) => /* @__PURE__ */ React.createElement("div", { key: a.id, className: "fd-file", style: { flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, titleCase(a.name)), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, a.email, " · deleted ", fdate(a.deletedAt), " · ", days(a.deletedAt), " days left")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => store.restoreApplicant(a.id) }, "Restore"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => store.purgeApplicant(a.id), armedLabel: "Click again — this is permanent" }, "Delete forever")))))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement(BackupCard, { store, apps })), pw && /* @__PURE__ */ React.createElement(PasswordDialog, { app: pw, store, onClose: () => setPw(null) }), del && /* @__PURE__ */ React.createElement(Modal, { title: `Move ${titleCase(del.name)} to the trash?`, sub: `${del.email} (${del.id}) disappears from every list. You can restore it within 30 days.`, onClose: () => setDel(null) }, /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn danger", onClick: () => {
+      store.softDeleteApplicant(del.id);
+      setDel(null);
+    } }, "Move to trash"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setDel(null) }, "Cancel"))));
+  }
+  function FounderDesk({ pillar, store, onBack, onExit, founderEmail, onLogout }) {
+    useStyles();
+    const key = "fd-tab-" + pillar;
+    const [tab, setTabS] = useState(() => {
+      try {
+        return sessionStorage.getItem(key) || "";
+      } catch (e) {
+        return "";
+      }
+    });
+    const [focus, setFocus] = useState(null);
+    const setTab = (t2) => {
+      setTabS(t2);
+      try {
+        sessionStorage.setItem(key, t2);
+      } catch (e) {
+      }
+      window.scrollTo({ top: 0 });
+    };
+    const meta = PILLARS[pillar] || { name: pillar, accent: "#C9A961" };
+    let nav, view;
+    if (pillar === "scholarships") {
+      const apps = store.listApplicants();
+      const scholars = apps.filter((a) => a.status === "accepted");
+      const reports = store.listReports();
+      const donations = store.listDonations();
+      const due = scholars.reduce((a, s) => a + (s.semesters || []).filter((x) => x.status === "bill-uploaded").length, 0);
+      const todo = apps.filter((a) => ["submitted", "interview-scheduled", "interview-done"].includes(a.status)).length;
+      const reqs = apps.reduce((a, x) => a + (x.changeRequests || []).filter((r) => r.status === "pending").length, 0);
+      const unver = donations.filter((d) => !(store.isInternalDonation && store.isInternalDonation(d)) && !d.verified).length;
+      const open = reports.filter((r) => r.status === "open").length;
+      nav = [
+        { id: "apps", label: "Applications", icon: ICON.inbox, count: todo + reqs, hot: todo + reqs > 0 },
+        { id: "pay", label: "Disbursements", icon: ICON.pay, count: due, hot: due > 0 },
+        { id: "scholars", label: "Scholars", icon: ICON.cap, count: scholars.length },
+        { id: "gifts", label: "Donations", icon: ICON.gift, count: unver, hot: unver > 0 },
+        { id: "help", label: "Help desk", icon: ICON.help, count: open, hot: open > 0 },
+        { id: "accounts", label: "Accounts", icon: ICON.users, count: apps.length }
+      ];
+      const t2 = nav.some((n) => n.id === tab) ? tab : "apps";
+      const openRecord = (id) => {
+        setFocus(id);
+        setTab("apps");
+      };
+      view = t2 === "apps" ? /* @__PURE__ */ React.createElement(ApplicationsView, { store, apps, focus, clearFocus: () => setFocus(null) }) : t2 === "pay" ? /* @__PURE__ */ React.createElement(DisbursementsView, { store, scholars }) : t2 === "scholars" ? /* @__PURE__ */ React.createElement(ScholarsView, { store, scholars, openRecord }) : t2 === "gifts" ? /* @__PURE__ */ React.createElement(DonationsView, { store, donations }) : t2 === "help" ? /* @__PURE__ */ React.createElement(HelpDeskView, { store, reports }) : /* @__PURE__ */ React.createElement(AccountsView, { store, apps, deleted: store.listDeleted(), openRecord });
+      return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
+    }
+    if (pillar === "library") {
+      nav = [
+        { id: "catalog", label: "Catalogue", icon: ICON.book, count: store.listEbooks().length },
+        { id: "sales", label: "Sales", icon: ICON.sale, count: store.listLibrarySales().length },
+        { id: "link", label: "Pillar link", icon: ICON.link }
+      ];
+      const t2 = nav.some((n) => n.id === tab) ? tab : "catalog";
+      view = t2 === "catalog" ? /* @__PURE__ */ React.createElement(CatalogView, { store }) : t2 === "sales" ? /* @__PURE__ */ React.createElement(SalesView, { store }) : /* @__PURE__ */ React.createElement(LinkView, { store, pillarKey: pillar, cfg: meta });
+      return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
+    }
+    const cfg = PILLARS[pillar];
+    if (!cfg) return null;
+    nav = [
+      { id: "grants", label: "Grants", icon: ICON.grant, count: store.getPillarGrants().filter((g) => g.pillar === cfg.grantName && !g.archived).length },
+      { id: "story", label: "Programme page", icon: ICON.story },
+      { id: "link", label: cfg.linkMode === "pillar" ? "Pillar link" : "Partner button", icon: ICON.link }
+    ];
+    const t = nav.some((n) => n.id === tab) ? tab : "grants";
+    view = t === "grants" ? /* @__PURE__ */ React.createElement(GrantsView, { store, cfg }) : t === "story" ? /* @__PURE__ */ React.createElement(ProgrammeView, { key: pillar, store, cfg }) : /* @__PURE__ */ React.createElement(LinkView, { store, pillarKey: pillar, cfg });
+    return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
+  }
+  return FounderDesk;
+})();
+// <<< FOUNDER DESK
+
 // ============================================================
 // MAIN PORTAL
 // ============================================================
@@ -8763,6 +9683,16 @@ const AdminPortalGated = ({
   }, []);
   const pendingDisb = scholars.reduce((a, s) => a + (s.semesters || []).filter(x => x.status === "bill-uploaded").length, 0);
   const worshipCount = store.getPillarGrants().filter(g => g.pillar === "Houses of Worship").length;
+  if (pillar && typeof FD === "function") return /*#__PURE__*/React.createElement(FD, {
+    pillar: pillar,
+    store: store,
+    onBack: () => setPillar(null),
+    onExit: onExit,
+    founderEmail: founderEmail,
+    onLogout: async () => {
+      await store.clearFounderSession();
+    }
+  });
 
   // Houses of Worship — grants + redirect link
   if (pillar === "worship") {

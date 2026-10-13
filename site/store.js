@@ -1235,12 +1235,12 @@ window.BrialClipboard = { copy: copyToClipboard };
       );
       Store._commit({ ...a, semesters });
     },
-    payBill(applicantId, semId) {
+    payBill(applicantId, semId, ref) {
       const a = Store.getApplicant(applicantId); if (!a) return;
       const semesters = a.semesters.map(s =>
         s.id === semId ? {
           ...s, status: "paid", paidAt: now(),
-          txHash: "0x" + Math.random().toString(16).slice(2, 6) + "…" + Math.random().toString(16).slice(2, 6),
+          txHash: ref ? String(ref).trim() : "",
         } : s
       );
       const paidIdx = semesters.findIndex(s => s.id === semId);
