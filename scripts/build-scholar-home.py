@@ -48,7 +48,8 @@ def inject(code):
     p.write_text(s, encoding="utf-8")
 
 
-def refresh_bundle():
+def refresh_bundle(ref="HEAD"):
+    """Refresh bundle entries for site/*.js files that differ from git `ref`."""
     idx = SITE / "index.html"
     h = idx.read_text(encoding="utf-8")
     m = re.search(r'(<script type="__bundler/manifest">)(.*?)(</script>)', h, re.S)
@@ -56,7 +57,7 @@ def refresh_bundle():
     changed = {}
     for f in SITE.glob("*.js"):
         try:
-            old = subprocess.check_output(["git", "show", "HEAD:site/" + f.name], cwd=ROOT, stderr=subprocess.DEVNULL)
+            old = subprocess.check_output(["git", "show", ref + ":site/" + f.name], cwd=ROOT, stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             continue
         new = f.read_bytes()
