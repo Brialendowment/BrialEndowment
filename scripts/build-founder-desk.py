@@ -57,6 +57,8 @@ CHOOSER_PATCHES = [
      '      gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))",\n      gap: 20\n    }\n  }, (only ? cards.filter(c => only.indexOf(c.id) >= 0) : cards).map(c => /*#__PURE__*/React.createElement("button", {'),
     ('}), /*#__PURE__*/React.createElement(PillarChooser, {\n    onPick: id => {',
      '}), /*#__PURE__*/React.createElement(typeof FD === "function" && FD.Home ? FD.Home : PillarChooser, {\n    Chooser: PillarChooser,\n    onPick: id => {'),
+    ('if (!authed) return /*#__PURE__*/React.createElement(FounderLogin, {',
+     'if (!authed) return /*#__PURE__*/React.createElement(typeof FD === "function" && FD.Login ? FD.Login : FounderLogin, {'),
     ('c.id !== "backup" && c.id !== "site" ? ',
      'c.id !== "backup" && c.id !== "site" && c.id !== "treasury" ? '),
 ]

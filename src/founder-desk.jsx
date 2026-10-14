@@ -1781,6 +1781,327 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
 
   // ============================================================
+  // FOUNDER GATE — the sign-in page: a gate of light, two angels
+  // welcoming, a palace on the hill, gardens along the way, fireflies.
+  // ============================================================
+  const GATE_CSS = `
+.fg{position:relative;min-height:100vh;min-height:100dvh;overflow:hidden;background:linear-gradient(180deg,#050D1B 0%,#081530 46%,#0C2142 74%,#081631 100%);color:#EFE9DC;font-family:'Manrope',system-ui,sans-serif}
+.fg-scene{position:absolute;inset:0;width:100%;height:100%;display:block;animation:fgIn 2.4s cubic-bezier(.2,.7,.2,1) both}
+.fg-fire{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+@keyframes fgIn{from{opacity:0;filter:brightness(.4)}to{opacity:1;filter:none}}
+.fg-halo{transform-origin:600px 450px;animation:fgBreath 7s ease-in-out infinite}
+@keyframes fgBreath{0%,100%{opacity:.85}50%{opacity:1}}
+.fg-tw{animation:fgTw 3.2s ease-in-out infinite}
+@keyframes fgTw{0%,100%{opacity:.25}50%{opacity:1}}
+.fg-exit{position:absolute;top:20px;left:20px;z-index:5;display:inline-flex;align-items:center;gap:8px;background:rgba(6,14,28,.35);border:1px solid rgba(191,216,255,.22);color:rgba(239,233,220,.8);padding:8px 14px;border-radius:999px;font:500 13px 'Manrope',sans-serif;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.fg-exit:hover{color:#fff;border-color:rgba(226,201,142,.6)}
+.fg-verse{position:absolute;z-index:3;top:clamp(64px,9vh,96px);left:50%;transform:translateX(-50%);width:min(620px,86vw);text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(16px,1.5vw,19px);line-height:1.5;color:rgba(214,228,250,.78);animation:fgUp 2.4s .6s both}
+.fg-verse small{display:block;margin-top:6px;font-family:'Manrope',sans-serif;font-style:normal;font-size:12px;letter-spacing:.04em;color:rgba(226,201,142,.75)}
+.fg-card{position:absolute;z-index:4;left:50%;bottom:max(2.5vh,16px);transform:translateX(-50%);width:min(320px,calc(100vw - 32px));padding:46px 26px 22px;background:linear-gradient(180deg,rgba(14,32,62,.58),rgba(8,20,42,.78));border:1px solid rgba(191,216,255,.2);border-radius:160px 160px 16px 16px / 110px 110px 16px 16px;backdrop-filter:blur(14px) saturate(130%);-webkit-backdrop-filter:blur(14px) saturate(130%);box-shadow:0 0 0 1px rgba(226,201,142,.08) inset,0 30px 80px -30px rgba(0,0,0,.9),0 0 60px -10px rgba(110,160,240,.25);animation:fgUp 1.6s 1s both}
+@keyframes fgUp{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+.fg-mark{display:flex;justify-content:center;margin-bottom:8px}
+.fg-k{text-align:center;font-size:13px;font-weight:500;color:#E2C98E;margin:0}
+.fg-h{text-align:center;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:31px;line-height:1.1;margin:2px 0 16px;color:#F4EFE4}
+.fg-f{display:block;margin-bottom:11px}
+.fg-f label{display:block;font-size:12.5px;color:rgba(214,228,250,.7);margin-bottom:6px}
+.fg-in{display:flex;align-items:center;background:rgba(5,13,27,.55);border:1px solid rgba(191,216,255,.2);border-radius:10px;transition:border-color .2s}
+.fg-in:focus-within{border-color:#E2C98E}
+.fg-in input{flex:1;min-width:0;background:none;border:0;outline:none;color:#F4EFE4;font:15px 'Manrope',sans-serif;padding:10px 12px}
+.fg-eye{background:none;border:0;color:rgba(214,228,250,.6);padding:8px 10px;cursor:pointer;display:flex}
+.fg-eye:hover{color:#fff}
+.fg-err{margin:2px 0 14px;padding:10px 12px;border-radius:10px;background:rgba(229,134,134,.1);border:1px solid rgba(229,134,134,.35);color:#F0A3A3;font-size:13px}
+.fg-btn{width:100%;margin-top:6px;padding:12px 0;border:0;border-radius:10px;background:linear-gradient(180deg,#E2C98E,#C9A961);color:#0A1628;font:700 14px 'Manrope',sans-serif;cursor:pointer;box-shadow:0 8px 30px -10px rgba(226,201,142,.6);transition:filter .2s}
+.fg-btn:hover{filter:brightness(1.06)}
+.fg-btn[disabled]{opacity:.5;cursor:not-allowed;box-shadow:none}
+.fg :focus-visible{outline:2px solid #E2C98E;outline-offset:2px}
+@media (max-aspect-ratio:9/10){
+  .fg-scene{height:auto;bottom:auto}
+  .fg-verse{position:relative;top:auto;left:auto;transform:none;margin:0 auto;padding:0 20px 18px;animation:fgFade 2s .6s both}
+  .fg-card{position:relative;left:auto;bottom:auto;transform:none;margin:0 auto 36px;animation:fgFade 1.4s .8s both}
+  .fg-flow{position:relative;z-index:3;padding-top:var(--fg-top,58vw)}
+}
+@keyframes fgFade{from{opacity:0}to{opacity:1}}
+@media (min-aspect-ratio:9/10) and (max-height:860px){.fg-card{padding-top:32px;bottom:max(1.5vh,10px)}.fg-mark{display:none}.fg-h{font-size:27px;margin-bottom:12px}.fg-in input{padding:8px 12px}.fg-f{margin-bottom:8px}.fg-btn{padding:10px 0}.fg-verse{top:clamp(52px,7vh,80px)}}
+@media (prefers-reduced-motion:reduce){.fg-scene,.fg-card,.fg-verse,.fg-halo,.fg-tw{animation:none}}
+`;
+  function useGateStyles() {
+    useEffect(() => {
+      if (document.getElementById("fg-css")) return;
+      const s = document.createElement("style");
+      s.id = "fg-css";
+      s.textContent = GATE_CSS;
+      document.head.appendChild(s);
+    }, []);
+  }
+  // deterministic scatter so the garden is the same on every visit
+  const rng = seed => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+  // An angel facing right, feet at (0,0). Line light over a translucent body.
+  function Angel({ x, y, s, flip, id }) {
+    const t = `translate(${x} ${y}) scale(${flip ? -s : s} ${s})`;
+    // feathered wings raised behind the shoulders: secondaries hang, primaries rise
+    const feathers = useMemo(() => {
+      const f = v => v.toFixed(1);
+      const make = (S, W, th0, th1, L0, L1, N, w0, w1) => {
+        const out = [];
+        for (let k = N - 1; k >= 0; k--) {
+          const u = k / (N - 1);
+          const bend = Math.sin(u * Math.PI) * 18;
+          const R = [S[0] + (W[0] - S[0]) * u - bend * .6, S[1] + (W[1] - S[1]) * u + bend * .2];
+          const th = (th0 + (th1 - th0) * Math.pow(u, 1.15)) * Math.PI / 180;
+          const L = L0 + (L1 - L0) * Math.pow(u, .7);
+          const d = [Math.cos(th), Math.sin(th)], n = [-d[1], d[0]];
+          const w = w0 + (w1 - w0) * u;
+          const T = [R[0] + d[0] * L, R[1] + d[1] * L];
+          const M1 = [R[0] + d[0] * L * .5 + n[0] * w, R[1] + d[1] * L * .5 + n[1] * w];
+          const M2 = [R[0] + d[0] * L * .5 - n[0] * w * .5, R[1] + d[1] * L * .5 - n[1] * w * .5];
+          out.push({ d: `M${f(R[0])} ${f(R[1])} Q${f(M1[0])} ${f(M1[1])} ${f(T[0])} ${f(T[1])} Q${f(M2[0])} ${f(M2[1])} ${f(R[0])} ${f(R[1])} Z`, o: u });
+        }
+        return out;
+      };
+      const S = [-8, -330], W = [-74, -508];
+      return {
+        far: make([12, -334], [34, -450], 238, 282, 70, 124, 9, 16, 20),
+        out: make(S, W, 128, 246, 110, 232, 18, 22, 30),
+        cov: make([-12, -336], [-62, -474], 140, 232, 54, 92, 9, 14, 16),
+        arm: `M${S[0]} ${S[1] + 4} C${S[0] - 26} ${S[1] - 60} ${W[0] + 6} ${W[1] + 50} ${W[0]} ${W[1]}`,
+      };
+    }, []);
+    const farWing = "M8 -336 C18 -388 40 -440 84 -478 C92 -484 100 -486 106 -482 C96 -462 92 -440 92 -418 C84 -406 78 -392 76 -378 C60 -362 34 -346 8 -336 Z";
+    const robe = "M-22 -342 C-36 -300 -46 -214 -58 -128 C-68 -66 -92 -20 -136 0 L74 0 C54 -38 42 -112 36 -198 C32 -260 30 -308 26 -342 C10 -350 -8 -350 -22 -342 Z";
+    const veil = "M6 -424 C27 -424 33 -402 26 -385 C22 -375 27 -362 33 -350 C12 -342 -10 -340 -30 -338 C-27 -364 -23 -390 -15 -409 C-10 -418 -2 -424 6 -424 Z";
+    const sleeve = "M12 -340 C34 -354 62 -364 92 -368 C99 -369 103 -363 99 -357 C78 -350 50 -339 20 -322 Z";
+    const drape = "M32 -334 C42 -306 54 -290 74 -282 C66 -300 62 -320 62 -342 Z";
+    const folds = "M-8 -300 C-14 -220 -24 -140 -44 -40 M8 -296 C8 -220 6 -140 0 -24 M22 -284 C26 -200 32 -120 46 -30";
+    const base = "#0C2350";
+    return (
+      <g transform={t}>
+        {feathers.far.map((f, i) => <g key={"f" + i}><path d={f.d} fill={base} /><path d={f.d} fill={`url(#${id}-wing)`} stroke="rgba(214,232,255,.4)" strokeWidth=".9" /></g>)}
+        <g filter="url(#fg-glow)">
+          {feathers.out.map((f, i) => <g key={i}><path d={f.d} fill={base} /><path d={f.d} fill={`url(#${id}-wing)`} stroke={`rgba(222,237,255,${(.5 + .4 * f.o).toFixed(2)})`} strokeWidth="1.05" /></g>)}
+          {feathers.cov.map((f, i) => <g key={"c" + i}><path d={f.d} fill={base} /><path d={f.d} fill={`url(#${id}-wing)`} stroke="rgba(222,237,255,.6)" strokeWidth=".9" /></g>)}
+          <path d={feathers.arm} fill="none" stroke="rgba(236,244,255,.85)" strokeWidth="1.4" />
+        </g>
+        <path d={robe} fill={base} />
+        <path d={robe} fill={`url(#${id}-robe)`} stroke="rgba(224,238,255,.85)" strokeWidth="1.3" filter="url(#fg-glow)" />
+        <path d={folds} fill="none" stroke="rgba(214,232,255,.24)" strokeWidth=".9" />
+        <path d={drape} fill={base} stroke="rgba(214,232,255,.5)" strokeWidth="1" />
+        <path d={sleeve} fill={base} />
+        <path d={sleeve} fill={`url(#${id}-robe)`} stroke="rgba(224,238,255,.8)" strokeWidth="1.2" />
+        <ellipse cx="104" cy="-364" rx="7" ry="4.2" transform="rotate(-20 104 -364)" fill={base} stroke="rgba(234,242,255,.8)" strokeWidth="1" />
+        <path d={veil} fill={base} />
+        <path d={veil} fill={`url(#${id}-robe)`} stroke="rgba(234,242,255,.9)" strokeWidth="1.3" filter="url(#fg-glow)" />
+        <path d="M-2 -332 C6 -316 13 -300 15 -284" fill="none" stroke="rgba(214,232,255,.5)" strokeWidth="1.1" />
+        <circle cx="114" cy="-368" r="18" fill="url(#fg-orb)" className="fg-tw" style={{ animationDuration: "4.6s" }} />
+        <circle cx="114" cy="-368" r="3.6" fill="#FFF3D2" />
+        <ellipse cx="-30" cy="2" rx="170" ry="12" fill="url(#fg-mist)" />
+      </g>
+    );
+  }
+
+  function GateScene({ narrow }) {
+    const g = useMemo(() => {
+      const r = rng(2026);
+      const stars = Array.from({ length: 70 }, () => ({ x: -300 + r() * 1800, y: 10 + r() * 360, s: .4 + r() * 1.3, d: (2 + r() * 4).toFixed(1), o: (r() * 3).toFixed(1) }));
+      const yAt = t => 492 + 408 * Math.pow(t, 1.3), hw = t => 7 + 113 * t;
+      const trees = [], shrubs = [], blooms = [], lamps = [], beds = [], pools = [.33, .62].map(t => ({ y: yAt(t), rx: 8 + 34 * t, ry: 2 + 8 * t }));
+      [0.06, .13, .21, .3, .4, .51, .63, .76, .9].forEach((t, i) => {
+        const y = yAt(t), w = hw(t), gap = 6 + 70 * t;
+        [-1, 1].forEach(side => {
+          const cx = 600 + side * (w + gap);
+          if (i % 2 === 0) trees.push({ x: cx, y, h: 16 + 150 * Math.pow(t, 1.15), k: "c" });
+          else shrubs.push({ x: cx, y, rx: 6 + 46 * t, ry: 4 + 26 * t });
+          trees.push({ x: 600 + side * (w + gap + 30 + 120 * t), y: y - 2, h: 12 + 110 * Math.pow(t, 1.15), k: "c" });
+          lamps.push({ x: 600 + side * (w + 2), y: y - (3 + 22 * t), r: 1.2 + 4 * t });
+          beds.push({ x: 600 + side * (w + 6 + 18 * t), y: y - 2 * t, rx: 5 + 34 * t, ry: 1.5 + 7 * t });
+          for (let k = 0; k < 7; k++) blooms.push({ x: 600 + side * (w + 4 + r() * (gap + 40 * t)), y: y - r() * 10 * (t + .2), r: .6 + 2.4 * t * r(), c: r() < .45 ? "#F2D99B" : r() < .7 ? "#F3C6D6" : "#CFE3FF" });
+        });
+      });
+      // groves on the hillsides beyond the gate
+      for (let i = 0; i < 46; i++) {
+        const side = i % 2 ? 1 : -1, t = r();
+        const x = 600 + side * (190 + t * 900 + r() * 60), y = 560 + r() * 250 + t * 40;
+        if (Math.abs(x - 600) < 200) continue;
+        (r() < .55 ? trees : shrubs).push(r() < .55 ? { x, y, h: 30 + r() * 90, k: "c" } : { x, y, rx: 10 + r() * 30, ry: 6 + r() * 16 });
+        for (let k = 0; k < 3; k++) blooms.push({ x: x + (r() - .5) * 60, y: y + r() * 8, r: .7 + r() * 1.8, c: r() < .5 ? "#F2D99B" : r() < .75 ? "#F3C6D6" : "#CFE3FF" });
+      }
+      trees.sort((a, b) => a.y - b.y); shrubs.sort((a, b) => a.y - b.y);
+      return { stars, trees, shrubs, blooms, lamps, beds, pools };
+    }, []);
+    const cyp = ({ x, y, h }) => { const w = h * .26; return `M${x - w / 2} ${y} C${x - w / 2} ${y - h * .5} ${x - w * .16} ${y - h * .86} ${x} ${y - h} C${x + w * .16} ${y - h * .86} ${x + w / 2} ${y - h * .5} ${x + w / 2} ${y} Z`; };
+    const vb = narrow ? "190 196 820 704" : "0 0 1200 900";
+    const par = narrow ? "xMidYMin meet" : "xMidYMax meet";
+    const L = narrow ? { x: 338, s: .72 } : { x: 232, s: 1 };
+    const R = narrow ? { x: 862, s: .72 } : { x: 968, s: 1 };
+    const mins = [{ cx: 524, top: 404 }, { cx: 676, top: 404 }];
+    return (
+      <svg className="fg-scene" viewBox={vb} preserveAspectRatio={par} aria-hidden="true" style={narrow ? { position: "absolute", top: 0, left: 0, width: "100%", height: "auto" } : null}>
+        <defs>
+          <filter id="fg-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <filter id="fg-soft"><feGaussianBlur stdDeviation="6" /></filter>
+          <linearGradient id="fg-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#040B18" /><stop offset=".5" stopColor="#0A1A36" /><stop offset=".78" stopColor="#15325E" /><stop offset="1" stopColor="#0B1C38" /></linearGradient>
+          <radialGradient id="fg-halo" cx="600" cy="450" r="330" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#9CC3FF" stopOpacity=".55" /><stop offset=".35" stopColor="#4D7FCC" stopOpacity=".28" /><stop offset="1" stopColor="#1B3A6B" stopOpacity="0" /></radialGradient>
+          <radialGradient id="fg-door" cx="600" cy="640" r="260" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#BFD8FF" stopOpacity=".35" /><stop offset="1" stopColor="#BFD8FF" stopOpacity="0" /></radialGradient>
+          <linearGradient id="fg-hill1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#14305A" /><stop offset="1" stopColor="#0A1A34" /></linearGradient>
+          <linearGradient id="fg-hill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#0F2548" /><stop offset="1" stopColor="#081730" /></linearGradient>
+          <linearGradient id="fg-road" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#6E9BE0" stopOpacity=".4" /><stop offset="1" stopColor="#2A4F88" stopOpacity=".28" /></linearGradient>
+          <linearGradient id="fg-water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#E6F0FF" stopOpacity=".95" /><stop offset=".5" stopColor="#8DB6F2" stopOpacity=".8" /><stop offset="1" stopColor="#4C7CC4" stopOpacity=".6" /></linearGradient>
+          <linearGradient id="fg-stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1A3A6A" /><stop offset="1" stopColor="#0B1D3A" /></linearGradient>
+          <radialGradient id="fg-orb"><stop offset="0" stopColor="#FFF1C8" stopOpacity=".95" /><stop offset=".4" stopColor="#E2C98E" stopOpacity=".5" /><stop offset="1" stopColor="#E2C98E" stopOpacity="0" /></radialGradient>
+          <linearGradient id="fg-tree" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3D6AAE" /><stop offset=".4" stopColor="#173A6E" /><stop offset="1" stopColor="#0B2044" /></linearGradient>
+          <radialGradient id="fg-bush" cx=".5" cy=".25" r=".8"><stop offset="0" stopColor="#4A78BE" /><stop offset=".55" stopColor="#1A3E74" /><stop offset="1" stopColor="#0E2548" /></radialGradient>
+          <radialGradient id="fg-bed"><stop offset="0" stopColor="#F3C6D6" stopOpacity=".55" /><stop offset=".5" stopColor="#E2C98E" stopOpacity=".25" /><stop offset="1" stopColor="#E2C98E" stopOpacity="0" /></radialGradient>
+          <radialGradient id="fg-mist"><stop offset="0" stopColor="#BFD8FF" stopOpacity=".28" /><stop offset="1" stopColor="#BFD8FF" stopOpacity="0" /></radialGradient>
+          {["fgl", "fgr"].map(id => (
+            <React.Fragment key={id}>
+              <linearGradient id={id + "-wing"} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#D6E8FF" stopOpacity=".42" /><stop offset=".55" stopColor="#7FA8E8" stopOpacity=".18" /><stop offset="1" stopColor="#4F7BC4" stopOpacity=".06" /></linearGradient>
+              <linearGradient id={id + "-robe"} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#E2EEFF" stopOpacity=".46" /><stop offset=".45" stopColor="#9CC0F5" stopOpacity=".2" /><stop offset="1" stopColor="#6F9BE0" stopOpacity=".05" /></linearGradient>
+            </React.Fragment>
+          ))}
+        </defs>
+        <rect x="-1000" y="-200" width="3200" height="1200" fill="url(#fg-sky)" />
+        {g.stars.map((s, i) => <circle key={i} cx={s.x} cy={s.y} r={s.s} fill="#DCE8FF" className={i % 3 === 0 ? "fg-tw" : null} style={i % 3 === 0 ? { animationDuration: s.d + "s", animationDelay: s.o + "s" } : { opacity: .5 }} />)}
+        <circle cx="600" cy="450" r="330" fill="url(#fg-halo)" className="fg-halo" />
+        {/* the hill and the palace */}
+        <path d="M-1000 600 C-400 590 200 560 420 520 C500 500 560 490 600 489 C640 490 700 500 780 520 C1000 560 1600 590 2200 600 L2200 1000 L-1000 1000 Z" fill="url(#fg-hill1)" />
+        <path d="M-1000 600 C-400 590 200 560 420 520 C500 500 560 490 600 489 C640 490 700 500 780 520 C1000 560 1600 590 2200 600" fill="none" stroke="rgba(190,215,255,.45)" strokeWidth="1.2" filter="url(#fg-glow)" />
+        <g filter="url(#fg-glow)" stroke="#D6E6FF" strokeWidth="1.1" fill="#123060">
+          <rect x="552" y="452" width="96" height="38" />
+          <rect x="530" y="464" width="22" height="26" /><rect x="648" y="464" width="22" height="26" />
+          <rect x="580" y="440" width="40" height="12" />
+          <path d="M580 440 C580 414 592 402 600 388 C608 402 620 414 620 440 Z" />
+          <path d="M533 464 C533 454 539 449 541 445 C543 449 549 454 549 464 Z" /><path d="M651 464 C651 454 657 449 659 445 C661 449 667 454 667 464 Z" />
+          {mins.map((m, i) => <g key={i}><rect x={m.cx - 3} y={m.top} width="6" height={490 - m.top} /><path d={`M${m.cx - 4} ${m.top} L${m.cx} ${m.top - 13} L${m.cx + 4} ${m.top} Z`} /><rect x={m.cx - 5} y={m.top + 18} width="10" height="2" /></g>)}
+          <line x1="600" y1="388" x2="600" y2="376" /><circle cx="600" cy="373" r="2" fill="#F2D99B" stroke="none" />
+        </g>
+        <g fill="#F2D99B">
+          {[560, 572, 584, 616, 628, 640].map(x => <path key={x} d={`M${x} 482 L${x} 472 C${x} 468 ${x + 3} 466 ${x + 3} 466 C${x + 3} 466 ${x + 6} 468 ${x + 6} 472 L${x + 6} 482 Z`} opacity=".85" />)}
+          <path d="M594 490 L594 474 C594 468 600 465 600 465 C600 465 606 468 606 474 L606 490 Z" />
+        </g>
+        {/* the road, with a channel of water from the palace to the gate */}
+        <path d="M593 492 L480 900 L720 900 L607 492 Z" fill="url(#fg-road)" />
+        <path d="M593 492 L480 900 M607 492 L720 900" stroke="rgba(190,215,255,.35)" strokeWidth="1" fill="none" />
+        <path d="M598.6 494 L583 900 L617 900 L601.4 494 Z" fill="url(#fg-water)" filter="url(#fg-glow)" />
+        {/* lower foreground ground */}
+        <path d="M-1000 700 C-300 690 300 660 470 640 L730 640 C900 660 1500 690 2200 700 L2200 1000 L-1000 1000 Z" fill="url(#fg-hill2)" opacity=".6" />
+        <path d="M480 900 L593 492 L607 492 L720 900 Z" fill="url(#fg-road)" opacity=".55" />
+        <path d="M598.6 494 L583 900 L617 900 L601.4 494 Z" fill="url(#fg-water)" opacity=".8" />
+        {/* gardens */}
+        {g.pools.map((p, i) => <g key={"p" + i} filter="url(#fg-glow)"><ellipse cx="600" cy={p.y} rx={p.rx} ry={p.ry} fill="#9CC0F5" fillOpacity=".35" stroke="#E6F0FF" strokeWidth="1" /><ellipse cx="600" cy={p.y} rx={p.rx * .45} ry={p.ry * .45} fill="#E6F0FF" fillOpacity=".5" /><path d={`M600 ${p.y} L600 ${p.y - p.ry * 3.2}`} stroke="#E6F0FF" strokeOpacity=".7" strokeWidth="1" /></g>)}
+        {g.beds.map((b, i) => <ellipse key={"d" + i} cx={b.x} cy={b.y} rx={b.rx} ry={b.ry} fill="url(#fg-bed)" />)}
+        {g.shrubs.map((s, i) => <ellipse key={"s" + i} cx={s.x} cy={s.y - s.ry * .6} rx={s.rx} ry={s.ry} fill="url(#fg-bush)" stroke="rgba(190,215,255,.5)" strokeWidth=".9" />)}
+        {g.trees.map((t, i) => <path key={"t" + i} d={cyp(t)} fill="url(#fg-tree)" stroke="rgba(200,224,255,.55)" strokeWidth=".9" />)}
+        {g.blooms.map((b, i) => <circle key={"b" + i} cx={b.x} cy={b.y} r={b.r} fill={b.c} opacity=".85" />)}
+        {g.lamps.map((l, i) => <g key={"l" + i}><circle cx={l.x} cy={l.y} r={l.r * 4} fill="url(#fg-orb)" className="fg-tw" style={{ animationDuration: (3 + (i % 5) * .7) + "s", animationDelay: (i % 7) * .4 + "s" }} /><circle cx={l.x} cy={l.y} r={l.r * .6} fill="#FFF3D2" /></g>)}
+        {/* the gate */}
+        <circle cx="600" cy="640" r="260" fill="url(#fg-door)" />
+        <g filter="url(#fg-glow)">
+          <path fillRule="evenodd" fill="url(#fg-stone)" stroke="#D6E6FF" strokeWidth="1.5"
+            d="M404 900 L404 470 C404 380 500 300 600 246 C700 300 796 380 796 470 L796 900 L730 900 L730 474 C730 410 670 360 600 322 C530 360 470 410 470 474 L470 900 Z" />
+          <path fill="none" stroke="#E2C98E" strokeOpacity=".75" strokeWidth="1.2" d="M484 900 L484 476 C484 418 538 372 600 338 C662 372 716 418 716 476 L716 900" />
+          <path fill="none" stroke="#E2C98E" strokeOpacity=".45" strokeWidth="1" d="M418 900 L418 472 C418 390 508 316 600 262 C692 316 782 390 782 472 L782 900" />
+          <rect x="394" y="462" width="86" height="12" fill="#14325E" stroke="#D6E6FF" strokeWidth="1.1" /><rect x="720" y="462" width="86" height="12" fill="#14325E" stroke="#D6E6FF" strokeWidth="1.1" />
+          <rect x="390" y="878" width="94" height="22" fill="#14325E" stroke="#D6E6FF" strokeWidth="1.1" /><rect x="716" y="878" width="94" height="22" fill="#14325E" stroke="#D6E6FF" strokeWidth="1.1" />
+          <path d="M600 246 L600 214" stroke="#E2C98E" strokeWidth="1.4" />
+          <path d="M589 232 C589 222 600 216 600 206 C600 216 611 222 611 232 Z" fill="#14325E" stroke="#E2C98E" strokeWidth="1.2" />
+          <circle cx="600" cy="200" r="4" fill="#F2D99B" />
+          {[[437, 600], [763, 600], [437, 720], [763, 720]].map(([x, y], i) => <path key={i} d={`M${x} ${y - 11} L${x + 3.5} ${y - 3.5} L${x + 11} ${y} L${x + 3.5} ${y + 3.5} L${x} ${y + 11} L${x - 3.5} ${y + 3.5} L${x - 11} ${y} L${x - 3.5} ${y - 3.5} Z`} fill="none" stroke="#E2C98E" strokeOpacity=".7" strokeWidth="1" />)}
+        </g>
+        <path d="M600 322 C530 360 470 410 470 474 L470 900 L730 900 L730 474 C730 410 670 360 600 322 Z" fill="url(#fg-door)" opacity=".5" />
+        {/* the two angels */}
+        <Angel id="fgl" x={L.x} y={900} s={L.s} />
+        <Angel id="fgr" x={R.x} y={900} s={R.s} flip />
+      </svg>
+    );
+  }
+
+  function Fireflies() {
+    const ref = useRef(null);
+    useEffect(() => {
+      const c = ref.current; if (!c) return;
+      const ctx = c.getContext("2d");
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let w = 0, h = 0, dpr = 1, parts = [], raf = 0, run = true;
+      const sprite = (() => { const s = document.createElement("canvas"); s.width = s.height = 48; const g = s.getContext("2d"); const gr = g.createRadialGradient(24, 24, 0, 24, 24, 24); gr.addColorStop(0, "rgba(255,244,200,1)"); gr.addColorStop(.25, "rgba(242,217,155,.75)"); gr.addColorStop(1, "rgba(226,201,142,0)"); g.fillStyle = gr; g.fillRect(0, 0, 48, 48); return s; })();
+      const size = () => {
+        const r = c.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = c.width = Math.max(1, Math.round(r.width * dpr)); h = c.height = Math.max(1, Math.round(r.height * dpr));
+        const n = Math.round(Math.min(60, Math.max(22, r.width / 24)));
+        parts = Array.from({ length: n }, () => ({ x: Math.random() * w, y: h * (.35 + Math.random() * .62), a: Math.random() * Math.PI * 2, v: (.12 + Math.random() * .3) * dpr, r: (.55 + Math.random() * .9) * dpr, ph: Math.random() * 10, f: .5 + Math.random() * 1.1 }));
+      };
+      const draw = t => {
+        ctx.clearRect(0, 0, w, h);
+        const time = t / 1000;
+        parts.forEach(p => {
+          if (!reduce) {
+            p.a += (Math.sin(time * .7 + p.ph) * .04) + (Math.random() - .5) * .08;
+            p.x += Math.cos(p.a) * p.v; p.y += Math.sin(p.a) * p.v * .7 - .03 * dpr;
+            if (p.x < -20) p.x = w + 20; if (p.x > w + 20) p.x = -20;
+            if (p.y < h * .25) p.a = Math.PI / 2 + (Math.random() - .5); if (p.y > h + 10) p.y = h * .3;
+          }
+          const pulse = Math.max(0, Math.sin(time * p.f + p.ph));
+          const alpha = reduce ? .6 : .12 + .88 * Math.pow(pulse, 2.2);
+          ctx.globalAlpha = alpha;
+          const s = p.r * 8;
+          ctx.drawImage(sprite, p.x - s / 2, p.y - s / 2, s, s);
+        });
+        ctx.globalAlpha = 1;
+        if (run && !reduce) raf = requestAnimationFrame(draw);
+      };
+      size(); raf = requestAnimationFrame(draw);
+      const ro = window.ResizeObserver ? new ResizeObserver(() => size()) : null;
+      if (ro) ro.observe(c);
+      const onR = () => size();
+      const onV = () => { if (document.hidden) { run = false; cancelAnimationFrame(raf); } else if (!run) { run = true; raf = requestAnimationFrame(draw); } };
+      window.addEventListener("resize", onR); document.addEventListener("visibilitychange", onV);
+      return () => { run = false; cancelAnimationFrame(raf); if (ro) ro.disconnect(); window.removeEventListener("resize", onR); document.removeEventListener("visibilitychange", onV); };
+    }, []);
+    return <canvas ref={ref} className="fg-fire" aria-hidden="true" />;
+  }
+
+  const EyeIcon = ({ off }) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" />{off && <path d="M4 4l16 16" />}</svg>;
+
+  function FounderGate({ onExit }) {
+    useGateStyles();
+    const store = window.BrialStore;
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [reveal, setReveal] = useState(false);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const isNarrow = () => window.innerWidth / Math.max(1, window.innerHeight) < 0.9;
+    const [narrow, setNarrow] = useState(isNarrow);
+    useEffect(() => { const h = () => setNarrow(isNarrow()); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, []);
+    const submit = async e => {
+      e && e.preventDefault();
+      setError(null); setLoading(true);
+      let res;
+      try { res = await store.authFounder(email, password); } catch (err) { res = { error: "Could not reach the server. Check your connection and try again." }; }
+      if (res && res.ok) window.dispatchEvent(new CustomEvent("brial:change", { detail: { key: "founder-auth" } }));
+      else { setError((res && res.error) || "The email or password is not correct."); setLoading(false); }
+    };
+    return (
+      <div className="fg" style={narrow ? { "--fg-top": (window.innerWidth * 704 / 820 + 14) + "px" } : null}>
+        <GateScene narrow={narrow} />
+        <Fireflies />
+        <button className="fg-exit" onClick={onExit}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>Public site</button>
+        <div className={narrow ? "fg-flow" : null}>
+          <p className="fg-verse">“When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, and a righteous child who prays for them.”<small>Sahih Muslim</small></p>
+          <form className="fg-card" onSubmit={submit}>
+            <div className="fg-mark"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#E2C98E" strokeWidth="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" /><circle cx="18" cy="18" r="4" fill="#E2C98E" stroke="none" /></g></svg></div>
+            <p className="fg-k">Founder Portal</p>
+            <h1 className="fg-h">Welcome back.</h1>
+            <div className="fg-f"><label htmlFor="fg-email">Email</label><div className="fg-in"><input id="fg-email" type="email" autoFocus value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" spellCheck={false} /></div></div>
+            <div className="fg-f"><label htmlFor="fg-pw">Password</label><div className="fg-in"><input id="fg-pw" type={reveal ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" /><button type="button" className="fg-eye" onClick={() => setReveal(r => !r)} aria-label={reveal ? "Hide password" : "Show password"}><EyeIcon off={reveal} /></button></div></div>
+            {error && <div className="fg-err" role="alert">{error}</div>}
+            <button className="fg-btn" type="submit" disabled={!email || !password || loading}>{loading ? "Signing in…" : "Sign in"}</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
   // SITE SETTINGS — contact & social links in the public footer
   // ============================================================
   const LINE_TYPES = ["email", "phone", "whatsapp", "address"];
@@ -1974,5 +2295,6 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
   }
   FounderDesk.Home = FounderHome;
+  FounderDesk.Login = FounderGate;
   return FounderDesk;
 })();
