@@ -9631,7 +9631,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
         const side = i % 2 ? 1 : -1, t = r();
         const x = 600 + side * (190 + t * 900 + r() * 60), y = 560 + r() * 250 + t * 40;
         if (Math.abs(x - 600) < 200) continue;
-        (r() < 0.55 ? trees : shrubs).push(r() < 0.55 ? { x, y, h: 30 + r() * 90, k: "c" } : { x, y, rx: 10 + r() * 30, ry: 6 + r() * 16 });
+        if (r() < 0.55) trees.push({ x, y, h: 30 + r() * 90, k: "c" });
+        else shrubs.push({ x, y, rx: 10 + r() * 30, ry: 6 + r() * 16 });
         for (let k = 0; k < 3; k++) blooms.push({ x: x + (r() - 0.5) * 60, y: y + r() * 8, r: 0.7 + r() * 1.8, c: r() < 0.5 ? "#F2D99B" : r() < 0.75 ? "#F3C6D6" : "#CFE3FF" });
       }
       trees.sort((a, b) => a.y - b.y);
