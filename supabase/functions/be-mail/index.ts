@@ -24,6 +24,12 @@ const FROM = {
   hello: "The Brial Endowment <hello@brialendowment.org>",
   desk: "Brial Endowment Desk <desk@brialendowment.org>",
 };
+// Senders the founder can choose when writing an email. Replies always come back to hello@.
+export const SENDERS: Record<string, string> = {
+  brial: "Brial Asif Hayi Paka <brial@brialendowment.org>",
+  hello: "The Brial Endowment <hello@brialendowment.org>",
+  receipts: "The Brial Endowment <receipts@brialendowment.org>",
+};
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -75,6 +81,7 @@ async function build(row: any, settings: any): Promise<Built> {
   const founderTo = isEmail(settings.founderTo) ? settings.founderTo : R.HELLO;
 
   if (kind === "test") return { to: founderTo, from: FROM.desk, replyTo: R.HELLO, ...R.testEmail(founderTo) };
+  if (kind === "message") return await composeMessage(p);
 
   if (kind === "receipt" || kind === "donation_reported") {
     const d = donationDoc(await one("donations", row.ref));
@@ -131,6 +138,25 @@ async function build(row: any, settings: any): Promise<Built> {
   return { skip: "unknown kind " + kind };
 }
 
+async function composeMessage(p: any): Promise<Built> {
+  const to = String(p.to || "").trim();
+  if (!isEmail(to)) return { skip: "no email address" };
+  const ack = p.ack && Number(p.ack.amount) > 0 ? { ...p.ack, amount: Number(p.ack.amount), no: p.ack.no || ackNo(p.ack.date, to) } : null;
+  const m = R.messageEmail({ subject: String(p.subject || "").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign !== false, ack });
+  const out: Mail = { to, from: SENDERS[p.from] || SENDERS.hello, replyTo: R.HELLO, ...m };
+  if (ack && ack.pdf) {
+    const pdf = await receiptPdf({ no: ack.no, amount: ack.amount, donorName: String(ack.name || "").trim() || "A friend of the endowment", email: to,
+      issuedAt: new Date().toISOString(), reference: String(ack.reference || "").trim(), ack: { programme: String(ack.programme || ""), date: ack.date } });
+    out.attachments = [{ filename: `Brial-Endowment-Acknowledgement-${ack.no}.pdf`, content: b64(pdf) }];
+  }
+  return out;
+}
+function ackNo(date: unknown, to: string) {
+  const d = new Date(String(date || "")); const ymd = isNaN(d.getTime()) ? new Date().toISOString().slice(0, 10) : d.toISOString().slice(0, 10);
+  let h = 0; for (const c of to.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return "ACK-" + ymd.replace(/-/g, "") + "-" + h.toString(36).toUpperCase().slice(-4).padStart(4, "0");
+}
+
 // ---------------------------------------------------------------- send
 async function send(m: Mail, key: string): Promise<{ ok: true; id: string } | { ok: false; retry: boolean; error: string }> {
   if (!RESEND_KEY) return { ok: false, retry: true, error: "RESEND_API_KEY is not set" };
@@ -164,7 +190,7 @@ async function drain() {
     if (error) throw new Error("claim: " + error.message);
     if (!rows || rows.length === 0) break;
     for (const row of rows) {
-      const enabled = row.kind === "test" || (settings.kinds || {})[row.kind] !== false;
+      const enabled = row.kind === "test" || row.kind === "message" || (settings.kinds || {})[row.kind] !== false;
       if (!enabled) { await done(row.id, "skipped", null, null, null, "turned off in settings"); skipped++; continue; }
       if (budget <= 0) { await done(row.id, "wait", null, null, null, "daily sending limit reached — will retry"); continue; }
       let m: Built;
@@ -222,6 +248,12 @@ Deno.serve(async (req) => {
     if (body?.action === "sample_pdf") {
       const pdf = await receiptPdf({ ...receiptData(SAMPLE_D, SAMPLE_RC), sample: true });
       return json({ filename: "Brial-Endowment-Receipt-SAMPLE.pdf", base64: b64(pdf) });
+    }
+    if (body?.action === "preview_message") {
+      const p = body.message || {};
+      const ack = p.ack && Number(p.ack.amount) > 0 ? { ...p.ack, amount: Number(p.ack.amount) } : null;
+      const m = R.messageEmail({ subject: String(p.subject || "(no subject)").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign !== false, ack });
+      return json({ subject: m.subject, html: m.html, from: SENDERS[p.from] || SENDERS.hello });
     }
     if (body?.action === "preview") {
       const m = R.receiptEmail(SAMPLE_D, SAMPLE_RC);

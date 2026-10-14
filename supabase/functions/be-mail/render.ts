@@ -344,3 +344,32 @@ export function testEmail(to: string) {
     foot: deskFoot,
   }) };
 }
+
+// ---------------------------------------------------------------- messages written in the Founder Console
+export type Message = {
+  subject: string; body: string; sign?: boolean;
+  ack?: { name?: string; amount?: number; programme?: string; date?: string; reference?: string; no?: string; pdf?: boolean } | null;
+};
+export const FOUNDER_SIGNATURE = `<div style="margin-top:22px;padding-top:14px;border-top:1px solid ${LINE};font-size:13px;color:${MUTED}"><b style="color:${NAVY};font-size:14px">Brial Asif Hayi Paka</b><br>Founder, The Brial Endowment</div>`;
+
+export function messageEmail(m: Message) {
+  const paras = String(m.body || "").replace(/\r\n/g, "\n").trim().split(/\n{2,}/)
+    .map(p => `<p style="margin:0 0 14px">${nl2br(p)}</p>`).join("");
+  const a = m.ack;
+  const rows: Row[] = a ? [
+    ["Contributed by", esc(a.name || "")],
+    ["Amount", a.amount ? `${usd(a.amount)} <span style="color:${MUTED};font-weight:400">USD</span>` : ""],
+    ["Programme", esc(a.programme || "")],
+    ["Date", esc(day(a.date))],
+    ["Reference", a.reference ? `<span style="font-family:Consolas,Menlo,monospace;font-weight:500">${esc(a.reference)}</span>` : ""],
+  ] : [];
+  const b = layout({
+    pre: String(m.body || "").replace(/\s+/g, " ").slice(0, 120),
+    kicker: a ? "With gratitude" : "",
+    title: m.subject,
+    intro: `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.7">${paras}</div>` + (m.sign !== false ? FOUNDER_SIGNATURE : ""),
+    rows,
+    note: a ? `This acknowledges your contribution to the programme above, delivered through The Brial Endowment${a.pdf ? ". A PDF copy is attached for your records" : ""}. It is not a numbered donation receipt.` : "",
+  });
+  return { subject: m.subject, ...b };
+}

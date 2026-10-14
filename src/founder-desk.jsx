@@ -2331,6 +2331,96 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   const MAIL_TONE = { sent: "ok", pending: "warn", sending: "warn", skipped: "", failed: "bad" };
   const MAIL_WORD = { sent: "Sent", pending: "Waiting", sending: "Sending", skipped: "Not sent", failed: "Failed" };
 
+  MAIL_LABEL.message = "Email you wrote";
+  const SENDERS = [
+    ["brial", "Brial Asif Hayi Paka", "brial@brialendowment.org", "A personal letter from you"],
+    ["hello", "The Brial Endowment", "hello@brialendowment.org", "The foundation's general address"],
+    ["receipts", "The Brial Endowment", "receipts@brialendowment.org", "For anything about gifts and receipts"],
+  ];
+  const PROGRAMMES = ["The Brial Endowment — general endowment fund", "Scholarships", "Clean Water — wells and water systems", "Food & Land — Trees for Life, olive trees in Palestine", "Houses of Worship", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure", "Library"];
+  const THANKS = "Dear …,\n\nThank you for your generous contribution of $… to …. Because of you, …\n\n…\n\nMay God accept it from you and multiply its reward.\n\nWith heartfelt thanks,";
+  const splitTo = s => String(s || "").split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
+  function Composer({ store, onClose, onSent }) {
+    const [f, setF] = useState({ from: "brial", to: "", subject: "", body: "", sign: true });
+    const [ackOn, setAckOn] = useState(false);
+    const [ack, setAck] = useState({ name: "", amount: "", programme: "", date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10), reference: "", pdf: true });
+    const [prev, setPrev] = useState(null);
+    const [busy, setBusy] = useState("");
+    const [err, setErr] = useState("");
+    const set = (k, v) => { setF(p => ({ ...p, [k]: v })); setPrev(null); };
+    const setA = (k, v) => { setAck(p => ({ ...p, [k]: v })); setPrev(null); };
+    const tos = splitTo(f.to);
+    const badTo = tos.filter(t => !okEmail(t));
+    const amt = parseFloat(String(ack.amount).replace(/,/g, ""));
+    const ackBad = ackOn && !(amt > 0);
+    const ready = tos.length > 0 && tos.length <= 20 && !badTo.length && f.subject.trim() && f.body.trim() && !ackBad;
+    const msg = () => ({ ...f, to: tos, subject: f.subject.trim(), body: f.body.trim(), ack: ackOn ? { ...ack, amount: amt } : null });
+    const preview = async () => { setBusy("prev"); setErr(""); try { setPrev(await store.previewMessage(msg())); } catch (e) { setErr("Could not load the preview."); } setBusy(""); };
+    const send = async () => {
+      setBusy("send"); setErr("");
+      try { const r = await store.sendMessage(msg()); onSent(r && r.queued ? r.queued : tos.length); onClose(); }
+      catch (e) { const c = String(e && (e.message || e)); setErr(c.indexOf("rate_limited") >= 0 ? "That's a lot of email in one hour — wait a little, then try again." : c.indexOf("invalid_email") >= 0 ? "One of the addresses doesn't look right." : "Could not send right now. Try again in a moment."); }
+      setBusy("");
+    };
+    const S = SENDERS.find(s => s[0] === f.from) || SENDERS[0];
+    return (
+      <Modal wide title="Write an email" sub="Sent from brialendowment.org. Replies come back to hello@, which forwards to your inbox." onClose={onClose}>
+        {prev ? (
+          <>
+            <div className="fd-sub" style={{ margin: "0 0 10px" }}><b style={{ color: "var(--text)" }}>From</b> {S[1]} &lt;{S[2]}&gt; · <b style={{ color: "var(--text)" }}>To</b> {tos.join(", ")}{ackOn && ack.pdf ? " · PDF acknowledgement attached" : ""}</div>
+            <iframe className="fd-mprev" title="Email preview" sandbox="" srcDoc={prev.html} />
+            <div className="fd-actions" style={{ marginTop: 14 }}>
+              <Confirm className="fd-btn primary" armedLabel={`Confirm · send to ${tos.length} ${plural(tos.length, "person", "people")}`} disabled={!ready || !!busy} onConfirm={send}>{busy === "send" ? "Sending…" : "Send"}</Confirm>
+              <button className="fd-btn ghost" onClick={() => setPrev(null)}>Back to editing</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <Field label="From">
+              <select className="fd-input" value={f.from} onChange={e => set("from", e.target.value)}>{SENDERS.map(s => <option key={s[0]} value={s[0]}>{s[1]} — {s[2]}</option>)}</select>
+            </Field>
+            <p className="fd-sub" style={{ margin: "4px 0 0" }}>{S[3]}.</p>
+            <Field label="To" hint={badTo.length ? "" : "One or more addresses, separated by commas. Each person gets their own email."} style={{ marginTop: 12 }}>
+              <input className="fd-input" value={f.to} onChange={e => set("to", e.target.value)} placeholder="name@example.com" spellCheck={false} />
+            </Field>
+            {badTo.length > 0 && <small className="fd-bad">Check: {badTo.join(", ")}</small>}
+            <Field label="Subject" style={{ marginTop: 12 }}><input className="fd-input" value={f.subject} maxLength={200} onChange={e => set("subject", e.target.value)} placeholder="Thank you for …" /></Field>
+            <div className="fd-actions" style={{ margin: "12px 0 6px" }}>
+              <span className="fd-sub" style={{ margin: 0 }}>Start from</span>
+              <button className="fd-btn quiet sm" onClick={() => { set("body", THANKS); if (!f.subject) set("subject", "Thank you"); }}>Thank-you letter</button>
+              <button className="fd-btn quiet sm" onClick={() => set("body", "")}>Blank</button>
+            </div>
+            <Field label="Message" hint="Leave an empty line between paragraphs.">
+              <textarea className="fd-input" rows={10} maxLength={10000} value={f.body} onChange={e => set("body", e.target.value)} placeholder="Dear …," />
+            </Field>
+            <div className="fd-krow" style={{ borderTop: 0 }}><div><b>Sign with my name</b><small>Adds "Brial Asif Hayi Paka · Founder, The Brial Endowment" under the message.</small></div><Switch on={f.sign} onChange={v => set("sign", v)}>{f.sign ? "On" : "Off"}</Switch></div>
+            <div className="fd-krow"><div><b>Acknowledge a contribution</b><small>Adds the amount and programme to the email, with a PDF acknowledgement. It does not change the public ledger.</small></div><Switch on={ackOn} onChange={v => { setAckOn(v); setPrev(null); }}>{ackOn ? "On" : "Off"}</Switch></div>
+            {ackOn && (
+              <div className="fd-card" style={{ background: "rgba(10,22,40,.4)", marginTop: 6 }}>
+                <div className="fd-grid2">
+                  <Field label="Contributed by"><input className="fd-input" value={ack.name} onChange={e => setA("name", e.target.value)} placeholder="Full name" /></Field>
+                  <Field label="Amount (USD)"><input className="fd-input" inputMode="decimal" value={ack.amount} onChange={e => setA("amount", e.target.value)} placeholder="35" /></Field>
+                  <Field label="Programme"><input className="fd-input" list="fd-programmes" value={ack.programme} onChange={e => setA("programme", e.target.value)} placeholder="Food & Land — …" /><datalist id="fd-programmes">{PROGRAMMES.map(x => <option key={x} value={x} />)}</datalist></Field>
+                  <Field label="Date of contribution"><input className="fd-input" type="date" value={ack.date} onChange={e => setA("date", e.target.value)} /></Field>
+                  <Field label="Reference (optional)"><input className="fd-input" value={ack.reference} onChange={e => setA("reference", e.target.value)} placeholder="Bank or grant reference" /></Field>
+                  <div style={{ display: "flex", alignItems: "flex-end" }}><Switch on={ack.pdf} onChange={v => setA("pdf", v)}>Attach PDF</Switch></div>
+                </div>
+                {ackBad && <small className="fd-bad">Enter the amount.</small>}
+              </div>
+            )}
+            {err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
+            <div className="fd-actions" style={{ marginTop: 16 }}>
+              <button className="fd-btn primary" disabled={!ready || !!busy} onClick={preview}>{busy === "prev" ? "Preparing…" : "Preview"}</button>
+              <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+              {!ready && <small className="fd-sub" style={{ margin: 0 }}>Fill in who it's to, a subject and the message.</small>}
+            </div>
+          </>
+        )}
+        {prev && err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
+      </Modal>
+    );
+  }
+
   const offKinds = k => Object.keys(k || {}).filter(x => k[x] === false).sort().join(",");
   const mailDirty = (a, b) => !!(a && b) && (a.founderTo.trim() !== b.founderTo || offKinds(a.kinds) !== offKinds(b.kinds));
   function EmailView({ store }) {
@@ -2341,6 +2431,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const [err, setErr] = useState("");
     const [busy, setBusy] = useState("");
     const [prev, setPrev] = useState(null);
+    const [compose, setCompose] = useState(false);
     const [m, flash] = useFlash();
     const keep = st => { const norm = { founderTo: st.founderTo || "hello@brialendowment.org", paused: !!st.paused, kinds: st.kinds || {} }; svRef.current = norm; setSv(norm); return norm; };
     const load = useCallback(async () => {
@@ -2386,6 +2477,12 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
           <div>
             <div className="fd-card">
               <div className="fd-mstat">
+                <div><h2 className="fd-h2" style={{ marginTop: 0 }}>Write an email</h2><p className="fd-sub" style={{ margin: 0 }}>A thank-you, an update or a reply — sent from brial@, hello@ or receipts@brialendowment.org.</p></div>
+                <button className="fd-btn primary" disabled={paused} title={paused ? "Resume sending first" : ""} onClick={() => setCompose(true)}>{ICON.send}Write an email</button>
+              </div>
+            </div>
+            <div className="fd-card">
+              <div className="fd-mstat">
                 <div>
                   <Tag tone={paused ? "warn" : "ok"} dot>{paused ? "Paused" : "Sending"}</Tag>
                   <h2 className="fd-h2">{paused ? "Emails are waiting, not sent" : "Email is on"}</h2>
@@ -2420,7 +2517,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             {log.length === 0 ? <p className="fd-sub">Nothing sent yet.</p> : (
               <div className="fd-mlog">{log.map(x => (
                 <div className="fd-mlog-i" key={x.id}>
-                  <b>{MAIL_LABEL[x.kind] || x.kind}</b><Tag tone={MAIL_TONE[x.status]}>{MAIL_WORD[x.status] || x.status}</Tag>
+                  <b>{x.kind === "message" ? (x.subject || MAIL_LABEL.message) : (MAIL_LABEL[x.kind] || x.kind)}</b><Tag tone={MAIL_TONE[x.status]}>{MAIL_WORD[x.status] || x.status}</Tag>
                   <small>{[x.to, fdatetime(x.sentAt || x.createdAt)].filter(Boolean).join(" · ")}</small><span />
                   {x.error && x.status !== "sent" && <small style={{ gridColumn: "1 / -1", color: x.status === "failed" ? "var(--rose)" : "var(--faint)" }}>{x.error}</small>}
                 </div>
@@ -2437,6 +2534,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             </div>
           </div>
         )}
+        {compose && <Composer store={store} onClose={() => setCompose(false)} onSent={n => { flash(`${n} ${plural(n, "email is", "emails are")} on the way.`); setTimeout(load, 5000); setTimeout(load, 15000); }} />}
         {prev && (
           <Modal wide title={prev.subject} sub={"From " + prev.from + " · sample data"} onClose={() => setPrev(null)}>
             <iframe className="fd-mprev" title="Receipt email preview" sandbox="" srcDoc={prev.html} />

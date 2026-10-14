@@ -1009,6 +1009,8 @@ window.BrialClipboard = { copy: copyToClipboard };
     sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
     mailPreview() { return Store._mailFn({ action: "preview", kind: "receipt" }); },
+    sendMessage(msg) { return Store._mailRpc("be_mail_send_message", { p_msg: msg }); },
+    previewMessage(msg) { return Store._mailFn({ action: "preview_message", message: msg }); },
     async downloadReceiptPdf(donationId, sample) {
       const r = await Store._mailFn(sample ? { action: "sample_pdf" } : { action: "receipt_pdf", donationId });
       const bin = atob(r.base64); const bytes = new Uint8Array(bin.length);

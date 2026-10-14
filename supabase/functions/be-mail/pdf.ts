@@ -47,6 +47,8 @@ const PAPER = rgb(250 / 255, 248 / 255, 242 / 255);
 export type ReceiptData = {
   no: string; amount: number; donorName: string; email?: string; country?: string;
   reportedAt?: string; verifiedAt?: string; issuedAt?: string; reference?: string; sample?: boolean;
+  // an acknowledgement of a contribution made through the endowment (no receipt number, no ledger entry)
+  ack?: { programme: string; date?: string };
 };
 
 const fold = (s: string) =>
@@ -55,15 +57,16 @@ const fold = (s: string) =>
 
 const fmtDay = (iso?: string) => {
   const d = new Date(String(iso || ""));
-  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" });
 };
 const money = (n: number) => (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  doc.setTitle(`Receipt ${r.no} — The Brial Endowment`);
+  const A = r.ack;
+  doc.setTitle(A ? `Acknowledgement ${r.no} — The Brial Endowment` : `Receipt ${r.no} — The Brial Endowment`);
   doc.setAuthor("The Brial Endowment");
-  doc.setSubject("Official donation receipt");
+  doc.setSubject(A ? "Acknowledgement of contribution" : "Official donation receipt");
   doc.setCreator("brialendowment.org");
   doc.setProducer("brialendowment.org");
   doc.setCreationDate(new Date());
@@ -129,9 +132,9 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
 
   // title block
   y -= 62;
-  text(page, "Official receipt", M, y + 26, F.sansBold, 8.5, GILT, { spacing: 1.8 });
-  text(page, "Donation Receipt", M, y - 8, F.serif, 34, NAVY);
-  text(page, "RECEIPT NO.", W - M, y + 26, F.sansBold, 8, MUTED, { align: "right", spacing: 1.4 });
+  text(page, A ? "With gratitude" : "Official receipt", M, y + 26, F.sansBold, 8.5, GILT, { spacing: 1.8 });
+  text(page, A ? "Acknowledgement" : "Donation Receipt", M, y - 8, F.serif, 34, NAVY);
+  text(page, A ? "REFERENCE" : "RECEIPT NO.", W - M, y + 26, F.sansBold, 8, MUTED, { align: "right", spacing: 1.4 });
   text(page, r.no, W - M, y + 2, F.sansBold, 15, NAVY, { align: "right" });
   text(page, "Issued " + fmtDay(r.issuedAt || r.verifiedAt), W - M, y - 14, F.sans, 9.5, MUTED, { align: "right" });
 
@@ -140,8 +143,8 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
   page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.8, color: LINE });
   y -= 30;
   const colR = W / 2 + 18;
-  text(page, "RECEIVED FROM", M, y, F.sansBold, 8, MUTED, { spacing: 1.4 });
-  text(page, "AMOUNT RECEIVED", colR, y, F.sansBold, 8, MUTED, { spacing: 1.4 });
+  text(page, A ? "CONTRIBUTED BY" : "RECEIVED FROM", M, y, F.sansBold, 8, MUTED, { spacing: 1.4 });
+  text(page, A ? "AMOUNT CONTRIBUTED" : "AMOUNT RECEIVED", colR, y, F.sansBold, 8, MUTED, { spacing: 1.4 });
   y -= 24;
   text(page, fit(r.donorName || "Anonymous donor", F.serif, 21, colR - M - 20), M, y, F.serif, 21, NAVY);
   text(page, "USD", colR, y + 1, F.sansBold, 10, GILT);
@@ -151,7 +154,13 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
 
   // details table
   y -= 78;
-  const rows: [string, string][] = [
+  const rows: [string, string][] = A ? [
+    ["Programme", A.programme || "The Brial Endowment"],
+    ["Date of contribution", fmtDay(A.date)],
+    ["Delivered through", "The Brial Endowment"],
+    ["Payment reference", r.reference || "—"],
+    ["Currency", "United States dollar (USD)"],
+  ] : [
     ["Gift reported on", fmtDay(r.reportedAt)],
     ["Verified on", fmtDay(r.verifiedAt || r.issuedAt)],
     ["Payment reference", r.reference || "—"],
@@ -169,7 +178,10 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
 
   // statement
   y = ry - 26;
-  const stmt = [
+  const stmt = A ? [
+    `With gratitude, The Brial Endowment acknowledges the contribution described above to ${A.programme || "its work"}. This letter is an acknowledgement of contribution, not a numbered donation receipt.`,
+    "Every grant the endowment makes is recorded on its public ledger at brialendowment.org. Please keep this letter for your records.",
+  ] : [
     "This receipt confirms that The Brial Endowment received and verified the gift described above. No goods or services were provided in exchange for this gift.",
     "Every verified gift is recorded on the endowment's public ledger at brialendowment.org. Please keep this receipt for your records.",
   ];
@@ -191,8 +203,8 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
   page.drawCircle({ x: sx, y: sy, size: 46, borderColor: GILT, borderWidth: 1.2 });
   page.drawCircle({ x: sx, y: sy, size: 40, borderColor: GILT, borderWidth: 0.5 });
   star(sx, sy + 12, 9);
-  text(page, "VERIFIED", sx, sy - 10, F.sansBold, 8, GILT, { align: "center", spacing: 1.6 });
-  text(page, r.no.replace(/^BE-/, ""), sx, sy - 22, F.sans, 7.5, GILT, { align: "center" });
+  text(page, A ? "THANK YOU" : "VERIFIED", sx, sy - 10, F.sansBold, A ? 7.5 : 8, GILT, { align: "center", spacing: A ? 1.2 : 1.6 });
+  text(page, A ? String(new Date(A.date || r.issuedAt || Date.now()).getUTCFullYear()) : r.no.replace(/^BE-/, ""), sx, sy - 22, F.sans, 7.5, GILT, { align: "center" });
 
   // footer
   page.drawLine({ start: { x: M, y: 70 }, end: { x: W - M, y: 70 }, thickness: 0.6, color: LINE });
