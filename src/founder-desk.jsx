@@ -1330,11 +1330,12 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
   function ReceiptDialog({ store, d, r, onClose, onSent }) {
     const [to, setTo] = useState(d.email || "");
+    const [note, setNote] = useState("");
     const [busy, setBusy] = useState("");
     const [m, flash] = useFlash();
     const send = async () => {
       setBusy("send");
-      try { const res = await store.sendReceipt(d.id, to.trim()); flash(`Receipt ${res.no} is on its way to ${res.to}.`); onSent && onSent(); }
+      try { const res = await store.sendReceipt(d.id, to.trim(), note.trim()); flash(`Receipt ${res.no} is on its way to ${res.to}.`); onSent && onSent(); }
       catch (e) { const c = String(e && (e.message || e)); flash(c.indexOf("invalid_email") >= 0 ? "That email address doesn't look right." : "Could not send right now. Try again in a moment.", "err"); }
       setBusy("");
     };
@@ -1347,7 +1348,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     return (
       <Modal title={r ? `Receipt ${r.no}` : "Receipt"} sub={`${d.anonymous ? "Anonymous" : titleCase(d.name)} · ${money(d.amount)} · verified ${fdate(d.verifiedAt)}`} onClose={onClose}>
         <p className={"fd-rc " + line.tone} style={{ textAlign: "left", marginTop: 0 }}>{line.text}{r && r.mail && r.mail.status === "failed" && r.mail.error ? ` — ${r.mail.error}` : ""}</p>
-        <Field label="Send the receipt to" hint="Usually the donor's own address. A copy is marked as such in the email."><input className="fd-input" type="email" value={to} onChange={e => setTo(e.target.value)} placeholder="donor@example.com" /></Field>
+        <Field label="Send the receipt to" hint="Usually the donor's own address."><input className="fd-input" type="email" value={to} onChange={e => setTo(e.target.value)} placeholder="donor@example.com" /></Field>
+        <Field label="Personal note (optional)" hint="Shown above the receipt, signed with your name. Leave empty for the standard receipt." style={{ marginTop: 12 }}><textarea className="fd-input" rows={4} maxLength={2000} value={note} onChange={e => setNote(e.target.value)} placeholder="Dear …, thank you for…" /></Field>
         <div className="fd-actions" style={{ marginTop: 16 }}>
           <button className="fd-btn primary" disabled={!okEmail(to) || !!busy} onClick={send}>{busy === "send" ? "Sending…" : "Send receipt"}</button>
           <button className="fd-btn ghost" disabled={!!busy} onClick={pdf}>{ICON.pdf}{busy === "pdf" ? "Preparing…" : "Download PDF"}</button>

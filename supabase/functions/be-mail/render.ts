@@ -96,14 +96,20 @@ export function donorName(d: any) {
   return !n || n === "Anonymous patron" ? "" : titleCase(n);
 }
 
-export function receiptEmail(d: any, rc: any, opts: { copy?: boolean } = {}) {
+export function receiptEmail(d: any, rc: any, opts: { copy?: boolean; note?: string } = {}) {
   const name = donorName(d);
   const ref = String(d.txHash || "").trim();
+  const note = String(opts.note || "").trim();
+  const personal = note
+    ? `<div style="margin:22px 0 4px;padding:18px 20px;background:${PAPER};border-left:3px solid ${GILT_SOFT};border-radius:8px">` +
+      `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.65;color:${INK}">${nl2br(note)}</div>` +
+      `<div style="margin-top:12px;font-size:13px;color:${MUTED}"><b style="color:${NAVY}">Brial Asif Hayi Paka</b> &middot; Founder, The Brial Endowment</div></div>`
+    : "";
   const b = layout({
-    pre: `Receipt ${rc.no} for your gift of ${usd(rc.amount)}. Thank you.`,
+    pre: note ? `A personal note from our founder, and your receipt ${rc.no}.` : `Receipt ${rc.no} for your gift of ${usd(rc.amount)}. Thank you.`,
     kicker: "Official receipt",
     title: name ? `Thank you, ${firstName(name)}.` : "Thank you for your gift.",
-    intro: `<p style="margin:0">We have received and verified your gift of <b>${usd(rc.amount)}</b> to The Brial Endowment. Your official receipt is attached to this email as a PDF${opts.copy ? " (a copy of the original)" : ""}.</p>`,
+    intro: `<p style="margin:0">We have received and verified your gift of <b>${usd(rc.amount)}</b> to The Brial Endowment. Your official receipt is attached to this email as a PDF${opts.copy ? " (a copy of the original)" : ""}.</p>` + personal,
     rows: [
       ["Receipt number", esc(rc.no)],
       ["Amount", `${usd(rc.amount)} <span style="color:${MUTED};font-weight:400">USD</span>`],

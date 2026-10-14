@@ -90,7 +90,7 @@ async function build(row: any, settings: any): Promise<Built> {
     if (!rc) return { skip: "no receipt" };
     const pdf = await receiptPdf(receiptData(d, rc));
     return {
-      to, from: FROM.receipts, replyTo: R.HELLO, ...R.receiptEmail(d, rc, { copy: !!p.copy }),
+      to, from: FROM.receipts, replyTo: R.HELLO, ...R.receiptEmail(d, rc, { copy: !!p.copy, note: p.note ? String(p.note).slice(0, 2000) : "" }),
       attachments: [{ filename: `Brial-Endowment-Receipt-${rc.no}.pdf`, content: b64(pdf) }],
     };
   }

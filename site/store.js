@@ -1006,7 +1006,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       const map = {}; rows.forEach(r => { map[r.donationId] = r; });
       return map;
     },
-    sendReceipt(donationId, to) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null }); },
+    sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
     mailPreview() { return Store._mailFn({ action: "preview", kind: "receipt" }); },
     async downloadReceiptPdf(donationId, sample) {

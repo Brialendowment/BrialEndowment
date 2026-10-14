@@ -9263,12 +9263,13 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
   function ReceiptDialog({ store, d, r, onClose, onSent }) {
     const [to, setTo] = useState(d.email || "");
+    const [note, setNote] = useState("");
     const [busy, setBusy] = useState("");
     const [m, flash] = useFlash();
     const send = async () => {
       setBusy("send");
       try {
-        const res = await store.sendReceipt(d.id, to.trim());
+        const res = await store.sendReceipt(d.id, to.trim(), note.trim());
         flash(`Receipt ${res.no} is on its way to ${res.to}.`);
         onSent && onSent();
       } catch (e) {
@@ -9287,7 +9288,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       setBusy("");
     };
     const line = receiptLine(d, r);
-    return /* @__PURE__ */ React.createElement(Modal, { title: r ? `Receipt ${r.no}` : "Receipt", sub: `${d.anonymous ? "Anonymous" : titleCase(d.name)} · ${money(d.amount)} · verified ${fdate(d.verifiedAt)}`, onClose }, /* @__PURE__ */ React.createElement("p", { className: "fd-rc " + line.tone, style: { textAlign: "left", marginTop: 0 } }, line.text, r && r.mail && r.mail.status === "failed" && r.mail.error ? ` — ${r.mail.error}` : ""), /* @__PURE__ */ React.createElement(Field, { label: "Send the receipt to", hint: "Usually the donor's own address. A copy is marked as such in the email." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "email", value: to, onChange: (e) => setTo(e.target.value), placeholder: "donor@example.com" })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !okEmail(to) || !!busy, onClick: send }, busy === "send" ? "Sending…" : "Send receipt"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", disabled: !!busy, onClick: pdf }, ICON.pdf, busy === "pdf" ? "Preparing…" : "Download PDF")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(Flash, { m })));
+    return /* @__PURE__ */ React.createElement(Modal, { title: r ? `Receipt ${r.no}` : "Receipt", sub: `${d.anonymous ? "Anonymous" : titleCase(d.name)} · ${money(d.amount)} · verified ${fdate(d.verifiedAt)}`, onClose }, /* @__PURE__ */ React.createElement("p", { className: "fd-rc " + line.tone, style: { textAlign: "left", marginTop: 0 } }, line.text, r && r.mail && r.mail.status === "failed" && r.mail.error ? ` — ${r.mail.error}` : ""), /* @__PURE__ */ React.createElement(Field, { label: "Send the receipt to", hint: "Usually the donor's own address." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "email", value: to, onChange: (e) => setTo(e.target.value), placeholder: "donor@example.com" })), /* @__PURE__ */ React.createElement(Field, { label: "Personal note (optional)", hint: "Shown above the receipt, signed with your name. Leave empty for the standard receipt.", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", rows: 4, maxLength: 2e3, value: note, onChange: (e) => setNote(e.target.value), placeholder: "Dear …, thank you for…" })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !okEmail(to) || !!busy, onClick: send }, busy === "send" ? "Sending…" : "Send receipt"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", disabled: !!busy, onClick: pdf }, ICON.pdf, busy === "pdf" ? "Preparing…" : "Download PDF")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(Flash, { m })));
   }
   function DonationsView({ store, donations, title }) {
     const [filter, setFilter] = useState("pending");
