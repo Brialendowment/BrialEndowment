@@ -203,6 +203,76 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 @keyframes fdFade{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.fd *{animation:none!important;transition:none!important}}
 @media (max-width:1100px){.fd-md{grid-template-columns:290px minmax(0,1fr)}}
+/* treasury */
+.fd-attn{display:grid;gap:10px;margin:-6px 0 22px}
+.fd-attn-i{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:rgba(231,183,106,.07);border:1px solid rgba(231,183,106,.25)}
+.fd-attn-i>div{flex:1;min-width:0}.fd-attn-i b{display:block;font-weight:600}.fd-attn-i small{color:var(--muted);font-size:13px}
+.fd-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--faint)}.fd-dot.warn{background:var(--amber)}
+.fd-tgrid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:stretch}
+.fd-tgrid .fd-card+.fd-card{margin-top:0}
+.fd-ch-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:14px}
+.fd-ch-legend span{display:inline-flex;align-items:center;gap:7px}.fd-ch-legend b{color:var(--text);font-weight:600}
+.fd-ch-legend i,.fd-ch-tip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.fd-ch-plot{position:relative;height:210px;margin:8px 0 26px 44px}
+.fd-ch-grid{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.fd-ch-grid span{position:absolute;right:100%;margin-right:8px;transform:translateY(-50%);font-size:11px;color:var(--faint);white-space:nowrap;font-variant-numeric:tabular-nums}
+.fd-ch-cols{position:absolute;inset:0;display:flex}
+.fd-ch-col{flex:1;position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;outline:none;cursor:default}
+.fd-ch-col.on{background:rgba(239,233,220,.04)}
+.fd-ch-col:focus-visible{box-shadow:inset 0 0 0 2px var(--gilt);border-radius:6px}
+.fd-ch-bars{height:100%;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.fd-ch-bars i{width:min(12px,32%);border-radius:4px 4px 0 0;display:block}
+.fd-ch-x{position:absolute;top:100%;margin-top:7px;font-size:11px;color:var(--faint)}
+.fd-ch-tip{position:absolute;bottom:calc(100% - 30px);left:50%;transform:translate(-50%,-100%);z-index:5;min-width:150px;padding:10px 12px;border-radius:10px;background:#1A2F52;border:1px solid var(--line2);box-shadow:0 14px 34px -14px rgba(0,0,0,.9);font-size:12.5px;pointer-events:none}
+.fd-ch-tip b{display:block;font-weight:600;margin-bottom:6px}
+.fd-ch-tip div{display:flex;align-items:center;gap:7px;color:var(--muted)}.fd-ch-tip span{margin-left:auto;color:var(--text);font-variant-numeric:tabular-nums;padding-left:12px}
+.fd-ch-col:first-child .fd-ch-tip{left:0;transform:translate(0,-100%)}.fd-ch-col:last-child .fd-ch-tip{left:auto;right:0;transform:translate(0,-100%)}
+.fd-bars{display:grid;gap:16px}
+.fd-bar-t{display:flex;justify-content:space-between;gap:10px;font-size:13.5px}.fd-bar-t b{font-weight:600;font-variant-numeric:tabular-nums}
+.fd-bar-track{height:8px;border-radius:4px;background:rgba(239,233,220,.06);margin:7px 0 4px;overflow:hidden}
+.fd-bar-track i{display:block;height:100%;border-radius:4px}
+.fd-bar small{font-size:12px;color:var(--faint)}
+.fd-amt{text-align:right}
+.fd-td .num.in{color:#5FD3A6}.fd-td .num.out{color:var(--text)}
+.fd-tfoot{background:rgba(239,233,220,.03)}
+.fd-totals{display:flex;justify-content:flex-end;gap:28px;flex-wrap:wrap;margin-top:14px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.fd-totals span{display:block;font-size:12px;color:var(--muted)}
+.fd-totals b{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;font-variant-numeric:lining-nums tabular-nums}
+.fd-totals b.in{color:#5FD3A6}
+.fd-chans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.fd-chans .fd-card+.fd-card{margin-top:0}
+@media (max-width:1100px){.fd-tgrid{grid-template-columns:1fr}}
+@media (max-width:900px){.fd-ch-plot{margin-left:36px;height:180px}.fd-ch-x{font-size:10px}.fd-amt{text-align:left}.fd-totals{justify-content:space-between}}
+/* founder home (chooser) */
+.fdh{--line:rgba(239,233,220,.09);--line2:rgba(239,233,220,.16);--gilt:#C9A961;--gilt2:#E2C98E;--text:#EFE9DC;--muted:rgba(239,233,220,.62);max-width:1000px;margin:0 auto;padding:72px clamp(20px,4vw,56px) 100px;font-family:'Manrope',system-ui,sans-serif;color:var(--text)}
+.fdh-k{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gilt);letter-spacing:.28em;text-transform:uppercase}
+.fdh-tabs{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;margin:18px 0 26px;padding:4px;border-radius:999px;border:1px solid var(--line2);background:rgba(20,36,66,.55)}
+.fdh-tab{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:none;border:0;color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;padding:10px 22px;border-radius:999px;cursor:pointer;transition:color .2s;white-space:nowrap}
+.fdh-tab em{font-style:normal;font-size:11px;font-weight:700;opacity:.7}
+.fdh-tab[aria-selected=true]{color:#0A1628}
+.fdh-tab:focus-visible{outline:2px solid var(--gilt);outline-offset:2px}
+.fdh-ink{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:var(--gilt);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+.fdh-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,60px);font-weight:400;letter-spacing:-.02em;margin:0 0 10px;line-height:1.05}
+.fdh-lede{font-size:16px;font-weight:300;color:var(--muted);margin:0 0 36px;max-width:600px}
+.fdh-track{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:flex-start;transition:height .3s ease;overscroll-behavior-x:contain}
+.fdh-track::-webkit-scrollbar{display:none}
+.fdh-panel{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
+.fdh-hint{display:none;margin:18px 0 0;font-size:12px;color:var(--muted);text-align:center}
+@media (hover:none){.fdh-hint{display:block}}
+@media (max-width:560px){.fdh{padding-top:40px}.fdh-tabs{display:grid;width:100%}.fdh-tab{padding:10px 8px;font-size:13.5px}}
+@media (prefers-reduced-motion:reduce){.fdh-ink,.fdh-track{transition:none}}
+.pn-exit{white-space:nowrap}
+@media (max-width:640px){.pn{padding:12px 16px!important;gap:10px!important}.pn-sub,.pn-email,.pn-avatar{display:none!important}.pn-exit{padding:8px 10px!important;letter-spacing:.08em!important}}
+/* movement rows on a phone: name + amount on one line */
+@media (max-width:900px){
+  .fd-mv{grid-template-columns:minmax(0,1fr) auto!important;gap:4px 14px!important}
+  .fd-mv .fd-td[data-l]::before{display:none}
+  .fd-mv>.fd-td:nth-child(1){grid-column:1;grid-row:1}
+  .fd-mv>.fd-td:nth-child(4){grid-column:2;grid-row:1;text-align:right}
+  .fd-mv>.fd-td:nth-child(2){grid-column:1;grid-row:2;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+  .fd-mv>.fd-td:nth-child(3){grid-column:2;grid-row:2;text-align:right;font-size:12.5px;color:var(--muted)}
+  .fd-mv>.fd-td:nth-child(3) small{display:none}
+}
 /* site settings */
 .fd-site{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
 .fd-site .fd-card+.fd-card{margin-top:16px}
@@ -276,6 +346,11 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     story: I(<><path d="M5 4h11l3 3v13H5z" /><path d="M9 10h6M9 14h6M9 18h3" /></>),
     link: I(<><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></>),
     contact: I(<><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3.5 7l8.5 6 8.5-6" /></>),
+    treasury: I(<><path d="M3 9l9-5 9 5" /><path d="M5 9v9M10 9v9M14 9v9M19 9v9M3 20h18" /></>),
+    overview: I(<><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></>),
+    inflow: I(<><path d="M12 4v11M7 10l5 5 5-5" /><path d="M4 19h16" /></>),
+    outflow: I(<><path d="M12 15V4M7 9l5-5 5 5" /><path d="M4 19h16" /></>),
+    ledger: I(<><path d="M5 3.5h14v17H5z" /><path d="M8.5 8h7M8.5 12h7M8.5 16h4" /></>),
     site: I(<><circle cx="12" cy="12" r="3" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" /></>),
     book: I(<><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" /><path d="M12 6v14" /></>),
     sale: I(<><path d="M3 12l9-9h8v8l-9 9z" /><circle cx="15.5" cy="8.5" r="1.4" /></>),
@@ -415,6 +490,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     library: { name: "The Library", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
     scholarships: { name: "Scholarships", accent: "#C9A961" },
     site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" },
+    treasury: { name: "Treasury", accent: "#7FC9A8", sub: "Money in and out of the endowment" },
   };
 
   // ============================================================
@@ -1211,7 +1287,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       </Modal>
     );
   }
-  function DonationsView({ store, donations }) {
+  function DonationsView({ store, donations, title }) {
     const [filter, setFilter] = useState("pending");
     const [q, setQ] = useState("");
     const [chan, setChan] = useState(false);
@@ -1225,7 +1301,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const G = "minmax(0,1.8fr) minmax(0,.7fr) minmax(0,1.3fr) minmax(0,.8fr) auto";
     return (
       <>
-        <Head title="Donations" lede="Gifts reported through the donate page. Check each one against your wallet or bank, then verify it — only verified gifts are final.">
+        <Head title={title || "Donations"} lede="Gifts reported through the donate page. Check each one against your wallet or bank, then verify it — only verified gifts are final.">
           <button className="fd-btn ghost" onClick={() => setChan(true)}>Payment channels</button>
         </Head>
         <Stats items={[{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter(g => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }]} />
@@ -1394,6 +1470,317 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
 
   // ============================================================
+  // TREASURY — every movement of money, in one place
+  // ============================================================
+  const C_IN = "#199e70", C_OUT = "#c98500"; // validated pair on the dark surface (dataviz validator: CVD ΔE 8.4, normal 19.8)
+  const kmoney = n => { const v = Number(n) || 0; return v >= 10000 ? "$" + Math.round(v / 1000) + "k" : v >= 1000 ? "$" + (v / 1000).toFixed(1).replace(/\.0$/, "") + "k" : "$" + Math.round(v); };
+  const monthKey = iso => { const d = new Date(iso); return isNaN(d) ? null : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
+  const isSaleD = d => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
+
+  // One list of movements, built from the same records as the public totals
+  function useFlows(store) {
+    const donations = (store.listDonations() || []).filter(d => !(store.isInternalDonation && store.isInternalDonation(d)));
+    const income = donations.map(d => ({
+      id: d.id, dir: "in", date: d.submittedAt || (d.data && d.data.sale && d.data.sale.date) || null,
+      category: isSaleD(d) ? "Library sale" : "Gift",
+      title: isSaleD(d) ? (d.data && d.data.sale ? d.data.sale.title : d.name) : (d.anonymous ? "Anonymous" : d.name || "Donor"),
+      detail: isSaleD(d) ? ((d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "")) : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
+      amount: Number(d.amount) || 0, ref: d.txHash || "", settled: !!d.verified, raw: d,
+    }));
+    const scholars = store.listApplicants().filter(a => a.status === "accepted");
+    const tuition = [], due = [];
+    scholars.forEach(sc => (sc.semesters || []).forEach(sem => {
+      if (!sem.bill) return;
+      const row = { scholar: sc, semester: sem };
+      if (sem.paidAt) tuition.push({ id: sc.id + ":" + sem.id, dir: "out", date: sem.paidAt, category: "Tuition", pillar: "Scholarships", title: titleCase(sc.name), detail: [sem.label, instCase(sc.profile?.university?.name)].filter(Boolean).join(" · "), amount: Number(sem.bill.amount) || 0, ref: sem.txHash || "", settled: true, row });
+      else if (sem.status === "bill-uploaded") due.push(row);
+    }));
+    const allGrants = store.getPillarGrants();
+    const grants = allGrants.map(g => ({ id: g.id, dir: "out", date: g.date, category: "Grant", pillar: g.pillar, title: g.project || "Grant", detail: [g.partner, g.country].filter(Boolean).join(" · "), amount: Number(g.amount) || 0, ref: g.txRef || "", settled: !g.archived, archived: !!g.archived }));
+    const legacy = store.getLegacy();
+    const legacyRow = Number(legacy.totalFunds) > 0 ? [{ id: "LEGACY", dir: "out", date: null, category: "Founding era", pillar: "Scholarships", title: "Support before the website", detail: `${legacy.count || (legacy.scholars || []).length || 0} scholars, recorded as one total`, amount: Number(legacy.totalFunds) || 0, ref: "", settled: true }] : [];
+    const outflow = [...tuition, ...grants, ...legacyRow];
+    const sum = l => l.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+    const received = income.filter(x => x.settled), pendingIn = income.filter(x => !x.settled);
+    const paidOut = outflow.filter(x => x.settled);
+    const dueSum = due.reduce((a, r) => a + (Number(r.semester.bill?.amount) || 0), 0);
+    return { income, received, pendingIn, outflow, paidOut, due, dueSum, sum, legacy, scholars };
+  }
+
+  function InOutChart({ inRows, outRows }) {
+    const [hover, setHover] = useState(null);
+    const now = new Date();
+    const months = [];
+    for (let i = 11; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push({ key: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"), label: d.toLocaleDateString("en-GB", { month: "short" }), long: d.toLocaleDateString("en-GB", { month: "long", year: "numeric" }), inn: 0, out: 0 }); }
+    const at = {}; months.forEach(m => { at[m.key] = m; });
+    inRows.forEach(x => { const k = monthKey(x.date); if (k && at[k]) at[k].inn += x.amount; });
+    outRows.forEach(x => { const k = monthKey(x.date); if (k && at[k]) at[k].out += x.amount; });
+    const peak = Math.max(0, ...months.map(m => Math.max(m.inn, m.out)));
+    const nice = v => { if (v <= 0) return 100; const p = Math.pow(10, Math.floor(Math.log10(v))); const f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; };
+    const top = nice(peak);
+    const h = v => (v > 0 ? Math.max(2, (v / top) * 100) : 0) + "%";
+    const totalIn = months.reduce((a, m) => a + m.inn, 0), totalOut = months.reduce((a, m) => a + m.out, 0);
+    return (
+      <div className="fd-ch">
+        <div className="fd-ch-legend" aria-hidden="true"><span><i style={{ background: C_IN }} />Money in <b>{money(totalIn)}</b></span><span><i style={{ background: C_OUT }} />Money out <b>{money(totalOut)}</b></span></div>
+        <div className="fd-ch-plot" role="img" aria-label={`Money in and out by month, last 12 months. In ${money(totalIn)}, out ${money(totalOut)}.`}>
+          {[1, 0.5, 0].map(f => <div key={f} className="fd-ch-grid" style={{ bottom: f * 100 + "%" }}><span>{kmoney(top * f)}</span></div>)}
+          <div className="fd-ch-cols">
+            {months.map(m => (
+              <div key={m.key} className={"fd-ch-col" + (hover === m.key ? " on" : "")} tabIndex={0} onMouseEnter={() => setHover(m.key)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(m.key)} onBlur={() => setHover(null)} aria-label={`${m.long}: in ${money(m.inn)}, out ${money(m.out)}`}>
+                <div className="fd-ch-bars"><i style={{ height: h(m.inn), background: C_IN }} /><i style={{ height: h(m.out), background: C_OUT }} /></div>
+                <span className="fd-ch-x">{m.label}</span>
+                {hover === m.key && <div className="fd-ch-tip"><b>{m.long}</b><div><i style={{ background: C_IN }} />In<span>{money(m.inn)}</span></div><div><i style={{ background: C_OUT }} />Out<span>{money(m.out)}</span></div></div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const MoveRow = ({ x, G, showDir }) => (
+    <div className="fd-tr fd-mv" style={{ gridTemplateColumns: G }}>
+      <div className="fd-td full"><b>{x.title}</b>{x.detail && <small>{x.detail}</small>}</div>
+      <div className="fd-td" data-l="Category"><Tag tone={x.dir === "in" ? "ok" : "gold"}>{x.category}</Tag>{x.pillar && x.category !== "Tuition" && x.category !== "Founding era" && <small>{x.pillar}</small>}{x.archived && <small style={{ color: "var(--amber)" }}>Archived · not counted</small>}{x.dir === "in" && !x.settled && <small style={{ color: "var(--amber)" }}>Not verified yet</small>}</div>
+      <div className="fd-td" data-l="Date">{x.date ? fdate(x.date) : "Before 2026"}{x.ref && <small className="fd-mono" title={x.ref}>{x.ref.length > 18 ? x.ref.slice(0, 10) + "…" + x.ref.slice(-5) : x.ref}</small>}</div>
+      <div className="fd-td fd-amt" data-l="Amount"><span className={"num " + (x.dir === "in" ? "in" : "out")}>{showDir ? (x.dir === "in" ? "+" : "−") : ""}{money(x.amount)}</span></div>
+    </div>
+  );
+
+  function TreasuryOverview({ store, go }) {
+    const F = useFlows(store);
+    const pub = store.getPublicMetrics ? store.getPublicMetrics() : null;
+    const byPillar = {};
+    F.paidOut.forEach(x => { byPillar[x.pillar] = (byPillar[x.pillar] || 0) + x.amount; });
+    const pillars = Object.entries(byPillar).sort((a, b) => b[1] - a[1]);
+    const maxP = Math.max(1, ...pillars.map(p => p[1]));
+    const outTotal = F.sum(F.paidOut);
+    const recent = [...F.received, ...F.paidOut].filter(x => x.date).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
+    const G = "minmax(0,1.7fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,.7fr)";
+    return (
+      <>
+        <Head title="Treasury" lede="Everything that comes into the endowment and everything it gives out, in one place." />
+        <Stats items={[
+          { label: "Received", value: money(F.sum(F.received)), sub: `${F.received.filter(x => x.category === "Gift").length} gifts · ${F.received.filter(x => x.category === "Library sale").length} library sales`, tone: "ok" },
+          { label: "Distributed", value: money(outTotal), sub: pub && Math.abs(pub.disbursed - outTotal) < 0.01 ? "Same as the public site" : "Tuition, grants and founding era" },
+          { label: "Waiting for verification", value: money(F.sum(F.pendingIn)), sub: `${F.pendingIn.length} ${plural(F.pendingIn.length, "gift", "gifts")}`, tone: F.pendingIn.length ? "warn" : "" },
+          { label: "Bills to pay", value: money(F.dueSum), sub: `${F.due.length} ${plural(F.due.length, "bill", "bills")}`, tone: F.due.length ? "warn" : "" },
+        ]} />
+        {(F.pendingIn.length > 0 || F.due.length > 0) && (
+          <div className="fd-attn">
+            {F.pendingIn.length > 0 && <div className="fd-attn-i"><span className="fd-dot warn" /><div><b>{F.pendingIn.length} {plural(F.pendingIn.length, "gift needs", "gifts need")} checking</b><small>Match each one with your wallet or bank, then verify it.</small></div><button className="fd-btn ghost sm" onClick={() => go("in")}>Review</button></div>}
+            {F.due.length > 0 && <div className="fd-attn-i"><span className="fd-dot warn" /><div><b>{F.due.length} tuition {plural(F.due.length, "bill is", "bills are")} waiting</b><small>{money(F.dueSum)} to pay to universities.</small></div><button className="fd-btn ghost sm" onClick={() => go("out")}>Pay</button></div>}
+          </div>
+        )}
+        <div className="fd-tgrid">
+          <div className="fd-card">
+            <div className="fd-card-head"><div><h2 className="fd-h2">Last 12 months</h2><p className="fd-sub">Verified money in and money paid out, by month.</p></div><button className="fd-btn quiet sm" onClick={() => go("ledger")}>See the ledger</button></div>
+            <InOutChart inRows={F.received} outRows={F.paidOut} />
+          </div>
+          <div className="fd-card">
+            <div className="fd-card-head"><div><h2 className="fd-h2">Where it went</h2><p className="fd-sub">Distributed, by pillar.</p></div></div>
+            {pillars.length === 0 ? <p className="fd-sub">Nothing distributed yet.</p> : (
+              <div className="fd-bars">{pillars.map(([name, v]) => (
+                <div key={name} className="fd-bar"><div className="fd-bar-t"><span>{name}</span><b>{money(v)}</b></div><div className="fd-bar-track"><i style={{ width: Math.max(1.5, v / maxP * 100) + "%", background: C_OUT }} /></div><small>{Math.round(v / (outTotal || 1) * 100)}% of all giving</small></div>
+              ))}</div>
+            )}
+          </div>
+        </div>
+        <div className="fd-card-head" style={{ margin: "26px 0 12px" }}><h2 className="fd-h2">Recent movements</h2><button className="fd-btn quiet sm" onClick={() => go("ledger")}>View all</button></div>
+        <div className="fd-table">
+          <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Description</div><div>Category</div><div>Date · reference</div><div style={{ textAlign: "right" }}>Amount</div></div>
+          {recent.length === 0 ? <Empty title="No movements yet." /> : recent.map(x => <MoveRow key={x.dir + x.id} x={x} G={G} showDir />)}
+        </div>
+      </>
+    );
+  }
+
+  function MoneyOutView({ store }) {
+    const F = useFlows(store);
+    const [tab, setTab] = useState(F.due.length ? "due" : "paid");
+    const [pillar, setPillar] = useState("all");
+    const [q, setQ] = useState("");
+    const [pay, setPay] = useState(null);
+    const [legacyOpen, setLegacyOpen] = useState(false);
+    const pillarsUsed = [...new Set(F.outflow.map(x => x.pillar))];
+    const s = q.trim().toLowerCase();
+    const list = F.outflow.filter(x => (tab === "archived" ? x.archived : !x.archived) && (pillar === "all" || x.pillar === pillar) && (!s || [x.title, x.detail, x.ref, x.pillar].some(v => (v || "").toLowerCase().includes(s))))
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const G = "minmax(0,1.7fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,.7fr)";
+    const GD = "minmax(0,1.6fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr) auto";
+    const archivedN = F.outflow.filter(x => x.archived).length;
+    return (
+      <>
+        <Head title="Money out" lede="Tuition paid to universities, grants to partners, and support given before the website.">
+          <button className="fd-btn ghost" onClick={() => setLegacyOpen(true)}>Founding-era support</button>
+        </Head>
+        <Stats items={[
+          { label: "Distributed", value: money(F.sum(F.paidOut)), sub: `${F.paidOut.length} ${plural(F.paidOut.length, "payment", "payments")}` },
+          { label: "Tuition", value: money(F.sum(F.paidOut.filter(x => x.category === "Tuition"))), sub: `${F.paidOut.filter(x => x.category === "Tuition").length} semesters` },
+          { label: "Grants", value: money(F.sum(F.paidOut.filter(x => x.category === "Grant"))), sub: `${F.paidOut.filter(x => x.category === "Grant").length} grants` },
+          { label: "Bills to pay", value: money(F.dueSum), sub: `${F.due.length} ${plural(F.due.length, "bill", "bills")}`, tone: F.due.length ? "warn" : "" },
+        ]} />
+        <div className="fd-toolbar"><Seg value={tab} onChange={setTab} items={[["due", "To pay", F.due.length], ["paid", "Paid", F.paidOut.length], ...(archivedN ? [["archived", "Archived grants", archivedN]] : [])]} /></div>
+        {tab === "due" ? (
+          <div className="fd-table">
+            <div className="fd-tr fd-th" style={{ gridTemplateColumns: GD }}><div>Scholar</div><div>Semester</div><div>Amount</div><div>Sent</div><div /></div>
+            {F.due.length === 0 ? <Empty title="Nothing to pay.">New tuition bills from scholars will appear here.</Empty> : F.due.map(r => (
+              <div key={r.scholar.id + r.semester.id} className="fd-tr" style={{ gridTemplateColumns: GD }}>
+                <div className="fd-td full"><b>{titleCase(r.scholar.name)}</b><small>{r.scholar.scholarId} · {instCase(r.scholar.profile?.university?.name)}</small></div>
+                <div className="fd-td" data-l="Semester">{r.semester.label}</div>
+                <div className="fd-td" data-l="Amount"><span className="num">{money(r.semester.bill?.amount)}</span></div>
+                <div className="fd-td" data-l="Sent">{fdate(r.semester.bill?.uploadedAt)}</div>
+                <div className="fd-td full"><div className="fd-actions" style={{ justifyContent: "flex-end" }}><FileBtn file={r.semester.bill} label="View bill" /><button className="fd-btn primary sm" onClick={() => setPay(r)}>Mark as paid</button></div></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="fd-toolbar">
+              <Seg value={pillar} onChange={setPillar} items={[["all", "All pillars"], ...pillarsUsed.map(p => [p, p])]} />
+              <Search value={q} onChange={setQ} placeholder="Search scholar, project, partner or reference" />
+            </div>
+            <div className="fd-table">
+              <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Paid to</div><div>Category</div><div>Date · reference</div><div style={{ textAlign: "right" }}>Amount</div></div>
+              {list.length === 0 ? <Empty title="Nothing here." /> : list.map(x => <MoveRow key={x.id} x={x} G={G} />)}
+              {list.length > 0 && <div className="fd-tr fd-tfoot" style={{ gridTemplateColumns: G }}><div className="fd-td full"><b>{list.length} {plural(list.length, "payment", "payments")}</b></div><div /><div /><div className="fd-td fd-amt"><span className="num">{money(F.sum(list))}</span></div></div>}
+            </div>
+            <p className="fd-sub" style={{ marginTop: 10 }}>Grants are recorded inside each pillar. Archived grants stay on record but are not counted in the totals.</p>
+          </>
+        )}
+        {pay && <PayDialog row={pay} store={store} onClose={() => setPay(null)} />}
+        {legacyOpen && <LegacyDialog store={store} onClose={() => setLegacyOpen(false)} />}
+      </>
+    );
+  }
+
+  function LedgerView({ store }) {
+    const F = useFlows(store);
+    const [dir, setDir] = useState("all");
+    const [year, setYear] = useState("all");
+    const [q, setQ] = useState("");
+    const settled = [...F.received, ...F.paidOut];
+    const years = [...new Set(settled.map(x => (x.date ? new Date(x.date).getFullYear() : null)).filter(Boolean))].sort((a, b) => b - a);
+    const s = q.trim().toLowerCase();
+    const list = settled.filter(x => (dir === "all" || x.dir === dir) && (year === "all" || (x.date && new Date(x.date).getFullYear() === Number(year)) || (year === "early" && !x.date)) && (!s || [x.title, x.detail, x.ref, x.category, x.pillar].some(v => (v || "").toLowerCase().includes(s))))
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const tin = F.sum(list.filter(x => x.dir === "in")), tout = F.sum(list.filter(x => x.dir === "out"));
+    const G = "minmax(0,1.7fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,.7fr)";
+    const exportCSV = () => {
+      const H = ["Date", "Direction", "Category", "Pillar", "Description", "Details", "Amount (USD)", "Reference"];
+      const rows = list.map(x => [x.date ? new Date(x.date).toISOString().slice(0, 10) : "before 2026", x.dir === "in" ? "In" : "Out", x.category, x.pillar || "", x.title, x.detail, (x.dir === "in" ? "" : "-") + (Number(x.amount) || 0).toFixed(2), x.ref].map(csv).join(","));
+      download(stamp("brial-ledger", "csv"), "﻿" + H.map(csv).join(",") + "\n" + rows.join("\n") + "\n", "text/csv;charset=utf-8");
+    };
+    return (
+      <>
+        <Head title="Ledger" lede="Every settled movement — verified gifts and sales in, payments out. Unverified gifts and unpaid bills are left out until they settle.">
+          <button className="fd-btn ghost" onClick={exportCSV} disabled={!list.length}>Download CSV</button>
+        </Head>
+        <div className="fd-toolbar">
+          <Seg value={dir} onChange={setDir} items={[["all", "All", settled.length], ["in", "Money in", F.received.length], ["out", "Money out", F.paidOut.length]]} />
+          <select className="fd-input" style={{ width: "auto" }} value={year} onChange={e => setYear(e.target.value)} aria-label="Year"><option value="all">All years</option>{years.map(y => <option key={y} value={y}>{y}</option>)}{F.paidOut.some(x => !x.date) && <option value="early">Before 2026</option>}</select>
+          <Search value={q} onChange={setQ} placeholder="Search description or reference" />
+        </div>
+        <div className="fd-table">
+          <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Description</div><div>Category</div><div>Date · reference</div><div style={{ textAlign: "right" }}>Amount</div></div>
+          {list.length === 0 ? <Empty title="No movements match." /> : list.map(x => <MoveRow key={x.dir + x.id} x={x} G={G} showDir />)}
+        </div>
+        {list.length > 0 && (
+          <div className="fd-totals">
+            <div><span>Money in</span><b className="in">+{money(tin)}</b></div>
+            <div><span>Money out</span><b className="out">−{money(tout)}</b></div>
+            <div><span>Difference</span><b>{tin - tout < 0 ? "−" : ""}{money(Math.abs(tin - tout))}</b></div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  function ChannelsView({ store }) {
+    const [open, setOpen] = useState(false);
+    const c = store.getPaymentConfig();
+    const rows = [
+      ["usdt", "USDT (on-chain)", c.usdt.enabled !== false, [c.usdt.network, c.usdt.asset].filter(Boolean).join(" · "), c.usdt.address],
+      ["bank", "Bank transfer", c.bank.enabled !== false, [c.bank.bank, c.bank.currency].filter(Boolean).join(" · "), [c.bank.account, c.bank.holder].filter(Boolean).join(" · ")],
+      ["card", "Card (Mastercard / Visa)", c.card.enabled !== false, "Checkout page", c.card.link],
+    ];
+    return (
+      <>
+        <Head title="Payment channels" lede="How donors can give on the public donate page."><button className="fd-btn primary" onClick={() => setOpen(true)}>Edit channels</button></Head>
+        <div className="fd-chans">
+          {rows.map(([k, name, on, sub, val]) => (
+            <div key={k} className="fd-card">
+              <div className="fd-card-head" style={{ marginBottom: 6 }}><h2 className="fd-h2">{name}</h2><Tag tone={on ? "ok" : ""} dot>{on ? "Shown" : "Hidden"}</Tag></div>
+              <p className="fd-sub" style={{ margin: 0 }}>{sub}</p>
+              <p className="fd-mono" style={{ margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" }}>{val || "Not set"}</p>
+            </div>
+          ))}
+        </div>
+        {open && <ChannelsDialog store={store} onClose={() => setOpen(false)} />}
+      </>
+    );
+  }
+
+  // ============================================================
+  // FOUNDER HOME — the chooser, in two swipeable groups
+  // ============================================================
+  const GROUPS = [
+    { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra"] },
+    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the website and the records — the work that serves every pillar.", only: ["treasury", "site", "backup"] },
+  ];
+  function FounderHome(props) {
+    useStyles();
+    const { Chooser } = props;
+    const [group, setGroup] = useNav("fd-group", "pillars");
+    const track = useRef(null);
+    const panels = useRef([]);
+    const [height, setHeight] = useState(null);
+    const idx = Math.max(0, GROUPS.findIndex(g => g.id === group));
+    const idxRef = useRef(idx); idxRef.current = idx;
+    const measure = i => { const el = panels.current[i]; if (el) setHeight(el.offsetHeight); };
+    useEffect(() => {
+      const t = track.current; if (!t) return;
+      t.scrollTo({ left: idx * t.clientWidth, behavior: "auto" });
+      measure(idx);
+      const ro = window.ResizeObserver ? new ResizeObserver(() => measure(idxRef.current)) : null;
+      panels.current.forEach(p => p && ro && ro.observe(p));
+      return () => ro && ro.disconnect();
+    }, []);
+    useEffect(() => {
+      const t = track.current; if (!t) return;
+      if (Math.round(t.scrollLeft / t.clientWidth) !== idx) t.scrollTo({ left: idx * t.clientWidth, behavior: "smooth" });
+      measure(idx);
+    }, [idx]);
+    const onScroll = () => {
+      const t = track.current; if (!t) return;
+      clearTimeout(onScroll.t);
+      onScroll.t = setTimeout(() => { const i = Math.round(t.scrollLeft / t.clientWidth); if (GROUPS[i] && GROUPS[i].id !== group) setGroup(GROUPS[i].id, { replace: true }); }, 90);
+    };
+    const g = GROUPS[idx];
+    const counts = { pillars: GROUPS[0].only.length, office: GROUPS[1].only.length };
+    return (
+      <div className="fdh">
+        <div className="fdh-k">Founder Console</div>
+        <div className="fdh-tabs" role="tablist" aria-label="Founder console sections">
+          {GROUPS.map((x, i) => <button key={x.id} role="tab" aria-selected={x.id === g.id} className="fdh-tab" onClick={() => setGroup(x.id, { replace: true })}>{x.label}<em>{counts[x.id]}</em></button>)}
+          <span className="fdh-ink" style={{ transform: `translateX(${idx * 100}%)` }} aria-hidden="true" />
+        </div>
+        <h1 className="fdh-h1">{g.title}</h1>
+        <p className="fdh-lede">{g.lede}</p>
+        <div className="fdh-track" ref={track} onScroll={onScroll} style={height ? { height } : null}>
+          {GROUPS.map((x, i) => (
+            <div key={x.id} className="fdh-panel" ref={el => { panels.current[i] = el; }} role="tabpanel" aria-label={x.label} aria-hidden={x.id !== g.id}>
+              <Chooser {...props} bare only={x.only} />
+            </div>
+          ))}
+        </div>
+        <p className="fdh-hint">Swipe left or right to switch between {GROUPS[0].label.toLowerCase()} and the {GROUPS[1].label.toLowerCase()}.</p>
+      </div>
+    );
+  }
+
+  // ============================================================
   // SITE SETTINGS — contact & social links in the public footer
   // ============================================================
   const LINE_TYPES = ["email", "phone", "whatsapp", "address"];
@@ -1552,6 +1939,24 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <LinkView store={store} pillarKey={pillar} cfg={meta} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
+    if (pillar === "treasury") {
+      const F = { pendingIn: (store.listDonations() || []).filter(d => !(store.isInternalDonation && store.isInternalDonation(d)) && !d.verified).length,
+        due: store.listApplicants().filter(a => a.status === "accepted").reduce((a, s) => a + (s.semesters || []).filter(x => x.status === "bill-uploaded").length, 0) };
+      nav = [
+        { id: "overview", label: "Overview", icon: ICON.overview },
+        { id: "in", label: "Money in", icon: ICON.inflow, count: F.pendingIn, hot: F.pendingIn > 0 },
+        { id: "out", label: "Money out", icon: ICON.outflow, count: F.due, hot: F.due > 0 },
+        { id: "ledger", label: "Ledger", icon: ICON.ledger },
+        { id: "channels", label: "Payment channels", icon: ICON.pay },
+      ];
+      const t = nav.some(n => n.id === tab) ? tab : "overview";
+      view = t === "overview" ? <TreasuryOverview store={store} go={setTab} />
+        : t === "in" ? <DonationsView store={store} donations={store.listDonations()} title="Money in" />
+        : t === "out" ? <MoneyOutView store={store} />
+        : t === "ledger" ? <LedgerView store={store} />
+        : <ChannelsView store={store} />;
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
+    }
     if (pillar === "site") {
       nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }];
       view = <ContactView store={store} />;
@@ -1568,5 +1973,6 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     view = t === "grants" ? <GrantsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
     return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
   }
+  FounderDesk.Home = FounderHome;
   return FounderDesk;
 })();
