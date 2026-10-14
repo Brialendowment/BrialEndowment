@@ -1677,6 +1677,52 @@ const CtaStrip = ({
     background: "rgba(232,228,220,0.2)"
   }
 }), /*#__PURE__*/React.createElement("div", null, "Reply within 14 days"))));
+// ---------- Footer contact & social links (managed in Founder Portal → Site settings) ----------
+const FooterContacts = () => {
+  const read = () => window.BrialStore && window.BrialStore.publicContacts ? window.BrialStore.publicContacts() : [];
+  const [items, setItems] = useState(read);
+  useEffect(() => {
+    const h = () => setItems(read());
+    window.addEventListener("brial:change", h);
+    window.addEventListener("brial:ready", h);
+    h();
+    return () => {
+      window.removeEventListener("brial:change", h);
+      window.removeEventListener("brial:ready", h);
+    };
+  }, []);
+  if (!items.length) return null;
+  const S = window.BrialStore;
+  const lines = items.filter(i => ["email", "phone", "whatsapp", "address"].indexOf(i.type) >= 0);
+  const icons = items.filter(i => ["email", "phone", "whatsapp", "address"].indexOf(i.type) < 0);
+  const ext = h => h && /^https?:/i.test(h);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "b-contact",
+    style: { marginTop: 28 }
+  }, lines.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", flexDirection: "column", gap: 12 }
+  }, lines.map((i, k) => /*#__PURE__*/React.createElement(i.href ? "a" : "span", {
+    key: "l" + k,
+    href: i.href || undefined,
+    target: ext(i.href) ? "_blank" : undefined,
+    rel: ext(i.href) ? "noopener noreferrer" : undefined,
+    className: "b-contact-line",
+    style: { display: "inline-flex", alignItems: "flex-start", gap: 12, fontFamily: "'Manrope', sans-serif", fontSize: 14, lineHeight: 1.5, color: "rgba(232,228,220,0.72)", textDecoration: "none", overflowWrap: "anywhere" }
+  }, /*#__PURE__*/React.createElement("span", { style: { color: "#C9A961", display: "flex", flexShrink: 0, marginTop: 1 } }, S.contactIcon(i.type, 18)), /*#__PURE__*/React.createElement("span", null, i.type === "whatsapp" ? "WhatsApp " + i.text : i.text)))), icons.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", flexWrap: "wrap", gap: 10, marginTop: lines.length ? 22 : 0 }
+  }, icons.map((i, k) => /*#__PURE__*/React.createElement("a", {
+    key: "s" + k,
+    href: i.href || "#",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    title: i.name,
+    "aria-label": i.name,
+    className: "b-contact-icon",
+    style: { width: 40, height: 40, borderRadius: "50%", border: "1px solid rgba(201,169,97,0.35)", color: "#C9A961", display: "inline-flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, border-color 0.2s" },
+    onMouseEnter: e => { e.currentTarget.style.background = "rgba(201,169,97,0.12)"; e.currentTarget.style.borderColor = "#C9A961"; },
+    onMouseLeave: e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(201,169,97,0.35)"; }
+  }, S.contactIcon(i.type, 18)))));
+};
 const Footer = ({
   onAdmin,
   onScholar,
@@ -1914,7 +1960,7 @@ const Footer = ({
     marginTop: 20,
     maxWidth: 380
   }
-}, "A sovereign philanthropic foundation. Direct-to-student. On-chain and fully transparent.")), [{
+}, "A sovereign philanthropic foundation. Direct-to-student. On-chain and fully transparent."), /*#__PURE__*/React.createElement(FooterContacts, null)), [{
   h: "Foundation",
   l: [{
     t: "Charter",
@@ -2026,7 +2072,7 @@ const App = () => {
   useEffect(() => {
     try {
       const keepHash = location.hash && (_viewRef.current !== "landing" || location.hash.charAt(1) !== "/");
-      history.replaceState({ brialView: _viewRef.current }, "", keepHash ? location.hash : hashFor(_viewRef.current));
+      history.replaceState(Object.assign({}, history.state || {}, { brialView: _viewRef.current }), "", keepHash ? location.hash : hashFor(_viewRef.current));
     } catch (e) {}
     const onPop = e => _setView((e.state && e.state.brialView) || parseHashView());
     window.addEventListener("popstate", onPop);

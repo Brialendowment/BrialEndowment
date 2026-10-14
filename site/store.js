@@ -68,6 +68,67 @@ function showCopyFallback(str) {
 window.BrialClipboard = { copy: copyToClipboard };
 
 // ============================================================
+// In-page history — window.useBrialNav(key, initial)
+// A React state hook whose changes become browser history entries, so the
+// phone's back swipe and the browser's Back button step back through screens
+// inside a portal (pillar → tab → record) instead of leaving it. The URL is
+// unchanged; values live in history.state under "nav:<key>" next to the
+// app-level `brialView`. Several changes in the same tick make ONE entry.
+// set(v, { replace: true }) updates the current entry without adding one.
+// ============================================================
+(function () {
+  var pending = null;
+  function flush() {
+    var p = pending; pending = null;
+    if (!p) return;
+    try { history.pushState(Object.assign({}, history.state || {}, p), "", location.href); } catch (e) {}
+  }
+  function readKey(key, fallback) {
+    var s = history.state;
+    if (s && Object.prototype.hasOwnProperty.call(s, "nav:" + key)) return s["nav:" + key];
+    return typeof fallback === "function" ? fallback() : fallback;
+  }
+  window.useBrialNav = function (key, initial) {
+    var R = window.React;
+    var initRef = R.useRef(initial);
+    var st = R.useState(function () { return readKey(key, initial); });
+    var ref = R.useRef(st[0]);
+    ref.current = st[0];
+    R.useEffect(function () {
+      // Record the starting value in the current entry, so stepping back to
+      // this entry later restores it (not a newer default).
+      var s0 = history.state;
+      if (!(s0 && Object.prototype.hasOwnProperty.call(s0, "nav:" + key))) {
+        if (pending) pending["nav:" + key] = ref.current;
+        else {
+          var e0 = {}; e0["nav:" + key] = ref.current;
+          try { history.replaceState(Object.assign({}, s0 || {}, e0), "", location.href); } catch (e) {}
+        }
+      }
+      var on = function () { var v = readKey(key, initRef.current); ref.current = v; st[1](v); };
+      window.addEventListener("popstate", on);
+      return function () { window.removeEventListener("popstate", on); };
+    }, [key]);
+    var set = R.useCallback(function (v, opts) {
+      var nv = typeof v === "function" ? v(ref.current) : v;
+      if (nv === ref.current) return;
+      ref.current = nv;
+      st[1](nv);
+      var entry = {}; entry["nav:" + key] = nv;
+      if (opts && opts.replace) {
+        // an entry is about to be pushed this tick: ride along with it
+        if (pending) { pending["nav:" + key] = nv; return; }
+        try { history.replaceState(Object.assign({}, history.state || {}, entry), "", location.href); } catch (e) {}
+        return;
+      }
+      if (!pending) { pending = {}; Promise.resolve().then(flush); }
+      Object.assign(pending, entry);
+    }, [key]);
+    return [st[0], set];
+  };
+})();
+
+// ============================================================
 // Brial Store
 // ============================================================
 (function () {
@@ -593,7 +654,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     isInternalDonation(d) {
       if (!d) return true;
       const id = String(d.id || "");
-      const INTERNAL = ["LEGACY-SUMMARY", "PILLAR-GRANTS", "PILLAR-LINKS", "PILLAR-STATUS", "PAYMENT-CONFIG", "EBOOKS-CATALOG", "FOODLAND-CONTENT", "WORSHIP-CONTENT", "WATER-CONTENT"];
+      const INTERNAL = ["LEGACY-SUMMARY", "PILLAR-GRANTS", "PILLAR-LINKS", "PILLAR-STATUS", "PAYMENT-CONFIG", "EBOOKS-CATALOG", "FOODLAND-CONTENT", "WORSHIP-CONTENT", "WATER-CONTENT", "SITE-CONTACT"];
       return INTERNAL.indexOf(id) >= 0 || id.indexOf("PILLAR-CONTENT-") === 0 || String(d.name || "").slice(0, 2) === "__";
     },
     listDonations() { return _donations.filter(d => !Store.isInternalDonation(d)); },
@@ -864,6 +925,96 @@ window.BrialClipboard = { copy: copyToClipboard };
       saveCache(); notify({ key: "pillar-" + key });
       upsertDonation(rec).catch(e => console.error(e));
     },
+    // ----- Contact & social links shown in the site footer (founder-managed) -----
+    // items: [{ type, value, label?, shown }] in display order. Only items with
+    // shown:true leave the database for visitors (be_private.public_donation).
+    CONTACT_TYPES: [
+      { type: "email", label: "Email", hint: "hello@brialendowment.org" },
+      { type: "phone", label: "Phone", hint: "+90 505 000 0000" },
+      { type: "whatsapp", label: "WhatsApp", hint: "+90 505 000 0000" },
+      { type: "instagram", label: "Instagram", hint: "@brialendowment or full link" },
+      { type: "linkedin", label: "LinkedIn", hint: "Full profile or page link" },
+      { type: "facebook", label: "Facebook", hint: "Page name or full link" },
+      { type: "x", label: "X (Twitter)", hint: "@handle or full link" },
+      { type: "youtube", label: "YouTube", hint: "@channel or full link" },
+      { type: "tiktok", label: "TikTok", hint: "@handle or full link" },
+      { type: "telegram", label: "Telegram", hint: "@username or full link" },
+      { type: "website", label: "Website", hint: "https://…" },
+      { type: "address", label: "Address", hint: "Street, city, country" },
+    ],
+    // Monoline 24px icons for each contact type (shared by the footer and the founder editor)
+    CONTACT_ICONS: {
+      email: [["rect", { x: 3, y: 5.5, width: 18, height: 13, rx: 2 }], ["path", { d: "M3.5 7l8.5 6 8.5-6" }]],
+      phone: [["path", { d: "M6.5 3.5h3l1.8 4.6-2.3 1.4a11 11 0 0 0 5.5 5.5l1.4-2.3 4.6 1.8v3a1.5 1.5 0 0 1-1.6 1.5A16.5 16.5 0 0 1 5 5.1 1.5 1.5 0 0 1 6.5 3.5z" }]],
+      whatsapp: [["path", { d: "M20.5 11.6a8.6 8.6 0 0 1-12.7 7.6L3.5 20.5l1.3-4.1a8.6 8.6 0 1 1 15.7-4.8z" }], ["path", { d: "M9 8.6c.2 2.8 3.2 5.8 6 6l1.2-1.4-1.9-1-.9.8c-1-.4-2.3-1.7-2.7-2.7l.8-.9-1-1.9z" }]],
+      instagram: [["rect", { x: 3.5, y: 3.5, width: 17, height: 17, rx: 5 }], ["circle", { cx: 12, cy: 12, r: 4 }], ["circle", { cx: 17.2, cy: 6.8, r: 0.9, fill: "currentColor", stroke: "none" }]],
+      linkedin: [["rect", { x: 3.5, y: 3.5, width: 17, height: 17, rx: 3 }], ["path", { d: "M8 10.5V17M8 7.4v.1M11.5 17v-6.5M11.5 13.2c0-1.6 1.1-2.7 2.5-2.7s2.4 1 2.4 2.7V17" }]],
+      facebook: [["path", { d: "M14.5 3.5h-2a3.5 3.5 0 0 0-3.5 3.5v3H7v3.5h2v7h3.5v-7h2.4l.6-3.5h-3V7.4c0-.5.4-.9.9-.9h1.1z" }]],
+      x: [["path", { d: "M4.5 4.5l15 15M19.5 4.5l-15 15" }]],
+      youtube: [["rect", { x: 2.5, y: 5.5, width: 19, height: 13, rx: 4 }], ["path", { d: "M10.2 9.3v5.4l4.6-2.7z" }]],
+      tiktok: [["path", { d: "M13.5 3.5v11.2a3.3 3.3 0 1 1-3.3-3.3" }], ["path", { d: "M13.5 3.5c.4 2.6 2.4 4.6 5 4.8" }]],
+      telegram: [["path", { d: "M20.5 4.5L3.5 11l5.8 2.2 2.2 6.3 3.2-4 4.6 3.4z" }], ["path", { d: "M9.3 13.2l11.2-8.7" }]],
+      website: [["circle", { cx: 12, cy: 12, r: 8.5 }], ["path", { d: "M3.5 12h17M12 3.5c2.8 3.2 2.8 13.8 0 17M12 3.5c-2.8 3.2-2.8 13.8 0 17" }]],
+      address: [["path", { d: "M12 20.5s-6.5-5.8-6.5-10.8a6.5 6.5 0 0 1 13 0c0 5-6.5 10.8-6.5 10.8z" }], ["circle", { cx: 12, cy: 9.7, r: 2.3 }]],
+      link: [["path", { d: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" }], ["path", { d: "M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" }]],
+    },
+    contactIcon(type, size) {
+      const R = window.React; if (!R) return null;
+      const shapes = Store.CONTACT_ICONS[type] || Store.CONTACT_ICONS.link;
+      return R.createElement("svg", { width: size || 18, height: size || 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+        shapes.map((s, i) => R.createElement(s[0], Object.assign({ key: i }, s[1]))));
+    },
+    getSiteContact() {
+      const d = _donations.find(x => x.id === "SITE-CONTACT");
+      if (d && d.contact && Array.isArray(d.contact.items)) return d.contact.items;
+      return [{ type: "instagram", value: "https://www.instagram.com/brialendowment", shown: true }];
+    },
+    saveSiteContact(items) {
+      const clean = (Array.isArray(items) ? items : []).map(it => ({
+        type: String(it.type || "link"),
+        value: String(it.value || "").trim(),
+        label: String(it.label || "").trim(),
+        shown: !!it.shown && !!String(it.value || "").trim(),
+      })).filter(it => it.value || it.type !== "link");
+      const rec = { id: "SITE-CONTACT", name: "__contact__", amount: 0, contact: { items: clean } };
+      const idx = _donations.findIndex(x => x.id === "SITE-CONTACT");
+      if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
+      saveCache(); notify({ key: "contact" });
+      return upsertDonation(rec);
+    },
+    // Visible items with a ready-to-use link and display text.
+    publicContacts() {
+      const T = {}; Store.CONTACT_TYPES.forEach(t => { T[t.type] = t.label; });
+      return Store.getSiteContact().filter(it => it.shown && it.value).map(it => {
+        const href = Store.contactHref(it);
+        const name = it.type === "link" ? (it.label || "Link") : (T[it.type] || it.type);
+        const text = ["email", "phone", "whatsapp", "address"].indexOf(it.type) >= 0 ? it.value : (it.label || name);
+        return { type: it.type, name, text, href, value: it.value };
+      });
+    },
+    contactHref(it) {
+      const v = String((it && it.value) || "").trim();
+      if (!v) return null;
+      const handle = v.replace(/^@/, "");
+      const isUrl = /^https?:\/\//i.test(v);
+      const web = u => (/^https?:\/\//i.test(u) ? u : "https://" + u.replace(/^\/+/, ""));
+      const looksLikeDomain = /^[\w-]+(\.[\w-]+)+(\/|$)/.test(v);
+      switch (it.type) {
+        case "email": return "mailto:" + v;
+        case "phone": return "tel:" + v.replace(/[^\d+]/g, "");
+        case "whatsapp": return isUrl ? v : "https://wa.me/" + v.replace(/\D/g, "");
+        case "instagram": return isUrl || looksLikeDomain ? web(v) : "https://www.instagram.com/" + handle;
+        case "x": return isUrl || looksLikeDomain ? web(v) : "https://x.com/" + handle;
+        case "tiktok": return isUrl || looksLikeDomain ? web(v) : "https://www.tiktok.com/@" + handle;
+        case "youtube": return isUrl || looksLikeDomain ? web(v) : "https://www.youtube.com/@" + handle;
+        case "telegram": return isUrl || looksLikeDomain ? web(v) : "https://t.me/" + handle;
+        case "facebook": return isUrl || looksLikeDomain ? web(v) : "https://www.facebook.com/" + handle;
+        case "linkedin": return isUrl || looksLikeDomain ? web(v) : "https://www.linkedin.com/in/" + handle;
+        case "address": return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(v);
+        default: return isUrl || looksLikeDomain ? web(v) : null;
+      }
+    },
+
     // ----- Pillar visibility: which pillars are live on the public site -----
     getPillarActive(key) {
       const DEF = { scholarships: true, worship: true, library: true, foodland: true, water: true, hospitals: false, schools: false, livestock: false, infra: false };

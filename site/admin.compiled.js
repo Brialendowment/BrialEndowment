@@ -8399,6 +8399,7 @@ const FD = (() => {
   const isImage = (f) => !!f && (/^image\//i.test(f.type || "") || /\.(png|jpe?g|webp|gif)$/i.test(f.name || f.path || ""));
   const today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
   const plural = (n, one, many) => Number(n) === 1 ? one : many;
+  const useNav = (key, init) => window.useBrialNav ? window.useBrialNav(key, init) : useState(init);
   const Img = ({ src, className, style, fallback = null }) => {
     const [bad, setBad] = useState(false);
     useEffect(() => {
@@ -8570,6 +8571,28 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 @keyframes fdFade{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.fd *{animation:none!important;transition:none!important}}
 @media (max-width:1100px){.fd-md{grid-template-columns:290px minmax(0,1fr)}}
+/* site settings */
+.fd-site{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.fd-site .fd-card+.fd-card{margin-top:16px}
+.fd-site-prev{position:sticky;top:84px}
+.fd-crow{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:12px 16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.fd-crow:first-of-type{border-top:0}
+.fd-crow-l{display:flex;align-items:center;gap:10px;min-width:0}
+.fd-crow-l b{font-weight:600;font-size:14px}
+.fd-crow-ic{display:flex;color:var(--gilt2);flex-shrink:0}
+.fd-crow-v{min-width:0}
+.fd-crow-a{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.fd-crow-gap{display:inline-block;width:58px}
+.fd-bad{display:block;color:var(--rose);font-size:12px;margin-top:5px}
+.fd-prev{margin-top:14px;padding:18px;border-radius:12px;background:#060E1C;border:1px solid var(--line)}
+.fd-prev-brand{display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:18px}
+.fd-prev p{font-size:12px;color:var(--faint);margin:10px 0 0;line-height:1.6}
+.fd-prev-line{display:flex;gap:9px;align-items:flex-start;margin-top:10px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.fd-prev-line svg{color:var(--gilt);flex-shrink:0;margin-top:2px}
+.fd-prev-icons{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.fd-prev-icons span{width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,169,97,.35);color:var(--gilt);display:inline-flex;align-items:center;justify-content:center}
+@media (max-width:1100px){.fd-site{grid-template-columns:1fr}.fd-site-prev{position:static}}
+@media (max-width:640px){.fd-crow{grid-template-columns:1fr;gap:8px}.fd-crow-a{justify-content:space-between}}
 .fd-mvis{display:none}
 @media (max-width:900px){
   .fd-mvis{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:28px}
@@ -8618,6 +8641,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     grant: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 20V10M10 20V6M16 20v-8M22 20H2" }))),
     story: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M5 4h11l3 3v13H5z" }), /* @__PURE__ */ React.createElement("path", { d: "M9 10h6M9 14h6M9 18h3" }))),
     link: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" }), /* @__PURE__ */ React.createElement("path", { d: "M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" }))),
+    contact: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "5.5", width: "18", height: "13", rx: "2" }), /* @__PURE__ */ React.createElement("path", { d: "M3.5 7l8.5 6 8.5-6" }))),
+    site: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" }))),
     book: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" }), /* @__PURE__ */ React.createElement("path", { d: "M12 6v14" }))),
     sale: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 12l9-9h8v8l-9 9z" }), /* @__PURE__ */ React.createElement("circle", { cx: "15.5", cy: "8.5", r: "1.4" }))),
     search: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "11", cy: "11", r: "6.5" }), /* @__PURE__ */ React.createElement("path", { d: "M16 16l4.5 4.5" })), 16),
@@ -8715,9 +8740,9 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     };
     return /* @__PURE__ */ React.createElement("span", { className: "fd-upload" }, /* @__PURE__ */ React.createElement("span", { className: "fd-btn ghost sm" }, ICON.up, busy ? "Uploading…" : children), /* @__PURE__ */ React.createElement("input", { type: "file", accept, onChange: pick, disabled: busy, "aria-label": children }));
   }
-  function Shell({ store, pillarKey, meta, nav, active, onNav, onBack, onExit, founderEmail, onLogout, children }) {
+  function Shell({ store, pillarKey, meta, nav, active, onNav, onBack, onExit, founderEmail, onLogout, children, noVisibility }) {
     const visible = store.getPillarActive ? store.getPillarActive(pillarKey) : true;
-    return /* @__PURE__ */ React.createElement("div", { className: "fd", style: { "--accent": meta.accent } }, /* @__PURE__ */ React.createElement("header", { className: "fd-top" }, /* @__PURE__ */ React.createElement("div", { className: "fd-brand" }, ICON.star, /* @__PURE__ */ React.createElement("span", null, "Founder Portal")), /* @__PURE__ */ React.createElement("nav", { className: "fd-crumb", "aria-label": "Breadcrumb" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("button", { onClick: onBack }, "Pillars"), /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("b", null, meta.name)), /* @__PURE__ */ React.createElement("div", { className: "fd-top-r" }, /* @__PURE__ */ React.createElement("span", { className: "fd-email" }, founderEmail), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: onExit }, "Public site"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: onLogout }, "Sign out"))), /* @__PURE__ */ React.createElement("div", { className: "fd-body" }, /* @__PURE__ */ React.createElement("aside", { className: "fd-side", "aria-label": meta.name + " sections" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar-ic" }, ICON[pillarKey] || ICON.grant), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, meta.name), /* @__PURE__ */ React.createElement("small", null, visible ? "Live on the public site" : "Hidden from the public site"))), nav.map((n) => /* @__PURE__ */ React.createElement("button", { key: n.id, className: "fd-nav", "aria-current": active === n.id ? "page" : void 0, onClick: () => onNav(n.id) }, /* @__PURE__ */ React.createElement("span", { className: "fd-nav-ic" }, n.icon), n.label, typeof n.count === "number" && /* @__PURE__ */ React.createElement("span", { className: "fd-count" + (n.hot ? " hot" : "") }, n.count))), /* @__PURE__ */ React.createElement("div", { className: "fd-side-foot" }, /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show pillar on public site"))), /* @__PURE__ */ React.createElement("main", { className: "fd-main" }, children, /* @__PURE__ */ React.createElement("div", { className: "fd-mvis fd-card" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, meta.name), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, visible ? "Live on the public site" : "Hidden from the public site")), /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show")))));
+    return /* @__PURE__ */ React.createElement("div", { className: "fd", style: { "--accent": meta.accent } }, /* @__PURE__ */ React.createElement("header", { className: "fd-top" }, /* @__PURE__ */ React.createElement("div", { className: "fd-brand" }, ICON.star, /* @__PURE__ */ React.createElement("span", null, "Founder Portal")), /* @__PURE__ */ React.createElement("nav", { className: "fd-crumb", "aria-label": "Breadcrumb" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("button", { onClick: onBack }, "Pillars"), /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("b", null, meta.name)), /* @__PURE__ */ React.createElement("div", { className: "fd-top-r" }, /* @__PURE__ */ React.createElement("span", { className: "fd-email" }, founderEmail), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: onExit }, "Public site"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: onLogout }, "Sign out"))), /* @__PURE__ */ React.createElement("div", { className: "fd-body" }, /* @__PURE__ */ React.createElement("aside", { className: "fd-side", "aria-label": meta.name + " sections" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar-ic" }, ICON[pillarKey] || ICON.grant), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, meta.name), /* @__PURE__ */ React.createElement("small", null, noVisibility ? meta.sub : visible ? "Live on the public site" : "Hidden from the public site"))), nav.map((n) => /* @__PURE__ */ React.createElement("button", { key: n.id, className: "fd-nav", "aria-current": active === n.id ? "page" : void 0, onClick: () => onNav(n.id) }, /* @__PURE__ */ React.createElement("span", { className: "fd-nav-ic" }, n.icon), n.label, typeof n.count === "number" && /* @__PURE__ */ React.createElement("span", { className: "fd-count" + (n.hot ? " hot" : "") }, n.count))), !noVisibility && /* @__PURE__ */ React.createElement("div", { className: "fd-side-foot" }, /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show pillar on public site"))), /* @__PURE__ */ React.createElement("main", { className: "fd-main" }, children, !noVisibility && /* @__PURE__ */ React.createElement("div", { className: "fd-mvis fd-card" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, meta.name), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, visible ? "Live on the public site" : "Hidden from the public site")), /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show")))));
   }
   const Head = ({ title, lede, children }) => /* @__PURE__ */ React.createElement("div", { className: "fd-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "fd-h1" }, title), lede && /* @__PURE__ */ React.createElement("p", { className: "fd-lede" }, lede)), children && /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, children));
   const PILLARS = {
@@ -8729,7 +8754,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     livestock: { name: "Livestock & Enterprise", grantName: "Livestock & Enterprise", accent: "#C9A07F", unit: ["placement", "placements"], unitLabel: "Placements", get: (s) => s.getPillarContent("livestock"), save: (s, v) => s.savePillarContent("livestock", v), unitField: "units", partner: "", project: "e.g. Goat herd — family batch I", firstEntry: "The first herd", linkMode: "partner", linkHelp: "The enterprise partner's programme page. Hide the button while there is no active partner." },
     infra: { name: "Sustainable Infrastructure", grantName: "Sustainable Infrastructure", accent: "#9FA8B8", unit: ["work", "works"], unitLabel: "Works completed", get: (s) => s.getPillarContent("infra"), save: (s, v) => s.savePillarContent("infra", v), unitField: "units", partner: "", project: "e.g. Footbridge — phase I", firstEntry: "The first bridge", linkMode: "partner", linkHelp: "The works partner's programme page. Hide the button while there is no active partner." },
     library: { name: "The Library", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
-    scholarships: { name: "Scholarships", accent: "#C9A961" }
+    scholarships: { name: "Scholarships", accent: "#C9A961" },
+    site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" }
   };
   function GrantForm({ cfg, initial, onSave, onClose }) {
     const [f, setF] = useState(() => initial || { partner: cfg.partner || "", project: "", country: "", amount: "", units: "", note: "", date: today() });
@@ -8954,11 +8980,11 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   function ApplicationsView({ store, apps, focus, clearFocus }) {
     const [filter, setFilter] = useState("todo");
     const [q, setQ] = useState("");
-    const [sel, setSel] = useState(null);
+    const [sel, setSel] = useNav("fd-sel", null);
     useEffect(() => {
       if (focus) {
         setFilter("all");
-        setSel(focus);
+        setSel(focus, { replace: true });
         clearFocus && clearFocus();
       }
     }, [focus]);
@@ -8976,14 +9002,18 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const desktopSel = selected || (typeof window !== "undefined" && window.innerWidth > 900 ? list[0] : null);
     return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Applications", lede: "Review applicants, book interviews and record decisions." }), /* @__PURE__ */ React.createElement("div", { className: "fd-tools" + (selected ? " has-sel" : "") }, /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: (v) => {
       setFilter(v);
-      setSel(null);
+      setSel(null, { replace: true });
     }, items })), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search name, email, ID or university" }))), /* @__PURE__ */ React.createElement("div", { className: "fd-md" + (selected ? " has-sel" : "") }, /* @__PURE__ */ React.createElement("div", { className: "fd-list", role: "list" }, list.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "Nothing here." }, filter === "todo" ? "No applications are waiting for you." : "No applications match.") : list.map((a) => {
       var _a, _b;
       return /* @__PURE__ */ React.createElement("button", { key: a.id, className: "fd-li", role: "listitem", "aria-current": desktopSel && desktopSel.id === a.id, onClick: () => {
         setSel(a.id);
         if (window.innerWidth <= 900) window.scrollTo({ top: 0 });
       } }, /* @__PURE__ */ React.createElement("div", { className: "fd-li-top" }, /* @__PURE__ */ React.createElement("b", null, titleCase(a.name)), /* @__PURE__ */ React.createElement("span", { className: "fd-sub", style: { margin: 0, fontSize: 12 } }, rel(a.submittedAt || a.signedUpAt))), /* @__PURE__ */ React.createElement("small", null, instCase((_b = (_a = a.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.name) || "—"), /* @__PURE__ */ React.createElement("div", { className: "fd-li-bot" }, /* @__PURE__ */ React.createElement(StageTag, { s: a.status }), a.isUserSubmitted && a.status === "submitted" && /* @__PURE__ */ React.createElement(Tag, { tone: "gold" }, "New")));
-    })), desktopSel ? /* @__PURE__ */ React.createElement(ApplicantDetail, { key: desktopSel.id, app: desktopSel, store, onBack: () => setSel(null) }) : /* @__PURE__ */ React.createElement("div", { className: "fd-detail fd-card" }, /* @__PURE__ */ React.createElement(Empty, { title: "Choose an application." }))));
+    })), desktopSel ? /* @__PURE__ */ React.createElement(ApplicantDetail, { key: desktopSel.id, app: desktopSel, store, onBack: () => {
+      const h = history.state;
+      if (h && h["nav:fd-sel"] === sel) history.back();
+      else setSel(null);
+    } }) : /* @__PURE__ */ React.createElement("div", { className: "fd-detail fd-card" }, /* @__PURE__ */ React.createElement(Empty, { title: "Choose an application." }))));
   }
   function PayDialog({ row, store, onClose }) {
     var _a, _b, _c;
@@ -9209,10 +9239,84 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       setDel(null);
     } }, "Move to trash"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setDel(null) }, "Cancel"))));
   }
+  const LINE_TYPES = ["email", "phone", "whatsapp", "address"];
+  function ContactView({ store }) {
+    const types = store.CONTACT_TYPES || [];
+    const load = () => {
+      const stored = store.getSiteContact ? store.getSiteContact() : [];
+      const preset = types.map((t) => {
+        const hit = stored.find((x) => x.type === t.type);
+        return { type: t.type, value: hit ? hit.value : "", label: "", shown: hit ? !!hit.shown : false };
+      });
+      const extra = stored.filter((x) => x.type === "link").map((x, i) => ({ ...x, id: "c" + i }));
+      return { preset, extra };
+    };
+    const [f, setF] = useState(load);
+    const [saved, setSaved] = useState(() => JSON.stringify(load()));
+    const [busy, setBusy] = useState(false);
+    const [m, flash] = useFlash();
+    const dirty = JSON.stringify(f) !== saved;
+    useEffect(() => {
+      const h = (e) => {
+        if (dirty) {
+          e.preventDefault();
+          e.returnValue = "";
+        }
+      };
+      window.addEventListener("beforeunload", h);
+      return () => window.removeEventListener("beforeunload", h);
+    }, [dirty]);
+    const upd = (x, patch) => {
+      const n = { ...x, ...patch };
+      if (patch.value !== void 0) {
+        if (!patch.value.trim()) n.shown = false;
+        else if (!x.value.trim()) n.shown = true;
+      }
+      return n;
+    };
+    const setP = (type, patch) => setF((p) => ({ ...p, preset: p.preset.map((x) => x.type === type ? upd(x, patch) : x) }));
+    const setX = (id, patch) => setF((p) => ({ ...p, extra: p.extra.map((x) => x.id === id ? upd(x, patch) : x) }));
+    const addX = () => setF((p) => ({ ...p, extra: [...p.extra, { id: "c" + Date.now(), type: "link", label: "", value: "", shown: false }] }));
+    const delX = (id) => setF((p) => ({ ...p, extra: p.extra.filter((x) => x.id !== id) }));
+    const all = [...f.preset, ...f.extra];
+    const href = (it) => store.contactHref ? store.contactHref(it) : null;
+    const badUrl = (it) => it.type === "link" && it.value.trim() && !/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(it.value.trim());
+    const badEmail = (it) => it.type === "email" && it.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(it.value.trim());
+    const invalid = all.some((it) => badUrl(it) || badEmail(it) || it.type === "link" && it.value.trim() && !it.label.trim());
+    const save = async () => {
+      setBusy(true);
+      try {
+        await store.saveSiteContact(all.filter((x) => x.value.trim() || x.type !== "link").map(({ type, value, label, shown }) => ({ type, value, label, shown })));
+        setSaved(JSON.stringify(f));
+        flash("Saved — the footer is updated.");
+      } catch (e) {
+        flash("Could not save. Check your connection and try again.", "err");
+      }
+      setBusy(false);
+    };
+    const shownCount = all.filter((x) => x.shown && x.value.trim()).length;
+    const row = ({ k, it, label, hint, onValue, onShown, extra }) => {
+      const h = it.value.trim() ? href(it) : null;
+      return /* @__PURE__ */ React.createElement("div", { key: k, className: "fd-crow" }, /* @__PURE__ */ React.createElement("div", { className: "fd-crow-l" }, /* @__PURE__ */ React.createElement("span", { className: "fd-crow-ic" }, store.contactIcon ? store.contactIcon(it.type, 18) : null), extra || /* @__PURE__ */ React.createElement("b", null, label)), /* @__PURE__ */ React.createElement("div", { className: "fd-crow-v" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: it.value, onChange: (e) => onValue(e.target.value), placeholder: hint, spellCheck: false, "aria-label": label || "Link address" }), badEmail(it) && /* @__PURE__ */ React.createElement("small", { className: "fd-bad" }, "This doesn't look like an email address."), badUrl(it) && /* @__PURE__ */ React.createElement("small", { className: "fd-bad" }, "Use a web address, for example https://…")), /* @__PURE__ */ React.createElement("div", { className: "fd-crow-a" }, h ? /* @__PURE__ */ React.createElement("a", { className: "fd-btn quiet sm", href: h, target: "_blank", rel: "noopener noreferrer", title: "Test this link" }, "Test ", ICON.ext) : /* @__PURE__ */ React.createElement("span", { className: "fd-crow-gap" }), /* @__PURE__ */ React.createElement(Switch, { on: it.shown && !!it.value.trim(), onChange: (v) => it.value.trim() && onShown(v) }, it.shown && it.value.trim() ? "Shown" : "Hidden")));
+    };
+    const preview = all.filter((x) => x.shown && x.value.trim());
+    const T = {};
+    types.forEach((t) => {
+      T[t.type] = t;
+    });
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Contact & social", lede: "The contact details and social links at the bottom of every public page. Hidden items are never sent to visitors." }), /* @__PURE__ */ React.createElement("div", { className: "fd-site" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Contact details"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Shown as lines of text with an icon."))), f.preset.filter((x) => LINE_TYPES.includes(x.type)).map((it) => row({ k: it.type, it, label: T[it.type].label, hint: T[it.type].hint, onValue: (v) => setP(it.type, { value: v }), onShown: (v) => setP(it.type, { shown: v }) }))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Social profiles"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Shown as round icons. A handle like @brialendowment is enough."))), f.preset.filter((x) => !LINE_TYPES.includes(x.type)).map((it) => row({ k: it.type, it, label: T[it.type].label, hint: T[it.type].hint, onValue: (v) => setP(it.type, { value: v }), onShown: (v) => setP(it.type, { shown: v }) }))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Other links"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Anything else — a Linktree, a donation page, a podcast.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: addX }, "Add a link")), f.extra.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "8px 0 0" } }, "No other links.") : f.extra.map((it) => row({
+      k: it.id,
+      it,
+      hint: "https://…",
+      onValue: (v) => setX(it.id, { value: v }),
+      onShown: (v) => setX(it.id, { shown: v }),
+      extra: /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", minWidth: 0, flex: 1 } }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: it.label, onChange: (e) => setX(it.id, { label: e.target.value }), placeholder: "Name", "aria-label": "Link name" }), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => delX(it.id), "aria-label": "Remove link" }, "✕"))
+    })))), /* @__PURE__ */ React.createElement("aside", { className: "fd-card fd-site-prev" }, /* @__PURE__ */ React.createElement("div", { className: "fd-stage-k" }, "Footer preview"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 4 } }, shownCount ? `${shownCount} ${plural(shownCount, "item", "items")} visible to visitors.` : "Nothing is shown yet — the footer keeps its usual look."), /* @__PURE__ */ React.createElement("div", { className: "fd-prev" }, /* @__PURE__ */ React.createElement("div", { className: "fd-prev-brand" }, ICON.star, /* @__PURE__ */ React.createElement("span", null, "The Brial Endowment")), /* @__PURE__ */ React.createElement("p", null, "A sovereign philanthropic foundation. Direct-to-student. On-chain and fully transparent."), preview.filter((x) => LINE_TYPES.includes(x.type)).map((x, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "fd-prev-line" }, store.contactIcon(x.type, 16), /* @__PURE__ */ React.createElement("span", null, x.type === "whatsapp" ? "WhatsApp " + x.value : x.value))), /* @__PURE__ */ React.createElement("div", { className: "fd-prev-icons" }, preview.filter((x) => !LINE_TYPES.includes(x.type)).map((x, i) => /* @__PURE__ */ React.createElement("span", { key: i, title: x.type === "link" ? x.label : (T[x.type] || {}).label }, store.contactIcon(x.type, 16))))))), (dirty || m) && /* @__PURE__ */ React.createElement("div", { className: "fd-savebar" }, /* @__PURE__ */ React.createElement("span", { style: { color: m && m.tone === "err" ? "var(--rose)" : dirty ? "var(--amber)" : "var(--sage)", fontWeight: 600 } }, m && !dirty ? m.text : m && m.tone === "err" ? m.text : invalid ? "Fix the highlighted fields first" : "You have unsaved changes"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, dirty && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet", onClick: () => setF(JSON.parse(saved)) }, "Discard"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !dirty || invalid || busy, onClick: save }, busy ? "Saving…" : "Save and publish"))));
+  }
   function FounderDesk({ pillar, store, onBack, onExit, founderEmail, onLogout }) {
     useStyles();
     const key = "fd-tab-" + pillar;
-    const [tab, setTabS] = useState(() => {
+    const [tab, setTabS] = useNav(key, () => {
       try {
         return sessionStorage.getItem(key) || "";
       } catch (e) {
@@ -9265,6 +9369,11 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       const t2 = nav.some((n) => n.id === tab) ? tab : "catalog";
       view = t2 === "catalog" ? /* @__PURE__ */ React.createElement(CatalogView, { store }) : t2 === "sales" ? /* @__PURE__ */ React.createElement(SalesView, { store }) : /* @__PURE__ */ React.createElement(LinkView, { store, pillarKey: pillar, cfg: meta });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
+    }
+    if (pillar === "site") {
+      nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }];
+      view = /* @__PURE__ */ React.createElement(ContactView, { store });
+      return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: "contact", onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, view);
     }
     const cfg = PILLARS[pillar];
     if (!cfg) return null;
@@ -9475,6 +9584,14 @@ const PillarChooser = ({
       strokeWidth: "1.1"
     }, /*#__PURE__*/React.createElement("line", { x1: "8", y1: "44", x2: "56", y2: "44" }), /*#__PURE__*/React.createElement("path", { d: "M14 44 Q32 18 50 44" }), /*#__PURE__*/React.createElement("line", { x1: "22", y1: "44", x2: "22", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "32", y1: "44", x2: "32", y2: "31" }), /*#__PURE__*/React.createElement("line", { x1: "42", y1: "44", x2: "42", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "10", y1: "52", x2: "54", y2: "52", strokeWidth: "1.4" }))
   }, {
+    id: "site",
+    label: "Site Settings",
+    sub: "Contact & social",
+    accent: "#9FB4D9",
+    d: "The contact details and social links shown at the bottom of the public site \u2014 each one can be shown or hidden.",
+    meta: (n => n + " item" + (n === 1 ? "" : "s") + " shown")(store && store.publicContacts ? store.publicContacts().length : 0),
+    icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "52", height: "52", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("rect", { x: "10", y: "16", width: "44", height: "32", rx: "3" }), /*#__PURE__*/React.createElement("path", { d: "M11 18 L32 34 L53 18" }), /*#__PURE__*/React.createElement("circle", { cx: "50", cy: "48", r: "7", fill: "#0A1628" }), /*#__PURE__*/React.createElement("path", { d: "M47 48 h6 M50 45 v6" }))
+  }, {
     id: "backup",
     label: "Vault Backup",
     sub: "Cadangan",
@@ -9565,7 +9682,7 @@ const PillarChooser = ({
     style: {
       color: c.accent
     }
-  }, c.icon), store && store.getPillarActive && c.id !== "backup" ? (o => /*#__PURE__*/React.createElement("span", {
+  }, c.icon), store && store.getPillarActive && c.id !== "backup" && c.id !== "site" ? (o => /*#__PURE__*/React.createElement("span", {
     role: "switch",
     "aria-checked": o,
     title: o ? "Live on the public site — click to deactivate" : "Shown as coming soon — click to activate",
@@ -9669,7 +9786,7 @@ const AdminPortalGated = ({
   onExit
 }) => {
   const store = useStore();
-  const [pillar, setPillar] = useState(null); // null = chooser
+  const [pillar, setPillar] = window.useBrialNav ? window.useBrialNav("fd-pillar", null) : useState(null); // null = chooser
   const [tab, setTab] = useState("inbox");
   const apps = store.listApplicants();
   const scholars = apps.filter(a => a.status === "accepted");

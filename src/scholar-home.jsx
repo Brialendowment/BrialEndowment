@@ -63,19 +63,11 @@ const SH = (() => {
     "Application essay": "Esai pendaftaran", "Subject grades": "Nilai mata pelajaran", "Scholarship history": "Riwayat beasiswa",
     "Active": "Aktif", "Paused": "Ditangguhkan", "Ended": "Dihentikan", "Graduated": "Lulus",
   };
-  let lang = "en";
-  try { lang = localStorage.getItem("brial-lang") || "en"; } catch (e) {}
+  // English only — the EN/ID switch was retired (visitors use browser translation).
+  const lang = "en";
   const t = s => (lang === "id" && ID[s]) || s;
   const L = (en, id) => (lang === "id" ? id : en);
-  function useLang() {
-    const [, set] = useState(0);
-    useEffect(() => {
-      const h = e => { lang = (e && e.detail) || "en"; set(x => x + 1); };
-      window.addEventListener("brial:lang", h);
-      return () => window.removeEventListener("brial:lang", h);
-    }, []);
-    return lang;
-  }
+  function useLang() { return lang; }
 
   // ---------------- helpers ----------------
   const money = n => "$" + (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -119,6 +111,8 @@ const SH = (() => {
 .bsp-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;object-position:50% 25%;border:1px solid rgba(201,169,97,.5);background:linear-gradient(135deg,#C9A961,#8B7A4A);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:17px;color:#0A1628}
 .bsp-out{background:none;border:1px solid var(--line2);color:var(--muted);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .2s,color .2s}
 .bsp-out:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
+.bsp-site{display:inline-flex;align-items:center;gap:7px;background:none;border:0;color:var(--muted);border-radius:10px;padding:8px 10px;font-size:13px;font-weight:500;cursor:pointer;transition:color .2s,background .2s}
+.bsp-site:hover{color:var(--text);background:rgba(239,233,220,.05)}
 .bsp-main{max-width:1120px;margin:0 auto;padding:36px 24px 120px}
 .bsp-h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:30px;line-height:1.15;letter-spacing:-.005em;margin:0}
 .bsp-h3{font-size:16px;font-weight:600;margin:0;color:var(--text)}
@@ -289,6 +283,7 @@ select.bsp-input option{background:#0A1628}
   .bsp-brand small{display:none}
   .bsp-me{margin-left:auto}
   .bsp-me .bsp-avatar{display:none}
+  .bsp-site span{display:none}
   .bsp-tabs{order:3;width:100%;margin:0 -16px;padding:0 6px;overflow-x:auto;scrollbar-width:none;height:46px}
   .bsp-tabs::-webkit-scrollbar{display:none}
   .bsp-tab{padding:0 10px;flex-shrink:0;font-size:13.5px}
@@ -327,6 +322,7 @@ select.bsp-input option{background:#0A1628}
 
   // ---------------- icons ----------------
   const Icon = {
+    home: () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 11L12 4l8.5 7" /><path d="M6 9.5V20h12V9.5" /><path d="M10 20v-5h4v5" /></svg>,
     up: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" /></svg>,
     check: (s = 18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>,
     doc: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true"><path d="M6 2.5h8.5L19 7v14.5H6z" /><path d="M14 2.5V7h5" /></svg>,
@@ -999,11 +995,13 @@ select.bsp-input option{background:#0A1628}
 
   // ---------------- shell ----------------
   const TABS = [["overview", "Overview"], ["profile", "My profile"], ["account", "Account"], ["help", "Help"]];
-  function ScholarHome({ applicant, store, onLogout }) {
+  function ScholarHome({ applicant, store, onLogout, onExit }) {
     useStyles();
     useLang();
     const d = useScholar(applicant, store);
-    const [tab, setTabState] = useState(() => { try { return sessionStorage.getItem("bsp-tab") || "overview"; } catch (e) { return "overview"; } });
+    // each tab is a history entry: the back swipe / Back button returns to the previous tab
+    const initTab = () => { try { return sessionStorage.getItem("bsp-tab") || "overview"; } catch (e) { return "overview"; } };
+    const [tab, setTabState] = window.useBrialNav ? window.useBrialNav("sh-tab", initTab) : useState(initTab);
     const setTab = k => { setTabState(k); try { sessionStorage.setItem("bsp-tab", k); } catch (e) {} window.scrollTo({ top: 0, behavior: "smooth" }); };
     const per = applicant.profile?.personal || {};
     const avatar = fileUrl(per.showcasePhoto || (isImage(per.photoFile) ? per.photoFile : null));
@@ -1013,7 +1011,7 @@ select.bsp-input option{background:#0A1628}
       <div className="bsp">
         <header className="bsp-top">
           <div className="bsp-top-in">
-            <a className="bsp-brand" href="#/" title={t("Back to website")}>
+            <a className="bsp-brand" href="#/" title={t("Back to website")} onClick={e => { if (onExit) { e.preventDefault(); onExit(); } }}>
               {Icon.star()}
               <span><b>The Brial Endowment</b><small>{t("Scholar Portal")}</small></span>
             </a>
@@ -1028,6 +1026,7 @@ select.bsp-input option{background:#0A1628}
             </nav>
             <div className="bsp-me">
               {avatar ? <img className="bsp-avatar" src={avatar} alt="" /> : <span className="bsp-avatar">{(applicant.name || "?").charAt(0)}</span>}
+              {onExit && <button className="bsp-site" onClick={onExit} aria-label={t("Public site")} title={t("Back to the public website")}>{Icon.home ? Icon.home() : null}<span>{t("Public site")}</span></button>}
               <button className="bsp-out" onClick={onLogout}>{t("Sign out")}</button>
             </div>
           </div>

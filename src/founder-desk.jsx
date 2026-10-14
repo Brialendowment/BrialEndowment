@@ -29,6 +29,8 @@ const FD = (() => {
   const isImage = f => !!f && (/^image\//i.test(f.type || "") || /\.(png|jpe?g|webp|gif)$/i.test(f.name || f.path || ""));
   const today = () => new Date().toISOString().slice(0, 10);
   const plural = (n, one, many) => (Number(n) === 1 ? one : many);
+  // Screen state that the back swipe / Back button can step through (see store.js)
+  const useNav = (key, init) => (window.useBrialNav ? window.useBrialNav(key, init) : useState(init));
   // Image with a graceful fallback when the file cannot load (never a broken-image icon)
   const Img = ({ src, className, style, fallback = null }) => {
     const [bad, setBad] = useState(false);
@@ -201,6 +203,28 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 @keyframes fdFade{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.fd *{animation:none!important;transition:none!important}}
 @media (max-width:1100px){.fd-md{grid-template-columns:290px minmax(0,1fr)}}
+/* site settings */
+.fd-site{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.fd-site .fd-card+.fd-card{margin-top:16px}
+.fd-site-prev{position:sticky;top:84px}
+.fd-crow{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:12px 16px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.fd-crow:first-of-type{border-top:0}
+.fd-crow-l{display:flex;align-items:center;gap:10px;min-width:0}
+.fd-crow-l b{font-weight:600;font-size:14px}
+.fd-crow-ic{display:flex;color:var(--gilt2);flex-shrink:0}
+.fd-crow-v{min-width:0}
+.fd-crow-a{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.fd-crow-gap{display:inline-block;width:58px}
+.fd-bad{display:block;color:var(--rose);font-size:12px;margin-top:5px}
+.fd-prev{margin-top:14px;padding:18px;border-radius:12px;background:#060E1C;border:1px solid var(--line)}
+.fd-prev-brand{display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:18px}
+.fd-prev p{font-size:12px;color:var(--faint);margin:10px 0 0;line-height:1.6}
+.fd-prev-line{display:flex;gap:9px;align-items:flex-start;margin-top:10px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.fd-prev-line svg{color:var(--gilt);flex-shrink:0;margin-top:2px}
+.fd-prev-icons{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.fd-prev-icons span{width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,169,97,.35);color:var(--gilt);display:inline-flex;align-items:center;justify-content:center}
+@media (max-width:1100px){.fd-site{grid-template-columns:1fr}.fd-site-prev{position:static}}
+@media (max-width:640px){.fd-crow{grid-template-columns:1fr;gap:8px}.fd-crow-a{justify-content:space-between}}
 .fd-mvis{display:none}
 @media (max-width:900px){
   .fd-mvis{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:28px}
@@ -251,6 +275,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     grant: I(<><path d="M4 20V10M10 20V6M16 20v-8M22 20H2" /></>),
     story: I(<><path d="M5 4h11l3 3v13H5z" /><path d="M9 10h6M9 14h6M9 18h3" /></>),
     link: I(<><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></>),
+    contact: I(<><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3.5 7l8.5 6 8.5-6" /></>),
+    site: I(<><circle cx="12" cy="12" r="3" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" /></>),
     book: I(<><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" /><path d="M12 6v14" /></>),
     sale: I(<><path d="M3 12l9-9h8v8l-9 9z" /><circle cx="15.5" cy="8.5" r="1.4" /></>),
     search: I(<><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>, 16),
@@ -330,7 +356,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
 
   // ---------------- shell ----------------
-  function Shell({ store, pillarKey, meta, nav, active, onNav, onBack, onExit, founderEmail, onLogout, children }) {
+  function Shell({ store, pillarKey, meta, nav, active, onNav, onBack, onExit, founderEmail, onLogout, children, noVisibility }) {
     const visible = store.getPillarActive ? store.getPillarActive(pillarKey) : true;
     return (
       <div className="fd" style={{ "--accent": meta.accent }}>
@@ -352,7 +378,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
           <aside className="fd-side" aria-label={meta.name + " sections"}>
             <div className="fd-pillar">
               <div className="fd-pillar-ic">{ICON[pillarKey] || ICON.grant}</div>
-              <div><b>{meta.name}</b><small>{visible ? "Live on the public site" : "Hidden from the public site"}</small></div>
+              <div><b>{meta.name}</b><small>{noVisibility ? meta.sub : visible ? "Live on the public site" : "Hidden from the public site"}</small></div>
             </div>
             {nav.map(n => (
               <button key={n.id} className="fd-nav" aria-current={active === n.id ? "page" : undefined} onClick={() => onNav(n.id)}>
@@ -360,12 +386,12 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
                 {typeof n.count === "number" && <span className={"fd-count" + (n.hot ? " hot" : "")}>{n.count}</span>}
               </button>
             ))}
-            <div className="fd-side-foot">
+            {!noVisibility && <div className="fd-side-foot">
               <Switch on={visible} onChange={v => store.savePillarActive(pillarKey, v)}>Show pillar on public site</Switch>
-            </div>
+            </div>}
           </aside>
           <main className="fd-main">{children}
-            <div className="fd-mvis fd-card"><div><b style={{ fontWeight: 600 }}>{meta.name}</b><div className="fd-sub" style={{ margin: 0 }}>{visible ? "Live on the public site" : "Hidden from the public site"}</div></div><Switch on={visible} onChange={v => store.savePillarActive(pillarKey, v)}>Show</Switch></div>
+            {!noVisibility && <div className="fd-mvis fd-card"><div><b style={{ fontWeight: 600 }}>{meta.name}</b><div className="fd-sub" style={{ margin: 0 }}>{visible ? "Live on the public site" : "Hidden from the public site"}</div></div><Switch on={visible} onChange={v => store.savePillarActive(pillarKey, v)}>Show</Switch></div>}
           </main>
         </div>
       </div>
@@ -388,6 +414,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     infra: { name: "Sustainable Infrastructure", grantName: "Sustainable Infrastructure", accent: "#9FA8B8", unit: ["work", "works"], unitLabel: "Works completed", get: s => s.getPillarContent("infra"), save: (s, v) => s.savePillarContent("infra", v), unitField: "units", partner: "", project: "e.g. Footbridge — phase I", firstEntry: "The first bridge", linkMode: "partner", linkHelp: "The works partner's programme page. Hide the button while there is no active partner." },
     library: { name: "The Library", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
     scholarships: { name: "Scholarships", accent: "#C9A961" },
+    site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" },
   };
 
   // ============================================================
@@ -949,8 +976,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   function ApplicationsView({ store, apps, focus, clearFocus }) {
     const [filter, setFilter] = useState("todo");
     const [q, setQ] = useState("");
-    const [sel, setSel] = useState(null);
-    useEffect(() => { if (focus) { setFilter("all"); setSel(focus); clearFocus && clearFocus(); } }, [focus]);
+    const [sel, setSel] = useNav("fd-sel", null);
+    useEffect(() => { if (focus) { setFilter("all"); setSel(focus, { replace: true }); clearFocus && clearFocus(); } }, [focus]);
     const live = apps.filter(a => a.status !== "registered");
     const count = s => apps.filter(a => a.status === s).length;
     const items = [["todo", "To do", live.filter(a => !["accepted", "rejected"].includes(a.status)).length], ["submitted", "To review", count("submitted")], ["interview-scheduled", "Interview booked", count("interview-scheduled")], ["interview-done", "Decision due", count("interview-done")], ["accepted", "Granted", count("accepted")], ["rejected", "Declined", count("rejected")], ["registered", "Drafts", count("registered")], ["all", "All", apps.length]];
@@ -966,7 +993,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       <>
         <Head title="Applications" lede="Review applicants, book interviews and record decisions." />
         <div className={"fd-tools" + (selected ? " has-sel" : "")}>
-          <div className="fd-toolbar"><Seg value={filter} onChange={v => { setFilter(v); setSel(null); }} items={items} /></div>
+          <div className="fd-toolbar"><Seg value={filter} onChange={v => { setFilter(v); setSel(null, { replace: true }); }} items={items} /></div>
           <div className="fd-toolbar"><Search value={q} onChange={setQ} placeholder="Search name, email, ID or university" /></div>
         </div>
         <div className={"fd-md" + (selected ? " has-sel" : "")}>
@@ -979,7 +1006,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
               </button>
             ))}
           </div>
-          {desktopSel ? <ApplicantDetail key={desktopSel.id} app={desktopSel} store={store} onBack={() => setSel(null)} /> : <div className="fd-detail fd-card"><Empty title="Choose an application." /></div>}
+          {desktopSel ? <ApplicantDetail key={desktopSel.id} app={desktopSel} store={store} onBack={() => { const h = history.state; if (h && h["nav:fd-sel"] === sel) history.back(); else setSel(null); }} /> : <div className="fd-detail fd-card"><Empty title="Choose an application." /></div>}
         </div>
       </>
     );
@@ -1367,12 +1394,122 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
 
   // ============================================================
+  // SITE SETTINGS — contact & social links in the public footer
+  // ============================================================
+  const LINE_TYPES = ["email", "phone", "whatsapp", "address"];
+  function ContactView({ store }) {
+    const types = store.CONTACT_TYPES || [];
+    const load = () => {
+      const stored = store.getSiteContact ? store.getSiteContact() : [];
+      const preset = types.map(t => { const hit = stored.find(x => x.type === t.type); return { type: t.type, value: hit ? hit.value : "", label: "", shown: hit ? !!hit.shown : false }; });
+      const extra = stored.filter(x => x.type === "link").map((x, i) => ({ ...x, id: "c" + i }));
+      return { preset, extra };
+    };
+    const [f, setF] = useState(load);
+    const [saved, setSaved] = useState(() => JSON.stringify(load()));
+    const [busy, setBusy] = useState(false);
+    const [m, flash] = useFlash();
+    const dirty = JSON.stringify(f) !== saved;
+    useEffect(() => {
+      const h = e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
+      window.addEventListener("beforeunload", h);
+      return () => window.removeEventListener("beforeunload", h);
+    }, [dirty]);
+    // filling a field shows it; emptying a field hides it
+    const upd = (x, patch) => { const n = { ...x, ...patch }; if (patch.value !== undefined) { if (!patch.value.trim()) n.shown = false; else if (!x.value.trim()) n.shown = true; } return n; };
+    const setP = (type, patch) => setF(p => ({ ...p, preset: p.preset.map(x => (x.type === type ? upd(x, patch) : x)) }));
+    const setX = (id, patch) => setF(p => ({ ...p, extra: p.extra.map(x => (x.id === id ? upd(x, patch) : x)) }));
+    const addX = () => setF(p => ({ ...p, extra: [...p.extra, { id: "c" + Date.now(), type: "link", label: "", value: "", shown: false }] }));
+    const delX = id => setF(p => ({ ...p, extra: p.extra.filter(x => x.id !== id) }));
+    const all = [...f.preset, ...f.extra];
+    const href = it => (store.contactHref ? store.contactHref(it) : null);
+    const badUrl = it => it.type === "link" && it.value.trim() && !/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(it.value.trim());
+    const badEmail = it => it.type === "email" && it.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(it.value.trim());
+    const invalid = all.some(it => badUrl(it) || badEmail(it) || (it.type === "link" && it.value.trim() && !it.label.trim()));
+    const save = async () => {
+      setBusy(true);
+      try {
+        await store.saveSiteContact(all.filter(x => x.value.trim() || x.type !== "link").map(({ type, value, label, shown }) => ({ type, value, label, shown })));
+        setSaved(JSON.stringify(f));
+        flash("Saved — the footer is updated.");
+      } catch (e) { flash("Could not save. Check your connection and try again.", "err"); }
+      setBusy(false);
+    };
+    const shownCount = all.filter(x => x.shown && x.value.trim()).length;
+    const row = ({ k, it, label, hint, onValue, onShown, extra }) => {
+      const h = it.value.trim() ? href(it) : null;
+      return (
+        <div key={k} className="fd-crow">
+          <div className="fd-crow-l"><span className="fd-crow-ic">{store.contactIcon ? store.contactIcon(it.type, 18) : null}</span>{extra || <b>{label}</b>}</div>
+          <div className="fd-crow-v">
+            <input className="fd-input" value={it.value} onChange={e => onValue(e.target.value)} placeholder={hint} spellCheck={false} aria-label={label || "Link address"} />
+            {badEmail(it) && <small className="fd-bad">This doesn't look like an email address.</small>}
+            {badUrl(it) && <small className="fd-bad">Use a web address, for example https://…</small>}
+          </div>
+          <div className="fd-crow-a">
+            {h ? <a className="fd-btn quiet sm" href={h} target="_blank" rel="noopener noreferrer" title="Test this link">Test {ICON.ext}</a> : <span className="fd-crow-gap" />}
+            <Switch on={it.shown && !!it.value.trim()} onChange={v => it.value.trim() && onShown(v)}>{it.shown && it.value.trim() ? "Shown" : "Hidden"}</Switch>
+          </div>
+        </div>
+      );
+    };
+    const preview = all.filter(x => x.shown && x.value.trim());
+    const T = {}; types.forEach(t => { T[t.type] = t; });
+    return (
+      <>
+        <Head title="Contact & social" lede="The contact details and social links at the bottom of every public page. Hidden items are never sent to visitors." />
+        <div className="fd-site">
+          <div>
+            <div className="fd-card">
+              <div className="fd-card-head" style={{ marginBottom: 4 }}><div><h2 className="fd-h2">Contact details</h2><p className="fd-sub">Shown as lines of text with an icon.</p></div></div>
+              {f.preset.filter(x => LINE_TYPES.includes(x.type)).map(it => row({ k: it.type, it, label: T[it.type].label, hint: T[it.type].hint, onValue: v => setP(it.type, { value: v }), onShown: v => setP(it.type, { shown: v }) }))}
+            </div>
+            <div className="fd-card">
+              <div className="fd-card-head" style={{ marginBottom: 4 }}><div><h2 className="fd-h2">Social profiles</h2><p className="fd-sub">Shown as round icons. A handle like @brialendowment is enough.</p></div></div>
+              {f.preset.filter(x => !LINE_TYPES.includes(x.type)).map(it => row({ k: it.type, it, label: T[it.type].label, hint: T[it.type].hint, onValue: v => setP(it.type, { value: v }), onShown: v => setP(it.type, { shown: v }) }))}
+            </div>
+            <div className="fd-card">
+              <div className="fd-card-head" style={{ marginBottom: 4 }}>
+                <div><h2 className="fd-h2">Other links</h2><p className="fd-sub">Anything else — a Linktree, a donation page, a podcast.</p></div>
+                <button className="fd-btn ghost sm" onClick={addX}>Add a link</button>
+              </div>
+              {f.extra.length === 0 ? <p className="fd-sub" style={{ margin: "8px 0 0" }}>No other links.</p> : f.extra.map(it => (
+                row({ k: it.id, it, hint: "https://…", onValue: v => setX(it.id, { value: v }), onShown: v => setX(it.id, { shown: v }),
+                  extra: <div style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0, flex: 1 }}><input className="fd-input" value={it.label} onChange={e => setX(it.id, { label: e.target.value })} placeholder="Name" aria-label="Link name" /><button className="fd-btn quiet sm" onClick={() => delX(it.id)} aria-label="Remove link">✕</button></div> })
+              ))}
+            </div>
+          </div>
+          <aside className="fd-card fd-site-prev">
+            <div className="fd-stage-k">Footer preview</div>
+            <p className="fd-sub" style={{ marginTop: 4 }}>{shownCount ? `${shownCount} ${plural(shownCount, "item", "items")} visible to visitors.` : "Nothing is shown yet — the footer keeps its usual look."}</p>
+            <div className="fd-prev">
+              <div className="fd-prev-brand">{ICON.star}<span>The Brial Endowment</span></div>
+              <p>A sovereign philanthropic foundation. Direct-to-student. On-chain and fully transparent.</p>
+              {preview.filter(x => LINE_TYPES.includes(x.type)).map((x, i) => <div key={i} className="fd-prev-line">{store.contactIcon(x.type, 16)}<span>{x.type === "whatsapp" ? "WhatsApp " + x.value : x.value}</span></div>)}
+              <div className="fd-prev-icons">{preview.filter(x => !LINE_TYPES.includes(x.type)).map((x, i) => <span key={i} title={x.type === "link" ? x.label : (T[x.type] || {}).label}>{store.contactIcon(x.type, 16)}</span>)}</div>
+            </div>
+          </aside>
+        </div>
+        {(dirty || m) && (
+          <div className="fd-savebar">
+            <span style={{ color: m && m.tone === "err" ? "var(--rose)" : dirty ? "var(--amber)" : "var(--sage)", fontWeight: 600 }}>{m && !dirty ? m.text : m && m.tone === "err" ? m.text : invalid ? "Fix the highlighted fields first" : "You have unsaved changes"}</span>
+            <div className="fd-actions">
+              {dirty && <button className="fd-btn quiet" onClick={() => setF(JSON.parse(saved))}>Discard</button>}
+              <button className="fd-btn primary" disabled={!dirty || invalid || busy} onClick={save}>{busy ? "Saving…" : "Save and publish"}</button>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // ============================================================
   // ROOT
   // ============================================================
   function FounderDesk({ pillar, store, onBack, onExit, founderEmail, onLogout }) {
     useStyles();
     const key = "fd-tab-" + pillar;
-    const [tab, setTabS] = useState(() => { try { return sessionStorage.getItem(key) || ""; } catch (e) { return ""; } });
+    const [tab, setTabS] = useNav(key, () => { try { return sessionStorage.getItem(key) || ""; } catch (e) { return ""; } });
     const [focus, setFocus] = useState(null);
     const setTab = t => { setTabS(t); try { sessionStorage.setItem(key, t); } catch (e) {} window.scrollTo({ top: 0 }); };
     const meta = PILLARS[pillar] || { name: pillar, accent: "#C9A961" };
@@ -1414,6 +1551,11 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       const t = nav.some(n => n.id === tab) ? tab : "catalog";
       view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <LinkView store={store} pillarKey={pillar} cfg={meta} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
+    }
+    if (pillar === "site") {
+      nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }];
+      view = <ContactView store={store} />;
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="contact" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
     }
     const cfg = PILLARS[pillar];
     if (!cfg) return null;

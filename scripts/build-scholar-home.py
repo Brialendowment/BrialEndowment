@@ -20,7 +20,7 @@ END = "// <<< SCHOLAR HOME"
 HOOK = "  const status = applicant.status;\n  const greeting = applicant.name.split(\" \")[0];\n"
 HOOK_NEW = ("  const status = applicant.status;\n"
             "  if (status === \"accepted\" && typeof SH === \"function\") return /*#__PURE__*/React.createElement(SH, {\n"
-            "    applicant: applicant,\n    store: store,\n    onLogout: onLogout\n  });\n"
+            "    applicant: applicant,\n    store: store,\n    onLogout: onLogout,\n    onExit: onExit\n  });\n"
             "  const greeting = applicant.name.split(\" \")[0];\n")
 
 

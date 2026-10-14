@@ -328,7 +328,8 @@ const ApplicantAuth = ({
   initialMode = "signup"
 }) => {
   const store = useApplicantStore();
-  const [mode, setMode] = useState(initialMode); // "signup" | "signin"
+  // sign-up / sign-in switch is a history entry, so Back returns to the previous form
+  const [mode, setMode] = window.useBrialNav ? window.useBrialNav("auth-mode", initialMode) : useState(initialMode); // "signup" | "signin"
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -3557,23 +3558,10 @@ const SH = (() => {
     "Ended": "Dihentikan",
     "Graduated": "Lulus"
   };
-  let lang = "en";
-  try {
-    lang = localStorage.getItem("brial-lang") || "en";
-  } catch (e) {
-  }
+  const lang = "en";
   const t = (s) => lang === "id" && ID[s] || s;
   const L = (en, id) => lang === "id" ? id : en;
   function useLang() {
-    const [, set] = useState(0);
-    useEffect(() => {
-      const h = (e) => {
-        lang = e && e.detail || "en";
-        set((x) => x + 1);
-      };
-      window.addEventListener("brial:lang", h);
-      return () => window.removeEventListener("brial:lang", h);
-    }, []);
     return lang;
   }
   const money = (n) => "$" + (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -3614,6 +3602,8 @@ const SH = (() => {
 .bsp-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;object-position:50% 25%;border:1px solid rgba(201,169,97,.5);background:linear-gradient(135deg,#C9A961,#8B7A4A);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:17px;color:#0A1628}
 .bsp-out{background:none;border:1px solid var(--line2);color:var(--muted);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .2s,color .2s}
 .bsp-out:hover{border-color:rgba(201,169,97,.6);color:var(--text)}
+.bsp-site{display:inline-flex;align-items:center;gap:7px;background:none;border:0;color:var(--muted);border-radius:10px;padding:8px 10px;font-size:13px;font-weight:500;cursor:pointer;transition:color .2s,background .2s}
+.bsp-site:hover{color:var(--text);background:rgba(239,233,220,.05)}
 .bsp-main{max-width:1120px;margin:0 auto;padding:36px 24px 120px}
 .bsp-h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:30px;line-height:1.15;letter-spacing:-.005em;margin:0}
 .bsp-h3{font-size:16px;font-weight:600;margin:0;color:var(--text)}
@@ -3784,6 +3774,7 @@ select.bsp-input option{background:#0A1628}
   .bsp-brand small{display:none}
   .bsp-me{margin-left:auto}
   .bsp-me .bsp-avatar{display:none}
+  .bsp-site span{display:none}
   .bsp-tabs{order:3;width:100%;margin:0 -16px;padding:0 6px;overflow-x:auto;scrollbar-width:none;height:46px}
   .bsp-tabs::-webkit-scrollbar{display:none}
   .bsp-tab{padding:0 10px;flex-shrink:0;font-size:13.5px}
@@ -3820,6 +3811,7 @@ select.bsp-input option{background:#0A1628}
     }, []);
   }
   const Icon = {
+    home: () => /* @__PURE__ */ React.createElement("svg", { width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.6", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M3.5 11L12 4l8.5 7" }), /* @__PURE__ */ React.createElement("path", { d: "M6 9.5V20h12V9.5" }), /* @__PURE__ */ React.createElement("path", { d: "M10 20v-5h4v5" })),
     up: () => /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.6", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M12 16V4M7 9l5-5 5 5M5 20h14" })),
     check: (s = 18) => /* @__PURE__ */ React.createElement("svg", { width: s, height: s, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M5 12.5l4.5 4.5L19 7.5" })),
     doc: () => /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M6 2.5h8.5L19 7v14.5H6z" }), /* @__PURE__ */ React.createElement("path", { d: "M14 2.5V7h5" })),
@@ -4156,18 +4148,19 @@ select.bsp-input option{background:#0A1628}
     }))));
   }
   const TABS = [["overview", "Overview"], ["profile", "My profile"], ["account", "Account"], ["help", "Help"]];
-  function ScholarHome({ applicant, store, onLogout }) {
+  function ScholarHome({ applicant, store, onLogout, onExit }) {
     var _a;
     useStyles();
     useLang();
     const d = useScholar(applicant, store);
-    const [tab, setTabState] = useState(() => {
+    const initTab = () => {
       try {
         return sessionStorage.getItem("bsp-tab") || "overview";
       } catch (e) {
         return "overview";
       }
-    });
+    };
+    const [tab, setTabState] = window.useBrialNav ? window.useBrialNav("sh-tab", initTab) : useState(initTab);
     const setTab = (k) => {
       setTabState(k);
       try {
@@ -4180,7 +4173,12 @@ select.bsp-input option{background:#0A1628}
     const avatar = fileUrl(per.showcasePhoto || (isImage(per.photoFile) ? per.photoFile : null));
     const replies = (store.listReports() || []).filter((r) => r.applicantId === applicant.id && r.status === "replied").length;
     const pendingReq = (applicant.changeRequests || []).filter((r) => r.status === "pending").length;
-    return /* @__PURE__ */ React.createElement("div", { className: "bsp" }, /* @__PURE__ */ React.createElement("header", { className: "bsp-top" }, /* @__PURE__ */ React.createElement("div", { className: "bsp-top-in" }, /* @__PURE__ */ React.createElement("a", { className: "bsp-brand", href: "#/", title: t("Back to website") }, Icon.star(), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, "The Brial Endowment"), /* @__PURE__ */ React.createElement("small", null, t("Scholar Portal")))), /* @__PURE__ */ React.createElement("nav", { className: "bsp-tabs", role: "tablist", "aria-label": t("Scholar Portal") }, TABS.map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", className: "bsp-tab", "aria-selected": tab === k, onClick: () => setTab(k) }, t(l), k === "help" && replies > 0 && /* @__PURE__ */ React.createElement("span", { className: "bsp-badge" }, replies), k === "account" && pendingReq > 0 && /* @__PURE__ */ React.createElement("span", { className: "bsp-badge" }, pendingReq)))), /* @__PURE__ */ React.createElement("div", { className: "bsp-me" }, avatar ? /* @__PURE__ */ React.createElement("img", { className: "bsp-avatar", src: avatar, alt: "" }) : /* @__PURE__ */ React.createElement("span", { className: "bsp-avatar" }, (applicant.name || "?").charAt(0)), /* @__PURE__ */ React.createElement("button", { className: "bsp-out", onClick: onLogout }, t("Sign out"))))), /* @__PURE__ */ React.createElement("main", { className: "bsp-main" }, tab === "overview" && /* @__PURE__ */ React.createElement(Overview, { applicant, store, d, goHelp: () => setTab("help") }), tab !== "overview" && /* @__PURE__ */ React.createElement("div", { className: "bsp-sec-head", style: { marginBottom: 24 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "bsp-h2", style: { fontSize: "clamp(30px,4vw,40px)" } }, t(TABS.find((x) => x[0] === tab)[1])), /* @__PURE__ */ React.createElement("p", { className: "bsp-sub" }, L(`Signed in as ${titleCase(per.fullName || applicant.name)}`, `Masuk sebagai ${titleCase(per.fullName || applicant.name)}`)))), tab === "profile" && /* @__PURE__ */ React.createElement(Profile, { applicant, store }), tab === "account" && /* @__PURE__ */ React.createElement(Account, { applicant, store }), tab === "help" && /* @__PURE__ */ React.createElement(Help, { applicant, store })));
+    return /* @__PURE__ */ React.createElement("div", { className: "bsp" }, /* @__PURE__ */ React.createElement("header", { className: "bsp-top" }, /* @__PURE__ */ React.createElement("div", { className: "bsp-top-in" }, /* @__PURE__ */ React.createElement("a", { className: "bsp-brand", href: "#/", title: t("Back to website"), onClick: (e) => {
+      if (onExit) {
+        e.preventDefault();
+        onExit();
+      }
+    } }, Icon.star(), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, "The Brial Endowment"), /* @__PURE__ */ React.createElement("small", null, t("Scholar Portal")))), /* @__PURE__ */ React.createElement("nav", { className: "bsp-tabs", role: "tablist", "aria-label": t("Scholar Portal") }, TABS.map(([k, l]) => /* @__PURE__ */ React.createElement("button", { key: k, role: "tab", className: "bsp-tab", "aria-selected": tab === k, onClick: () => setTab(k) }, t(l), k === "help" && replies > 0 && /* @__PURE__ */ React.createElement("span", { className: "bsp-badge" }, replies), k === "account" && pendingReq > 0 && /* @__PURE__ */ React.createElement("span", { className: "bsp-badge" }, pendingReq)))), /* @__PURE__ */ React.createElement("div", { className: "bsp-me" }, avatar ? /* @__PURE__ */ React.createElement("img", { className: "bsp-avatar", src: avatar, alt: "" }) : /* @__PURE__ */ React.createElement("span", { className: "bsp-avatar" }, (applicant.name || "?").charAt(0)), onExit && /* @__PURE__ */ React.createElement("button", { className: "bsp-site", onClick: onExit, "aria-label": t("Public site"), title: t("Back to the public website") }, Icon.home ? Icon.home() : null, /* @__PURE__ */ React.createElement("span", null, t("Public site"))), /* @__PURE__ */ React.createElement("button", { className: "bsp-out", onClick: onLogout }, t("Sign out"))))), /* @__PURE__ */ React.createElement("main", { className: "bsp-main" }, tab === "overview" && /* @__PURE__ */ React.createElement(Overview, { applicant, store, d, goHelp: () => setTab("help") }), tab !== "overview" && /* @__PURE__ */ React.createElement("div", { className: "bsp-sec-head", style: { marginBottom: 24 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "bsp-h2", style: { fontSize: "clamp(30px,4vw,40px)" } }, t(TABS.find((x) => x[0] === tab)[1])), /* @__PURE__ */ React.createElement("p", { className: "bsp-sub" }, L(`Signed in as ${titleCase(per.fullName || applicant.name)}`, `Masuk sebagai ${titleCase(per.fullName || applicant.name)}`)))), tab === "profile" && /* @__PURE__ */ React.createElement(Profile, { applicant, store }), tab === "account" && /* @__PURE__ */ React.createElement(Account, { applicant, store }), tab === "help" && /* @__PURE__ */ React.createElement(Help, { applicant, store })));
   }
   return ScholarHome;
 })();
@@ -4192,13 +4190,15 @@ select.bsp-input option{background:#0A1628}
 const PortalHome = ({
   applicant,
   store,
-  onLogout
+  onLogout,
+  onExit
 }) => {
   const status = applicant.status;
   if (status === "accepted" && typeof SH === "function") return /*#__PURE__*/React.createElement(SH, {
     applicant: applicant,
     store: store,
-    onLogout: onLogout
+    onLogout: onLogout,
+    onExit: onExit
   });
   const greeting = applicant.name.split(" ")[0];
   return /*#__PURE__*/React.createElement("div", {
@@ -4274,13 +4274,15 @@ const PortalHome = ({
       alignItems: "center",
       gap: 14
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("style", null, "@media (max-width:640px){.ph-name,.ph-avatar{display:none!important}.ph-btn{padding:8px 10px!important;letter-spacing:0.08em!important}}"), /*#__PURE__*/React.createElement("span", {
+    className: "ph-name",
     style: {
       fontFamily: "'Manrope', sans-serif",
       fontSize: 13,
       color: "rgba(232,228,220,0.7)"
     }
   }, applicant.name), /*#__PURE__*/React.createElement("div", {
+    className: "ph-avatar",
     style: {
       width: 36,
       height: 36,
@@ -4294,8 +4296,24 @@ const PortalHome = ({
       color: "#0A1628",
       fontStyle: "italic"
     }
-  }, applicant.name.charAt(0)), /*#__PURE__*/React.createElement("button", {
+  }, applicant.name.charAt(0)), onExit && /*#__PURE__*/React.createElement("button", {
+    onClick: onExit,
+    className: "ph-btn",
+    title: "Back to the public website",
+    style: {
+      background: "transparent",
+      border: "1px solid rgba(232,228,220,0.2)",
+      color: "rgba(232,228,220,0.7)",
+      padding: "8px 14px",
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+      letterSpacing: "0.16em",
+      textTransform: "uppercase",
+      cursor: "pointer"
+    }
+  }, "Public site"), /*#__PURE__*/React.createElement("button", {
     onClick: onLogout,
+    className: "ph-btn",
     style: {
       background: "transparent",
       border: "1px solid rgba(232,228,220,0.2)",
@@ -4411,7 +4429,8 @@ const ScholarPortal = ({
   return /*#__PURE__*/React.createElement(PortalHome, {
     applicant: applicant,
     store: store,
-    onLogout: () => store.clearSession()
+    onLogout: () => store.clearSession(),
+    onExit: onExit
   });
 };
 window.ScholarPortal = ScholarPortal;

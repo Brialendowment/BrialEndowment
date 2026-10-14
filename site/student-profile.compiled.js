@@ -702,7 +702,8 @@ const ProfileEditor = ({
   onSubmit,
   hideSubmit
 }) => {
-  const [section, setSection] = useStateP("personal");
+  // each section is a history entry: the back swipe returns to the previous section
+  const [section, setSection] = window.useBrialNav ? window.useBrialNav("ap-section", "personal") : useStateP("personal");
   const progress = store.sectionProgress(applicant);
   const complete = store.isProfileComplete(applicant);
   const sections = [{
