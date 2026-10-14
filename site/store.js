@@ -982,6 +982,44 @@ window.BrialClipboard = { copy: copyToClipboard };
       saveCache(); notify({ key: "contact" });
       return upsertDonation(rec);
     },
+    // ----- Email: receipts and notices (founder only; sending happens on the server) -----
+    async _mailRpc(fn, args) {
+      const c = sbAuth();
+      if (!c || !_founderMode) throw new Error("forbidden");
+      const { data, error } = await c.rpc(fn, args || {});
+      if (error) throw error;
+      return data;
+    },
+    async _mailFn(body) {
+      const c = sbAuth();
+      if (!c || !_founderMode) throw new Error("forbidden");
+      const { data, error } = await c.functions.invoke("be-mail", { body });
+      if (error) throw error;
+      if (data && data.error) throw new Error(data.error);
+      return data;
+    },
+    getMailSettings() { return Store._mailRpc("be_mail_settings"); },
+    saveMailSettings(s) { return Store._mailRpc("be_mail_save_settings", { p_settings: s }); },
+    mailLog(limit) { return Store._mailRpc("be_mail_log", { p_limit: limit || 60 }); },
+    async mailReceipts() {
+      const rows = (await Store._mailRpc("be_receipts")) || [];
+      const map = {}; rows.forEach(r => { map[r.donationId] = r; });
+      return map;
+    },
+    sendReceipt(donationId, to) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null }); },
+    sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
+    mailPreview() { return Store._mailFn({ action: "preview", kind: "receipt" }); },
+    async downloadReceiptPdf(donationId, sample) {
+      const r = await Store._mailFn(sample ? { action: "sample_pdf" } : { action: "receipt_pdf", donationId });
+      const bin = atob(r.base64); const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      const a = document.createElement("a"); a.href = url; a.download = r.filename || "receipt.pdf";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      return r;
+    },
+
     // Visible items with a ready-to-use link and display text.
     publicContacts() {
       const T = {}; Store.CONTACT_TYPES.forEach(t => { T[t.type] = t.label; });
@@ -1567,7 +1605,8 @@ window.BrialClipboard = { copy: copyToClipboard };
       if (idx < 0) return;
       _donations[idx] = { ..._donations[idx], verified: true, verifiedAt: now() };
       saveCache(); notify({ key: id });
-      upsertDonation(_donations[idx]).catch(e => console.error(e));
+      // the database issues the receipt number and queues the receipt email
+      return upsertDonation(_donations[idx]).catch(e => { console.error(e); throw e; });
     },
     deleteDonation(id) {
       _donations = _donations.filter(d => d.id !== id);

@@ -8368,7 +8368,7 @@ const PillarConsole = ({
 
 // >>> FOUNDER DESK (generated from src/founder-desk.jsx — edit that file, then run scripts/build-founder-desk.py)
 const FD = (() => {
-  const { useState, useEffect, useMemo, useRef } = React;
+  const { useState, useEffect, useMemo, useRef, useCallback } = React;
   const money = (n) => "$" + (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
   const fdate = (iso) => {
     if (!iso) return "—";
@@ -8472,6 +8472,7 @@ const FD = (() => {
 .fd-btn.quiet{background:transparent;color:var(--muted);padding:7px 10px}.fd-btn.quiet:hover{color:var(--text);background:rgba(239,233,220,.05)}
 .fd-btn.danger{background:transparent;color:var(--rose);border-color:rgba(229,134,134,.35)}.fd-btn.danger:hover{background:rgba(229,134,134,.08)}
 .fd-btn.danger.armed{background:var(--rose);color:#0A1628;border-color:var(--rose)}
+.fd-btn.ok.armed{background:var(--sage);color:#0A1628;border-color:var(--sage)}
 .fd-btn.ok{background:rgba(143,212,168,.12);color:var(--sage);border-color:rgba(143,212,168,.4)}
 .fd-btn.sm{padding:6px 11px;font-size:12px;border-radius:8px}
 .fd-btn[disabled]{opacity:.45;cursor:not-allowed}
@@ -8668,6 +8669,25 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-prev-icons span{width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,169,97,.35);color:var(--gilt);display:inline-flex;align-items:center;justify-content:center}
 @media (max-width:1100px){.fd-site{grid-template-columns:1fr}.fd-site-prev{position:static}}
 @media (max-width:640px){.fd-crow{grid-template-columns:1fr;gap:8px}.fd-crow-a{justify-content:space-between}}
+/* email */
+.fd-rc{display:block;text-align:right;font-size:12px;color:var(--faint);margin-top:6px}
+.fd-rc.ok{color:var(--sage)}.fd-rc.warn{color:var(--amber)}.fd-rc.bad{color:var(--rose)}
+.fd-mail{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.fd-mail .fd-card+.fd-card{margin-top:16px}
+.fd-mstat{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.fd-mstat h2{margin:6px 0 4px}
+.fd-krow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--line)}
+.fd-krow:first-of-type{border-top:0}
+.fd-krow b{display:block;font-weight:600;font-size:14px}
+.fd-krow small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
+.fd-mlog{display:flex;flex-direction:column}
+.fd-mlog-i{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:11px 0;border-top:1px solid var(--line)}
+.fd-mlog-i:first-child{border-top:0}
+.fd-mlog-i b{font-weight:600;font-size:13px;overflow-wrap:anywhere}
+.fd-mlog-i small{font-size:12px;color:var(--faint);overflow-wrap:anywhere}
+.fd-mlog-i .fd-tag{justify-self:end}
+.fd-mprev{width:100%;height:560px;border:0;border-radius:10px;background:#F5F2EA}
+@media (max-width:1100px){.fd-mail{grid-template-columns:1fr}}
 .fd-mvis{display:none}
 @media (max-width:900px){
   .fd-mvis{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:28px}
@@ -8717,6 +8737,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     story: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M5 4h11l3 3v13H5z" }), /* @__PURE__ */ React.createElement("path", { d: "M9 10h6M9 14h6M9 18h3" }))),
     link: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" }), /* @__PURE__ */ React.createElement("path", { d: "M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" }))),
     contact: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "5.5", width: "18", height: "13", rx: "2" }), /* @__PURE__ */ React.createElement("path", { d: "M3.5 7l8.5 6 8.5-6" }))),
+    send: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M21 3 10 14" }), /* @__PURE__ */ React.createElement("path", { d: "M21 3l-6.5 18-4-8-8-4z" }))),
+    pdf: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M6 3h9l4 4v14H6z" }), /* @__PURE__ */ React.createElement("path", { d: "M14 3v5h5M9 13h6M9 17h4" })), 14),
     treasury: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 9l9-5 9 5" }), /* @__PURE__ */ React.createElement("path", { d: "M5 9v9M10 9v9M14 9v9M19 9v9M3 20h18" }))),
     overview: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("rect", { x: "3.5", y: "3.5", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "13.5", y: "3.5", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "3.5", y: "13.5", width: "7", height: "7", rx: "1.5" }), /* @__PURE__ */ React.createElement("rect", { x: "13.5", y: "13.5", width: "7", height: "7", rx: "1.5" }))),
     inflow: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M12 4v11M7 10l5 5 5-5" }), /* @__PURE__ */ React.createElement("path", { d: "M4 19h16" }))),
@@ -9209,10 +9231,70 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       onClose();
     } }, "Save channels"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
   }
+  const okEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(s || "").trim());
+  function useReceipts(store, dep) {
+    const [map, setMap] = useState({});
+    const alive = useRef(true);
+    const load = useCallback(() => {
+      if (!store.mailReceipts) return;
+      store.mailReceipts().then((m) => {
+        if (alive.current) setMap(m || {});
+      }).catch(() => {
+      });
+    }, [store]);
+    useEffect(() => {
+      alive.current = true;
+      load();
+      return () => {
+        alive.current = false;
+      };
+    }, [load, dep]);
+    return [map, load];
+  }
+  function receiptLine(d, r) {
+    if (!r) return { text: "Receipt number is being issued…", tone: "" };
+    const m = r.mail;
+    const base = "Receipt " + r.no;
+    if (!m) return okEmail(d.email) ? { text: base + " · not emailed", tone: "" } : { text: base + " · no email on file", tone: "" };
+    if (m.status === "sent") return { text: `${base} · emailed ${fdate(m.sentAt)}`, tone: "ok" };
+    if (m.status === "pending" || m.status === "sending") return { text: base + " · waiting to send", tone: "warn" };
+    if (m.status === "skipped") return { text: `${base} · not sent (${m.error || "skipped"})`, tone: "" };
+    return { text: `${base} · could not be sent`, tone: "bad" };
+  }
+  function ReceiptDialog({ store, d, r, onClose, onSent }) {
+    const [to, setTo] = useState(d.email || "");
+    const [busy, setBusy] = useState("");
+    const [m, flash] = useFlash();
+    const send = async () => {
+      setBusy("send");
+      try {
+        const res = await store.sendReceipt(d.id, to.trim());
+        flash(`Receipt ${res.no} is on its way to ${res.to}.`);
+        onSent && onSent();
+      } catch (e) {
+        const c = String(e && (e.message || e));
+        flash(c.indexOf("invalid_email") >= 0 ? "That email address doesn't look right." : "Could not send right now. Try again in a moment.", "err");
+      }
+      setBusy("");
+    };
+    const pdf = async () => {
+      setBusy("pdf");
+      try {
+        await store.downloadReceiptPdf(d.id);
+      } catch (e) {
+        flash("Could not create the PDF right now.", "err");
+      }
+      setBusy("");
+    };
+    const line = receiptLine(d, r);
+    return /* @__PURE__ */ React.createElement(Modal, { title: r ? `Receipt ${r.no}` : "Receipt", sub: `${d.anonymous ? "Anonymous" : titleCase(d.name)} · ${money(d.amount)} · verified ${fdate(d.verifiedAt)}`, onClose }, /* @__PURE__ */ React.createElement("p", { className: "fd-rc " + line.tone, style: { textAlign: "left", marginTop: 0 } }, line.text, r && r.mail && r.mail.status === "failed" && r.mail.error ? ` — ${r.mail.error}` : ""), /* @__PURE__ */ React.createElement(Field, { label: "Send the receipt to", hint: "Usually the donor's own address. A copy is marked as such in the email." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "email", value: to, onChange: (e) => setTo(e.target.value), placeholder: "donor@example.com" })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !okEmail(to) || !!busy, onClick: send }, busy === "send" ? "Sending…" : "Send receipt"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", disabled: !!busy, onClick: pdf }, ICON.pdf, busy === "pdf" ? "Preparing…" : "Download PDF")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(Flash, { m })));
+  }
   function DonationsView({ store, donations, title }) {
     const [filter, setFilter] = useState("pending");
     const [q, setQ] = useState("");
     const [chan, setChan] = useState(false);
+    const [open, setOpen] = useState(null);
+    const [vm, vflash] = useFlash();
     const list = (donations || []).filter((d) => !(store.isInternalDonation && store.isInternalDonation(d))).slice().sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
     const isSale = (d) => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
     const verified = list.filter((d) => d.verified), pending = list.filter((d) => !d.verified);
@@ -9222,11 +9304,29 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       return !s || [d.name, d.email, d.country, d.txHash, d.id].some((x) => (x || "").toLowerCase().includes(s));
     });
     const cfg = store.getPaymentConfig();
+    const [rc, reloadRc] = useReceipts(store, verified.length);
+    const verify = (d) => {
+      const p = store.markDonationVerified(d.id);
+      vflash(okEmail(d.email) ? `Verified. The receipt is being emailed to ${d.email}.` : "Verified. There is no email on file — download the receipt PDF if the donor asks for one.");
+      Promise.resolve(p).then(() => {
+        setTimeout(reloadRc, 1500);
+        setTimeout(reloadRc, 8e3);
+      }).catch(() => vflash("Could not verify — check your connection.", "err"));
+    };
     const G = "minmax(0,1.8fr) minmax(0,.7fr) minmax(0,1.3fr) minmax(0,.8fr) auto";
-    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: title || "Donations", lede: "Gifts reported through the donate page. Check each one against your wallet or bank, then verify it — only verified gifts are final." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setChan(true) }, "Payment channels")), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter((g) => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: setFilter, items: [["pending", "To verify", pending.length], ["verified", "Verified", verified.length], ["anonymous", "Anonymous", list.filter((d) => d.anonymous).length], ["all", "All", list.length]] })), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search donor, email, country or reference" })), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Donor"), /* @__PURE__ */ React.createElement("div", null, "Amount"), /* @__PURE__ */ React.createElement("div", null, "Reference"), /* @__PURE__ */ React.createElement("div", null, "Date"), /* @__PURE__ */ React.createElement("div", null)), shown.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: filter === "pending" ? "Nothing to verify." : "No donations match." }) : shown.map((d) => {
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: title || "Donations", lede: "Gifts reported through the donate page. Check each one against your wallet or bank, then verify it — only verified gifts are final." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setChan(true) }, "Payment channels")), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter((g) => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: filter, onChange: setFilter, items: [["pending", "To verify", pending.length], ["verified", "Verified", verified.length], ["anonymous", "Anonymous", list.filter((d) => d.anonymous).length], ["all", "All", list.length]] })), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search donor, email, country or reference" })), vm && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement(Flash, { m: vm })), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Donor"), /* @__PURE__ */ React.createElement("div", null, "Amount"), /* @__PURE__ */ React.createElement("div", null, "Reference"), /* @__PURE__ */ React.createElement("div", null, "Date"), /* @__PURE__ */ React.createElement("div", null)), shown.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: filter === "pending" ? "Nothing to verify." : "No donations match." }) : shown.map((d) => {
       const eth = /^0x[0-9a-f]{10,}$/i.test(d.txHash || "");
-      return /* @__PURE__ */ React.createElement("div", { key: d.id, className: "fd-tr", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, d.anonymous ? "Anonymous" : d.name, d.anonymous && d.name && d.name !== "Anonymous patron" ? /* @__PURE__ */ React.createElement("span", { className: "fd-sub", style: { fontWeight: 400 } }, " (", d.name, ")") : null), /* @__PURE__ */ React.createElement("small", null, [d.email, d.country].filter(Boolean).join(" · ")), d.message && /* @__PURE__ */ React.createElement("small", { style: { fontStyle: "italic" } }, "“", d.message, "”"), isSale(d) && /* @__PURE__ */ React.createElement(Tag, { tone: "sky" }, "Library sale")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Amount" }, /* @__PURE__ */ React.createElement("span", { className: "num" }, money(d.amount))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Reference" }, d.txHash ? /* @__PURE__ */ React.createElement(React.Fragment, null, eth ? /* @__PURE__ */ React.createElement("a", { className: "fd-mono", href: `https://etherscan.io/tx/${d.txHash}`, target: "_blank", rel: "noopener noreferrer" }, d.txHash.slice(0, 10), "…", d.txHash.slice(-6)) : /* @__PURE__ */ React.createElement("span", { className: "fd-mono" }, d.txHash), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => copy(d.txHash) }, "Copy")) : /* @__PURE__ */ React.createElement("small", null, "—")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Date" }, fdate(d.submittedAt)), /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { justifyContent: "flex-end" } }, d.verified ? /* @__PURE__ */ React.createElement(Tag, { tone: "ok", dot: true }, "Verified") : /* @__PURE__ */ React.createElement("button", { className: "fd-btn ok sm", onClick: () => store.markDonationVerified(d.id) }, "Verify"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => store.deleteDonation(d.id) }, "Delete"))));
-    })), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 12 } }, "Grants to partners are listed under each pillar, not here."), chan && /* @__PURE__ */ React.createElement(ChannelsDialog, { store, onClose: () => setChan(false) }));
+      return /* @__PURE__ */ React.createElement("div", { key: d.id, className: "fd-tr", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, d.anonymous ? "Anonymous" : d.name, d.anonymous && d.name && d.name !== "Anonymous patron" ? /* @__PURE__ */ React.createElement("span", { className: "fd-sub", style: { fontWeight: 400 } }, " (", d.name, ")") : null), /* @__PURE__ */ React.createElement("small", null, [d.email, d.country].filter(Boolean).join(" · ")), d.message && /* @__PURE__ */ React.createElement("small", { style: { fontStyle: "italic" } }, "“", d.message, "”"), isSale(d) && /* @__PURE__ */ React.createElement(Tag, { tone: "sky" }, "Library sale")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Amount" }, /* @__PURE__ */ React.createElement("span", { className: "num" }, money(d.amount))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Reference" }, d.txHash ? /* @__PURE__ */ React.createElement(React.Fragment, null, eth ? /* @__PURE__ */ React.createElement("a", { className: "fd-mono", href: `https://etherscan.io/tx/${d.txHash}`, target: "_blank", rel: "noopener noreferrer" }, d.txHash.slice(0, 10), "…", d.txHash.slice(-6)) : /* @__PURE__ */ React.createElement("span", { className: "fd-mono" }, d.txHash), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => copy(d.txHash) }, "Copy")) : /* @__PURE__ */ React.createElement("small", null, "—")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Date" }, fdate(d.submittedAt)), /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { justifyContent: "flex-end" } }, d.verified ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Tag, { tone: "ok", dot: true }, "Verified"), !isSale(d) && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setOpen(d.id) }, "Receipt")) : /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn ok sm", armedLabel: okEmail(d.email) ? "Confirm · email receipt" : "Confirm verify", onConfirm: () => verify(d) }, "Verify"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => store.deleteDonation(d.id) }, "Delete")), d.verified && !isSale(d) && (() => {
+        const l = receiptLine(d, rc[d.id]);
+        return /* @__PURE__ */ React.createElement("small", { className: "fd-rc " + l.tone }, l.text);
+      })()));
+    })), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 12 } }, "Grants to partners are listed under each pillar, not here. Verifying a gift issues its receipt number and emails the receipt to the donor."), chan && /* @__PURE__ */ React.createElement(ChannelsDialog, { store, onClose: () => setChan(false) }), open && (() => {
+      const d = list.find((x) => x.id === open);
+      return d ? /* @__PURE__ */ React.createElement(ReceiptDialog, { store, d, r: rc[d.id], onClose: () => setOpen(null), onSent: () => {
+        setTimeout(reloadRc, 1500);
+        setTimeout(reloadRc, 8e3);
+      } }) : null;
+    })());
   }
   function HelpDeskView({ store, reports }) {
     const [filter, setFilter] = useState("open");
@@ -9843,6 +9943,141 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       extra: /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", minWidth: 0, flex: 1 } }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: it.label, onChange: (e) => setX(it.id, { label: e.target.value }), placeholder: "Name", "aria-label": "Link name" }), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => delX(it.id), "aria-label": "Remove link" }, "✕"))
     })))), /* @__PURE__ */ React.createElement("aside", { className: "fd-card fd-site-prev" }, /* @__PURE__ */ React.createElement("div", { className: "fd-stage-k" }, "Footer preview"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 4 } }, shownCount ? `${shownCount} ${plural(shownCount, "item", "items")} visible to visitors.` : "Nothing is shown yet — the footer keeps its usual look."), /* @__PURE__ */ React.createElement("div", { className: "fd-prev" }, /* @__PURE__ */ React.createElement("div", { className: "fd-prev-brand" }, ICON.star, /* @__PURE__ */ React.createElement("span", null, "The Brial Endowment")), /* @__PURE__ */ React.createElement("p", null, "A sovereign philanthropic foundation. Direct-to-student. On-chain and fully transparent."), preview.filter((x) => LINE_TYPES.includes(x.type)).map((x, i) => /* @__PURE__ */ React.createElement("div", { key: i, className: "fd-prev-line" }, store.contactIcon(x.type, 16), /* @__PURE__ */ React.createElement("span", null, x.type === "whatsapp" ? "WhatsApp " + x.value : x.value))), /* @__PURE__ */ React.createElement("div", { className: "fd-prev-icons" }, preview.filter((x) => !LINE_TYPES.includes(x.type)).map((x, i) => /* @__PURE__ */ React.createElement("span", { key: i, title: x.type === "link" ? x.label : (T[x.type] || {}).label }, store.contactIcon(x.type, 16))))))), (dirty || m) && /* @__PURE__ */ React.createElement("div", { className: "fd-savebar" }, /* @__PURE__ */ React.createElement("span", { style: { color: m && m.tone === "err" ? "var(--rose)" : dirty ? "var(--amber)" : "var(--sage)", fontWeight: 600 } }, m && !dirty ? m.text : m && m.tone === "err" ? m.text : invalid ? "Fix the highlighted fields first" : "You have unsaved changes"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, dirty && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet", onClick: () => setF(JSON.parse(saved)) }, "Discard"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !dirty || invalid || busy, onClick: save }, busy ? "Saving…" : "Save and publish"))));
   }
+  const MAIL_GROUPS = [
+    { title: "Donors", sub: "From receipts@brialendowment.org", items: [
+      ["receipt", "Donation receipt", "The official receipt with a PDF, sent the moment you verify a gift."]
+    ] },
+    { title: "Alerts for you", sub: "From desk@brialendowment.org to your alert address", items: [
+      ["donation_reported", "New gift reported", "Someone reports a gift on the donate page."],
+      ["application_submitted", "New application", "An applicant submits the scholarship application."],
+      ["bill_uploaded", "Tuition bill uploaded", "A scholar uploads a bill for you to pay."],
+      ["ip_uploaded", "Semester results uploaded", "A scholar uploads the results of a semester."],
+      ["change_requested", "Change request", "A scholar asks to change a detail only you can approve."],
+      ["report_new", "Help desk message", "A scholar writes to the help desk."],
+      ["graduation", "Graduation submitted", "A scholar uploads the diploma and transcript."]
+    ] },
+    { title: "Applicants and scholars", sub: "From hello@brialendowment.org — replies come to you", items: [
+      ["application_received", "Application received", "Confirms the application arrived and explains the next steps."],
+      ["interview", "Interview invitation", "Date, time in WIB and Istanbul, and the meeting link."],
+      ["accepted", "Scholarship approved", "Welcome, scholar ID, and the first step."],
+      ["rejected", "Application declined", "A kind, respectful decision letter."],
+      ["tuition_paid", "Tuition paid", "Confirms a semester's tuition has been paid, with the reference."],
+      ["change_resolved", "Change request answered", "Tells the scholar whether you approved a change."],
+      ["scholar_status", "Scholarship paused, resumed or ended", "Includes the note you wrote when you changed the status."],
+      ["report_reply", "Help desk reply", "Your reply, with their original message."]
+    ] }
+  ];
+  const MAIL_LABEL = { test: "Test email" };
+  MAIL_GROUPS.forEach((g) => g.items.forEach(([k, l]) => {
+    MAIL_LABEL[k] = l;
+  }));
+  const MAIL_TONE = { sent: "ok", pending: "warn", sending: "warn", skipped: "", failed: "bad" };
+  const MAIL_WORD = { sent: "Sent", pending: "Waiting", sending: "Sending", skipped: "Not sent", failed: "Failed" };
+  const offKinds = (k) => Object.keys(k || {}).filter((x) => k[x] === false).sort().join(",");
+  const mailDirty = (a, b) => !!(a && b) && (a.founderTo.trim() !== b.founderTo || offKinds(a.kinds) !== offKinds(b.kinds));
+  function EmailView({ store }) {
+    const [s, setS] = useState(null);
+    const [sv, setSv] = useState(null);
+    const svRef = useRef(null);
+    const [log, setLog] = useState([]);
+    const [err, setErr] = useState("");
+    const [busy, setBusy] = useState("");
+    const [prev, setPrev] = useState(null);
+    const [m, flash] = useFlash();
+    const keep = (st) => {
+      const norm = { founderTo: st.founderTo || "hello@brialendowment.org", paused: !!st.paused, kinds: st.kinds || {} };
+      svRef.current = norm;
+      setSv(norm);
+      return norm;
+    };
+    const load = useCallback(async () => {
+      try {
+        const [st, lg] = await Promise.all([store.getMailSettings(), store.mailLog(40)]);
+        const before = svRef.current, norm = keep(st);
+        setS((cur) => cur && mailDirty(cur, before) ? cur : norm);
+        setLog(lg || []);
+        setErr("");
+      } catch (e) {
+        setErr("Could not load the email settings. Check your connection and refresh.");
+      }
+    }, [store]);
+    useEffect(() => {
+      load();
+      const t = setInterval(() => {
+        store.mailLog(40).then((l) => setLog(l || [])).catch(() => {
+        });
+      }, 2e4);
+      return () => clearInterval(t);
+    }, [load]);
+    if (err && !s) return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Email" }), /* @__PURE__ */ React.createElement("div", { className: "fd-msg err" }, err));
+    if (!s || !sv) return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Email" }), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Loading…"));
+    const dirty = mailDirty(s, sv);
+    const badTo = !okEmail(s.founderTo);
+    const on = (k) => s.kinds[k] !== false;
+    const setKind = (k, v) => setS((p) => ({ ...p, kinds: { ...p.kinds, [k]: v } }));
+    const persist = async (next) => {
+      const res = await store.saveMailSettings(next);
+      return keep(res);
+    };
+    const save = async () => {
+      setBusy("save");
+      try {
+        const n = await persist({ founderTo: s.founderTo.trim(), kinds: s.kinds, paused: sv.paused });
+        setS(n);
+        flash("Saved.");
+      } catch (e) {
+        flash("Could not save. Try again.", "err");
+      }
+      setBusy("");
+    };
+    const togglePause = async () => {
+      setBusy("pause");
+      try {
+        const n = await persist({ ...sv, paused: !sv.paused });
+        setS((cur) => ({ ...cur, paused: n.paused }));
+        flash(n.paused ? "Sending is paused. New emails wait in the queue." : "Sending is on. Anything waiting goes out now.");
+        setTimeout(load, 4e3);
+      } catch (e) {
+        flash("Could not change it. Try again.", "err");
+      }
+      setBusy("");
+    };
+    const test = async () => {
+      setBusy("test");
+      try {
+        await store.sendTestEmail();
+        flash(`A test email is on its way to ${sv.founderTo}.`);
+        setTimeout(load, 5e3);
+      } catch (e) {
+        flash(String(e && e.message).indexOf("rate_limited") >= 0 ? "That's enough tests for this hour." : "Could not send a test right now.", "err");
+      }
+      setBusy("");
+    };
+    const preview = async () => {
+      setBusy("prev");
+      try {
+        setPrev(await store.mailPreview());
+      } catch (e) {
+        flash("Could not load the preview.", "err");
+      }
+      setBusy("");
+    };
+    const samplePdf = async () => {
+      setBusy("pdf");
+      try {
+        await store.downloadReceiptPdf(null, true);
+      } catch (e) {
+        flash("Could not create the sample PDF.", "err");
+      }
+      setBusy("");
+    };
+    const paused = sv.paused;
+    const day = Date.now() - 864e5;
+    const sent24 = log.filter((x) => x.status === "sent" && new Date(x.sentAt).getTime() > day).length;
+    const waiting = log.filter((x) => x.status === "pending" || x.status === "sending").length;
+    const failed = log.filter((x) => x.status === "failed").length;
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Email", lede: "Receipts for donors, notices for applicants and scholars, and alerts for you — all sent from brialendowment.org." }), /* @__PURE__ */ React.createElement("div", { className: "fd-mail" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-mstat" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(Tag, { tone: paused ? "warn" : "ok", dot: true }, paused ? "Paused" : "Sending"), /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, paused ? "Emails are waiting, not sent" : "Email is on"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: 0 } }, paused ? "Events are still recorded. Everything waiting goes out when you resume." : "Each email goes out a few seconds after the event that triggers it.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn " + (paused ? "primary" : "ghost"), disabled: !!busy, onClick: togglePause }, busy === "pause" ? "…" : paused ? "Resume sending" : "Pause sending")), /* @__PURE__ */ React.createElement(Stats, { items: [{ label: "Sent in the last 24 hours", value: sent24, sub: "Free plan: up to 100 a day", tone: "ok" }, { label: "Waiting", value: waiting, tone: waiting ? "warn" : "" }, { label: "Failed", value: failed, sub: failed ? "See the activity list" : "None", tone: failed ? "bad" : "" }] }), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", disabled: !!busy || paused, onClick: test, title: paused ? "Resume sending first" : "" }, ICON.send, busy === "test" ? "Sending…" : "Send a test email"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", disabled: !!busy, onClick: preview }, busy === "prev" ? "Loading…" : "Preview the receipt email"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", disabled: !!busy, onClick: samplePdf }, ICON.pdf, busy === "pdf" ? "Preparing…" : "Sample receipt PDF")), m && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(Flash, { m }))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Your alerts go to"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "hello@brialendowment.org forwards to your Gmail. Use another address only if you have a reason to."))), /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "email", value: s.founderTo, onChange: (e) => setS((p) => ({ ...p, founderTo: e.target.value })), spellCheck: false, "aria-label": "Alert address" }), badTo && /* @__PURE__ */ React.createElement("small", { className: "fd-bad" }, "This doesn't look like an email address.")), MAIL_GROUPS.map((g) => /* @__PURE__ */ React.createElement("div", { className: "fd-card", key: g.title }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, g.title), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, g.sub))), g.items.map(([k, label, desc]) => /* @__PURE__ */ React.createElement("div", { className: "fd-krow", key: k }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, label), /* @__PURE__ */ React.createElement("small", null, desc)), /* @__PURE__ */ React.createElement(Switch, { on: on(k), onChange: (v) => setKind(k, v) }, on(k) ? "On" : "Off")))))), /* @__PURE__ */ React.createElement("aside", { className: "fd-card fd-site-prev" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "fd-stage-k" }, "Activity"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "4px 0 0" } }, "The latest emails, newest first.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: load }, "Refresh")), log.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Nothing sent yet.") : /* @__PURE__ */ React.createElement("div", { className: "fd-mlog" }, log.map((x) => /* @__PURE__ */ React.createElement("div", { className: "fd-mlog-i", key: x.id }, /* @__PURE__ */ React.createElement("b", null, MAIL_LABEL[x.kind] || x.kind), /* @__PURE__ */ React.createElement(Tag, { tone: MAIL_TONE[x.status] }, MAIL_WORD[x.status] || x.status), /* @__PURE__ */ React.createElement("small", null, [x.to, fdatetime(x.sentAt || x.createdAt)].filter(Boolean).join(" · ")), /* @__PURE__ */ React.createElement("span", null), x.error && x.status !== "sent" && /* @__PURE__ */ React.createElement("small", { style: { gridColumn: "1 / -1", color: x.status === "failed" ? "var(--rose)" : "var(--faint)" } }, x.error)))))), dirty && /* @__PURE__ */ React.createElement("div", { className: "fd-savebar" }, /* @__PURE__ */ React.createElement("span", { style: { color: "var(--amber)", fontWeight: 600 } }, badTo ? "Fix the alert address first" : "You have unsaved changes"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet", onClick: () => setS(sv) }, "Discard"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: badTo || !!busy, onClick: save }, busy === "save" ? "Saving…" : "Save"))), prev && /* @__PURE__ */ React.createElement(Modal, { wide: true, title: prev.subject, sub: "From " + prev.from + " · sample data", onClose: () => setPrev(null) }, /* @__PURE__ */ React.createElement("iframe", { className: "fd-mprev", title: "Receipt email preview", sandbox: "", srcDoc: prev.html })));
+  }
   function FounderDesk({ pillar, store, onBack, onExit, founderEmail, onLogout }) {
     useStyles();
     const key = "fd-tab-" + pillar;
@@ -9917,9 +10152,10 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, view);
     }
     if (pillar === "site") {
-      nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }];
-      view = /* @__PURE__ */ React.createElement(ContactView, { store });
-      return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: "contact", onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, view);
+      nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }, { id: "email", label: "Email", icon: ICON.send }];
+      const t2 = nav.some((n) => n.id === tab) ? tab : "contact";
+      view = t2 === "email" ? /* @__PURE__ */ React.createElement(EmailView, { store }) : /* @__PURE__ */ React.createElement(ContactView, { store });
+      return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, view);
     }
     const cfg = PILLARS[pillar];
     if (!cfg) return null;
