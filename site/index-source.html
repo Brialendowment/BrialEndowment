@@ -127,7 +127,7 @@
 <script src="file-store.js"></script>
 <script src="store.js"></script>
 <script>
-if ("serviceWorker" in navigator && location.protocol === "https:" && /(brialendowment\.org|netlify\.app)$/.test(location.hostname)) {
+if ("serviceWorker" in navigator && location.protocol === "https:" && /(brialendowment\.org|netlify\.app|pages\.dev)$/.test(location.hostname)) {
   addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); });
 }
 </script>
