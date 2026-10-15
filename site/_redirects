@@ -1,0 +1,3 @@
+# Cloudflare Pages strips ".html" with a redirect. Google's ownership file must
+# answer 200 at its exact URL, so serve it in place instead of redirecting.
+/google58daf6f8ba8273b4.html  /google58daf6f8ba8273b4  200
