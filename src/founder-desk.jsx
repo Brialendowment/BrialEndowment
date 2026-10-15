@@ -1179,7 +1179,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
               <div className="fd-td full"><b>{titleCase(r.scholar.name)}</b><small>{r.scholar.scholarId} · {instCase(r.scholar.profile?.university?.name)}</small></div>
               <div className="fd-td" data-l="Semester">{r.semester.label}</div>
               <div className="fd-td" data-l="Amount"><span className="num">{money(r.semester.bill?.amount)}</span></div>
-              <div className="fd-td" data-l={tab === "due" ? "Sent" : "Paid"}>{fdate(tab === "due" ? r.semester.bill?.uploadedAt : r.semester.paidAt)}{tab === "paid" && r.semester.txHash && <small className="fd-mono">{r.semester.txHash}</small>}</div>
+              <div className="fd-td" data-l={tab === "due" ? "Sent" : "Paid"}>{fdate(tab === "due" ? r.semester.bill?.uploadedAt : r.semester.paidAt)}{tab === "due" && r.semester.bill?.dueDate && (() => { const d = Math.round((new Date(r.semester.bill.dueDate + "T00:00:00") - new Date(new Date().toDateString())) / 864e5); return <small style={{ color: d <= 5 ? (d < 0 ? "var(--rose)" : "var(--amber)") : undefined, fontWeight: d <= 5 ? 600 : 400 }}>{d < 0 ? `Deadline passed ${fdate(r.semester.bill.dueDate)}` : d === 0 ? "Due today" : `Due ${fdate(r.semester.bill.dueDate)}${d <= 5 ? ` · ${d} ${plural(d, "day", "days")}` : ""}`}</small>; })()}{tab === "paid" && r.semester.txHash && <small className="fd-mono">{r.semester.txHash}</small>}</div>
               <div className="fd-td full"><div className="fd-actions" style={{ justifyContent: "flex-end" }}><FileBtn file={r.semester.bill} label="View bill" />{tab === "due" && <button className="fd-btn primary sm" onClick={() => setPay(r)}>Mark as paid</button>}</div></div>
             </div>
           ))}
@@ -2332,6 +2332,33 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   const MAIL_WORD = { sent: "Sent", pending: "Waiting", sending: "Sending", skipped: "Not sent", failed: "Failed" };
 
   MAIL_LABEL.message = "Email you wrote";
+  const REMINDER_KINDS = [
+    ["interview_reminder", "Interview reminder", "To the applicant, about 24 hours before the interview."],
+    ["bill_reminder", "Upload your tuition bill", "To scholars whose next semester has no bill yet, on the UKT dates below."],
+    ["results_reminder", "Upload your semester results", "To scholars whose paid semester has no IP / KHS yet, on the results dates below."],
+    ["bill_due", "Bill waiting / deadline near", "To you, when a bill's deadline is close or has passed, or a bill has waited too long."],
+  ];
+  REMINDER_KINDS.forEach(([k, l]) => { MAIL_LABEL[k] = l; });
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const mdLabel = md => { const [m, d] = String(md).split("-").map(Number); return `${d} ${MONTHS[m - 1] || "?"}`; };
+  const DEFAULT_REM = { billDates: ["01-10", "01-25", "07-25", "08-10"], resultDates: ["02-05", "02-20", "07-10", "07-25"], billGraceDays: 5 };
+  function DateChips({ value, onChange }) {
+    const [m, setM] = useState("1"); const [d, setD] = useState("");
+    const add = () => { const dd = parseInt(d, 10); if (!(dd >= 1 && dd <= 31)) return; const md = String(m).padStart(2, "0") + "-" + String(dd).padStart(2, "0"); if (!value.includes(md)) onChange([...value, md].sort()); setD(""); };
+    return (
+      <div>
+        <div className="fd-actions" style={{ gap: 6 }}>
+          {value.length === 0 && <small className="fd-sub" style={{ margin: 0 }}>No dates — this reminder never goes out.</small>}
+          {value.map(md => <span key={md} className="fd-tag gold">{mdLabel(md)}<button onClick={() => onChange(value.filter(x => x !== md))} aria-label={"Remove " + mdLabel(md)} style={{ background: "none", border: 0, color: "inherit", cursor: "pointer", padding: "0 0 0 4px" }}>×</button></span>)}
+        </div>
+        <div className="fd-actions" style={{ marginTop: 8, gap: 6 }}>
+          <input className="fd-input" style={{ width: 72 }} inputMode="numeric" placeholder="Day" value={d} onChange={e => setD(e.target.value.replace(/\D/g, "").slice(0, 2))} aria-label="Day" />
+          <select className="fd-input" style={{ width: 92 }} value={m} onChange={e => setM(e.target.value)} aria-label="Month">{MONTHS.map((x, i) => <option key={x} value={i + 1}>{x}</option>)}</select>
+          <button className="fd-btn ghost sm" onClick={add} disabled={!(parseInt(d, 10) >= 1 && parseInt(d, 10) <= 31)}>Add date</button>
+        </div>
+      </div>
+    );
+  }
   const SENDERS = [
     ["brial", "Brial Asif Hayi Paka", "brial@brialendowment.org", "A personal letter from you"],
     ["hello", "The Brial Endowment", "hello@brialendowment.org", "The foundation's general address"],
@@ -2422,7 +2449,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
 
   const offKinds = k => Object.keys(k || {}).filter(x => k[x] === false).sort().join(",");
-  const mailDirty = (a, b) => !!(a && b) && (a.founderTo.trim() !== b.founderTo || offKinds(a.kinds) !== offKinds(b.kinds));
+  const remKey = r => JSON.stringify([(r && r.billDates || []).slice().sort(), (r && r.resultDates || []).slice().sort(), Number(r && r.billGraceDays) || 5]);
+  const mailDirty = (a, b) => !!(a && b) && (a.founderTo.trim() !== b.founderTo || offKinds(a.kinds) !== offKinds(b.kinds) || remKey(a.reminders) !== remKey(b.reminders));
   function EmailView({ store }) {
     const [s, setS] = useState(null);      // the form
     const [sv, setSv] = useState(null);    // what the server holds
@@ -2433,7 +2461,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const [prev, setPrev] = useState(null);
     const [compose, setCompose] = useState(false);
     const [m, flash] = useFlash();
-    const keep = st => { const norm = { founderTo: st.founderTo || "hello@brialendowment.org", paused: !!st.paused, kinds: st.kinds || {} }; svRef.current = norm; setSv(norm); return norm; };
+    const keep = st => { const norm = { founderTo: st.founderTo || "hello@brialendowment.org", paused: !!st.paused, kinds: st.kinds || {}, reminders: { ...DEFAULT_REM, ...(st.reminders || {}) } }; svRef.current = norm; setSv(norm); return norm; };
     const load = useCallback(async () => {
       try {
         const [st, lg] = await Promise.all([store.getMailSettings(), store.mailLog(40)]);
@@ -2449,8 +2477,9 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const badTo = !okEmail(s.founderTo);
     const on = k => s.kinds[k] !== false;
     const setKind = (k, v) => setS(p => ({ ...p, kinds: { ...p.kinds, [k]: v } }));
+    const setRem = (k, v) => setS(p => ({ ...p, reminders: { ...p.reminders, [k]: v } }));
     const persist = async next => { const res = await store.saveMailSettings(next); return keep(res); };
-    const save = async () => { setBusy("save"); try { const n = await persist({ founderTo: s.founderTo.trim(), kinds: s.kinds, paused: sv.paused }); setS(n); flash("Saved."); } catch (e) { flash("Could not save. Try again.", "err"); } setBusy(""); };
+    const save = async () => { setBusy("save"); try { const n = await persist({ founderTo: s.founderTo.trim(), kinds: s.kinds, reminders: s.reminders, paused: sv.paused }); setS(n); flash("Saved."); } catch (e) { flash("Could not save. Try again.", "err"); } setBusy(""); };
     const togglePause = async () => {
       setBusy("pause");
       try { const n = await persist({ ...sv, paused: !sv.paused }); setS(cur => ({ ...cur, paused: n.paused })); flash(n.paused ? "Sending is paused. New emails wait in the queue." : "Sending is on. Anything waiting goes out now."); setTimeout(load, 4000); }
@@ -2502,6 +2531,19 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
               <div className="fd-card-head" style={{ marginBottom: 4 }}><div><h2 className="fd-h2">Your alerts go to</h2><p className="fd-sub">hello@brialendowment.org forwards to your Gmail. Use another address only if you have a reason to.</p></div></div>
               <input className="fd-input" type="email" value={s.founderTo} onChange={e => setS(p => ({ ...p, founderTo: e.target.value }))} spellCheck={false} aria-label="Alert address" />
               {badTo && <small className="fd-bad">This doesn't look like an email address.</small>}
+            </div>
+            <div className="fd-card">
+              <div className="fd-card-head" style={{ marginBottom: 4 }}><div><h2 className="fd-h2">Reminders</h2><p className="fd-sub">Sent automatically, once each. Dates follow Jakarta time and go out from 09:00 WIB.</p></div></div>
+              {REMINDER_KINDS.map(([k, label, desc]) => (
+                <div className="fd-krow" key={k}><div><b>{label}</b><small>{desc}</small></div><Switch on={on(k)} onChange={v => setKind(k, v)}>{on(k) ? "On" : "Off"}</Switch></div>
+              ))}
+              <div className="fd-grid2" style={{ marginTop: 14 }}>
+                <div><div className="fd-stage-k" style={{ marginBottom: 8 }}>UKT bill dates</div><DateChips value={s.reminders.billDates} onChange={v => setRem("billDates", v)} /></div>
+                <div><div className="fd-stage-k" style={{ marginBottom: 8 }}>Results dates</div><DateChips value={s.reminders.resultDates} onChange={v => setRem("resultDates", v)} /></div>
+              </div>
+              <Field label="Warn me this many days before a bill's deadline" hint="Bills without a deadline: a weekly note once they have waited this long." style={{ marginTop: 14, maxWidth: 360 }}>
+                <input className="fd-input" type="number" min={1} max={30} value={s.reminders.billGraceDays} onChange={e => setRem("billGraceDays", Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 1)))} />
+              </Field>
             </div>
             {MAIL_GROUPS.map(g => (
               <div className="fd-card" key={g.title}>

@@ -77,12 +77,12 @@ export function layout(b: Block) {
     b.cta ? `\n${b.cta.label}: ${b.cta.href}` : "",
     b.note ? "\n" + stripHtml(b.note) : "",
     "", "—", "The Brial Endowment · brialendowment.org · " + HELLO,
-  ].join("\n").replace(/\n{3,}/g, "\n\n");
+  ].join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
   return { html, text };
 }
 
 export function stripHtml(s: string) {
-  return String(s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p[^>]*>/gi, "\n\n").replace(/<[^>]+>/g, "")
+  return String(s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|h1|tr|table)>/gi, "\n\n").replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ").replace(/&middot;/g, "·").replace(/&rarr;/g, "→").replace(/&#10022;/g, "✦")
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").trim();
 }
@@ -177,7 +177,7 @@ export function billUploaded(a: any, sem: any) {
     pre: `${titleCase(a.name)} uploaded the ${sem?.label || ""} tuition bill.`,
     kicker: "Founder alert", title: "A tuition bill is waiting",
     intro: `<p style="margin:0">${esc(titleCase(a.name))} uploaded the official bill for ${esc(sem?.label || "the semester")}. Check it, pay the university, then mark it paid in Disbursements.</p>`,
-    rows: [["Scholar", esc(titleCase(a.name))], ["Scholar ID", esc(a.scholarId)], ["Semester", esc(sem?.label)], ["Amount on the bill", amt ? esc(idr(amt)) : ""]],
+    rows: [["Scholar", esc(titleCase(a.name))], ["Scholar ID", esc(a.scholarId)], ["Semester", esc(sem?.label)], ["Amount on the bill", amt ? usd(amt) : ""], ["University deadline", esc(day(sem?.bill?.dueDate))]],
     cta: { label: "Open Disbursements", href: DESK }, foot: deskFoot,
   }) };
 }
@@ -280,7 +280,7 @@ export function tuitionPaid(a: any, sem: any) {
     pre: `The endowment has paid your ${sem?.label || ""} tuition.`,
     kicker: "Tuition", title: "Your tuition has been paid",
     intro: hi(a) + `<p style="margin:0">The endowment has paid your tuition for <b>${esc(sem?.label || "this semester")}</b> to your university.</p>`,
-    rows: [["Semester", esc(sem?.label)], ["Amount", amt ? esc(idr(amt)) : ""], ["Paid on", esc(day(sem?.paidAt))], ["Payment reference", sem?.txHash ? `<span style="font-family:Consolas,Menlo,monospace;font-weight:500">${esc(sem.txHash)}</span>` : ""]],
+    rows: [["Semester", esc(sem?.label)], ["Amount", amt ? usd(amt) : ""], ["Paid on", esc(day(sem?.paidAt))], ["Payment reference", sem?.txHash ? `<span style="font-family:Consolas,Menlo,monospace;font-weight:500">${esc(sem.txHash)}</span>` : ""]],
     body: `<p style="margin:0">At the end of the semester, please upload your results (IP / KHS) in your portal. Keep studying well — we are proud of you.</p>`,
     cta: portalCta, foot: scholarFoot,
   }) };
@@ -372,4 +372,55 @@ export function messageEmail(m: Message) {
     note: a ? `This acknowledges your contribution to the programme above, delivered through The Brial Endowment${a.pdf ? ". A PDF copy is attached for your records" : ""}. It is not a numbered donation receipt.` : "",
   });
   return { subject: m.subject, ...b };
+}
+
+// ---------------------------------------------------------------- reminders
+export function interviewReminder(a: any) {
+  const link = String(a.meetingLink || "").trim();
+  return { subject: "Reminder: your scholarship interview is coming up", ...layout({
+    pre: `Your interview: ${whenBoth(a.interviewAt)}`,
+    kicker: "Reminder", title: "Your interview is coming up",
+    intro: hi(a) + `<p style="margin:0">This is a friendly reminder of your scholarship interview with The Brial Endowment.</p>`,
+    rows: [["When", esc(whenBoth(a.interviewAt))], ["Where", link ? `<a href="${esc(link)}" style="color:${GILT};word-break:break-all">${esc(link)}</a>` : "Online"]],
+    body: `<p style="margin:0">Please join a few minutes early from a quiet place with a stable connection, and have your student card at hand. If something has come up, reply to this email as soon as you can.</p>`,
+    cta: link ? { label: "Join the meeting", href: link } : portalCta, foot: scholarFoot,
+  }) };
+}
+
+export function billReminder(a: any, sem: any) {
+  return { subject: `Time to upload your ${sem?.label || "next semester"} tuition bill`, ...layout({
+    pre: `Upload your ${sem?.label || ""} UKT bill so the endowment can pay it on time.`,
+    kicker: "Reminder", title: "Time to upload your tuition bill",
+    intro: hi(a) + `<p style="margin:0">A new semester is coming. So that the endowment can pay your tuition for <b>${esc(sem?.label || "the next semester")}</b> on time, please upload the official bill (UKT) as soon as your university issues it.</p>`,
+    body: `<p style="margin:0"><b>How</b></p><p style="margin:6px 0 0">1. Download the bill from your university's portal.<br>2. Sign in to your Brial Scholar portal and open ${esc(sem?.label || "the semester")}.<br>3. Upload the bill with the amount and the payment deadline.</p><p style="margin:14px 0 0;color:${MUTED};font-size:14px">Already uploaded it? Then there is nothing to do — thank you.</p>`,
+    cta: portalCta, foot: scholarFoot,
+  }) };
+}
+
+export function resultsReminder(a: any, sem: any) {
+  return { subject: `Please upload your ${sem?.label || "semester"} results`, ...layout({
+    pre: `Upload your IP / KHS for ${sem?.label || "last semester"}.`,
+    kicker: "Reminder", title: "How did your semester go?",
+    intro: hi(a) + `<p style="margin:0">The results for <b>${esc(sem?.label || "your last semester")}</b> should be out by now. Please upload your IP / KHS in your portal, together with your GPA.</p>`,
+    body: `<p style="margin:0">Your results keep your scholarship record complete and help us support you well. Whatever the grades, we are behind you.</p><p style="margin:14px 0 0;color:${MUTED};font-size:14px">Already uploaded them? Then there is nothing to do — thank you.</p>`,
+    cta: portalCta, foot: scholarFoot,
+  }) };
+}
+
+export function billDue(a: any, sem: any, stage: string) {
+  const due = sem?.bill?.dueDate;
+  const days = due ? Math.round((new Date(due + "T00:00:00Z").getTime() - new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z").getTime()) / 864e5) : null;
+  const waited = sem?.bill?.uploadedAt ? Math.max(1, Math.round((Date.now() - new Date(sem.bill.uploadedAt).getTime()) / 864e5)) : null;
+  const head = stage === "overdue" ? "The tuition deadline has passed"
+    : stage === "last" ? (days === 0 ? "Tuition is due today" : "Tuition is due tomorrow")
+    : stage === "soon" ? `Tuition is due in ${days} days`
+    : `A tuition bill has waited ${waited} days`;
+  const amt = sem?.bill?.amount;
+  return { subject: `${head}: ${titleCase(a.name)} · ${sem?.label || ""}`.trim(), ...layout({
+    pre: `${titleCase(a.name)} · ${sem?.label || ""}${amt ? " · " + usd(amt) : ""}`,
+    kicker: "Founder alert", title: head,
+    intro: `<p style="margin:0">${stage === "overdue" ? `The university deadline for ${esc(titleCase(a.name))}'s ${esc(sem?.label || "")} tuition has passed and the bill is still unpaid. Please pay it or contact the scholar today.` : stage === "waiting" ? `${esc(titleCase(a.name))}'s ${esc(sem?.label || "")} bill is still waiting for payment. No deadline was given, so check the bill for the university's date.` : `${esc(titleCase(a.name))}'s ${esc(sem?.label || "")} tuition must reach the university soon. Pay it, then mark it paid in Disbursements.`}</p>`,
+    rows: [["Scholar", esc(titleCase(a.name))], ["Semester", esc(sem?.label)], ["Amount", amt ? usd(amt) : ""], ["University deadline", esc(day(due))], ["Bill sent", esc(day(sem?.bill?.uploadedAt))]],
+    cta: { label: "Open Disbursements", href: DESK }, foot: deskFoot,
+  }) };
 }

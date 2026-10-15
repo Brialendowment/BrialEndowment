@@ -421,9 +421,10 @@ select.bsp-input option{background:#0A1628}
   function BillDialog({ applicant, store, sem, onClose }) {
     const [file, setFile] = useState(null);
     const [amount, setAmount] = useState(applicant.profile?.university?.uktPerSemester || "");
+    const [dueDate, setDueDate] = useState("");
     const n = parseFloat(String(amount).replace(/,/g, ""));
     const ok = file && n > 0;
-    const [state, run] = useSubmit(() => store.uploadBill(applicant.id, sem.id, { ...file, amount: n }), onClose);
+    const [state, run] = useSubmit(() => store.uploadBill(applicant.id, sem.id, { ...file, amount: n, ...(dueDate ? { dueDate } : {}) }), onClose);
     return (
       <Modal title={L(`${sem.label} tuition bill`, `Tagihan UKT ${sem.label}`)} sub={L("Upload the official bill from your university. The foundation reviews it and pays your tuition.", "Unggah tagihan resmi dari kampus. Yayasan meninjaunya lalu membayar UKT Anda.")} onClose={onClose}>
         {state === "done" ? <Done text={L("Bill sent for review.", "Tagihan terkirim untuk ditinjau.")} /> : (
@@ -433,6 +434,11 @@ select.bsp-input option{background:#0A1628}
               <span>{t("Amount due (USD)")}</span>
               <div className="bsp-money"><input className="bsp-input" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" /></div>
               <div className="bsp-hint">{t("Enter the amount on the bill.")}</div>
+            </label>
+            <label className="bsp-field">
+              <span>{L("Payment deadline (optional)", "Batas pembayaran (opsional)")}</span>
+              <input className="bsp-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              <div className="bsp-hint">{L("The last day your university accepts payment. The foundation gets a reminder before it.", "Hari terakhir kampus menerima pembayaran.")}</div>
             </label>
             <div className="bsp-actions" style={{ marginTop: 24 }}>
               <button className="bsp-btn primary" disabled={!ok || state === "busy"} onClick={run}>{state === "busy" ? <span className="bsp-spin" /> : L("Send bill", "Kirim tagihan")}</button>

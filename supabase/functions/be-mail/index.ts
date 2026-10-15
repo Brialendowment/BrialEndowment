@@ -134,6 +134,12 @@ async function build(row: any, settings: any): Promise<Built> {
     case "change_resolved": return req ? toScholar(R.changeResolved(a, req)) : { skip: "request not found" };
     case "scholar_status": return toScholar(R.scholarStatus(a, p.status, p.from));
     case "graduation": return toFounder(R.graduationAlert(a));
+    case "interview_reminder":
+      if (a.status !== "interview-scheduled" || !(new Date(a.interviewAt).getTime() > Date.now())) return { skip: "interview no longer upcoming" };
+      return toScholar(R.interviewReminder(a));
+    case "bill_reminder": return sem && sem.status === "current" ? toScholar(R.billReminder(a, sem)) : { skip: "bill already uploaded" };
+    case "results_reminder": return sem && sem.status === "paid" ? toScholar(R.resultsReminder(a, sem)) : { skip: "results already uploaded" };
+    case "bill_due": return sem && sem.status === "bill-uploaded" ? toFounder(R.billDue(a, sem, p.stage)) : { skip: "bill already paid" };
   }
   return { skip: "unknown kind " + kind };
 }
