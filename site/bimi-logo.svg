@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" viewBox="0 0 256 256">
+  <title>The Brial Endowment</title>
+  <rect width="256" height="256" fill="#0a1628"/>
+  <path d="M128.00 63.50 L148.87 101.77 L191.72 109.80 L161.77 141.47 L167.38 184.70 L128.00 166.01 L88.62 184.70 L94.23 141.47 L64.28 109.80 L107.13 101.77 Z" fill="none" stroke="#c9a961" stroke-width="7.5" stroke-linejoin="round"/>
+  <circle cx="128" cy="130.5" r="14.5" fill="#c9a961"/>
+</svg>
