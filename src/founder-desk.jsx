@@ -373,6 +373,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     inflow: I(<><path d="M12 4v11M7 10l5 5 5-5" /><path d="M4 19h16" /></>),
     outflow: I(<><path d="M12 15V4M7 9l5-5 5 5" /><path d="M4 19h16" /></>),
     ledger: I(<><path d="M5 3.5h14v17H5z" /><path d="M8.5 8h7M8.5 12h7M8.5 16h4" /></>),
+    report: I(<><path d="M6 3.5h9l3.5 3.5v13.5H6z" /><path d="M9.5 17v-3M12.5 17v-6M15.5 17v-4.5" /></>),
     site: I(<><circle cx="12" cy="12" r="3" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" /></>),
     book: I(<><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" /><path d="M12 6v14" /></>),
     sale: I(<><path d="M3 12l9-9h8v8l-9 9z" /><circle cx="15.5" cy="8.5" r="1.4" /></>),
@@ -513,6 +514,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     scholarships: { name: "Scholarships", accent: "#C9A961" },
     site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" },
     treasury: { name: "Treasury", accent: "#7FC9A8", sub: "Money in and out of the endowment" },
+    impact: { name: "Impact Report", accent: "#E2C98E", sub: "The yearly report to the world" },
   };
 
   // ============================================================
@@ -1813,11 +1815,368 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
 
   // ============================================================
+  // IMPACT REPORT: one report a year. The numbers come from the
+  // Treasury and the scholar records; the founder adds the words.
+  // Numbers are frozen when the report is published.
+  // ============================================================
+  const SITE_URL = "https://brialendowment.org";
+  const reportUrl = y => SITE_URL + "/impact/" + y;
+  const normKey = s => String(s || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const isChainTx = h => /^0x[0-9a-f]{64}$/i.test(String(h || "").trim());
+  const ymdOf = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.toISOString().slice(0, 10); };
+  const newReport = (year, founding) => ({
+    id: "IR-" + year, year, founding: !!founding, status: "draft",
+    title: founding ? "Founding Year " + year : "Impact Report " + year,
+    intro: "", cover: "", coverCaption: "", letter: "", signName: "Brial Asif Hayi Paka", signRole: "Founder",
+    stories: [], plans: "", showMoney: false, showGifts: false, createdAt: new Date().toISOString(),
+  });
+  const newStory = () => ({ id: "st-" + Date.now().toString(36), title: "", text: "", photo: "", caption: "", consent: false });
+
+  function computeImpact(store, rep) {
+    const F = useFlows(store);
+    const from = rep.founding ? null : new Date(rep.year + "-01-01T00:00:00");
+    const to = new Date(rep.year + "-12-31T23:59:59");
+    const within = iso => { if (!iso) return false; const d = new Date(iso); if (isNaN(d)) return false; return (!from || d >= from) && d <= to; };
+    // money in
+    const gifts = F.received.filter(x => x.category === "Gift" && within(x.date));
+    const sales = F.received.filter(x => x.category === "Library sale" && within(x.date));
+    const donors = new Set(), countries = new Map();
+    gifts.forEach(x => {
+      const d = x.raw || {};
+      donors.add(normKey(d.email || d.name || x.id));
+      const c = String(d.country || "").trim(); if (c && !countries.has(normKey(c))) countries.set(normKey(c), c);
+    });
+    const copies = sales.reduce((a, x) => a + (Number(x.raw && x.raw.data && x.raw.data.sale && x.raw.data.sale.qty) || 1), 0);
+    // money out
+    const out = F.paidOut.filter(x => (x.id === "LEGACY" ? rep.founding : within(x.date)));
+    const byPillar = {};
+    out.forEach(x => { const k = x.pillar || "Scholarships"; byPillar[k] = byPillar[k] || { amount: 0, count: 0 }; byPillar[k].amount += x.amount; byPillar[k].count += 1; });
+    // what was built: units recorded on pillar grants (trees, wells, mosques)
+    const units = {};
+    store.getPillarGrants().filter(g => !g.archived && within(g.date)).forEach(g => {
+      const cfg = Object.values(PILLARS).find(p => p.grantName === g.pillar);
+      const n = Math.max(0, Math.round(Number(g.units) || 0));
+      if (!n) return;
+      units[g.pillar] = units[g.pillar] || { n: 0, unit: cfg && cfg.unit ? cfg.unit : ["unit", "units"] };
+      units[g.pillar].n += n;
+    });
+    // people and places
+    const scholars = F.scholars.filter(s => !s.deleted && (!s.acceptedAt || new Date(s.acceptedAt) <= to));
+    const nations = new Map(), insts = new Set();
+    const addNation = c => { c = String(c || "").trim(); if (c && !nations.has(normKey(c))) nations.set(normKey(c), c); };
+    scholars.forEach(s => { addNation(s.profile?.personal?.country); const u = String(s.profile?.university?.name || "").trim(); if (u) insts.add(normKey(u)); });
+    const legacy = F.legacy || {};
+    const legacyScholars = rep.founding ? (legacy.scholars || []) : [];
+    legacyScholars.forEach(s => { addNation(s.country); if (s.school) insts.add(normKey(s.school)); });
+    const legacyCount = rep.founding ? (Number(legacy.count) || legacyScholars.length || 0) : 0;
+    store.getPillarGrants().filter(g => !g.archived && within(g.date)).forEach(g => addNation(g.country));
+    const semesters = F.scholars.reduce((a, s) => a + (s.semesters || []).filter(x => x.paidAt && x.bill && within(x.paidAt)).length, 0);
+    const newScholars = F.scholars.filter(s => s.acceptedAt && within(s.acceptedAt)).length;
+    const proofs = [
+      ...gifts.filter(x => isChainTx(x.ref)).map(x => ({ kind: "Gift received", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
+      ...out.filter(x => isChainTx(x.ref)).map(x => ({ kind: x.category === "Tuition" ? "Tuition paid" : x.pillar + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
+    ].sort((a, b) => (a.date < b.date ? -1 : 1));
+    const pillarNames = Object.keys(byPillar);
+    if ((scholars.length + legacyCount) > 0 && pillarNames.indexOf("Scholarships") < 0) pillarNames.unshift("Scholarships");
+    return {
+      computedAt: new Date().toISOString(),
+      period: { label: rep.founding ? "From the beginning to 31 December " + rep.year : "1 January to 31 December " + rep.year, from: from ? ymdOf(from) : null, to: rep.year + "-12-31" },
+      people: { scholars: scholars.length + legacyCount, newScholars, nations: nations.size, nationList: [...nations.values()], institutions: insts.size, semesters },
+      pillars: pillarNames,
+      built: Object.entries(units).map(([pillar, u]) => ({ pillar, n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
+      gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
+      money: {
+        received: F.sum(gifts), sales: F.sum(sales), copies,
+        given: F.sum(out), byPillar: Object.entries(byPillar).map(([pillar, v]) => ({ pillar, amount: v.amount, count: v.count })).sort((a, b) => b.amount - a.amount),
+        proofs,
+      },
+    };
+  }
+  // What visitors receive: numbers the founder chose to show, nothing else.
+  const publicPart = (snap, rep) => ({
+    computedAt: snap.computedAt, period: snap.period, people: snap.people, pillars: snap.pillars, built: snap.built,
+    gifts: rep.showGifts ? snap.gifts : null,
+    money: rep.showMoney ? snap.money : null,
+  });
+  const reportForPublic = (rep, snap) => {
+    const { snapshot, notes, ...rest } = rep;
+    return { ...rest, public: publicPart(snap, rep) };
+  };
+
+  function ImpactView({ store }) {
+    const all = store.getImpactReports ? store.getImpactReports() : [];
+    const years = all.map(r => Number(r.year)).sort((a, b) => b - a);
+    const nowYear = new Date().getFullYear();
+    const [sel, setSel] = useNav("fd-impact-year", years.length ? years[0] : null);
+    const saved = all.find(r => Number(r.year) === Number(sel)) || null;
+    const [f, setF] = useState(saved);
+    const [base, setBase] = useState(JSON.stringify(saved));
+    const [busy, setBusy] = useState("");
+    const [mailOpen, setMailOpen] = useState(false);
+    const [m, flash] = useFlash();
+    useEffect(() => { setF(saved); setBase(JSON.stringify(saved)); }, [sel, saved && saved.updatedAt]);
+    const dirty = f && JSON.stringify(f) !== base;
+    useEffect(() => {
+      const h = e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
+      window.addEventListener("beforeunload", h);
+      return () => window.removeEventListener("beforeunload", h);
+    }, [dirty]);
+
+    const start = (year, founding) => {
+      if (all.some(r => Number(r.year) === year)) { setSel(year); return; }
+      const r = newReport(year, founding);
+      store.saveImpactReports([...all, { ...r, updatedAt: r.createdAt }]).catch(() => flash("Could not save. Check your connection.", "err"));
+      setSel(year);
+    };
+    if (!all.length || !f) {
+      const first = !all.length;
+      const y = first ? 2026 : Math.max(nowYear, (years[0] || nowYear) + 1);
+      return (
+        <>
+          <Head title="Impact Report" lede="One report a year, published on the website and as a PDF. The numbers come from the Treasury and the scholar records. You add the words." />
+          <div className="fd-card" style={{ maxWidth: 760 }}>
+            <h2 className="fd-h2">{first ? "Start your first report" : "Choose a report"}</h2>
+            <p className="fd-sub">{first ? "The founding report covers everything from the very beginning to 31 December 2026." : "Open an existing report, or start the next one."}</p>
+            <div className="fd-actions" style={{ marginTop: 14 }}>
+              {years.map(yy => <button key={yy} className="fd-btn ghost" onClick={() => setSel(yy)}>{yy}</button>)}
+              <button className="fd-btn primary" onClick={() => start(y, first)}>{first ? "Start Founding Year 2026" : "Start the " + y + " report"}</button>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    const published = f.status === "published";
+    const snap = published && f.snapshot ? f.snapshot : computeImpact(store, f);
+    const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+    const setStory = (id, patch) => setF(p => ({ ...p, stories: p.stories.map(s => (s.id === id ? { ...s, ...patch } : s)) }));
+    const moveStory = (i, d) => setF(p => { const n = p.stories.slice(); const j = i + d; if (j < 0 || j >= n.length) return p; [n[i], n[j]] = [n[j], n[i]]; return { ...p, stories: n }; });
+    const missingConsent = (f.stories || []).filter(s => (s.title.trim() || s.text.trim() || s.photo) && !s.consent).length;
+    const commit = async (next, msg) => {
+      const list = all.filter(r => Number(r.year) !== Number(next.year));
+      const rec = { ...next, updatedAt: new Date().toISOString() };
+      if (rec.status === "published") rec.public = publicPart(rec.snapshot, rec);
+      setBusy("save");
+      try { await store.saveImpactReports([...list, rec]); setF(rec); setBase(JSON.stringify(rec)); flash(msg); }
+      catch (e) { flash("Could not save. Check your connection and try again.", "err"); }
+      setBusy("");
+    };
+    const save = () => commit(f, published ? "Saved. The public report is updated." : "Draft saved.");
+    const publish = () => {
+      const s = computeImpact(store, f);
+      commit({ ...f, status: "published", snapshot: s, publishedAt: f.publishedAt || new Date().toISOString() }, "Published. The report is live on the website.");
+    };
+    const unpublish = () => commit({ ...f, status: "draft", public: null, snapshot: null }, "Back to draft. The public page no longer shows this report.");
+    const preview = print => {
+      try { localStorage.setItem("brial-impact-preview", JSON.stringify(reportForPublic(f, snap))); } catch (e) {}
+      window.open("/impact/" + f.year + "?preview=1" + (print ? "&print=1" : ""), "_blank", "noopener");
+    };
+    const P = snap.people, G = snap.gifts, M = snap.money;
+    const donorList = (() => {
+      const seen = new Map();
+      (store.listDonations() || []).forEach(d => {
+        if ((store.isInternalDonation && store.isInternalDonation(d)) || !d.verified || isSaleD(d)) return;
+        const e = String(d.email || "").trim(); if (!okEmail(e)) return;
+        const k = e.toLowerCase(); if (!seen.has(k)) seen.set(k, { email: e, name: d.anonymous ? "" : d.name || "" });
+      });
+      return [...seen.values()];
+    })();
+
+    return (
+      <>
+        <Head title="Impact Report" lede="One report a year, published on the website and as a PDF. The numbers come from the Treasury and the scholar records. You add the words.">
+          {years.length > 1 && <Seg items={years.map(y => [y, String(y)])} value={Number(sel)} onChange={v => { if (dirty) flash("Save or discard your changes first.", "err"); else setSel(v); }} />}
+          {!years.includes(Math.max(nowYear, years[0] + 1)) && published && <button className="fd-btn ghost sm" onClick={() => start(Math.max(nowYear, years[0] + 1), false)}>Start {Math.max(nowYear, years[0] + 1)}</button>}
+        </Head>
+
+        <div className="fd-card">
+          <div className="fd-card-head">
+            <div>
+              <h2 className="fd-h2">{f.title || "Untitled report"}</h2>
+              <p className="fd-sub">{published ? `Published ${fdate(f.publishedAt)}. Numbers frozen on ${fdate(snap.computedAt)}.` : "Draft. Only you can see it until you publish."}</p>
+            </div>
+            <Tag tone={published ? "ok" : "gold"} dot>{published ? "Live on the website" : "Draft"}</Tag>
+          </div>
+          <div className="fd-grid2" style={{ marginTop: 12 }}>
+            <Field label="Title"><input className="fd-input" value={f.title} onChange={e => set("title", e.target.value)} /></Field>
+            <Field label="Period" hint={published ? "Unpublish to change the period." : null}>
+              <select className="fd-input" value={f.founding ? "all" : "year"} disabled={published} onChange={e => set("founding", e.target.value === "all")}>
+                <option value="all">From the beginning to 31 Dec {f.year}</option>
+                <option value="year">1 Jan to 31 Dec {f.year}</option>
+              </select>
+            </Field>
+          </div>
+        </div>
+
+        <div className="fd-card">
+          <div className="fd-card-head"><div><h2 className="fd-h2">The numbers</h2><p className="fd-sub">{snap.period.label}. {published ? "Frozen when you published." : "Updated live from your records until you publish."}</p></div></div>
+          <Stats items={[
+            { label: "Scholars supported", value: String(P.scholars), sub: `${P.newScholars} new this period` },
+            { label: "Nations", value: String(P.nations), sub: P.nationList.join(", ") || "None yet" },
+            { label: "Pillars at work", value: String(snap.pillars.length), sub: snap.pillars.join(", ") || "None yet" },
+            { label: "Semesters funded", value: String(P.semesters), sub: `${P.institutions} ${plural(P.institutions, "institution", "institutions")}` },
+          ]} />
+          {snap.built.length > 0 && <p className="fd-sub" style={{ marginTop: 10 }}>Built and planted: {snap.built.map(b => `${b.n} ${b.label} (${b.pillar})`).join(", ")}.</p>}
+          <div className="fd-krow" style={{ display: "grid", gap: 12, marginTop: 16 }}>
+            <div className="fd-card-head" style={{ margin: 0 }}>
+              <div><b>Show money amounts</b><p className="fd-sub" style={{ margin: "2px 0 0" }}>{f.showMoney ? `Visible: ${money(M.received)} received, ${money(M.given)} given, ${M.proofs.length} on-chain ${plural(M.proofs.length, "proof", "proofs")}.` : "Hidden. The report shows people, places and pillars, but no dollar figures and no transaction links. The amounts never leave the database."}</p></div>
+              <Switch on={!!f.showMoney} onChange={v => set("showMoney", v)}>{f.showMoney ? "Shown" : "Hidden"}</Switch>
+            </div>
+            <div className="fd-card-head" style={{ margin: 0 }}>
+              <div><b>Show the number of gifts and donors</b><p className="fd-sub" style={{ margin: "2px 0 0" }}>{f.showGifts ? `Visible: ${G.count} ${plural(G.count, "gift", "gifts")} from ${G.donors} ${plural(G.donors, "donor", "donors")}.` : "Hidden."} Donor names are never shown.</p></div>
+              <Switch on={!!f.showGifts} onChange={v => set("showGifts", v)}>{f.showGifts ? "Shown" : "Hidden"}</Switch>
+            </div>
+          </div>
+        </div>
+
+        <div className="fd-card">
+          <h2 className="fd-h2">Opening</h2>
+          <p className="fd-sub">A cover photo and a few lines that set the tone for the year.</p>
+          <div style={{ display: "flex", gap: 16, alignItems: "center", margin: "12px 0", flexWrap: "wrap" }}>
+            {f.cover ? <Img className="fd-cover" src={f.cover} style={{ width: 180, height: 110, objectFit: "cover" }} /> : <div className="fd-cover" style={{ width: 180, height: 110 }}>No cover</div>}
+            <div className="fd-actions">
+              <PhotoUpload onUploaded={meta => set("cover", meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : ""))}>{f.cover ? "Replace cover" : "Upload cover"}</PhotoUpload>
+              {f.cover && <button className="fd-btn quiet sm" onClick={() => set("cover", "")}>Remove</button>}
+            </div>
+          </div>
+          <div className="fd-form">
+            {f.cover && <Field label="Cover caption"><input className="fd-input" value={f.coverCaption} onChange={e => set("coverCaption", e.target.value)} placeholder="Where and when the photo was taken" /></Field>}
+            <Field label="Opening words" hint="Two or three sentences. Shown under the title."><textarea className="fd-input" value={f.intro} onChange={e => set("intro", e.target.value)} /></Field>
+          </div>
+        </div>
+
+        <div className="fd-card">
+          <h2 className="fd-h2">Letter from the founder</h2>
+          <p className="fd-sub">Write to the people who made the year possible. Leave a blank line between paragraphs.</p>
+          <div className="fd-form" style={{ marginTop: 12 }}>
+            <textarea className="fd-input" style={{ minHeight: 220 }} value={f.letter} onChange={e => set("letter", e.target.value)} aria-label="Letter from the founder" />
+            <div className="fd-grid2">
+              <Field label="Signed by"><input className="fd-input" value={f.signName} onChange={e => set("signName", e.target.value)} /></Field>
+              <Field label="Role"><input className="fd-input" value={f.signRole} onChange={e => set("signRole", e.target.value)} /></Field>
+            </div>
+          </div>
+        </div>
+
+        <div className="fd-card">
+          <div className="fd-card-head">
+            <div><h2 className="fd-h2">Stories of the year</h2><p className="fd-sub">A well, a grove, a first semester. Each story needs the permission of anyone it names or shows.</p></div>
+            <button className="fd-btn ghost sm" onClick={() => setF(p => ({ ...p, stories: [...(p.stories || []), newStory()] }))}>Add a story</button>
+          </div>
+          {(f.stories || []).length === 0 && <Empty title="No stories yet.">Stories are optional, but they are what people remember.</Empty>}
+          {(f.stories || []).map((s, i) => (
+            <div key={s.id} className="fd-card" style={{ background: "rgba(10,22,40,.4)", marginTop: 12 }}>
+              <div className="fd-form">
+                <Field label={"Story " + (i + 1) + " title"}><input className="fd-input" value={s.title} onChange={e => setStory(s.id, { title: e.target.value })} placeholder="A well for the village" /></Field>
+                <Field label="Story"><textarea className="fd-input" value={s.text} onChange={e => setStory(s.id, { text: e.target.value })} /></Field>
+                <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+                  {s.photo ? <Img className="fd-cover" src={s.photo} style={{ width: 120, height: 80, objectFit: "cover" }} /> : null}
+                  <PhotoUpload onUploaded={meta => setStory(s.id, { photo: meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : "") })}>{s.photo ? "Replace photo" : "Add photo"}</PhotoUpload>
+                  {s.photo && <button className="fd-btn quiet sm" onClick={() => setStory(s.id, { photo: "", caption: "" })}>Remove photo</button>}
+                </div>
+                {s.photo && <Field label="Photo caption"><input className="fd-input" value={s.caption} onChange={e => setStory(s.id, { caption: e.target.value })} /></Field>}
+                <label className="fd-switch" style={{ gap: 8 }}><input type="checkbox" checked={!!s.consent} onChange={e => setStory(s.id, { consent: e.target.checked })} style={{ accentColor: "#C9A961" }} />Everyone this story names or shows has agreed to it being published.</label>
+              </div>
+              <div className="fd-actions" style={{ marginTop: 10 }}>
+                <button className="fd-btn quiet sm" disabled={i === 0} onClick={() => moveStory(i, -1)}>Move up</button>
+                <button className="fd-btn quiet sm" disabled={i === f.stories.length - 1} onClick={() => moveStory(i, 1)}>Move down</button>
+                <Confirm onConfirm={() => setF(p => ({ ...p, stories: p.stories.filter(x => x.id !== s.id) }))}>Remove story</Confirm>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="fd-card">
+          <h2 className="fd-h2">The year ahead</h2>
+          <p className="fd-sub">What you hope to plant next.</p>
+          <textarea className="fd-input" style={{ marginTop: 12 }} value={f.plans} onChange={e => set("plans", e.target.value)} aria-label="The year ahead" />
+        </div>
+
+        {published && (
+          <div className="fd-card">
+            <div className="fd-card-head">
+              <div><h2 className="fd-h2">Share it</h2><p className="fd-sub">{reportUrl(f.year)}{f.emailedAt ? ` · Emailed to ${f.emailedCount} ${plural(f.emailedCount, "donor", "donors")} on ${fdate(f.emailedAt)}.` : ""}</p></div>
+              <div className="fd-actions">
+                <a className="fd-btn ghost sm" href={"/impact/" + f.year} target="_blank" rel="noopener noreferrer">Open public page {ICON.ext}</a>
+                <a className="fd-btn ghost sm" href={"/impact/" + f.year + "?print=1"} target="_blank" rel="noopener noreferrer">{ICON.pdf} Download PDF</a>
+                <button className="fd-btn ghost sm" onClick={() => copy(reportUrl(f.year))}>Copy link</button>
+                <button className="fd-btn primary sm" disabled={!donorList.length} onClick={() => setMailOpen(true)}>Email donors</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="fd-savebar">
+          <div className="fd-sub" style={{ margin: 0 }}>{missingConsent ? `${missingConsent} ${plural(missingConsent, "story needs", "stories need")} permission before publishing.` : dirty ? "You have unsaved changes." : published ? "Everything is saved and live." : "Everything is saved."} <Flash m={m} /></div>
+          <div className="fd-actions">
+            {dirty && <button className="fd-btn quiet" onClick={() => setF(JSON.parse(base))}>Discard</button>}
+            <button className="fd-btn ghost" onClick={() => preview(false)}>Preview</button>
+            {published ? (
+              <>
+                <Confirm className="fd-btn quiet" armedLabel="Click again to unpublish" onConfirm={unpublish}>Unpublish</Confirm>
+                <button className="fd-btn primary" disabled={!dirty || !!busy || missingConsent > 0} onClick={save}>{busy ? "Saving…" : "Save changes"}</button>
+              </>
+            ) : (
+              <>
+                <button className="fd-btn ghost" disabled={!dirty || !!busy} onClick={save}>Save draft</button>
+                <Confirm className="fd-btn primary" armedLabel="Click again to publish" disabled={!!busy || missingConsent > 0 || !f.title.trim()} onConfirm={publish}>Publish</Confirm>
+              </>
+            )}
+          </div>
+        </div>
+        {mailOpen && <ImpactMail store={store} rep={f} donors={donorList} onClose={() => setMailOpen(false)} onSent={n => commit({ ...f, emailedAt: new Date().toISOString(), emailedCount: (f.emailedCount || 0) + n }, `Sent to ${n} ${plural(n, "donor", "donors")}.`)} />}
+      </>
+    );
+  }
+
+  function ImpactMail({ store, rep, donors, onClose, onSent }) {
+    const [pick, setPick] = useState(() => donors.map(d => d.email));
+    const [subject, setSubject] = useState(`${rep.title}: what your gift became`);
+    const [body, setBody] = useState(`Dear friend,\n\nYour gift helped make this year possible, and we would like you to see what it became. Our ${rep.title} report is now published:\n\n${reportUrl(rep.year)}\n\nThank you for trusting us with something meant to outlast us all.\n\nWith gratitude,`);
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const toggle = e => setPick(p => (p.includes(e) ? p.filter(x => x !== e) : [...p, e]));
+    const send = async () => {
+      setBusy(true); setErr("");
+      let sent = 0;
+      try {
+        for (let i = 0; i < pick.length; i += 20) {
+          const r = await store.sendMessage({ from: "hello", to: pick.slice(i, i + 20), subject: subject.trim(), body: body.trim(), sign: true });
+          sent += r && r.queued ? r.queued : Math.min(20, pick.length - i);
+        }
+        onSent(sent); onClose();
+      } catch (e) {
+        const c = String(e && (e.message || e));
+        setErr((sent ? `Sent to ${sent}. ` : "") + (c.indexOf("rate_limited") >= 0 ? "The hourly email limit was reached. Send the rest in an hour." : "Could not send right now. Try again in a moment."));
+        if (sent) onSent(sent);
+      }
+      setBusy(false);
+    };
+    return (
+      <Modal wide title="Email the report to donors" sub="Each donor receives their own email from hello@brialendowment.org. No one sees the other addresses." onClose={onClose}>
+        <div className="fd-form">
+          <Field label={`Recipients (${pick.length} of ${donors.length})`}>
+            <div style={{ display: "grid", gap: 6, maxHeight: 180, overflow: "auto" }}>
+              {donors.map(d => <label key={d.email} className="fd-switch" style={{ gap: 8 }}><input type="checkbox" checked={pick.includes(d.email)} onChange={() => toggle(d.email)} style={{ accentColor: "#C9A961" }} />{d.email}{d.name ? " · " + d.name : ""}</label>)}
+            </div>
+          </Field>
+          <Field label="Subject"><input className="fd-input" value={subject} onChange={e => setSubject(e.target.value)} /></Field>
+          <Field label="Message" hint="Your signature is added at the end."><textarea className="fd-input" style={{ minHeight: 200 }} value={body} onChange={e => setBody(e.target.value)} /></Field>
+        </div>
+        {err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
+        <div className="fd-actions" style={{ marginTop: 18 }}>
+          <Confirm className="fd-btn primary" armedLabel={`Confirm · send to ${pick.length} ${plural(pick.length, "donor", "donors")}`} disabled={!pick.length || !subject.trim() || !body.trim() || busy} onConfirm={send}>{busy ? "Sending…" : "Send"}</Confirm>
+          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </Modal>
+    );
+  }
+
+  // ============================================================
   // FOUNDER HOME — the chooser, in two swipeable groups
   // ============================================================
   const GROUPS = [
     { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra"] },
-    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the website and the records — the work that serves every pillar.", only: ["treasury", "site", "backup"] },
+    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "site", "backup"] },
   ];
   function FounderHome(props) {
     useStyles();
@@ -2652,6 +3011,11 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
         : t === "ledger" ? <LedgerView store={store} />
         : <ChannelsView store={store} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
+    }
+    if (pillar === "impact") {
+      const reps = store.getImpactReports ? store.getImpactReports() : [];
+      nav = [{ id: "report", label: "Annual report", icon: ICON.report, count: reps.length }];
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="report" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility><ImpactView store={store} /></Shell>;
     }
     if (pillar === "site") {
       nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }, { id: "email", label: "Email", icon: ICON.send }];

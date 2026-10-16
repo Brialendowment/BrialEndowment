@@ -500,13 +500,13 @@ const Hero = ({
       margin: 0,
       maxWidth: 580
     }
-  }, "The Brial Endowment underwrites four-year university scholarships paid ", /*#__PURE__*/React.createElement("em", {
+  }, "The Brial Endowment holds its capital in trust and never spends it. Its returns go ", /*#__PURE__*/React.createElement("em", {
     style: {
       color: "#E8E4DC",
       fontStyle: "normal",
       fontWeight: 500
     }
-  }, "directly to the student"), " \u2014 no university intermediary, no administrative skim. Every dollar is recorded, attested, and auditable on a public ledger."), /*#__PURE__*/React.createElement("div", {
+  }, "directly to the people they serve"), ", as scholarships, clean water, houses of worship and more, and every dollar is recorded on a public ledger. A gift built to keep giving long after we are gone."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
@@ -646,6 +646,33 @@ const Hero = ({
 // TRANSPARENCY METRICS — public ledger (live store data only)
 // ============================================================
 const fmt = n => "$" + n.toLocaleString("en-US");
+// Link to the latest published annual impact report (hidden until one is published)
+const ImpactReportLink = () => {
+  const read = () => window.BrialStore && window.BrialStore.getPublishedImpactReports ? window.BrialStore.getPublishedImpactReports() : [];
+  const [list, setList] = useState(read);
+  useEffect(() => {
+    const h = () => setList(read());
+    window.addEventListener("brial:change", h);
+    return () => window.removeEventListener("brial:change", h);
+  }, []);
+  const r = list[0];
+  if (!r) return null;
+  return /*#__PURE__*/React.createElement("a", {
+    href: "/impact/" + r.year,
+    style: {
+      display: "inline-block",
+      marginTop: 18,
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+      letterSpacing: "0.2em",
+      textTransform: "uppercase",
+      color: "#C9A961",
+      textDecoration: "none",
+      borderBottom: "1px solid rgba(201,169,97,0.4)",
+      paddingBottom: 4
+    }
+  }, "Read the " + (r.title || r.year + " report") + " \u2192");
+};
 const Transparency = () => {
   const metrics = useMetrics();
   const total = metrics.disbursed;
@@ -674,7 +701,7 @@ const Transparency = () => {
     className: "b-2col"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Eyebrow, {
     color: "#4FD1C5"
-  }, "\xA7 II \u2014 Public Ledger"), /*#__PURE__*/React.createElement("h2", {
+  }, "\xA7 II \xB7 Public Ledger"), /*#__PURE__*/React.createElement("h2", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: "clamp(44px, 5.2vw, 78px)",
@@ -698,11 +725,11 @@ const Transparency = () => {
       color: "rgba(232,228,220,0.65)",
       margin: 0
     }
-  }, "Every disbursement is paid ", /*#__PURE__*/React.createElement("em", {
+  }, "Every disbursement goes ", /*#__PURE__*/React.createElement("em", {
     style: {
       fontStyle: "italic"
     }
-  }, "directly to the student"), " and recorded here as our scholar roster grows. These are the real institutions and amounts the foundation has underwritten to date."))), /*#__PURE__*/React.createElement("div", {
+  }, "directly to the recipient"), " and is recorded here, from tuition paid to a university to a gift for a village. These are the real institutions and amounts the foundation has funded to date."), /*#__PURE__*/React.createElement(ImpactReportLink, null))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1.4fr 1fr 1fr",
@@ -749,7 +776,7 @@ const Transparency = () => {
       letterSpacing: "0.22em",
       textTransform: "uppercase"
     }
-  }, "Total distributed \u2014 all pillars"), /*#__PURE__*/React.createElement("div", {
+  }, "Total distributed across all pillars"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: "clamp(40px, 5.5vw, 76px)",
@@ -895,7 +922,7 @@ const Transparency = () => {
       color: "#E8E4DC",
       fontStyle: "italic"
     }
-  }, "any university or country"), ". The institutions below are simply where our scholars are currently enrolled \u2014 the list grows with every new awardee."), /*#__PURE__*/React.createElement("div", {
+  }, "any university or country"), ". The institutions below are simply where our scholars are enrolled today, and the list grows with every new awardee."), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "20px 40px",
       display: "grid",
@@ -997,7 +1024,7 @@ const Philosophy = ({
     status: "active",
     action: "scholars",
     cta: "Meet our scholars →",
-    d: "Tuition paid directly to students who would otherwise be priced out of their potential. This is our first pillar — live, funded, and growing.",
+    d: "Tuition paid directly to students who would otherwise be priced out of their potential. This is our first pillar: live, funded, and growing.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1026,7 +1053,7 @@ const Philosophy = ({
       src: MINANG_LOGO,
       name: "Minang Bandung"
     },
-    d: "In partnership with Minang Bandung Foundation as builder. Brial's grant funds the construction of a mosque — a place that gathers a community and endures long after its builders.",
+    d: "In partnership with Minang Bandung Foundation as builder. Brial's grant funds the construction of a mosque, a place that gathers a community and endures long after its builders.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1068,7 +1095,7 @@ const Philosophy = ({
       src: (window.BRIAL_LOGOS || {}).lynk,
       name: "Lynk · Storefront"
     },
-    d: "The endowment's own books and guides — beginning with our scholarship handbooks in three languages. Every copy sold is planted straight back into the fund.",
+    d: "The endowment's own books and guides, beginning with our scholarship handbooks in three languages. Every copy sold is planted straight back into the fund.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1095,7 +1122,7 @@ const Philosophy = ({
       src: (window.BRIAL_LOGOS || {}).zaytoun,
       name: "Zaytoun · Palestine"
     },
-    d: "In partnership with Zaytoun, London — olive trees planted on Palestinian family land through the Trees for Life programme. A harvest that renews itself, season after season.",
+    d: "In partnership with Zaytoun, London: olive trees planted on Palestinian family land through the Trees for Life programme. A harvest that renews itself, season after season.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1120,7 +1147,7 @@ const Philosophy = ({
     status: "active",
     action: "water",
     cta: "Follow the water →",
-    d: "Wells and water systems — the simplest gift that changes everything for a village, drawn fresh for generations.",
+    d: "Wells and water systems, the simplest gift that changes everything for a village, drawn fresh for generations.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1156,7 +1183,7 @@ const Philosophy = ({
     cta: "Walk the wards →",
     sub: "Rumah Sakit",
     status: "soon",
-    d: "Care for those who cannot afford to be sick — clinics and hospitals funded from the corpus, free at the point of need.",
+    d: "Care for those who cannot afford to be sick: clinics and hospitals funded from the corpus, free at the point of need.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1186,7 +1213,7 @@ const Philosophy = ({
     cta: "Visit the classrooms →",
     sub: "Sekolah",
     status: "soon",
-    d: "Classrooms and teachers for children where there are none — education as infrastructure, owned by the community.",
+    d: "Classrooms and teachers for children where there are none. Education as infrastructure, owned by the community.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1222,7 +1249,7 @@ const Philosophy = ({
     cta: "Meet the herds →",
     sub: "Ternak",
     status: "soon",
-    d: "Herds and small enterprise placed as productive capital \u2014 assets that multiply, feed a family, and fund the gift again.",
+    d: "Herds and small enterprise placed as productive capital: assets that multiply, feed a family, and fund the gift again.",
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M20 16 Q14 20 16 27" }), /*#__PURE__*/React.createElement("path", { d: "M44 16 Q50 20 48 27" }), /*#__PURE__*/React.createElement("path", { d: "M16 27 Q16 42 32 50 Q48 42 48 27 Q40 22 32 24 Q24 22 16 27 Z" }), /*#__PURE__*/React.createElement("circle", { cx: "26", cy: "33", r: "1", fill: "currentColor", stroke: "none" }), /*#__PURE__*/React.createElement("circle", { cx: "38", cy: "33", r: "1", fill: "currentColor", stroke: "none" }), /*#__PURE__*/React.createElement("path", { d: "M28 42 Q32 45 36 42" }))
   }, {
     t: "Sustainable Infrastructure",
@@ -1231,7 +1258,7 @@ const Philosophy = ({
     cta: "Walk the works →",
     sub: "Prasarana",
     status: "soon",
-    d: "Bridges, power and public works \u2014 the quiet foundations that let a community stand, trade, and endure on its own.",
+    d: "Bridges, power and public works, the quiet foundations that let a community stand, trade, and endure on its own.",
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("line", { x1: "8", y1: "44", x2: "56", y2: "44" }), /*#__PURE__*/React.createElement("path", { d: "M14 44 Q32 18 50 44" }), /*#__PURE__*/React.createElement("line", { x1: "22", y1: "44", x2: "22", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "32", y1: "44", x2: "32", y2: "31" }), /*#__PURE__*/React.createElement("line", { x1: "42", y1: "44", x2: "42", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "10", y1: "52", x2: "54", y2: "52", strokeWidth: "1.4" }))
   }];
   return /*#__PURE__*/React.createElement("section", {
@@ -1275,7 +1302,7 @@ const Philosophy = ({
     className: "b-2col"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Eyebrow, {
     color: "#8B7A4A"
-  }, "\xA7 I \u2014 Our Mission"), /*#__PURE__*/React.createElement("h2", {
+  }, "\xA7 I \xB7 Our Mission"), /*#__PURE__*/React.createElement("h2", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: "clamp(44px, 5.2vw, 78px)",
@@ -1311,7 +1338,7 @@ const Philosophy = ({
       maxWidth: 560,
       justifySelf: "end"
     }
-  }, "The Brial Endowment is a ", /*#__PURE__*/React.createElement("strong", { style: { fontWeight: 500 } }, "perpetual endowment"), " \u2014 capital held in trust across generations. Its principal is never spent; its returns are given, forever, with zero administrative overhead and every movement recorded on a public ledger. It is, at heart, an investment in the next generation: scholarships paid directly to students today, and from the same enduring corpus, the pillars of tomorrow \u2014 houses of worship, libraries, groves, clean water, and the institutions a community needs to endure.")), /*#__PURE__*/React.createElement("div", {
+  }, "The Brial Endowment is a ", /*#__PURE__*/React.createElement("strong", { style: { fontWeight: 500 } }, "perpetual endowment"), ", capital held in trust across generations. Its principal is never spent. Its returns are given, forever, with zero administrative overhead and every movement recorded on a public ledger. Scholarships were our first pillar, and they are only the beginning: from the same enduring fund rise houses of worship, libraries, olive groves, clean water, and the institutions a community needs to stand on its own. What we plant today is meant to keep giving to generations we will never meet.")), /*#__PURE__*/React.createElement("div", {
     className: "b-pillars",
     style: {
       display: "grid",
@@ -1510,7 +1537,7 @@ const Philosophy = ({
       lineHeight: 1.4,
       maxWidth: 420
     }
-  }, "More pillars will rise in their season \u2014 each one funded, never spent, and built to endure."))), /*#__PURE__*/React.createElement("div", {
+  }, "More pillars will rise in their season, each one funded, never spent, and built to endure."))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 80,
       display: "flex",
@@ -1542,7 +1569,7 @@ const Philosophy = ({
       marginTop: 14,
       lineHeight: 1.3
     }
-  }, "\"We do not spend the gift. We plant it \u2014 so that it gives, and keeps giving, long after we are gone.\""), /*#__PURE__*/React.createElement("div", {
+  }, "\"We do not spend the gift. We plant it, so that it gives and keeps giving long after we are gone.\""), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 11,
@@ -1550,7 +1577,7 @@ const Philosophy = ({
       marginTop: 14,
       letterSpacing: "0.1em"
     }
-  }, "\u2014 The Brial Endowment, Founding Charter")), /*#__PURE__*/React.createElement("svg", {
+  }, "The Brial Endowment, Founding Charter")), /*#__PURE__*/React.createElement("svg", {
     width: "92",
     height: "92",
     viewBox: "0 0 92 92"
@@ -1796,7 +1823,7 @@ const Footer = ({
     maxWidth: 620,
     lineHeight: 1.6
   }
-}, "Send USDT on Ethereum (ERC-20). 100% flows to a scholar's tuition \u2014 no fees, no overhead, recorded on-chain.")), /*#__PURE__*/React.createElement("div", {
+}, "Send USDT on Ethereum (ERC-20). 100% goes to the work of the endowment, with no fees and no overhead, and every transfer is recorded on chain.")), /*#__PURE__*/React.createElement("div", {
   className: "b-donate-pill",
   style: {
     padding: "16px 28px",
@@ -1960,7 +1987,7 @@ const Footer = ({
     marginTop: 20,
     maxWidth: 380
   }
-}, "A sovereign philanthropic foundation. Direct-to-student. On-chain and fully transparent."), /*#__PURE__*/React.createElement(FooterContacts, null)), [{
+}, "A perpetual philanthropic endowment. Given directly, recorded openly, and built to outlast us."), /*#__PURE__*/React.createElement(FooterContacts, null)), [{
   h: "Foundation",
   l: [{
     t: "Charter",

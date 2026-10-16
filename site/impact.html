@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impact Report | The Brial Endowment</title>
+<meta name="description" content="The yearly impact report of The Brial Endowment, a perpetual philanthropic endowment: what the year's giving became, told in numbers and in stories.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="The Brial Endowment">
+<meta property="og:title" content="Impact Report | The Brial Endowment">
+<meta property="og:description" content="What the year's giving became, told in numbers and in stories.">
+<meta property="og:image" content="https://sdlrjqdbxxzddgivnjws.supabase.co/storage/v1/object/public/brial-files/site/og-cover.jpg">
+<meta name="theme-color" content="#0A1628">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A1628;--navy2:#132746;--stone:#E8E4DC;--paper:#F6F2EA;--ink:#14213A;--muted:#5D6678;--gold:#C9A961;--gold2:#9C7F3E;--line:rgba(20,33,58,.14)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink)}
+body{font-family:'Manrope',system-ui,sans-serif;font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:var(--gold2)}
+img{max-width:100%;display:block}
+.mono{font-family:'JetBrains Mono',monospace;letter-spacing:.22em;text-transform:uppercase;font-size:11px}
+.serif{font-family:'Cormorant Garamond',serif}
+.wrap{max-width:880px;margin:0 auto;padding:0 clamp(16px,5vw,40px)}
+/* top bar */
+.bar{position:sticky;top:0;z-index:5;background:rgba(10,22,40,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(201,169,97,.18)}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--stone);text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:20px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(201,169,97,.55);color:#EAD9A8;background:none;padding:8px 16px;font:500 13px 'Manrope',sans-serif;letter-spacing:.04em;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{background:rgba(201,169,97,.12)}
+/* cover */
+.cover{background:radial-gradient(ellipse at 70% 20%,#142442 0%,#0A1628 60%,#060E1C 100%);color:var(--stone);padding:clamp(56px,10vw,110px) 0 clamp(48px,8vw,90px)}
+.cover .eyebrow{color:var(--gold)}
+.cover h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(44px,8vw,86px);line-height:1.02;margin:18px 0 14px;letter-spacing:-.01em}
+.cover h1 em{color:var(--gold);font-style:italic}
+.cover .period{color:rgba(232,228,220,.6)}
+.cover .intro{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(21px,2.6vw,26px);line-height:1.5;color:rgba(232,228,220,.86);max-width:680px;margin:30px 0 0}
+.cover figure{margin:44px 0 0}
+.cover figure img{width:100%;max-height:520px;object-fit:cover;border:1px solid rgba(201,169,97,.25)}
+figcaption{font-size:13px;color:var(--muted);margin-top:10px}
+.cover figcaption{color:rgba(232,228,220,.55)}
+/* sections */
+section{padding:clamp(48px,7vw,80px) 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+h2{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(32px,4.4vw,44px);line-height:1.1;margin:10px 0 26px}
+h2 em{font-style:italic;color:var(--gold2)}
+.eyebrow{color:var(--gold2)}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(190px,100%),1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.stat{padding:22px 20px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat b{display:block;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:46px;line-height:1;color:var(--ink)}
+.stat span{display:block;margin-top:10px;font-size:13px;color:var(--muted);line-height:1.45}
+.principles{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:26px;color:var(--muted);font-size:14px}
+.principles i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-right:10px;vertical-align:middle}
+.letter p{margin:0 0 1.05em;font-size:18px}
+.sign{margin-top:30px}
+.sign b{display:block;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:24px}
+.sign span{color:var(--muted);font-size:14px}
+.story{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,4vw,44px);align-items:start;margin-top:40px}
+.story:first-of-type{margin-top:0}
+.story.noimg{grid-template-columns:1fr}
+.story:nth-of-type(even) figure{order:2}
+.story h3{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:30px;line-height:1.15;margin:0 0 12px}
+.story p{margin:0 0 .9em}
+.story figure{margin:0}
+.story figure img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.bars{display:grid;gap:16px}
+.barrow .t{display:flex;justify-content:space-between;gap:12px;font-size:15px}
+.barrow .track{height:6px;background:rgba(20,33,58,.08);margin-top:8px}
+.barrow .track i{display:block;height:100%;background:var(--gold)}
+.proofs{width:100%;border-collapse:collapse;font-size:14px}
+.proofs th{text-align:left;font-weight:500;color:var(--muted);border-bottom:1px solid var(--line);padding:8px 8px 8px 0}
+.proofs td{border-bottom:1px solid var(--line);padding:10px 8px 10px 0;vertical-align:top}
+.proofs td.r,.proofs th.r{text-align:right;padding-right:0}
+.proofs .h{font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all}
+.closing{background:var(--navy);color:var(--stone);text-align:center;padding:clamp(60px,9vw,110px) 0}
+.closing q{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(26px,3.6vw,38px);line-height:1.35;max-width:720px;margin:22px auto 0;quotes:none}
+.closing .src{color:rgba(232,228,220,.55);margin-top:18px}
+.foot{background:var(--navy);color:rgba(232,228,220,.5);font-size:13px;padding:0 0 40px;text-align:center}
+.foot a{color:var(--gold)}
+.notice{max-width:560px;margin:14vh auto;text-align:center;padding:0 16px}
+.notice h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:46px;margin:16px 0 10px}
+.banner{background:#7A5B1E;color:#FFF6E0;text-align:center;padding:8px 12px;font-size:13px}
+.list{columns:2;column-gap:32px;padding:0;margin:0;list-style:none}
+.list li{break-inside:avoid;padding:4px 0}
+@media (max-width:680px){.stats{grid-template-columns:1fr 1fr}.stat{padding:18px 14px}.stat b{font-size:38px}.story{grid-template-columns:1fr}.story:nth-of-type(even) figure{order:0}.list{columns:1}.brand span{display:none}.proofs .hide-s{display:none}}
+@page{size:A4;margin:14mm 14mm 16mm}
+@media print{
+  body{font-size:11.5pt;background:#fff}
+  .bar,.banner,.noprint{display:none!important}
+  .cover,.closing,.foot{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cover{padding:48px 0 40px}
+  section{padding:28px 0;break-inside:auto}
+  .stat,.story,.barrow,.proofs tr,.sign{break-inside:avoid}
+  h2{break-after:avoid}
+  .stat{background:#fff}
+  a{color:var(--ink);text-decoration:none}
+  .wrap{max-width:none;padding:0 4mm}
+}
+</style>
+</head>
+<body>
+<div id="app"><div class="notice"><div class="mono" style="color:#9C7F3E">The Brial Endowment</div><h1>Opening the report…</h1></div></div>
+<script>
+(function () {
+  "use strict";
+  var SB = "https://sdlrjqdbxxzddgivnjws.supabase.co";
+  var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbHJqcWRieHh6ZGRnaXZuandzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTA5MDAsImV4cCI6MjA5NTU2NjkwMH0.QZOgo2_R7VrjAFbRBU33YJE8xnwRdni_T65uLeP4Nps";
+  var STAR = '<svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#C9A961" stroke-width="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z"></path><circle cx="18" cy="18" r="4" fill="#C9A961" stroke="none"></circle></g></svg>';
+  var qs = new URLSearchParams(location.search);
+  var preview = qs.get("preview") === "1";
+  var printMode = qs.get("print") === "1";
+  var m = location.pathname.match(/\/impact\/(\d{4})/);
+  var wantYear = m ? Number(m[1]) : null;
+  var app = document.getElementById("app");
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function paras(s) { return String(s || "").trim().split(/\n\s*\n/).filter(Boolean).map(function (p) { return "<p>" + esc(p.trim()).replace(/\n/g, "<br>") + "</p>"; }).join(""); }
+  function safeImg(u) { u = String(u || "").trim(); return /^https:\/\/[^\s"'<>]+$/i.test(u) ? u : ""; }
+  function money(n) { return "$" + (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 0 }); }
+  function fdate(iso) { var d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }); }
+  function stat(v, label) { return '<div class="stat"><b>' + esc(v) + "</b><span>" + esc(label) + "</span></div>"; }
+  function plural(n, a, b) { return Number(n) === 1 ? a : b; }
+
+  function notice(title, text) {
+    document.title = title + " | The Brial Endowment";
+    app.innerHTML = '<div class="notice">' + STAR + '<div class="mono" style="color:#9C7F3E;margin-top:14px">The Brial Endowment</div><h1>' + esc(title) + '</h1><p style="color:#5D6678">' + text + '</p><p><a class="btn" style="color:#9C7F3E;border-color:#C9A961" href="/">Return to the Endowment</a></p></div>';
+  }
+
+  function render(r, isPreview) {
+    var P = r.public || {}, people = P.people || {}, money_ = P.money, gifts = P.gifts;
+    var title = r.title || ("Impact Report " + r.year);
+    document.title = title + " | The Brial Endowment";
+    var h = [];
+    if (isPreview) h.push('<div class="banner">Preview. This is how the report will look. It is not published yet.</div>');
+    h.push('<header class="bar"><div class="wrap"><a class="brand" href="/">' + STAR + "<span>The Brial Endowment</span></a>" +
+      '<button class="btn noprint" onclick="window.print()">Download PDF</button></div></header>');
+    // cover
+    var words = esc(title).split(" ");
+    var last = words.length > 1 ? words.pop() : "";
+    h.push('<div class="cover"><div class="wrap"><div class="mono eyebrow">Impact Report · ' + esc(r.year) + "</div>" +
+      "<h1>" + words.join(" ") + (last ? " <em>" + last + "</em>" : "") + "</h1>" +
+      '<div class="mono period">' + esc(P.period && P.period.label || "") + "</div>" +
+      (r.intro ? '<p class="intro">' + esc(r.intro).replace(/\n/g, "<br>") + "</p>" : "") +
+      (safeImg(r.cover) ? '<figure><img src="' + safeImg(r.cover) + '" alt="' + esc(r.coverCaption || title) + '">' + (r.coverCaption ? "<figcaption>" + esc(r.coverCaption) + "</figcaption>" : "") + "</figure>" : "") +
+      "</div></div>");
+    // numbers
+    var s = [];
+    s.push(stat(people.scholars || 0, plural(people.scholars, "scholar supported", "scholars supported")));
+    s.push(stat(people.nations || 0, plural(people.nations, "nation reached", "nations reached")));
+    s.push(stat((P.pillars || []).length, plural((P.pillars || []).length, "pillar at work", "pillars at work")));
+    if (people.semesters) s.push(stat(people.semesters, plural(people.semesters, "semester of tuition funded", "semesters of tuition funded")));
+    (P.built || []).forEach(function (b) { s.push(stat(b.n, b.label + " · " + b.pillar)); });
+    if (gifts) { s.push(stat(gifts.count, plural(gifts.count, "gift received", "gifts received"))); s.push(stat(gifts.donors, plural(gifts.donors, "donor", "donors"))); }
+    if (money_) { s.push(stat(money(money_.received), "received in gifts")); s.push(stat(money(money_.given), "given across all pillars")); }
+    h.push('<section><div class="wrap"><div class="mono eyebrow">The year in numbers</div><h2>What the gift <em>became</em></h2><div class="stats">' + s.join("") + "</div>" +
+      ((P.pillars || []).length ? '<p style="color:#5D6678;margin:22px 0 0">Pillars at work: ' + esc(P.pillars.join(", ")) + ".</p>" : "") +
+      ((people.nationList || []).length ? '<p style="color:#5D6678;margin:6px 0 0">Nations: ' + esc(people.nationList.join(", ")) + ".</p>" : "") +
+      '<div class="principles"><span><i></i>Paid directly to the people we serve</span><span><i></i>Zero administrative overhead</span><span><i></i>Principal held in trust, never spent</span><span><i></i>Every movement on a public ledger</span></div>' +
+      "</div></section>");
+    // letter
+    if (String(r.letter || "").trim()) {
+      h.push('<section><div class="wrap"><div class="mono eyebrow">A letter from the founder</div><h2>To everyone who <em>planted</em> with us</h2><div class="letter">' + paras(r.letter) + "</div>" +
+        '<div class="sign"><b>' + esc(r.signName || "") + "</b><span>" + esc(r.signRole || "") + ", The Brial Endowment</span></div></div></section>");
+    }
+    // stories
+    var stories = (r.stories || []).filter(function (x) { return x && x.consent && (String(x.title || "").trim() || String(x.text || "").trim()); });
+    if (stories.length) {
+      h.push('<section><div class="wrap"><div class="mono eyebrow">Stories of the year</div><h2>Where the gift <em>landed</em></h2>' +
+        stories.map(function (x) {
+          var img = safeImg(x.photo);
+          return '<article class="story' + (img ? "" : " noimg") + '">' + (img ? '<figure><img src="' + img + '" alt="' + esc(x.caption || x.title) + '" loading="lazy">' + (x.caption ? "<figcaption>" + esc(x.caption) + "</figcaption>" : "") + "</figure>" : "") +
+            "<div>" + (x.title ? "<h3>" + esc(x.title) + "</h3>" : "") + paras(x.text) + "</div></article>";
+        }).join("") + "</div></section>");
+    }
+    // money detail
+    if (money_ && (money_.byPillar || []).length) {
+      var max = Math.max.apply(null, money_.byPillar.map(function (p) { return p.amount; }).concat([1]));
+      h.push('<section><div class="wrap"><div class="mono eyebrow">Where it went</div><h2>Given, <em>by pillar</em></h2><div class="bars">' +
+        money_.byPillar.map(function (p) { return '<div class="barrow"><div class="t"><span>' + esc(p.pillar) + "</span><b>" + money(p.amount) + '</b></div><div class="track"><i style="width:' + Math.max(1.5, p.amount / max * 100).toFixed(1) + '%"></i></div></div>'; }).join("") +
+        "</div>" + (money_.sales ? '<p style="color:#5D6678;margin-top:20px">The Library sold ' + esc(money_.copies) + " " + plural(money_.copies, "copy", "copies") + " of our books, returning " + money(money_.sales) + " to the fund.</p>" : "") + "</div></section>");
+    }
+    if (money_ && (money_.proofs || []).length) {
+      h.push('<section><div class="wrap"><div class="mono eyebrow">Verify it yourself</div><h2>On the <em>public ledger</em></h2><p style="color:#5D6678;margin-top:-6px">Every transfer below can be checked on the Ethereum blockchain.</p><table class="proofs"><thead><tr><th>Date</th><th>Movement</th><th class="hide-s">Transaction</th><th class="r">Amount</th></tr></thead><tbody>' +
+        money_.proofs.map(function (p) { var hash = /^0x[0-9a-f]{64}$/i.test(p.hash) ? p.hash : ""; return "<tr><td>" + esc(fdate(p.date)) + "</td><td>" + esc(p.kind) + '</td><td class="h hide-s">' + (hash ? '<a href="https://etherscan.io/tx/' + hash + '" target="_blank" rel="noopener">' + hash.slice(0, 12) + "…" + hash.slice(-6) + "</a>" : "") + '</td><td class="r">' + money(p.amount) + "</td></tr>"; }).join("") +
+        "</tbody></table></div></section>");
+    }
+    // the year ahead
+    if (String(r.plans || "").trim()) {
+      h.push('<section><div class="wrap"><div class="mono eyebrow">The year ahead</div><h2>What we hope to <em>plant</em> next</h2><div class="letter">' + paras(r.plans) + "</div></div></section>");
+    }
+    h.push('<div class="closing"><div class="wrap">' + STAR + '<q>We do not spend the gift. We plant it, so that it gives and keeps giving long after we are gone.</q><div class="mono src">The Brial Endowment, Founding Charter</div></div></div>');
+    h.push('<div class="foot"><div class="wrap">' + (r.publishedAt ? "Published " + esc(fdate(r.publishedAt)) + " · " : "") + (P.computedAt ? "Figures as of " + esc(fdate(P.computedAt)) + " · " : "") +
+      '<a href="https://brialendowment.org/impact/' + esc(r.year) + '">brialendowment.org/impact/' + esc(r.year) + "</a></div></div>");
+    app.innerHTML = h.join("");
+    if (printMode) {
+      var imgs = Array.prototype.slice.call(document.images);
+      Promise.all(imgs.map(function (im) { return im.complete ? 0 : new Promise(function (ok) { im.onload = im.onerror = ok; }); }))
+        .then(function () { return document.fonts ? document.fonts.ready : 0; })
+        .then(function () { setTimeout(function () { window.print(); }, 300); });
+    }
+  }
+
+  if (preview) {
+    var raw = null;
+    try { raw = localStorage.getItem("brial-impact-preview"); } catch (e) {}
+    var rep = null;
+    try { rep = raw ? JSON.parse(raw) : null; } catch (e) {}
+    if (rep && rep.public) { render(rep, true); return; }
+    notice("Nothing to preview", "Open the preview again from the Founder Console.");
+    return;
+  }
+
+  fetch(SB + "/rest/v1/rpc/be_public_impact", { method: "POST", headers: { apikey: KEY, Authorization: "Bearer " + KEY, "Content-Type": "application/json" }, body: "{}" })
+    .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+    .then(function (list) {
+      list = (Array.isArray(list) ? list : []).filter(function (r) { return r && r.public; }).sort(function (a, b) { return (Number(b.year) || 0) - (Number(a.year) || 0); });
+      var r = wantYear ? list.filter(function (x) { return Number(x.year) === wantYear; })[0] : list[0];
+      if (r) { render(r, false); return; }
+      if (wantYear) notice("The " + wantYear + " report is not out yet", "Each year's report is published at the turn of the year. Until then, every movement of the endowment is on the public ledger.");
+      else notice("Our first report is on its way", "The Founding Year report will be published at the turn of the year. Until then, every movement of the endowment is on the public ledger.");
+    })
+    .catch(function () { notice("The report could not load", "Please check your connection and try again."); });
+})();
+</script>
+</body>
+</html>

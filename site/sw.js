@@ -1,7 +1,7 @@
 // Brial Endowment service worker — offline resilience.
 // Navigations: network-first (fresh deploys win), cached shell when offline.
 // Static assets (fonts, CDN scripts, Supabase images): stale-while-revalidate.
-const VER = "brial-v1";
+const VER = "brial-v2";
 const SHELL = "/";
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VER).then(c => c.add(SHELL)).catch(() => {}));
@@ -20,10 +20,10 @@ self.addEventListener("fetch", e => {
   if (req.mode === "navigate") {
     e.respondWith(
       fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(VER).then(c => c.put(SHELL, copy)).catch(() => {});
+        // only the home page is the offline shell; other pages (e.g. /impact) are never stored under "/"
+        if (url.pathname === "/" && res.ok) { const copy = res.clone(); caches.open(VER).then(c => c.put(SHELL, copy)).catch(() => {}); }
         return res;
-      }).catch(() => caches.match(SHELL))
+      }).catch(() => caches.match(url.pathname === "/" ? SHELL : req).then(hit => hit || caches.match(SHELL)))
     );
     return;
   }

@@ -733,6 +733,24 @@ window.BrialClipboard = { copy: copyToClipboard };
       if (clean.amount !== undefined) clean.amount = Number(clean.amount) || 0;
       Store._savePillarGrants(Store.getPillarGrants().map(g => g.id === id ? { ...g, ...clean } : g));
     },
+    // ----- Impact reports: one a year, written in the Founder Console. -----
+    // Kept in the internal record IMPACT-REPORTS. Visitors receive published
+    // reports only, and never the founder's working numbers ("snapshot").
+    getImpactReports() {
+      const d = _donations.find(x => x.id === "IMPACT-REPORTS");
+      return (d && d.data && Array.isArray(d.data.reports)) ? d.data.reports : [];
+    },
+    getPublishedImpactReports() {
+      return Store.getImpactReports().filter(r => r && r.status === "published" && r.public)
+        .sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
+    },
+    saveImpactReports(reports) {
+      const rec = { id: "IMPACT-REPORTS", name: "__impact__", amount: 0, data: { reports } };
+      const idx = _donations.findIndex(x => x.id === "IMPACT-REPORTS");
+      if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
+      saveCache(); notify({ key: "impact" });
+      return upsertDonation(rec);
+    },
     // Sum of per-grant units (trees, mosques, wells) for one pillar
     getPillarUnits(pillarName) {
       return Store.getPillarGrants().filter(g => g.pillar === pillarName && !g.archived).reduce((a, g) => a + (Number(g.units) || 0), 0);

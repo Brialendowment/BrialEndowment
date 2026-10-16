@@ -59,9 +59,20 @@ CHOOSER_PATCHES = [
      '}), /*#__PURE__*/React.createElement(typeof FD === "function" && FD.Home ? FD.Home : PillarChooser, {\n    Chooser: PillarChooser,\n    onPick: id => {'),
     ('if (!authed) return /*#__PURE__*/React.createElement(FounderLogin, {',
      'if (!authed) return /*#__PURE__*/React.createElement(typeof FD === "function" && FD.Login ? FD.Login : FounderLogin, {'),
+    ('c.id !== "site" && c.id !== "treasury" ? ',
+     'c.id !== "site" && c.id !== "treasury" && c.id !== "impact" ? '),
     ('c.id !== "backup" && c.id !== "site" ? ',
-     'c.id !== "backup" && c.id !== "site" && c.id !== "treasury" ? '),
+     'c.id !== "backup" && c.id !== "site" && c.id !== "treasury" && c.id !== "impact" ? '),
 ]
+# Impact Report tile (Foundation office), placed after Treasury
+IMPACT_TILE = ("  }, {\n    id: \"impact\",\n    label: \"Impact Report\",\n    sub: \"Once a year\",\n    accent: \"#E2C98E\",\n"
+    "    d: \"The yearly report to donors and the world. The numbers come from your records, the words come from you. Published on the website and as a PDF.\",\n"
+    "    meta: (() => { const r = store && store.getImpactReports ? store.getImpactReports() : []; const pub = r.filter(x => x.status === \"published\").length; return r.length ? (pub + \" published, \" + (r.length - pub) + \" draft\" + (r.length - pub === 1 ? \"\" : \"s\")) : \"No report yet\"; })(),\n"
+    "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M16 8 H40 L50 18 V56 H16 Z\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M40 8 V18 H50\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M24 46 V38 M32 46 V30 M40 46 V34\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M32 14 l1.6 3.4 3.6.4 -2.7 2.4 .8 3.6 -3.3-1.9 -3.3 1.9 .8-3.6 -2.7-2.4 3.6-.4z\" }))\n")
 TREASURY_ANCHOR = "  }, {\n    id: \"site\",\n"
 TREASURY_TILE = ("  }, {\n    id: \"treasury\",\n    label: \"Treasury\",\n    sub: \"Money in & out\",\n    accent: \"#7FC9A8\",\n"
     "    d: \"Every gift received and every payment made \\u2014 verify donations, pay tuition bills, and keep a ledger your accountant can read.\",\n"
@@ -117,6 +128,9 @@ def inject(code):
     if "id: \"treasury\"," not in s:
         assert s.count(TREASURY_ANCHOR) == 1, "treasury tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, TREASURY_TILE + TREASURY_ANCHOR)
+    if "id: \"impact\"," not in s:
+        assert s.count(TREASURY_ANCHOR) == 1, "impact tile anchor not found"
+        s = s.replace(TREASURY_ANCHOR, IMPACT_TILE + TREASURY_ANCHOR)
     s = patch_portal_nav(s)
     for a, b in CHOOSER_PATCHES:
         if b in s:
