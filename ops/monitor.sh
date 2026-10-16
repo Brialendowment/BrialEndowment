@@ -104,6 +104,14 @@ send_mail() { # subject, text
   [ "$code" = 200 ]
 }
 
+if [ "${TEST_ALERT:-false}" = true ]; then
+  send_mail "Test: Brial Endowment monitor alerts work" \
+"This is a test from the hourly site monitor. If you can read this, alert emails reach you.
+
+Real alerts arrive only when the website, database, sign-in or email function stops working, every 6 hours while it lasts, and once when it recovers."
+  exit $?
+fi
+
 echo "== Checks $(date -u '+%F %T') UTC"
 try "Website (brialendowment.org)" check_home
 try "www → main site redirect" check_www

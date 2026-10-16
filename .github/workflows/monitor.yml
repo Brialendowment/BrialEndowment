@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "23 * * * *"
   workflow_dispatch:
+    inputs:
+      test_alert:
+        description: "Only send a test alert email (to check that alerts arrive)"
+        type: boolean
+        default: false
 
 permissions:
   actions: write   # keep this scheduled workflow enabled (public repos idle 60 days)
@@ -41,6 +46,7 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           GH_TOKEN: ${{ github.token }}
+          TEST_ALERT: ${{ inputs.test_alert || false }}
 
       - name: Save state
         if: always()
