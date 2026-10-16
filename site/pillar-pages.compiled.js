@@ -406,7 +406,7 @@
       { img: "fleet-puma.webp", n: "Ford Puma", s: "Crossover · for the city" }
     ];
     const desks = [["Antalya", "AYT"], ["Istanbul", "IST · SAW"], ["Gaziantep", "GZT"], ["İzmir", "ADB"], ["Ankara", "ESB"], ["Kayseri", "ASR"], ["Nevşehir", "Cappadocia"], ["Sivas", "VAS"], ["Northern Cyprus", "Region"]];
-    const goLedger = () => { try { location.hash = "#/proof"; } catch (e) {} };
+    const goLedger = () => { try { history.pushState({ brialView: "proof" }, "", "/proof"); window.dispatchEvent(new PopStateEvent("popstate", { state: { brialView: "proof" } })); } catch (e) { location.href = "/proof"; } };
     const rentBtn = (label) => h("a", { href: st.link, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", background: `linear-gradient(120deg, #EAD9A8, ${GOLD} 55%, #B08F4C)`, color: "#131A33", textDecoration: "none", padding: "17px 34px", fontFamily: sans, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, label);
 
     return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both", overflowX: "hidden" }, "data-screen-label": "Transportation · go2rent" },

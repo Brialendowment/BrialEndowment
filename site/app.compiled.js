@@ -2105,12 +2105,19 @@ const Footer = ({
 // ============================================================
 const App = () => {
   const BRIAL_VIEWS = ["scholars", "donate", "ebooks", "foodland", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "scholar", "admin", "proof"];
-  const parseHashView = () => { const m = (location.hash || "").match(/^#\/([a-z]+)/); return m && BRIAL_VIEWS.indexOf(m[1]) >= 0 ? m[1] : "landing"; };
+  // Public views have clean addresses (/transport); the portals stay on #/ (/#/scholar, /#/admin).
+  const BRIAL_PATHS = ["scholars", "donate", "ebooks", "foodland", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "proof"];
+  const parseHashView = () => {
+    const m = (location.hash || "").match(/^#\/([a-z]+)/);
+    if (m) return BRIAL_VIEWS.indexOf(m[1]) >= 0 ? m[1] : "landing";
+    const p = (location.pathname || "/").replace(/\.html$/, "").replace(/\/+$/, "").slice(1);
+    return BRIAL_PATHS.indexOf(p) >= 0 ? p : "landing";
+  };
   const [view, _setView] = useState(() => (history.state && history.state.brialView) || parseHashView()); // landing | admin | scholar | donate | ...
   const _viewRef = React.useRef(view);
   _viewRef.current = view;
   // Browser back/forward + shareable deep links: every view is a real history entry with its own #/ URL
-  const hashFor = v => v === "landing" ? location.pathname + location.search : "#/" + v;
+  const hashFor = v => v === "landing" ? "/" + location.search : BRIAL_PATHS.indexOf(v) >= 0 ? "/" + v + location.search : "/#/" + v;
   const setView = v => {
     if (v !== _viewRef.current) {
       try { history.pushState({ brialView: v }, "", hashFor(v)); } catch (e) {}
@@ -2119,8 +2126,10 @@ const App = () => {
   };
   useEffect(() => {
     try {
-      const keepHash = location.hash && (_viewRef.current !== "landing" || location.hash.charAt(1) !== "/");
-      history.replaceState(Object.assign({}, history.state || {}, { brialView: _viewRef.current }), "", keepHash ? location.hash : hashFor(_viewRef.current));
+      // keep #section anchors and story deep links (#/water/3); turn old #/pillar links into clean addresses
+      const hh = location.hash || "";
+      const keepHash = hh && (hh.charAt(1) !== "/" || /^#\/[a-z]+\/\d+/.test(hh));
+      history.replaceState(Object.assign({}, history.state || {}, { brialView: _viewRef.current }), "", keepHash ? location.pathname + location.search + hh : hashFor(_viewRef.current));
     } catch (e) {}
     const onPop = e => _setView((e.state && e.state.brialView) || parseHashView());
     window.addEventListener("popstate", onPop);
@@ -2128,6 +2137,11 @@ const App = () => {
   }, []);
   const [scholarMode, setScholarMode] = useState("signup"); // signup | signin
 
+  // Tab title follows the view
+  useEffect(() => {
+    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "The Library", foodland: "Food & Land", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
+    try { document.title = T[view] ? T[view] + " | The Brial Endowment" : "The Brial Endowment | A Perpetual Philanthropic Endowment"; } catch (e) {}
+  }, [view]);
   // Always start a new view at the top (fixes landing on previous scroll position)
   useEffect(() => {
     window.scrollTo(0, 0);

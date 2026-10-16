@@ -92,6 +92,7 @@ def refresh_bundle(ref="HEAD"):
     idx.write_text(h, encoding="utf-8")
     missing = sorted(set(n for n, _ in changed.values()) - set(hits))
     print("bundle refreshed:", sorted(hits + css_hits), "| not in bundle:", missing)
+    build_seo_pages()
 
 
 if __name__ == "__main__":
@@ -99,3 +100,75 @@ if __name__ == "__main__":
     print("injected scholar home")
     if "--bundle" in sys.argv:
         refresh_bundle()
+
+
+# ---- Clean addresses with their own preview (title, description, image) ----
+# Each public view is also served as site/<slug>.html (Cloudflare serves it at /<slug>):
+# the same app, with a head that Google and link previews can read.
+SEO_PAGES = {
+    "scholars": ("Brial Scholars", "Meet the scholars of the Brial Endowment: students whose tuition is paid directly to their institution, semester by semester, and recorded on a public ledger.", None),
+    "donate": ("Give", "Give to a perpetual endowment. Every gift is recorded on the open ledger and serves scholarships, clean water, houses of worship, olive groves and more.", None),
+    "ebooks": ("The Library", "Scholarship guides in English, Bahasa Indonesia and French. Every copy sold returns to the endowment.", None),
+    "foodland": ("Food & Land", "Trees for Life: olive trees planted on Palestinian family land with Zaytoun, a harvest that renews itself season after season.", None),
+    "worship": ("Houses of Worship", "Mosques raised as waqf with local builders: places that gather a community and endure long after their builders.", None),
+    "water": ("Clean Water", "Wells and water systems built with local partners, so clean water is close to home for the villages that need it.", None),
+    "transport": ("Transportation", "The enterprise pillar. go2rent cars on the road across Türkiye and Northern Cyprus, and a share of the founder's returns given to the endowment.", "https://brialendowment.org/partners/go2rent/og.jpg"),
+    "hospitals": ("Hospitals", "Care for those who cannot afford to be sick: clinics funded from the endowment, free at the point of need. A pillar in preparation.", None),
+    "schools": ("Schools", "Classrooms raised where distance decides who learns, built once and teaching for generations. A pillar in preparation.", None),
+    "livestock": ("Livestock & Enterprise", "Herds and small enterprise placed as productive capital in family hands. A pillar in preparation.", None),
+    "infra": ("Sustainable Infrastructure", "Bridges, power and public works: the quiet foundations that let a community stand on its own. A pillar in preparation.", None),
+    "proof": ("The Open Ledger", "Every gift received and every grant made by the Brial Endowment, dated, named and totalled in public.", None),
+}
+
+
+def build_seo_pages():
+    import html as _h
+    src = (SITE / "index.html").read_text(encoding="utf-8")
+    m = re.search(r'(<script type="__bundler/template">)(.*?)(</script>)', src, re.S)
+    base = json.loads(m.group(2))
+
+    def setattr_(t, pattern, value):
+        new, n = re.subn(pattern, lambda mm: mm.group(1) + _h.escape(value, quote=True) + mm.group(2), t, count=1)
+        assert n == 1, "SEO tag not found: " + pattern
+        return new
+
+    for slug, (name, desc, img) in SEO_PAGES.items():
+        title = name + " | The Brial Endowment"
+        url = "https://brialendowment.org/" + slug
+        t = re.sub(r"<title>.*?</title>", "<title>" + _h.escape(title) + "</title>", base, count=1)
+        t = setattr_(t, r'(<meta name="description" content=")[^"]*(")', desc)
+        t = setattr_(t, r'(<link rel="canonical" href=")[^"]*(")', url)
+        t = setattr_(t, r'(<meta property="og:title" content=")[^"]*(")', title)
+        t = setattr_(t, r'(<meta property="og:description" content=")[^"]*(")', desc)
+        t = setattr_(t, r'(<meta property="og:url" content=")[^"]*(")', url)
+        t = setattr_(t, r'(<meta property="og:image:alt" content=")[^"]*(")', title)
+        t = setattr_(t, r'(<meta name="twitter:title" content=")[^"]*(")', title)
+        t = setattr_(t, r'(<meta name="twitter:description" content=")[^"]*(")', desc)
+        if img:
+            t = setattr_(t, r'(<meta property="og:image" content=")[^"]*(")', img)
+            t = setattr_(t, r'(<meta name="twitter:image" content=")[^"]*(")', img)
+        enc = json.dumps(t, ensure_ascii=False).replace("</", "<\\u002F")
+        out = src[:m.start(2)] + enc + src[m.end(2):]
+        out = outer_head(out, t, title)
+        (SITE / (slug + ".html")).write_text(out, encoding="utf-8")
+    # the home page gets the same readable head
+    (SITE / "index.html").write_text(outer_head(src, base, None), encoding="utf-8")
+    print("seo pages:", ", ".join(SEO_PAGES))
+
+
+def outer_head(page, tpl, title):
+    """Copy the description, canonical, preview (Open Graph) and JSON-LD tags from the
+    bundled template into the outer page head, where link previews and crawlers read them."""
+    import html as _h
+    a = tpl.index('<meta name="google-site-verification"')
+    b = tpl.index("</script>", tpl.index("application/ld+json")) + len("</script>")
+    keep = [ln for ln in tpl[a:b].split("\n")
+            if ln.strip().startswith(("<meta ", '<link rel="canonical"', '<script type="application/ld+json"'))
+            and "google-site-verification" not in ln]
+    block = "<!--seo-->\n" + "\n".join(keep) + "\n<!--/seo-->"
+    page = re.sub(r"<!--seo-->.*?<!--/seo-->\n?", "", page, count=1, flags=re.S)
+    head_end = page.index("</title>") + len("</title>")
+    page = page[:head_end] + "\n" + block + page[head_end:]
+    if title:
+        page = re.sub(r"<title>.*?</title>", "<title>" + _h.escape(title) + "</title>", page, count=1)
+    return page
