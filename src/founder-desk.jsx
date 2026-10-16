@@ -515,6 +515,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" },
     treasury: { name: "Treasury", accent: "#7FC9A8", sub: "Money in and out of the endowment" },
     impact: { name: "Impact Report", accent: "#E2C98E", sub: "The yearly report to the world" },
+    email: { name: "Email", accent: "#9FC3E2", sub: "Letters, receipts and reminders" },
   };
 
   // ============================================================
@@ -2176,7 +2177,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   // ============================================================
   const GROUPS = [
     { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra"] },
-    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "site", "backup"] },
+    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "site", "backup"] },
   ];
   function FounderHome(props) {
     useStyles();
@@ -2860,12 +2861,12 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const failed = log.filter(x => x.status === "failed").length;
     return (
       <>
-        <Head title="Email" lede="Receipts for donors, notices for applicants and scholars, and alerts for you — all sent from brialendowment.org." />
+        <Head title="Email" lede="Receipts for donors, notices for applicants and scholars, and alerts for you, all sent from brialendowment.org." />
         <div className="fd-mail">
           <div>
             <div className="fd-card">
               <div className="fd-mstat">
-                <div><h2 className="fd-h2" style={{ marginTop: 0 }}>Write an email</h2><p className="fd-sub" style={{ margin: 0 }}>A thank-you, an update or a reply — sent from brial@, hello@ or receipts@brialendowment.org.</p></div>
+                <div><h2 className="fd-h2" style={{ marginTop: 0 }}>Write an email</h2><p className="fd-sub" style={{ margin: 0 }}>A thank-you, an update or a reply, sent from brial@, hello@ or receipts@brialendowment.org.</p></div>
                 <button className="fd-btn primary" disabled={paused} title={paused ? "Resume sending first" : ""} onClick={() => setCompose(true)}>{ICON.send}Write an email</button>
               </div>
             </div>
@@ -3018,10 +3019,14 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="report" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility><ImpactView store={store} /></Shell>;
     }
     if (pillar === "site") {
-      nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }, { id: "email", label: "Email", icon: ICON.send }];
-      const t = nav.some(n => n.id === tab) ? tab : "contact";
-      view = t === "email" ? <EmailView store={store} /> : <ContactView store={store} />;
-      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
+      nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }];
+      view = <ContactView store={store} />;
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="contact" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
+    }
+    if (pillar === "email") {
+      nav = [{ id: "email", label: "Email", icon: ICON.send }];
+      view = <EmailView store={store} />;
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="email" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
     }
     const cfg = PILLARS[pillar];
     if (!cfg) return null;

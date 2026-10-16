@@ -1336,7 +1336,9 @@ const Philosophy = ({
       color: "rgba(10,22,40,0.75)",
       margin: 0,
       maxWidth: 560,
-      justifySelf: "end"
+      justifySelf: "end",
+      textAlign: "justify",
+      textAlignLast: "left"
     }
   }, "The Brial Endowment is a ", /*#__PURE__*/React.createElement("strong", { style: { fontWeight: 500 } }, "perpetual endowment"), ", capital held in trust across generations. Its principal is never spent. Its returns are given, forever, with zero administrative overhead and every movement recorded on a public ledger. Scholarships were our first pillar, and they are only the beginning: from the same enduring fund rise houses of worship, libraries, olive groves, clean water, and the institutions a community needs to stand on its own. What we plant today is meant to keep giving to generations we will never meet.")), /*#__PURE__*/React.createElement("div", {
     className: "b-pillars",
