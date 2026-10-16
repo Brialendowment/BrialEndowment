@@ -8764,6 +8764,9 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     infra: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M2 18h20M4 18c2-6 14-6 16 0M8 18v-4M12 18v-5M16 18v-4" }))),
     scholarships: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M2 9l10-5 10 5-10 5z" }), /* @__PURE__ */ React.createElement("path", { d: "M6 11v5c3 2 9 2 12 0v-5" })))
   };
+  ICON.email = ICON.contact;
+  ICON.security = ICON.shield;
+  ICON.impact = ICON.report;
   function Modal({ title, sub, onClose, wide, children }) {
     useEffect(() => {
       const k = (e) => {
