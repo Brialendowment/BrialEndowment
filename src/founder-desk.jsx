@@ -194,6 +194,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-modal.wide{max-width:760px}
 .fd-modal-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
 .fd-x{background:none;border:1px solid var(--line2);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:17px;line-height:1;flex-shrink:0}
+.fd-sec-setup{}@media (max-width:640px){.fd-sec-setup{grid-template-columns:1fr!important}}
 .fd-savebar{position:sticky;bottom:16px;z-index:20;margin-top:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;border-radius:12px;background:#132746;border:1px solid rgba(201,169,97,.4);box-shadow:0 18px 50px -20px rgba(0,0,0,.9)}
 .fd-thumb{width:84px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--line2);background:#0A1628}
 .fd-cover{width:64px;height:88px;border-radius:6px;object-fit:cover;border:1px solid var(--line2);background:#0A1628;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:11px}
@@ -374,6 +375,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     outflow: I(<><path d="M12 15V4M7 9l5-5 5 5" /><path d="M4 19h16" /></>),
     ledger: I(<><path d="M5 3.5h14v17H5z" /><path d="M8.5 8h7M8.5 12h7M8.5 16h4" /></>),
     report: I(<><path d="M6 3.5h9l3.5 3.5v13.5H6z" /><path d="M9.5 17v-3M12.5 17v-6M15.5 17v-4.5" /></>),
+    shield: I(<><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z" /><path d="M9 12l2.2 2.2L15.5 10" /></>),
     site: I(<><circle cx="12" cy="12" r="3" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" /></>),
     book: I(<><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" /><path d="M12 6v14" /></>),
     sale: I(<><path d="M3 12l9-9h8v8l-9 9z" /><circle cx="15.5" cy="8.5" r="1.4" /></>),
@@ -516,6 +518,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     treasury: { name: "Treasury", accent: "#7FC9A8", sub: "Money in and out of the endowment" },
     impact: { name: "Impact Report", accent: "#E2C98E", sub: "The yearly report to the world" },
     email: { name: "Email", accent: "#9FC3E2", sub: "Letters, receipts and reminders" },
+    security: { name: "Security", accent: "#C8B6F0", sub: "Two-step verification and activity" },
   };
 
   // ============================================================
@@ -2173,11 +2176,173 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   }
 
   // ============================================================
+  // SECURITY: two-step verification, recovery codes, activity log
+  // ============================================================
+  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Food & Land page", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
+  const ACT_WORD = {
+    "security.signed_in": "Signed in", "security.signed_out": "Signed out", "security.authenticator_added": "Turned on two-step verification",
+    "security.authenticator_removed": "Turned off two-step verification", "security.recovery_codes_created": "Created new recovery codes",
+    "security.recovery_code_used": "Signed in with a recovery code", "security.recovery_code_failed": "A wrong recovery code was tried",
+  };
+  const actLabel = x => {
+    if (ACT_WORD[x.action]) return ACT_WORD[x.action] + (x.action === "security.signed_in" && x.detail && x.detail.method ? (x.detail.method === "authenticator" ? " with the authenticator" : " with password") : "");
+    const [table, op] = String(x.action).split(".");
+    const verb = op === "insert" ? "Added" : op === "delete" ? "Deleted" : "Updated";
+    const t = x.target || "";
+    if (table === "applicants") return `${verb} ${x.detail && x.detail.status ? "the status of " : ""}applicant ${x.detail && x.detail.name ? titleCase(x.detail.name) : t}`;
+    if (table === "reports") return `${verb} a help desk message`;
+    if (table === "donations") return ACT_TARGET[t] ? `${verb} ${ACT_TARGET[t]}` : String(t).indexOf("PILLAR-CONTENT-") === 0 ? `${verb} a programme page` : `${verb} gift ${t}`;
+    return `${verb} ${t}`;
+  };
+  const actDetail = x => {
+    const d = x.detail || {};
+    const parts = [];
+    if (d.status) parts.push(`status ${d.status.from || "none"} to ${d.status.to || "none"}`);
+    if (Array.isArray(d.fields) && d.fields.length) parts.push("changed: " + d.fields.slice(0, 6).join(", ") + (d.fields.length > 6 ? ` and ${d.fields.length - 6} more` : ""));
+    if (typeof d.remaining === "number") parts.push(`${d.remaining} recovery ${plural(d.remaining, "code", "codes")} left`);
+    return parts.join(" · ");
+  };
+
+  function RecoveryCodes({ codes, onDone }) {
+    const [saved, setSaved] = useState(false);
+    const text = "The Brial Endowment · Founder Console recovery codes\nEach code works once. Keep them somewhere safe, away from your phone.\n\n" + codes.join("\n") + "\n";
+    const download = () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+      a.download = "brial-founder-recovery-codes.txt";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    };
+    return (
+      <div className="fd-card" style={{ borderColor: "rgba(226,201,142,.5)" }}>
+        <h2 className="fd-h2">Your recovery codes</h2>
+        <p className="fd-sub">If your phone is lost, each of these codes lets you sign in once. They are shown only now. Save them in Google Password Manager or print them, and keep them away from your phone.</p>
+        <div className="fd-mono" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "8px 18px", margin: "16px 0", fontSize: 16, letterSpacing: ".06em" }}>
+          {codes.map(c => <span key={c}>{c}</span>)}
+        </div>
+        <div className="fd-actions">
+          <button className="fd-btn ghost sm" onClick={() => copy(codes.join("\n"))}>Copy all</button>
+          <button className="fd-btn ghost sm" onClick={download}>Download as a text file</button>
+        </div>
+        <label className="fd-switch" style={{ gap: 8, marginTop: 16 }}><input type="checkbox" checked={saved} onChange={e => setSaved(e.target.checked)} style={{ accentColor: "#C9A961" }} />I have saved these codes somewhere safe.</label>
+        <div className="fd-actions" style={{ marginTop: 14 }}><button className="fd-btn primary" disabled={!saved} onClick={onDone}>Done</button></div>
+      </div>
+    );
+  }
+
+  function SecurityView({ store }) {
+    const [sec, setSec] = useState(null);
+    const [log, setLog] = useState(null);
+    const [setup, setSetup] = useState(null); // { factorId, qr, secret }
+    const [code, setCode] = useState("");
+    const [codes, setCodes] = useState(null);
+    const [busy, setBusy] = useState("");
+    const [err, setErr] = useState("");
+    const [m, flash] = useFlash();
+    const recovered = (() => { try { return sessionStorage.getItem("fd-recovered") === "1"; } catch (e) { return false; } })();
+    const load = async () => {
+      try { setSec(await store.founderSecurity()); } catch (e) { setSec({ error: true }); }
+      try { setLog(await store.founderActivity(150)); } catch (e) { setLog([]); }
+    };
+    useEffect(() => { load(); }, []);
+    const begin = async () => {
+      setBusy("start"); setErr("");
+      try { setSetup(await store.startFounderEnroll()); setCode(""); }
+      catch (e) { setErr("Could not start the set-up: " + (e.message || e)); }
+      setBusy("");
+    };
+    const finish = async () => {
+      setBusy("verify"); setErr("");
+      const r = await store.finishFounderEnroll(setup.factorId, code);
+      if (r.error) { setErr(r.error); setBusy(""); return; }
+      try { setCodes(await store.newFounderRecoveryCodes()); setSetup(null); try { sessionStorage.removeItem("fd-recovered"); } catch (x) {} }
+      catch (e) { setErr("Two-step verification is on, but the recovery codes could not be created. Press New recovery codes below."); setSetup(null); }
+      setBusy(""); load();
+    };
+    const regenerate = async () => {
+      setBusy("codes"); setErr("");
+      try { setCodes(await store.newFounderRecoveryCodes()); } catch (e) { setErr("Could not create new codes. Try again in a moment."); }
+      setBusy(""); load();
+    };
+    const turnOff = async () => {
+      setBusy("off"); setErr("");
+      try { await store.removeFounderAuthenticator(); flash("Two-step verification is off."); }
+      catch (e) { setErr("Could not turn it off: " + (e.message || e)); }
+      setBusy(""); load();
+    };
+    const on = sec && sec.mfa;
+    return (
+      <>
+        <Head title="Security" lede="Two-step verification for the Founder Console, recovery codes for emergencies, and a record of every change." />
+        {recovered && !on && <div className="fd-attn"><div className="fd-attn-i"><span className="fd-dot warn" /><div><b>You signed in with a recovery code</b><small>Your old authenticator was removed. Set up Google Authenticator again below.</small></div></div></div>}
+        {codes ? <RecoveryCodes codes={codes} onDone={() => { setCodes(null); flash("Recovery codes saved."); }} /> : (
+          <div className="fd-card">
+            <div className="fd-card-head">
+              <div>
+                <h2 className="fd-h2">Two-step verification</h2>
+                <p className="fd-sub">{sec == null ? "Checking…" : on ? "On. Signing in on a new device needs your password and the 6-digit code from Google Authenticator. This device stays signed in until you sign out." : "Off. Anyone with your password can open the console. Turn it on to require the code from Google Authenticator as well."}</p>
+              </div>
+              {sec != null && <Tag tone={on ? "ok" : "warn"} dot>{on ? "On" : "Off"}</Tag>}
+            </div>
+            {!on && !setup && sec != null && <div className="fd-actions" style={{ marginTop: 12 }}><button className="fd-btn primary" disabled={!!busy} onClick={begin}>{busy === "start" ? "Preparing…" : "Turn on with Google Authenticator"}</button></div>}
+            {setup && (
+              <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 220px) minmax(0, 1fr)", gap: 22, marginTop: 16, alignItems: "start" }} className="fd-sec-setup">
+                <div style={{ background: "#fff", padding: 10, borderRadius: 10, width: 220, maxWidth: "100%" }}><img src={setup.qr} alt="QR code for Google Authenticator" style={{ width: "100%", display: "block" }} /></div>
+                <div className="fd-form">
+                  <p className="fd-sub" style={{ margin: 0 }}><b style={{ color: "var(--text)" }}>1.</b> In Google Authenticator, tap <b style={{ color: "var(--text)" }}>+</b> and <b style={{ color: "var(--text)" }}>Scan a QR code</b>, then scan this code.</p>
+                  <p className="fd-sub" style={{ margin: 0 }}>Can't scan? Choose <b style={{ color: "var(--text)" }}>Enter a setup key</b> and type: <span className="fd-mono" style={{ color: "var(--text)", wordBreak: "break-all" }}>{setup.secret}</span> <button className="fd-btn quiet sm" onClick={() => copy(setup.secret)}>Copy</button></p>
+                  <Field label="2. Type the 6-digit code the app shows"><input className="fd-input" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" style={{ letterSpacing: ".35em", fontSize: 18, maxWidth: 200 }} /></Field>
+                  <div className="fd-actions">
+                    <button className="fd-btn primary" disabled={code.length !== 6 || !!busy} onClick={finish}>{busy === "verify" ? "Checking…" : "Verify and turn on"}</button>
+                    <button className="fd-btn ghost" disabled={!!busy} onClick={() => { setSetup(null); setErr(""); }}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {on && (
+              <>
+                <div className="fd-krow" style={{ marginTop: 14 }}>
+                  <div><b>Recovery codes</b><small>{sec.recoveryLeft} of 10 left{sec.recoveryCreatedAt ? `, created ${fdate(sec.recoveryCreatedAt)}` : ""}. Each code lets you in once if your phone is lost.</small></div>
+                  <button className="fd-btn ghost sm" disabled={!!busy} onClick={regenerate}>{busy === "codes" ? "Creating…" : "New recovery codes"}</button>
+                </div>
+                {sec.recoveryLeft < 3 && <div className="fd-msg err" style={{ marginTop: 10 }}>Only {sec.recoveryLeft} recovery {plural(sec.recoveryLeft, "code is", "codes are")} left. Create new ones now.</div>}
+                <div className="fd-krow">
+                  <div><b>Turn off two-step verification</b><small>Only if you are moving to a new phone. Turn it on again straight after.</small></div>
+                  <Confirm className="fd-btn danger sm" armedLabel="Click again to turn off" disabled={!!busy} onConfirm={turnOff}>Turn off</Confirm>
+                </div>
+              </>
+            )}
+            {err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
+            <Flash m={m} />
+          </div>
+        )}
+        <div className="fd-card">
+          <div className="fd-card-head">
+            <div><h2 className="fd-h2">Activity</h2><p className="fd-sub">Every change made from the Founder Console, and every sign in. Only the names of changed fields are kept, never their contents.</p></div>
+            <button className="fd-btn quiet sm" onClick={load}>Refresh</button>
+          </div>
+          {log == null ? <p className="fd-sub">Loading…</p> : log.length === 0 ? <Empty title="Nothing recorded yet.">Changes appear here from now on.</Empty> : (
+            <div className="fd-mlog">{log.map(x => (
+              <div className="fd-mlog-i" key={x.id}>
+                <b>{actLabel(x)}</b>
+                <span />
+                <small>{[fdatetime(x.at), x.by].filter(Boolean).join(" · ")}</small>
+                <span />
+                {actDetail(x) && <small style={{ gridColumn: "1 / -1", color: "var(--faint)" }}>{actDetail(x)}</small>}
+              </div>
+            ))}</div>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // ============================================================
   // FOUNDER HOME — the chooser, in two swipeable groups
   // ============================================================
   const GROUPS = [
     { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra"] },
-    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "site", "backup"] },
+    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, security, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "security", "site", "backup"] },
   ];
   function FounderHome(props) {
     useStyles();
@@ -2523,14 +2688,28 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const isNarrow = () => window.innerWidth / Math.max(1, window.innerHeight) < 0.9;
     const [narrow, setNarrow] = useState(isNarrow);
     useEffect(() => { const h = () => setNarrow(isNarrow()); window.addEventListener("resize", h); return () => window.removeEventListener("resize", h); }, []);
+    // step: "password" | "code" | "recovery"
+    const [step, setStep] = useState("password");
+    const [code, setCode] = useState("");
+    useEffect(() => { let on = true; store.founderNeedsCode && store.founderNeedsCode().then(n => { if (on && n) setStep("code"); }); return () => { on = false; }; }, []);
+    const opened = () => window.dispatchEvent(new CustomEvent("brial:change", { detail: { key: "founder-auth" } }));
     const submit = async e => {
       e && e.preventDefault();
       setError(null); setLoading(true);
       let res;
       try { res = await store.authFounder(email, password); } catch (err) { res = { error: "Could not reach the server. Check your connection and try again." }; }
-      if (res && res.ok) window.dispatchEvent(new CustomEvent("brial:change", { detail: { key: "founder-auth" } }));
+      if (res && res.needsCode) { setStep("code"); setCode(""); setLoading(false); }
+      else if (res && res.ok) opened();
       else { setError((res && res.error) || "The email or password is not correct."); setLoading(false); }
     };
+    const submitCode = async e => {
+      e && e.preventDefault();
+      setError(null); setLoading(true);
+      const res = step === "recovery" ? await store.useFounderRecoveryCode(code) : await store.verifyFounderCode(code);
+      if (res && res.ok) { if (res.recovered) { try { sessionStorage.setItem("fd-recovered", "1"); } catch (x) {} } opened(); }
+      else { setError((res && res.error) || "That code is not right."); setLoading(false); }
+    };
+    const otherAccount = () => { setError(null); setCode(""); setPassword(""); setStep("password"); store.clearFounderSession().then(() => {}, () => {}); };
     return (
       <div className="fg" style={narrow ? { "--fg-top": (window.innerWidth * 704 / 820 + 14) + "px" } : null}>
         <GateScene narrow={narrow} />
@@ -2538,6 +2717,26 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
         <button className="fg-exit" onClick={onExit}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>Public site</button>
         <div className={narrow ? "fg-flow" : null}>
           <p className="fg-verse">“When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, and a righteous child who prays for them.”<small>Sahih Muslim</small></p>
+          {step !== "password" ? (
+          <form className="fg-card" onSubmit={submitCode}>
+            <div className="fg-mark"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#E2C98E" strokeWidth="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" /><circle cx="18" cy="18" r="4" fill="#E2C98E" stroke="none" /></g></svg></div>
+            <p className="fg-k">Two-step verification</p>
+            <h1 className="fg-h">{step === "recovery" ? "Use a recovery code." : "Enter your code."}</h1>
+            <div className="fg-f">
+              <label htmlFor="fg-code">{step === "recovery" ? "One of your ten recovery codes" : "The 6 digits in Google Authenticator"}</label>
+              <div className="fg-in">{step === "recovery"
+                ? <input id="fg-code" autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase().slice(0, 16))} autoComplete="off" spellCheck={false} placeholder="XXXXX-XXXXX" />
+                : <input id="fg-code" autoFocus inputMode="numeric" pattern="[0-9]*" autoComplete="one-time-code" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" style={{ letterSpacing: ".4em", fontSize: 20, textAlign: "center" }} />}
+              </div>
+            </div>
+            {error && <div className="fg-err" role="alert">{error}</div>}
+            <button className="fg-btn" type="submit" disabled={loading || (step === "recovery" ? code.replace(/[^A-Z0-9]/g, "").length < 10 : code.length !== 6)}>{loading ? "Checking…" : step === "recovery" ? "Use code and enter" : "Verify and enter"}</button>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginTop: 12, fontSize: 12.5 }}>
+              <button type="button" onClick={() => { setError(null); setCode(""); setStep(step === "recovery" ? "code" : "recovery"); }} style={{ background: "none", border: 0, color: "#E2C98E", cursor: "pointer", padding: 0, font: "inherit" }}>{step === "recovery" ? "Use the app code instead" : "Lost your phone? Use a recovery code"}</button>
+              <button type="button" onClick={otherAccount} style={{ background: "none", border: 0, color: "rgba(214,228,250,.65)", cursor: "pointer", padding: 0, font: "inherit" }}>Different account</button>
+            </div>
+          </form>
+          ) : (
           <form className="fg-card" onSubmit={submit}>
             <div className="fg-mark"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#E2C98E" strokeWidth="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" /><circle cx="18" cy="18" r="4" fill="#E2C98E" stroke="none" /></g></svg></div>
             <p className="fg-k">Founder Portal</p>
@@ -2547,6 +2746,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             {error && <div className="fg-err" role="alert">{error}</div>}
             <button className="fg-btn" type="submit" disabled={!email || !password || loading}>{loading ? "Signing in…" : "Sign in"}</button>
           </form>
+          )}
         </div>
       </div>
     );
@@ -3022,6 +3222,10 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       nav = [{ id: "contact", label: "Contact & social", icon: ICON.contact }];
       view = <ContactView store={store} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="contact" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
+    }
+    if (pillar === "security") {
+      nav = [{ id: "security", label: "Security", icon: ICON.shield }];
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="security" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility><SecurityView store={store} /></Shell>;
     }
     if (pillar === "email") {
       nav = [{ id: "email", label: "Email", icon: ICON.send }];

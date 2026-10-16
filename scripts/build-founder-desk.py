@@ -19,7 +19,7 @@ ANCHOR = "// ============================================================\n// MA
 HOOK = "  const worshipCount = store.getPillarGrants().filter(g => g.pillar === \"Houses of Worship\").length;\n"
 HOOK_NEW = HOOK + ("  if (pillar && typeof FD === \"function\") return /*#__PURE__*/React.createElement(FD, {\n"
                    "    pillar: pillar,\n    store: store,\n    onBack: () => setPillar(null),\n    onExit: onExit,\n"
-                   "    founderEmail: founderEmail,\n    onLogout: async () => {\n      await store.clearFounderSession();\n    }\n  });\n")
+                   "    founderEmail: founderEmail,\n    onLogout: async () => {\n      await store.signOutFounder();\n    }\n  });\n")
 
 
 def compile_jsx(esbuild):
@@ -76,8 +76,22 @@ EMAIL_TILE = ("  }, {\n    id: \"email\",\n    label: \"Email\",\n    sub: \"Let
     "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M56 10 L28 38\" }), "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M56 10 L38 56 L28 38 L8 28 Z\" }))\n")
+# Security tile (Foundation office): two-step verification and activity log
+SECURITY_TILE = ("  }, {\n    id: \"security\",\n    label: \"Security\",\n    sub: \"Two-step & activity\",\n    accent: \"#C8B6F0\",\n"
+    "    d: \"Two-step verification with Google Authenticator, recovery codes for emergencies, and a record of every change made in this console.\",\n"
+    "    meta: \"Sign in and activity\",\n"
+    "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M32 8 L52 16 V30 C52 42 43 52 32 56 C21 52 12 42 12 30 V16 Z\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M24 32 L30 38 L41 26\" }))\n")
+# Founder gate: a session that still needs the authenticator code is not "signed in"
+GATE_PATCHES = [
+    ("const [authed, setAuthed] = useState(() => !!store.founderSessionSync());",
+     "const [authed, setAuthed] = useState(() => store.founderReadySync ? store.founderReadySync() : !!store.founderSessionSync());"),
+]
+READY_OLD = "store.getFounderSession().then(s => {"
+READY_NEW = "(store.founderReady ? store.founderReady() : store.getFounderSession()).then(s => {"
 # Tiles that are offices, not pillars: no public on/off switch
-NOT_PILLARS = ["backup", "site", "treasury", "impact", "email"]
+NOT_PILLARS = ["backup", "site", "treasury", "impact", "email", "security"]
 TOGGLE_RE = re.compile(r'store && store\.getPillarActive && (?:c\.id !== "[a-z]+"(?: && )?)+ \? ')
 TREASURY_ANCHOR = "  }, {\n    id: \"site\",\n"
 TREASURY_TILE = ("  }, {\n    id: \"treasury\",\n    label: \"Treasury\",\n    sub: \"Money in & out\",\n    accent: \"#7FC9A8\",\n"
@@ -113,6 +127,8 @@ def patch_portal_nav(s):
 def inject(code):
     p = SITE / "admin.compiled.js"
     s = p.read_text(encoding="utf-8")
+    # every Sign out button asks first (store.signOutFounder shows the dialog)
+    s = s.replace("await store.clearFounderSession();", "await store.signOutFounder();")
     block = START + "\n" + code.strip() + "\n" + END + "\n\n"
     if START in s:
         s = re.sub(re.escape(START) + r".*?" + re.escape(END) + r"\n\n", lambda m: block, s, flags=re.S)
@@ -137,6 +153,16 @@ def inject(code):
     if "id: \"impact\"," not in s:
         assert s.count(TREASURY_ANCHOR) == 1, "impact tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, IMPACT_TILE + TREASURY_ANCHOR)
+    if "id: \"security\",\n    label: \"Security\"," not in s:
+        assert s.count(TREASURY_ANCHOR) == 1, "security tile anchor not found"
+        s = s.replace(TREASURY_ANCHOR, SECURITY_TILE + TREASURY_ANCHOR)
+    for a, z in GATE_PATCHES:
+        if z not in s:
+            assert s.count(a) == 1, "gate patch anchor not found: " + a[:50]
+            s = s.replace(a, z)
+    if READY_NEW not in s:
+        assert s.count(READY_OLD) == 2, "founder session check not found"
+        s = s.replace(READY_OLD, READY_NEW)
     if "id: \"email\",\n    label: \"Email\"," not in s:  # the desk itself also has id: "email"
         assert s.count(TREASURY_ANCHOR) == 1, "email tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, EMAIL_TILE + TREASURY_ANCHOR)

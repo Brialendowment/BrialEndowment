@@ -8567,6 +8567,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-modal.wide{max-width:760px}
 .fd-modal-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
 .fd-x{background:none;border:1px solid var(--line2);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:17px;line-height:1;flex-shrink:0}
+.fd-sec-setup{}@media (max-width:640px){.fd-sec-setup{grid-template-columns:1fr!important}}
 .fd-savebar{position:sticky;bottom:16px;z-index:20;margin-top:22px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;border-radius:12px;background:#132746;border:1px solid rgba(201,169,97,.4);box-shadow:0 18px 50px -20px rgba(0,0,0,.9)}
 .fd-thumb{width:84px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--line2);background:#0A1628}
 .fd-cover{width:64px;height:88px;border-radius:6px;object-fit:cover;border:1px solid var(--line2);background:#0A1628;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:11px}
@@ -8745,6 +8746,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     outflow: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M12 15V4M7 9l5-5 5 5" }), /* @__PURE__ */ React.createElement("path", { d: "M4 19h16" }))),
     ledger: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M5 3.5h14v17H5z" }), /* @__PURE__ */ React.createElement("path", { d: "M8.5 8h7M8.5 12h7M8.5 16h4" }))),
     report: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M6 3.5h9l3.5 3.5v13.5H6z" }), /* @__PURE__ */ React.createElement("path", { d: "M9.5 17v-3M12.5 17v-6M15.5 17v-4.5" }))),
+    shield: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z" }), /* @__PURE__ */ React.createElement("path", { d: "M9 12l2.2 2.2L15.5 10" }))),
     site: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ React.createElement("path", { d: "M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" }))),
     book: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" }), /* @__PURE__ */ React.createElement("path", { d: "M12 6v14" }))),
     sale: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 12l9-9h8v8l-9 9z" }), /* @__PURE__ */ React.createElement("circle", { cx: "15.5", cy: "8.5", r: "1.4" }))),
@@ -8861,7 +8863,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" },
     treasury: { name: "Treasury", accent: "#7FC9A8", sub: "Money in and out of the endowment" },
     impact: { name: "Impact Report", accent: "#E2C98E", sub: "The yearly report to the world" },
-    email: { name: "Email", accent: "#9FC3E2", sub: "Letters, receipts and reminders" }
+    email: { name: "Email", accent: "#9FC3E2", sub: "Letters, receipts and reminders" },
+    security: { name: "Security", accent: "#C8B6F0", sub: "Two-step verification and activity" }
   };
   function GrantForm({ cfg, initial, onSave, onClose }) {
     const [f, setF] = useState(() => initial || { partner: cfg.partner || "", project: "", country: "", amount: "", units: "", note: "", date: today() });
@@ -9835,9 +9838,148 @@ With gratitude,`);
     };
     return /* @__PURE__ */ React.createElement(Modal, { wide: true, title: "Email the report to donors", sub: "Each donor receives their own email from hello@brialendowment.org. No one sees the other addresses.", onClose }, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Field, { label: `Recipients (${pick.length} of ${donors.length})` }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gap: 6, maxHeight: 180, overflow: "auto" } }, donors.map((d) => /* @__PURE__ */ React.createElement("label", { key: d.email, className: "fd-switch", style: { gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: pick.includes(d.email), onChange: () => toggle(d.email), style: { accentColor: "#C9A961" } }), d.email, d.name ? " · " + d.name : "")))), /* @__PURE__ */ React.createElement(Field, { label: "Subject" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: subject, onChange: (e) => setSubject(e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Message", hint: "Your signature is added at the end." }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { minHeight: 200 }, value: body, onChange: (e) => setBody(e.target.value) }))), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 12 } }, err), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn primary", armedLabel: `Confirm · send to ${pick.length} ${plural(pick.length, "donor", "donors")}`, disabled: !pick.length || !subject.trim() || !body.trim() || busy, onConfirm: send }, busy ? "Sending…" : "Send"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
   }
+  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Food & Land page", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
+  const ACT_WORD = {
+    "security.signed_in": "Signed in",
+    "security.signed_out": "Signed out",
+    "security.authenticator_added": "Turned on two-step verification",
+    "security.authenticator_removed": "Turned off two-step verification",
+    "security.recovery_codes_created": "Created new recovery codes",
+    "security.recovery_code_used": "Signed in with a recovery code",
+    "security.recovery_code_failed": "A wrong recovery code was tried"
+  };
+  const actLabel = (x) => {
+    if (ACT_WORD[x.action]) return ACT_WORD[x.action] + (x.action === "security.signed_in" && x.detail && x.detail.method ? x.detail.method === "authenticator" ? " with the authenticator" : " with password" : "");
+    const [table, op] = String(x.action).split(".");
+    const verb = op === "insert" ? "Added" : op === "delete" ? "Deleted" : "Updated";
+    const t = x.target || "";
+    if (table === "applicants") return `${verb} ${x.detail && x.detail.status ? "the status of " : ""}applicant ${x.detail && x.detail.name ? titleCase(x.detail.name) : t}`;
+    if (table === "reports") return `${verb} a help desk message`;
+    if (table === "donations") return ACT_TARGET[t] ? `${verb} ${ACT_TARGET[t]}` : String(t).indexOf("PILLAR-CONTENT-") === 0 ? `${verb} a programme page` : `${verb} gift ${t}`;
+    return `${verb} ${t}`;
+  };
+  const actDetail = (x) => {
+    const d = x.detail || {};
+    const parts = [];
+    if (d.status) parts.push(`status ${d.status.from || "none"} to ${d.status.to || "none"}`);
+    if (Array.isArray(d.fields) && d.fields.length) parts.push("changed: " + d.fields.slice(0, 6).join(", ") + (d.fields.length > 6 ? ` and ${d.fields.length - 6} more` : ""));
+    if (typeof d.remaining === "number") parts.push(`${d.remaining} recovery ${plural(d.remaining, "code", "codes")} left`);
+    return parts.join(" · ");
+  };
+  function RecoveryCodes({ codes, onDone }) {
+    const [saved, setSaved] = useState(false);
+    const text = "The Brial Endowment · Founder Console recovery codes\nEach code works once. Keep them somewhere safe, away from your phone.\n\n" + codes.join("\n") + "\n";
+    const download2 = () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+      a.download = "brial-founder-recovery-codes.txt";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4e3);
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { borderColor: "rgba(226,201,142,.5)" } }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Your recovery codes"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "If your phone is lost, each of these codes lets you sign in once. They are shown only now. Save them in Google Password Manager or print them, and keep them away from your phone."), /* @__PURE__ */ React.createElement("div", { className: "fd-mono", style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "8px 18px", margin: "16px 0", fontSize: 16, letterSpacing: ".06em" } }, codes.map((c) => /* @__PURE__ */ React.createElement("span", { key: c }, c))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => copy(codes.join("\n")) }, "Copy all"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: download2 }, "Download as a text file")), /* @__PURE__ */ React.createElement("label", { className: "fd-switch", style: { gap: 8, marginTop: 16 } }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: saved, onChange: (e) => setSaved(e.target.checked), style: { accentColor: "#C9A961" } }), "I have saved these codes somewhere safe."), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !saved, onClick: onDone }, "Done")));
+  }
+  function SecurityView({ store }) {
+    const [sec, setSec] = useState(null);
+    const [log, setLog] = useState(null);
+    const [setup, setSetup] = useState(null);
+    const [code, setCode] = useState("");
+    const [codes, setCodes] = useState(null);
+    const [busy, setBusy] = useState("");
+    const [err, setErr] = useState("");
+    const [m, flash] = useFlash();
+    const recovered = (() => {
+      try {
+        return sessionStorage.getItem("fd-recovered") === "1";
+      } catch (e) {
+        return false;
+      }
+    })();
+    const load = async () => {
+      try {
+        setSec(await store.founderSecurity());
+      } catch (e) {
+        setSec({ error: true });
+      }
+      try {
+        setLog(await store.founderActivity(150));
+      } catch (e) {
+        setLog([]);
+      }
+    };
+    useEffect(() => {
+      load();
+    }, []);
+    const begin = async () => {
+      setBusy("start");
+      setErr("");
+      try {
+        setSetup(await store.startFounderEnroll());
+        setCode("");
+      } catch (e) {
+        setErr("Could not start the set-up: " + (e.message || e));
+      }
+      setBusy("");
+    };
+    const finish = async () => {
+      setBusy("verify");
+      setErr("");
+      const r = await store.finishFounderEnroll(setup.factorId, code);
+      if (r.error) {
+        setErr(r.error);
+        setBusy("");
+        return;
+      }
+      try {
+        setCodes(await store.newFounderRecoveryCodes());
+        setSetup(null);
+        try {
+          sessionStorage.removeItem("fd-recovered");
+        } catch (x) {
+        }
+      } catch (e) {
+        setErr("Two-step verification is on, but the recovery codes could not be created. Press New recovery codes below.");
+        setSetup(null);
+      }
+      setBusy("");
+      load();
+    };
+    const regenerate = async () => {
+      setBusy("codes");
+      setErr("");
+      try {
+        setCodes(await store.newFounderRecoveryCodes());
+      } catch (e) {
+        setErr("Could not create new codes. Try again in a moment.");
+      }
+      setBusy("");
+      load();
+    };
+    const turnOff = async () => {
+      setBusy("off");
+      setErr("");
+      try {
+        await store.removeFounderAuthenticator();
+        flash("Two-step verification is off.");
+      } catch (e) {
+        setErr("Could not turn it off: " + (e.message || e));
+      }
+      setBusy("");
+      load();
+    };
+    const on = sec && sec.mfa;
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Security", lede: "Two-step verification for the Founder Console, recovery codes for emergencies, and a record of every change." }), recovered && !on && /* @__PURE__ */ React.createElement("div", { className: "fd-attn" }, /* @__PURE__ */ React.createElement("div", { className: "fd-attn-i" }, /* @__PURE__ */ React.createElement("span", { className: "fd-dot warn" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "You signed in with a recovery code"), /* @__PURE__ */ React.createElement("small", null, "Your old authenticator was removed. Set up Google Authenticator again below.")))), codes ? /* @__PURE__ */ React.createElement(RecoveryCodes, { codes, onDone: () => {
+      setCodes(null);
+      flash("Recovery codes saved.");
+    } }) : /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Two-step verification"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, sec == null ? "Checking…" : on ? "On. Signing in on a new device needs your password and the 6-digit code from Google Authenticator. This device stays signed in until you sign out." : "Off. Anyone with your password can open the console. Turn it on to require the code from Google Authenticator as well.")), sec != null && /* @__PURE__ */ React.createElement(Tag, { tone: on ? "ok" : "warn", dot: true }, on ? "On" : "Off")), !on && !setup && sec != null && /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !!busy, onClick: begin }, busy === "start" ? "Preparing…" : "Turn on with Google Authenticator")), setup && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0, 220px) minmax(0, 1fr)", gap: 22, marginTop: 16, alignItems: "start" }, className: "fd-sec-setup" }, /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", padding: 10, borderRadius: 10, width: 220, maxWidth: "100%" } }, /* @__PURE__ */ React.createElement("img", { src: setup.qr, alt: "QR code for Google Authenticator", style: { width: "100%", display: "block" } })), /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: 0 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "var(--text)" } }, "1."), " In Google Authenticator, tap ", /* @__PURE__ */ React.createElement("b", { style: { color: "var(--text)" } }, "+"), " and ", /* @__PURE__ */ React.createElement("b", { style: { color: "var(--text)" } }, "Scan a QR code"), ", then scan this code."), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: 0 } }, "Can't scan? Choose ", /* @__PURE__ */ React.createElement("b", { style: { color: "var(--text)" } }, "Enter a setup key"), " and type: ", /* @__PURE__ */ React.createElement("span", { className: "fd-mono", style: { color: "var(--text)", wordBreak: "break-all" } }, setup.secret), " ", /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => copy(setup.secret) }, "Copy")), /* @__PURE__ */ React.createElement(Field, { label: "2. Type the 6-digit code the app shows" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "numeric", autoComplete: "one-time-code", value: code, onChange: (e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6)), placeholder: "000000", style: { letterSpacing: ".35em", fontSize: 18, maxWidth: 200 } })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: code.length !== 6 || !!busy, onClick: finish }, busy === "verify" ? "Checking…" : "Verify and turn on"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", disabled: !!busy, onClick: () => {
+      setSetup(null);
+      setErr("");
+    } }, "Cancel")))), on && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-krow", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Recovery codes"), /* @__PURE__ */ React.createElement("small", null, sec.recoveryLeft, " of 10 left", sec.recoveryCreatedAt ? `, created ${fdate(sec.recoveryCreatedAt)}` : "", ". Each code lets you in once if your phone is lost.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", disabled: !!busy, onClick: regenerate }, busy === "codes" ? "Creating…" : "New recovery codes")), sec.recoveryLeft < 3 && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 10 } }, "Only ", sec.recoveryLeft, " recovery ", plural(sec.recoveryLeft, "code is", "codes are"), " left. Create new ones now."), /* @__PURE__ */ React.createElement("div", { className: "fd-krow" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Turn off two-step verification"), /* @__PURE__ */ React.createElement("small", null, "Only if you are moving to a new phone. Turn it on again straight after.")), /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn danger sm", armedLabel: "Click again to turn off", disabled: !!busy, onConfirm: turnOff }, "Turn off"))), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 12 } }, err), /* @__PURE__ */ React.createElement(Flash, { m })), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Activity"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Every change made from the Founder Console, and every sign in. Only the names of changed fields are kept, never their contents.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: load }, "Refresh")), log == null ? /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Loading…") : log.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "Nothing recorded yet." }, "Changes appear here from now on.") : /* @__PURE__ */ React.createElement("div", { className: "fd-mlog" }, log.map((x) => /* @__PURE__ */ React.createElement("div", { className: "fd-mlog-i", key: x.id }, /* @__PURE__ */ React.createElement("b", null, actLabel(x)), /* @__PURE__ */ React.createElement("span", null), /* @__PURE__ */ React.createElement("small", null, [fdatetime(x.at), x.by].filter(Boolean).join(" · ")), /* @__PURE__ */ React.createElement("span", null), actDetail(x) && /* @__PURE__ */ React.createElement("small", { style: { gridColumn: "1 / -1", color: "var(--faint)" } }, actDetail(x)))))));
+  }
   const GROUPS = [
     { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra"] },
-    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "site", "backup"] }
+    { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, security, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "security", "site", "backup"] }
   ];
   function FounderHome(props) {
     useStyles();
@@ -10116,6 +10258,18 @@ With gratitude,`);
       window.addEventListener("resize", h);
       return () => window.removeEventListener("resize", h);
     }, []);
+    const [step, setStep] = useState("password");
+    const [code, setCode] = useState("");
+    useEffect(() => {
+      let on = true;
+      store.founderNeedsCode && store.founderNeedsCode().then((n) => {
+        if (on && n) setStep("code");
+      });
+      return () => {
+        on = false;
+      };
+    }, []);
+    const opened = () => window.dispatchEvent(new CustomEvent("brial:change", { detail: { key: "founder-auth" } }));
     const submit = async (e) => {
       e && e.preventDefault();
       setError(null);
@@ -10126,13 +10280,48 @@ With gratitude,`);
       } catch (err) {
         res = { error: "Could not reach the server. Check your connection and try again." };
       }
-      if (res && res.ok) window.dispatchEvent(new CustomEvent("brial:change", { detail: { key: "founder-auth" } }));
+      if (res && res.needsCode) {
+        setStep("code");
+        setCode("");
+        setLoading(false);
+      } else if (res && res.ok) opened();
       else {
         setError(res && res.error || "The email or password is not correct.");
         setLoading(false);
       }
     };
-    return /* @__PURE__ */ React.createElement("div", { className: "fg", style: narrow ? { "--fg-top": window.innerWidth * 704 / 820 + 14 + "px" } : null }, /* @__PURE__ */ React.createElement(GateScene, { narrow }), /* @__PURE__ */ React.createElement(Fireflies, null), /* @__PURE__ */ React.createElement("button", { className: "fg-exit", onClick: onExit }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M15 5l-7 7 7 7" })), "Public site"), /* @__PURE__ */ React.createElement("div", { className: narrow ? "fg-flow" : null }, /* @__PURE__ */ React.createElement("p", { className: "fg-verse" }, "“When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, and a righteous child who prays for them.”", /* @__PURE__ */ React.createElement("small", null, "Sahih Muslim")), /* @__PURE__ */ React.createElement("form", { className: "fg-card", onSubmit: submit }, /* @__PURE__ */ React.createElement("div", { className: "fg-mark" }, /* @__PURE__ */ React.createElement("svg", { width: "26", height: "26", viewBox: "0 0 36 36", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("g", { fill: "none", stroke: "#E2C98E", strokeWidth: "1.2" }, /* @__PURE__ */ React.createElement("path", { d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "18", r: "4", fill: "#E2C98E", stroke: "none" })))), /* @__PURE__ */ React.createElement("p", { className: "fg-k" }, "Founder Portal"), /* @__PURE__ */ React.createElement("h1", { className: "fg-h" }, "Welcome back."), /* @__PURE__ */ React.createElement("div", { className: "fg-f" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "fg-email" }, "Email"), /* @__PURE__ */ React.createElement("div", { className: "fg-in" }, /* @__PURE__ */ React.createElement("input", { id: "fg-email", type: "email", autoFocus: true, value: email, onChange: (e) => setEmail(e.target.value), autoComplete: "username", spellCheck: false }))), /* @__PURE__ */ React.createElement("div", { className: "fg-f" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "fg-pw" }, "Password"), /* @__PURE__ */ React.createElement("div", { className: "fg-in" }, /* @__PURE__ */ React.createElement("input", { id: "fg-pw", type: reveal ? "text" : "password", value: password, onChange: (e) => setPassword(e.target.value), autoComplete: "current-password" }), /* @__PURE__ */ React.createElement("button", { type: "button", className: "fg-eye", onClick: () => setReveal((r) => !r), "aria-label": reveal ? "Hide password" : "Show password" }, /* @__PURE__ */ React.createElement(EyeIcon, { off: reveal })))), error && /* @__PURE__ */ React.createElement("div", { className: "fg-err", role: "alert" }, error), /* @__PURE__ */ React.createElement("button", { className: "fg-btn", type: "submit", disabled: !email || !password || loading }, loading ? "Signing in…" : "Sign in"))));
+    const submitCode = async (e) => {
+      e && e.preventDefault();
+      setError(null);
+      setLoading(true);
+      const res = step === "recovery" ? await store.useFounderRecoveryCode(code) : await store.verifyFounderCode(code);
+      if (res && res.ok) {
+        if (res.recovered) {
+          try {
+            sessionStorage.setItem("fd-recovered", "1");
+          } catch (x) {
+          }
+        }
+        opened();
+      } else {
+        setError(res && res.error || "That code is not right.");
+        setLoading(false);
+      }
+    };
+    const otherAccount = () => {
+      setError(null);
+      setCode("");
+      setPassword("");
+      setStep("password");
+      store.clearFounderSession().then(() => {
+      }, () => {
+      });
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "fg", style: narrow ? { "--fg-top": window.innerWidth * 704 / 820 + 14 + "px" } : null }, /* @__PURE__ */ React.createElement(GateScene, { narrow }), /* @__PURE__ */ React.createElement(Fireflies, null), /* @__PURE__ */ React.createElement("button", { className: "fg-exit", onClick: onExit }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M15 5l-7 7 7 7" })), "Public site"), /* @__PURE__ */ React.createElement("div", { className: narrow ? "fg-flow" : null }, /* @__PURE__ */ React.createElement("p", { className: "fg-verse" }, "“When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, and a righteous child who prays for them.”", /* @__PURE__ */ React.createElement("small", null, "Sahih Muslim")), step !== "password" ? /* @__PURE__ */ React.createElement("form", { className: "fg-card", onSubmit: submitCode }, /* @__PURE__ */ React.createElement("div", { className: "fg-mark" }, /* @__PURE__ */ React.createElement("svg", { width: "26", height: "26", viewBox: "0 0 36 36", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("g", { fill: "none", stroke: "#E2C98E", strokeWidth: "1.2" }, /* @__PURE__ */ React.createElement("path", { d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "18", r: "4", fill: "#E2C98E", stroke: "none" })))), /* @__PURE__ */ React.createElement("p", { className: "fg-k" }, "Two-step verification"), /* @__PURE__ */ React.createElement("h1", { className: "fg-h" }, step === "recovery" ? "Use a recovery code." : "Enter your code."), /* @__PURE__ */ React.createElement("div", { className: "fg-f" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "fg-code" }, step === "recovery" ? "One of your ten recovery codes" : "The 6 digits in Google Authenticator"), /* @__PURE__ */ React.createElement("div", { className: "fg-in" }, step === "recovery" ? /* @__PURE__ */ React.createElement("input", { id: "fg-code", autoFocus: true, value: code, onChange: (e) => setCode(e.target.value.toUpperCase().slice(0, 16)), autoComplete: "off", spellCheck: false, placeholder: "XXXXX-XXXXX" }) : /* @__PURE__ */ React.createElement("input", { id: "fg-code", autoFocus: true, inputMode: "numeric", pattern: "[0-9]*", autoComplete: "one-time-code", value: code, onChange: (e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6)), placeholder: "000000", style: { letterSpacing: ".4em", fontSize: 20, textAlign: "center" } }))), error && /* @__PURE__ */ React.createElement("div", { className: "fg-err", role: "alert" }, error), /* @__PURE__ */ React.createElement("button", { className: "fg-btn", type: "submit", disabled: loading || (step === "recovery" ? code.replace(/[^A-Z0-9]/g, "").length < 10 : code.length !== 6) }, loading ? "Checking…" : step === "recovery" ? "Use code and enter" : "Verify and enter"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 10, marginTop: 12, fontSize: 12.5 } }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+      setError(null);
+      setCode("");
+      setStep(step === "recovery" ? "code" : "recovery");
+    }, style: { background: "none", border: 0, color: "#E2C98E", cursor: "pointer", padding: 0, font: "inherit" } }, step === "recovery" ? "Use the app code instead" : "Lost your phone? Use a recovery code"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: otherAccount, style: { background: "none", border: 0, color: "rgba(214,228,250,.65)", cursor: "pointer", padding: 0, font: "inherit" } }, "Different account"))) : /* @__PURE__ */ React.createElement("form", { className: "fg-card", onSubmit: submit }, /* @__PURE__ */ React.createElement("div", { className: "fg-mark" }, /* @__PURE__ */ React.createElement("svg", { width: "26", height: "26", viewBox: "0 0 36 36", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("g", { fill: "none", stroke: "#E2C98E", strokeWidth: "1.2" }, /* @__PURE__ */ React.createElement("path", { d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "18", r: "4", fill: "#E2C98E", stroke: "none" })))), /* @__PURE__ */ React.createElement("p", { className: "fg-k" }, "Founder Portal"), /* @__PURE__ */ React.createElement("h1", { className: "fg-h" }, "Welcome back."), /* @__PURE__ */ React.createElement("div", { className: "fg-f" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "fg-email" }, "Email"), /* @__PURE__ */ React.createElement("div", { className: "fg-in" }, /* @__PURE__ */ React.createElement("input", { id: "fg-email", type: "email", autoFocus: true, value: email, onChange: (e) => setEmail(e.target.value), autoComplete: "username", spellCheck: false }))), /* @__PURE__ */ React.createElement("div", { className: "fg-f" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "fg-pw" }, "Password"), /* @__PURE__ */ React.createElement("div", { className: "fg-in" }, /* @__PURE__ */ React.createElement("input", { id: "fg-pw", type: reveal ? "text" : "password", value: password, onChange: (e) => setPassword(e.target.value), autoComplete: "current-password" }), /* @__PURE__ */ React.createElement("button", { type: "button", className: "fg-eye", onClick: () => setReveal((r) => !r), "aria-label": reveal ? "Hide password" : "Show password" }, /* @__PURE__ */ React.createElement(EyeIcon, { off: reveal })))), error && /* @__PURE__ */ React.createElement("div", { className: "fg-err", role: "alert" }, error), /* @__PURE__ */ React.createElement("button", { className: "fg-btn", type: "submit", disabled: !email || !password || loading }, loading ? "Signing in…" : "Sign in"))));
   }
   const LINE_TYPES = ["email", "phone", "whatsapp", "address"];
   function ContactView({ store }) {
@@ -10522,6 +10711,10 @@ With gratitude,`);
       view = /* @__PURE__ */ React.createElement(ContactView, { store });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: "contact", onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, view);
     }
+    if (pillar === "security") {
+      nav = [{ id: "security", label: "Security", icon: ICON.shield }];
+      return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: "security", onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, /* @__PURE__ */ React.createElement(SecurityView, { store }));
+    }
     if (pillar === "email") {
       nav = [{ id: "email", label: "Email", icon: ICON.send }];
       view = /* @__PURE__ */ React.createElement(EmailView, { store });
@@ -10764,6 +10957,14 @@ const PillarChooser = ({
     meta: "Sent from brialendowment.org",
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "52", height: "52", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M56 10 L28 38" }), /*#__PURE__*/React.createElement("path", { d: "M56 10 L38 56 L28 38 L8 28 Z" }))
   }, {
+    id: "security",
+    label: "Security",
+    sub: "Two-step & activity",
+    accent: "#C8B6F0",
+    d: "Two-step verification with Google Authenticator, recovery codes for emergencies, and a record of every change made in this console.",
+    meta: "Sign in and activity",
+    icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "52", height: "52", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M32 8 L52 16 V30 C52 42 43 52 32 56 C21 52 12 42 12 30 V16 Z" }), /*#__PURE__*/React.createElement("path", { d: "M24 32 L30 38 L41 26" }))
+  }, {
     id: "site",
     label: "Site Settings",
     sub: "Contact & social",
@@ -10862,7 +11063,7 @@ const PillarChooser = ({
     style: {
       color: c.accent
     }
-  }, c.icon), store && store.getPillarActive && c.id !== "backup" && c.id !== "site" && c.id !== "treasury" && c.id !== "impact" && c.id !== "email" ? (o => /*#__PURE__*/React.createElement("span", {
+  }, c.icon), store && store.getPillarActive && c.id !== "backup" && c.id !== "site" && c.id !== "treasury" && c.id !== "impact" && c.id !== "email" && c.id !== "security" ? (o => /*#__PURE__*/React.createElement("span", {
     role: "switch",
     "aria-checked": o,
     title: o ? "Live on the public site — click to deactivate" : "Shown as coming soon — click to activate",
@@ -10987,7 +11188,7 @@ const AdminPortalGated = ({
     onExit: onExit,
     founderEmail: founderEmail,
     onLogout: async () => {
-      await store.clearFounderSession();
+      await store.signOutFounder();
     }
   });
 
@@ -10998,7 +11199,7 @@ const AdminPortalGated = ({
       onExit: onExit,
       founderLabel: founderEmail,
       onLogout: async () => {
-        await store.clearFounderSession();
+        await store.signOutFounder();
       },
       onBack: () => setPillar(null),
       tab: wtab,
@@ -11042,7 +11243,7 @@ const AdminPortalGated = ({
       onExit: onExit,
       founderLabel: founderEmail,
       onLogout: async () => {
-        await store.clearFounderSession();
+        await store.signOutFounder();
       },
       onBack: () => setPillar(null),
       tab: ltab,
@@ -11087,7 +11288,7 @@ const AdminPortalGated = ({
       onExit: onExit,
       founderLabel: founderEmail,
       onLogout: async () => {
-        await store.clearFounderSession();
+        await store.signOutFounder();
       },
       onBack: () => setPillar(null),
       tab: ftab,
@@ -11131,7 +11332,7 @@ const AdminPortalGated = ({
       onExit: onExit,
       founderLabel: founderEmail,
       onLogout: async () => {
-        await store.clearFounderSession();
+        await store.signOutFounder();
       },
       onBack: () => setPillar(null),
       tab: wtab2,
@@ -11176,7 +11377,7 @@ const AdminPortalGated = ({
       onExit: onExit,
       founderLabel: founderEmail,
       onLogout: async () => {
-        await store.clearFounderSession();
+        await store.signOutFounder();
       },
       onBack: () => setPillar(null),
       tab: gtab,
@@ -11224,7 +11425,7 @@ const AdminPortalGated = ({
       onExit: onExit,
       founderLabel: founderEmail,
       onLogout: async () => {
-        await store.clearFounderSession();
+        await store.signOutFounder();
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -11345,7 +11546,7 @@ const AdminPortalGated = ({
     onExit: onExit,
     founderLabel: founderEmail,
     onLogout: async () => {
-      await store.clearFounderSession();
+      await store.signOutFounder();
     }
   }), /*#__PURE__*/React.createElement(typeof FD === "function" && FD.Home ? FD.Home : PillarChooser, {
     Chooser: PillarChooser,
@@ -11379,18 +11580,18 @@ const AdminPortal = ({
   onExit
 }) => {
   const store = useStore();
-  const [authed, setAuthed] = useState(() => !!store.founderSessionSync());
+  const [authed, setAuthed] = useState(() => store.founderReadySync ? store.founderReadySync() : !!store.founderSessionSync());
   const [checking, setChecking] = useState(true);
   useEffect(() => {
     let alive = true;
-    store.getFounderSession().then(s => {
+    (store.founderReady ? store.founderReady() : store.getFounderSession()).then(s => {
       if (alive) {
         setAuthed(!!s);
         setChecking(false);
       }
     });
     const h = () => {
-      store.getFounderSession().then(s => {
+      (store.founderReady ? store.founderReady() : store.getFounderSession()).then(s => {
         if (alive) setAuthed(!!s);
       });
     };

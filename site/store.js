@@ -1567,15 +1567,151 @@ window.BrialClipboard = { copy: copyToClipboard };
         password: password || "",
       });
       if (error) return { error: "Invalid email or password." };
+      // Two-step verification: with an authenticator set up, the console opens only after the code.
+      if (await Store.founderNeedsCode()) return { needsCode: true };
       const isFounder = await checkFounder();
       if (isFounder === false) {
         try { await client.auth.signOut(); } catch (e) {}
         return { error: "This account is not authorized to open the founder console." };
       }
+      await Store._enterFounderMode();
+      Store.founderLog("security.signed_in", { method: "password" });
+      return { ok: true, user: data.user };
+    },
+    async _enterFounderMode() {
       _founderMode = true;
       subscribeRealtime();
       await refreshAll();
-      return { ok: true, user: data.user };
+    },
+
+    // ----- Founder two-step verification (authenticator app, TOTP) -----
+    // The device stays trusted until the founder signs out: the session keeps
+    // its verified level when it refreshes.
+    async founderAal() {
+      const c = sbAuth();
+      if (!c || !c.auth.mfa) return null;
+      try { const { data, error } = await c.auth.mfa.getAuthenticatorAssuranceLevel(); return error ? null : data; } catch (e) { return null; }
+    },
+    async founderNeedsCode() {
+      const a = await Store.founderAal();
+      return !!(a && a.currentLevel === "aal1" && a.nextLevel === "aal2");
+    },
+    async founderReady() {
+      const s = await Store.getFounderSession();
+      if (!s) return false;
+      return !(await Store.founderNeedsCode());
+    },
+    founderReadySync() {
+      const v = Store.founderSessionSync();
+      if (!v) return false;
+      try {
+        const sess = v.currentSession || v;
+        const factors = (sess.user && sess.user.factors) || [];
+        if (!factors.some(f => f.status === "verified")) return true;
+        const b = String(sess.access_token).split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        return JSON.parse(atob(b + "===".slice((b.length + 3) % 4))).aal === "aal2";
+      } catch (e) { return false; }
+    },
+    async verifyFounderCode(code) {
+      const c = sbAuth();
+      if (!c) return { error: "Service not ready. Please try again in a moment." };
+      try {
+        const { data: lf } = await c.auth.mfa.listFactors();
+        const factor = lf && lf.totp && lf.totp[0];
+        if (!factor) return { error: "No authenticator is set up for this account." };
+        const { error } = await c.auth.mfa.challengeAndVerify({ factorId: factor.id, code: String(code || "").replace(/\D/g, "") });
+        if (error) return { error: "That code is not right. Use the newest code in Google Authenticator." };
+        if (!(await checkFounder())) { try { await c.auth.signOut(); } catch (e) {} return { error: "This account is not authorized to open the founder console." }; }
+        await Store._enterFounderMode();
+        Store.founderLog("security.signed_in", { method: "authenticator" });
+        return { ok: true };
+      } catch (e) { return { error: "Could not check the code right now. Check your connection and try again." }; }
+    },
+    async useFounderRecoveryCode(code) {
+      const c = sbAuth();
+      if (!c) return { error: "Service not ready. Please try again in a moment." };
+      try {
+        const { data, error } = await c.rpc("be_founder_use_recovery", { p_code: String(code || "") });
+        if (error) return { error: String(error.message || "").indexOf("too_many_attempts") >= 0 ? "Too many attempts. Wait an hour, then try again." : "Could not check the code right now. Try again in a moment." };
+        if (!data) return { error: "That recovery code is not valid, or it was already used." };
+        await c.auth.refreshSession();
+        if (!(await checkFounder())) return { error: "The code worked, but the console could not open. Sign in again." };
+        await Store._enterFounderMode();
+        return { ok: true, recovered: true };
+      } catch (e) { return { error: "Could not check the code right now. Try again in a moment." }; }
+    },
+    founderLog(action, detail) {
+      const c = sbAuth();
+      if (c) c.rpc("be_founder_log", { p_action: action, p_detail: detail || {} }).then(() => {}, () => {});
+    },
+    async founderSecurity() {
+      const { data, error } = await sbAuth().rpc("be_founder_security");
+      if (error) throw error;
+      return data;
+    },
+    async founderActivity(limit) {
+      const { data, error } = await sbAuth().rpc("be_founder_activity", { p_limit: limit || 100 });
+      if (error) throw error;
+      return data || [];
+    },
+    async startFounderEnroll() {
+      const c = sbAuth();
+      const { data: lf } = await c.auth.mfa.listFactors();
+      // clear set-ups that were started but never finished
+      for (const f of ((lf && lf.all) || []).filter(x => x.status !== "verified")) { try { await c.auth.mfa.unenroll({ factorId: f.id }); } catch (e) {} }
+      const { data, error } = await c.auth.mfa.enroll({ factorType: "totp", friendlyName: "Founder Console " + new Date().toISOString().slice(0, 10), issuer: "Brial Endowment" });
+      if (error) throw error;
+      return { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret, uri: data.totp.uri };
+    },
+    async finishFounderEnroll(factorId, code) {
+      const c = sbAuth();
+      const { error } = await c.auth.mfa.challengeAndVerify({ factorId, code: String(code || "").replace(/\D/g, "") });
+      if (error) return { error: "That code is not right. Use the newest code in Google Authenticator." };
+      Store.founderLog("security.authenticator_added", {});
+      return { ok: true };
+    },
+    async newFounderRecoveryCodes() {
+      const A = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+      const one = () => { const b = new Uint8Array(10); crypto.getRandomValues(b); const s = Array.from(b, x => A[x % A.length]).join(""); return s.slice(0, 5) + "-" + s.slice(5); };
+      const codes = Array.from({ length: 10 }, one);
+      const { error } = await sbAuth().rpc("be_founder_set_recovery", { p_codes: codes });
+      if (error) throw error;
+      return codes;
+    },
+    async removeFounderAuthenticator() {
+      const c = sbAuth();
+      const { data: lf, error } = await c.auth.mfa.listFactors();
+      if (error) throw error;
+      for (const f of (lf.all || [])) { const r = await c.auth.mfa.unenroll({ factorId: f.id }); if (r.error) throw r.error; }
+      Store.founderLog("security.authenticator_removed", {});
+      await c.auth.refreshSession();
+      return true;
+    },
+    // Every Sign out button in the console asks first.
+    signOutFounder() {
+      return new Promise(resolve => {
+        const wrap = document.createElement("div");
+        wrap.setAttribute("role", "dialog");
+        wrap.setAttribute("aria-modal", "true");
+        wrap.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:rgba(3,8,18,.72);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Manrope,system-ui,sans-serif";
+        wrap.innerHTML = '<div style="width:100%;max-width:400px;background:#0F1F3A;border:1px solid rgba(201,169,97,.35);border-radius:14px;padding:26px 24px;color:#E8E4DC;box-shadow:0 30px 80px -20px rgba(0,0,0,.9)">'
+          + '<div style="font-family:Cormorant Garamond,serif;font-size:26px;line-height:1.2;margin:0 0 10px">Sign out of the Founder Console?</div>'
+          + '<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:rgba(232,228,220,.72)">This device will forget you. To come back you will need your password and the code from Google Authenticator.</p>'
+          + '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">'
+          + '<button data-a="stay" style="padding:10px 16px;border-radius:9px;border:1px solid rgba(232,228,220,.25);background:none;color:#E8E4DC;font:600 13px Manrope,sans-serif;cursor:pointer">Stay signed in</button>'
+          + '<button data-a="out" style="padding:10px 16px;border-radius:9px;border:0;background:#C9A961;color:#0A1628;font:600 13px Manrope,sans-serif;cursor:pointer">Sign out</button></div></div>';
+        const done = async go => {
+          document.removeEventListener("keydown", onKey);
+          wrap.remove();
+          if (go) { Store.founderLog("security.signed_out", {}); await new Promise(r => setTimeout(r, 150)); await Store.clearFounderSession(); }
+          resolve(!!go);
+        };
+        const onKey = e => { if (e.key === "Escape") done(false); };
+        wrap.addEventListener("click", e => { const a = e.target && e.target.getAttribute && e.target.getAttribute("data-a"); if (a) done(a === "out"); else if (e.target === wrap) done(false); });
+        document.addEventListener("keydown", onKey);
+        document.body.appendChild(wrap);
+        const stay = wrap.querySelector('[data-a="stay"]'); if (stay) stay.focus();
+      });
     },
     async getFounderSession() {
       const client = sbAuth();
