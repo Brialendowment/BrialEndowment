@@ -1,0 +1,50 @@
+name: Site monitor
+
+# Hourly health check of brialendowment.org. Emails the founder only when
+# something breaks, while it stays broken (every 6 h), and when it recovers.
+# Logic lives in ops/monitor.sh. Needs the RESEND_API_KEY repository secret.
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write   # read the backup workflow's runs; keep scheduled workflows enabled
+  contents: read
+
+concurrency:
+  group: site-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            ops
+            site/supabase-client.js
+          sparse-checkout-cone-mode: false
+
+      - name: Restore previous state
+        uses: actions/cache/restore@v4
+        with:
+          path: .monitor-state
+          key: monitor-state-${{ github.run_id }}
+          restore-keys: monitor-state-
+
+      - name: Run checks
+        run: bash ops/monitor.sh
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Save state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .monitor-state
+          key: monitor-state-${{ github.run_id }}-${{ github.run_attempt }}
