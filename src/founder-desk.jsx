@@ -393,6 +393,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     infra: I(<><path d="M2 18h20M4 18c2-6 14-6 16 0M8 18v-4M12 18v-5M16 18v-4" /></>),
     scholarships: I(<><path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c3 2 9 2 12 0v-5" /></>),
   };
+  ICON.transport = I(<><path d="M3 15v-3l2.5-4.5A2 2 0 0 1 7.3 6.5h9.4a2 2 0 0 1 1.8 1L21 12v3z" /><path d="M5 12h14" /><circle cx="7.5" cy="16.5" r="2" /><circle cx="16.5" cy="16.5" r="2" /></>);
   // Foundation office consoles reuse the matching section icon in their sidebar header.
   ICON.email = ICON.contact; ICON.security = ICON.shield; ICON.impact = ICON.report;
 
@@ -516,6 +517,9 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     infra: { name: "Sustainable Infrastructure", grantName: "Sustainable Infrastructure", accent: "#9FA8B8", unit: ["work", "works"], unitLabel: "Works completed", get: s => s.getPillarContent("infra"), save: (s, v) => s.savePillarContent("infra", v), unitField: "units", partner: "", project: "e.g. Footbridge — phase I", firstEntry: "The first bridge", linkMode: "partner", linkHelp: "The works partner's programme page. Hide the button while there is no active partner." },
     library: { name: "The Library", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
     scholarships: { name: "Scholarships", accent: "#C9A961" },
+    transport: { name: "Transportation", accent: "#E8834A", linkMode: "partner", linkHelp: "Where the Rent with go2rent button sends visitors, usually https://www.gotworent.com/.", note: "the road",
+      get: s => s.getPillarContent("transport"), save: (s, v) => s.savePillarContent("transport", v),
+      facts: [["fleet", "Vehicles in service", "730+"], ["regions", "Regions", "9"], ["airports", "Airport desks", "9"], ["support", "Support", "24/7"]] },
     site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" },
     treasury: { name: "Treasury", accent: "#7FC9A8", sub: "Money in and out of the endowment" },
     impact: { name: "Impact Report", accent: "#E2C98E", sub: "The yearly report to the world" },
@@ -629,9 +633,16 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
               <Field label="Partner line"><input className="fd-input" value={f.partnerLine || ""} onChange={e => set({ partnerLine: e.target.value })} placeholder="In partnership with …" /></Field>
             </div>
             <Field label="Introduction" hint="How the programme works, in two or three sentences."><textarea className="fd-input" value={f.intro || ""} onChange={e => set({ intro: e.target.value })} /></Field>
-            <Field label={cfg.unitLabel + " shown on the page"} hint={unitsFromGrants > 0 ? `The page currently shows ${unitsFromGrants}, counted from your grants. This number is only used when no grant has a count.` : "Used until a grant records a count."} style={{ maxWidth: 260 }}>
+            {cfg.facts ? (
+              <>
+                <div className="fd-grid2">{cfg.facts.map(([k, label, ph]) => <Field key={k} label={label}><input className="fd-input" value={f[k] || ""} onChange={e => set({ [k]: e.target.value })} placeholder={ph} /></Field>)}</div>
+                <Field label="Note under the figures" hint="Where the figures come from, and when."><input className="fd-input" value={f.factsNote || ""} onChange={e => set({ factsNote: e.target.value })} /></Field>
+              </>
+            ) : cfg.unitField ? (
+              <Field label={cfg.unitLabel + " shown on the page"} hint={unitsFromGrants > 0 ? `The page currently shows ${unitsFromGrants}, counted from your grants. This number is only used when no grant has a count.` : "Used until a grant records a count."} style={{ maxWidth: 260 }}>
               <input className="fd-input" type="number" min="0" value={f[cfg.unitField] ?? 0} onChange={e => set({ [cfg.unitField]: Math.max(0, parseInt(e.target.value || "0", 10)) })} />
             </Field>
+            ) : null}
           </div>
         </div>
 
@@ -829,6 +840,59 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             </div>
             <div className="fd-actions" style={{ marginTop: 20 }}>
               <button className="fd-btn primary" disabled={!(parseFloat(f.amount) > 0) || !f.bookId} onClick={save}>Record sale</button>
+              <button className="fd-btn ghost" onClick={() => setOpen(false)}>Cancel</button>
+            </div>
+          </Modal>
+        )}
+      </>
+    );
+  }
+
+
+  // ============================================================
+  // TRANSPORTATION: contributions from go2rent (enterprise income)
+  // ============================================================
+  function ContributionsView({ store }) {
+    const list = store.listEnterpriseIncome ? store.listEnterpriseIncome("go2rent") : [];
+    const [open, setOpen] = useState(false);
+    const blank = () => ({ amount: "", period: "", txRef: "", note: "", date: today() });
+    const [f, setF] = useState(blank);
+    const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+    const total = list.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+    const last = list[0];
+    const save = () => {
+      store.addEnterpriseIncome({ source: "go2rent", amount: parseFloat(f.amount), period: f.period, txRef: f.txRef, note: f.note, date: new Date(f.date).toISOString() });
+      setF(blank()); setOpen(false);
+    };
+    const G = "minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1.2fr) auto";
+    return (
+      <>
+        <Head title="Contributions" lede="Money given to the endowment from your returns in go2rent. Each contribution enters the public ledger as verified income and shows on the Transportation page."><button className="fd-btn primary" onClick={() => setOpen(true)}>Record a contribution</button></Head>
+        <Stats items={[{ label: "Returned to the endowment", value: money(total), tone: total > 0 ? "ok" : "" }, { label: "Contributions", value: list.length }, { label: "Latest", value: last ? fdate(last.date) : "None yet" }]} />
+        <div className="fd-table">
+          <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Period</div><div>Amount</div><div>Reference · date</div><div /></div>
+          {list.length === 0 ? <Empty title="No contributions recorded yet.">When you give part of your go2rent returns to the endowment, record it here.</Empty> : list.map(x => (
+            <div key={x.id} className="fd-tr" style={{ gridTemplateColumns: G }}>
+              <div className="fd-td full"><b>{x.period || "Contribution"}</b>{x.note && <small>{x.note}</small>}</div>
+              <div className="fd-td" data-l="Amount"><span className="num">{money(x.amount)}</span></div>
+              <div className="fd-td" data-l="Reference"><span className="fd-mono">{x.txRef || "—"}</span><small>{fdate(x.date)}</small></div>
+              <div className="fd-td"><Confirm onConfirm={() => store.deleteEnterpriseIncome(x.id)}>Delete</Confirm></div>
+            </div>
+          ))}
+        </div>
+        {open && (
+          <Modal title="Record a contribution" sub="From your go2rent returns to the endowment" onClose={() => setOpen(false)}>
+            <div className="fd-form">
+              <div className="fd-grid3">
+                <Field label="Amount (USD)"><div className="fd-money"><input className="fd-input" inputMode="decimal" value={f.amount} onChange={e => set("amount", e.target.value)} /></div></Field>
+                <Field label="Period"><input className="fd-input" value={f.period} onChange={e => set("period", e.target.value)} placeholder="e.g. October 2026" /></Field>
+                <Field label="Date given"><input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} /></Field>
+              </div>
+              <Field label="Transaction reference (optional)" hint="A blockchain hash or bank reference. Left empty, a reference is made for you."><input className="fd-input" value={f.txRef} onChange={e => set("txRef", e.target.value)} /></Field>
+              <Field label="Note (optional)" hint="Shown on the public ledger."><input className="fd-input" value={f.note} onChange={e => set("note", e.target.value)} placeholder="e.g. Share of Q3 returns" /></Field>
+            </div>
+            <div className="fd-actions" style={{ marginTop: 20 }}>
+              <button className="fd-btn primary" disabled={!(parseFloat(f.amount) > 0)} onClick={save}>Record contribution</button>
               <button className="fd-btn ghost" onClick={() => setOpen(false)}>Cancel</button>
             </div>
           </Modal>
@@ -1374,7 +1438,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const [open, setOpen] = useState(null);
     const [vm, vflash] = useFlash();
     const list = (donations || []).filter(d => !(store.isInternalDonation && store.isInternalDonation(d))).slice().sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
-    const isSale = d => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
+    const isSale = d => !!(d.data && (d.data.sale || d.data.enterprise)) || /^(SALE|ENT)-/.test(String(d.id || ""));
     const verified = list.filter(d => d.verified), pending = list.filter(d => !d.verified);
     const sum = l => l.reduce((a, d) => a + (Number(d.amount) || 0), 0);
     const shown = list.filter(d => (filter === "pending" ? !d.verified : filter === "verified" ? d.verified : filter === "anonymous" ? d.anonymous : true))
@@ -1574,15 +1638,16 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   const kmoney = n => { const v = Number(n) || 0; return v >= 10000 ? "$" + Math.round(v / 1000) + "k" : v >= 1000 ? "$" + (v / 1000).toFixed(1).replace(/\.0$/, "") + "k" : "$" + Math.round(v); };
   const monthKey = iso => { const d = new Date(iso); return isNaN(d) ? null : d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
   const isSaleD = d => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
+  const isEntD = d => !!(d.data && d.data.enterprise) || String(d.id || "").indexOf("ENT-") === 0;
 
   // One list of movements, built from the same records as the public totals
   function useFlows(store) {
     const donations = (store.listDonations() || []).filter(d => !(store.isInternalDonation && store.isInternalDonation(d)));
     const income = donations.map(d => ({
       id: d.id, dir: "in", date: d.submittedAt || (d.data && d.data.sale && d.data.sale.date) || null,
-      category: isSaleD(d) ? "Library sale" : "Gift",
-      title: isSaleD(d) ? (d.data && d.data.sale ? d.data.sale.title : d.name) : (d.anonymous ? "Anonymous" : d.name || "Donor"),
-      detail: isSaleD(d) ? ((d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "")) : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
+      category: isEntD(d) ? "Enterprise" : isSaleD(d) ? "Library sale" : "Gift",
+      title: isEntD(d) ? ((d.data && d.data.enterprise && d.data.enterprise.name) || "Enterprise") + (d.data && d.data.enterprise && d.data.enterprise.period ? " · " + d.data.enterprise.period : "") : isSaleD(d) ? (d.data && d.data.sale ? d.data.sale.title : d.name) : (d.anonymous ? "Anonymous" : d.name || "Donor"),
+      detail: isEntD(d) ? ["Transportation pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? ((d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "")) : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
       amount: Number(d.amount) || 0, ref: d.txHash || "", settled: !!d.verified, raw: d,
     }));
     const scholars = store.listApplicants().filter(a => a.status === "accepted");
@@ -1660,7 +1725,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       <>
         <Head title="Treasury" lede="Everything that comes into the endowment and everything it gives out, in one place." />
         <Stats items={[
-          { label: "Received", value: money(F.sum(F.received)), sub: `${F.received.filter(x => x.category === "Gift").length} gifts · ${F.received.filter(x => x.category === "Library sale").length} library sales`, tone: "ok" },
+          { label: "Received", value: money(F.sum(F.received)), sub: `${F.received.filter(x => x.category === "Gift").length} gifts · ${F.received.filter(x => x.category === "Library sale").length} library sales` + (F.received.some(x => x.category === "Enterprise") ? ` · ${F.received.filter(x => x.category === "Enterprise").length} enterprise` : ""), tone: "ok" },
           { label: "Distributed", value: money(outTotal), sub: pub && Math.abs(pub.disbursed - outTotal) < 0.01 ? "Same as the public site" : "Tuition, grants and founding era" },
           { label: "Waiting for verification", value: money(F.sum(F.pendingIn)), sub: `${F.pendingIn.length} ${plural(F.pendingIn.length, "gift", "gifts")}`, tone: F.pendingIn.length ? "warn" : "" },
           { label: "Bills to pay", value: money(F.dueSum), sub: `${F.due.length} ${plural(F.due.length, "bill", "bills")}`, tone: F.due.length ? "warn" : "" },
@@ -1846,6 +1911,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     // money in
     const gifts = F.received.filter(x => x.category === "Gift" && within(x.date));
     const sales = F.received.filter(x => x.category === "Library sale" && within(x.date));
+    const enterprise = F.received.filter(x => x.category === "Enterprise" && within(x.date));
     const donors = new Set(), countries = new Map();
     gifts.forEach(x => {
       const d = x.raw || {};
@@ -1892,7 +1958,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       built: Object.entries(units).map(([pillar, u]) => ({ pillar, n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
       gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
       money: {
-        received: F.sum(gifts), sales: F.sum(sales), copies,
+        received: F.sum(gifts), sales: F.sum(sales), copies, enterprise: F.sum(enterprise),
         given: F.sum(out), byPillar: Object.entries(byPillar).map(([pillar, v]) => ({ pillar, amount: v.amount, count: v.count })).sort((a, b) => b.amount - a.amount),
         proofs,
       },
@@ -1981,7 +2047,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const donorList = (() => {
       const seen = new Map();
       (store.listDonations() || []).forEach(d => {
-        if ((store.isInternalDonation && store.isInternalDonation(d)) || !d.verified || isSaleD(d)) return;
+        if ((store.isInternalDonation && store.isInternalDonation(d)) || !d.verified || isSaleD(d) || isEntD(d)) return;
         const e = String(d.email || "").trim(); if (!okEmail(e)) return;
         const k = e.toLowerCase(); if (!seen.has(k)) seen.set(k, { email: e, name: d.anonymous ? "" : d.name || "" });
       });
@@ -2345,7 +2411,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   // FOUNDER HOME — the chooser, in two swipeable groups
   // ============================================================
   const GROUPS = [
-    { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra"] },
+    { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra", "transport"] },
     { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, security, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "security", "site", "backup"] },
   ];
   function FounderHome(props) {
@@ -3235,6 +3301,17 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       nav = [{ id: "email", label: "Email", icon: ICON.send }];
       view = <EmailView store={store} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="email" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
+    }
+    if (pillar === "transport") {
+      const cfg = PILLARS.transport;
+      nav = [
+        { id: "contrib", label: "Contributions", icon: ICON.inflow, count: store.listEnterpriseIncome ? store.listEnterpriseIncome("go2rent").length : 0 },
+        { id: "story", label: "Programme page", icon: ICON.story },
+        { id: "link", label: "Partner button", icon: ICON.link },
+      ];
+      const t = nav.some(n => n.id === tab) ? tab : "contrib";
+      view = t === "contrib" ? <ContributionsView store={store} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     const cfg = PILLARS[pillar];
     if (!cfg) return null;

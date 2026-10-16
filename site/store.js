@@ -287,7 +287,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       (Store.listEbooks() || []).forEach(b => { if (b.cover) urls.push(b.cover); });
     } catch (e) {}
     try {
-      [Store.getWorship(), Store.getWater(), Store.getPillarContent("hospitals"), Store.getPillarContent("schools"), Store.getPillarContent("livestock"), Store.getPillarContent("infra")].forEach(c => (c.articles || []).forEach(a => { if (a.photo && (a.photo.url || a.photo.path)) urls.push(a.photo.url || pub(a.photo.path)); }));
+      [Store.getWorship(), Store.getWater(), Store.getPillarContent("hospitals"), Store.getPillarContent("schools"), Store.getPillarContent("livestock"), Store.getPillarContent("infra"), Store.getPillarContent("transport")].forEach(c => (c.articles || []).forEach(a => { if (a.photo && (a.photo.url || a.photo.path)) urls.push(a.photo.url || pub(a.photo.path)); }));
     } catch (e) {}
     try {
       (_applicants || []).filter(a => a.status === "accepted" && !a.deleted).forEach(a => {
@@ -801,6 +801,44 @@ window.BrialClipboard = { copy: copyToClipboard };
       Store.deleteDonation(id);
     },
 
+    // ----- Enterprise income (companies that give part of their returns, e.g. go2rent for Transportation) -----
+    // Enters the ledger as a verified gift, like a Library sale; never counted as distributed.
+    ENTERPRISES: { go2rent: { name: "go2rent", pillar: "transport", pillarName: "Transportation" } },
+    listEnterpriseIncome(source) {
+      return _donations
+        .filter(d => d.data && d.data.enterprise && (!source || d.data.enterprise.source === source))
+        .map(d => ({ ...d.data.enterprise, id: d.id, amount: Number(d.amount) || 0, message: d.message || "" }))
+        .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    },
+    addEnterpriseIncome(obj) {
+      const src = Store.ENTERPRISES[obj.source] ? obj.source : "go2rent";
+      const ent = Store.ENTERPRISES[src];
+      const dte = new Date(obj.date || now());
+      const ymd = dte.getFullYear() + String(dte.getMonth() + 1).padStart(2, "0") + String(dte.getDate()).padStart(2, "0");
+      const ref = "GO2-" + ymd + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+      const iso = obj.date ? new Date(obj.date).toISOString() : now();
+      const period = (obj.period || "").trim();
+      const note = (obj.note || "").trim();
+      const rec = {
+        id: "ENT-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5).toUpperCase(),
+        name: ent.pillarName + " \u00b7 " + ent.name + (period ? " \u00b7 " + period : ""),
+        anonymous: false,
+        amount: Number(obj.amount) || 0,
+        message: note,
+        txHash: (obj.txRef || "").trim() || ref,
+        email: "", country: "",
+        submittedAt: iso,
+        verified: true, verifiedAt: now(),
+        data: { enterprise: { source: src, name: ent.name, pillar: ent.pillar, period, note, date: iso, txRef: (obj.txRef || "").trim() || ref } },
+      };
+      _donations.unshift(rec); saveCache(); notify({ key: "enterprise" });
+      upsertDonation(rec).catch(e => console.error(e));
+      return rec;
+    },
+    deleteEnterpriseIncome(id) {
+      Store.deleteDonation(id);
+    },
+
     // ----- Legacy (pre-website) disbursements, founder-managed -----
     getLegacy() {
       const d = _donations.find(x => x.id === "LEGACY-SUMMARY");
@@ -936,7 +974,8 @@ window.BrialClipboard = { copy: copyToClipboard };
         hospitals: { programme: "Hospitals", intro: "Care for those who cannot afford to be sick. The endowment funds clinics and wards with local health partners \u2014 each one assessed where illness costs families the most, built and equipped to last, and held to one rule: free at the point of need." },
         schools: { programme: "Schools", intro: "Distance and fees decide who learns; a school nearby changes the arithmetic. The endowment funds classrooms with local partners \u2014 grounded where children walk farthest, raised and staffed to teach well, and open to every child of the village." },
         livestock: { programme: "Livestock & Enterprise", intro: "Charity that multiplies. The endowment places productive capital \u2014 herds, tools and small enterprise \u2014 in the hands of families who tend it: the offspring and the profits stay with them, the dignity of earning returns, and the gift funds itself again." },
-        infra: { programme: "Sustainable Infrastructure", intro: "The quiet foundations. The endowment funds bridges, power and public works with local partners \u2014 surveyed with the community that will use them, built to endure, and maintained so a village can stand, trade and grow on its own." }
+        infra: { programme: "Sustainable Infrastructure", intro: "The quiet foundations. The endowment funds bridges, power and public works with local partners \u2014 surveyed with the community that will use them, built to endure, and maintained so a village can stand, trade and grow on its own." },
+        transport: { programme: "Transportation", partnerLine: "go2rent", location: "T\u00fcrkiye and Northern Cyprus", fleet: "730+", regions: "9", airports: "9", support: "24/7", factsNote: "Fleet figures from go2rent, July 2026: 730 to 985 vehicles, growing for the summer season and smaller in winter.", intro: "Not every pillar gives. Some pillars earn, so that the others can keep giving. go2rent is a car rental company that serves travellers, families and companies across T\u00fcrkiye and Northern Cyprus. The founder of the Brial Endowment is a co-founder of go2rent, and a share of his returns from the company is given to the endowment. Every contribution is recorded on the open ledger, like every other gift." }
       };
       const def = { partnerLine: "", units: 0, location: "", articles: [], ...(DEFS[key] || { programme: key, intro: "" }) };
       const d = _donations.find(x => x.id === "PILLAR-CONTENT-" + String(key).toUpperCase());
@@ -1086,7 +1125,7 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Pillar visibility: which pillars are live on the public site -----
     getPillarActive(key) {
-      const DEF = { scholarships: true, worship: true, library: true, foodland: true, water: true, hospitals: false, schools: false, livestock: false, infra: false };
+      const DEF = { scholarships: true, worship: true, library: true, foodland: true, water: true, hospitals: false, schools: false, livestock: false, infra: false, transport: true };
       const d = _donations.find(x => x.id === "PILLAR-STATUS");
       const map = (d && d.data && d.data.active) || {};
       if (map[key] !== undefined) return !!map[key];
@@ -1113,6 +1152,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         schools: "",
         livestock: "",
         infra: "",
+        transport: "https://www.gotworent.com/",
       };
       const d = _donations.find(x => x.id === "PILLAR-LINKS");
       if (d && d.data && d.data.links) return { ...defaults, ...d.data.links };

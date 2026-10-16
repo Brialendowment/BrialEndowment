@@ -1177,6 +1177,19 @@ const Philosophy = ({
       d: "M32 36 L32 48 M27 42 Q32 38 37 42"
     }))
   }, {
+    t: "Transportation",
+    k: "transport",
+    action: "transport",
+    cta: "See the fleet \u2192",
+    sub: "Transportasi",
+    status: "active",
+    partner: {
+      src: "/partners/go2rent/logo-light.svg",
+      name: "Car rental"
+    },
+    d: "Cars on the road across T\u00fcrkiye and Northern Cyprus. Our enterprise pillar: a share of the founder's returns from go2rent is given to the endowment, so the other pillars can keep giving.",
+    icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M10 40 L10 32 L16 22 Q18 19 22 19 L42 19 Q46 19 48 22 L54 32 L54 40 Z" }), /*#__PURE__*/React.createElement("path", { d: "M14 32 L50 32" }), /*#__PURE__*/React.createElement("path", { d: "M20 19 L17 32 M44 19 L47 32" }), /*#__PURE__*/React.createElement("circle", { cx: "20", cy: "42", r: "5" }), /*#__PURE__*/React.createElement("circle", { cx: "44", cy: "42", r: "5" }), /*#__PURE__*/React.createElement("line", { x1: "6", y1: "50", x2: "58", y2: "50", strokeWidth: "1.4" }))
+  }, {
     t: "Hospitals",
     k: "hospitals",
     action: "hospitals",
@@ -2091,7 +2104,7 @@ const Footer = ({
 // APP
 // ============================================================
 const App = () => {
-  const BRIAL_VIEWS = ["scholars", "donate", "ebooks", "foodland", "worship", "water", "hospitals", "schools", "livestock", "infra", "scholar", "admin", "proof"];
+  const BRIAL_VIEWS = ["scholars", "donate", "ebooks", "foodland", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "scholar", "admin", "proof"];
   const parseHashView = () => { const m = (location.hash || "").match(/^#\/([a-z]+)/); return m && BRIAL_VIEWS.indexOf(m[1]) >= 0 ? m[1] : "landing"; };
   const [view, _setView] = useState(() => (history.state && history.state.brialView) || parseHashView()); // landing | admin | scholar | donate | ...
   const _viewRef = React.useRef(view);

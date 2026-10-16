@@ -180,7 +180,7 @@ h2 em{font-style:italic;color:var(--gold2)}
       var max = Math.max.apply(null, money_.byPillar.map(function (p) { return p.amount; }).concat([1]));
       h.push('<section><div class="wrap"><div class="mono eyebrow">Where it went</div><h2>Given, <em>by pillar</em></h2><div class="bars">' +
         money_.byPillar.map(function (p) { return '<div class="barrow"><div class="t"><span>' + esc(p.pillar) + "</span><b>" + money(p.amount) + '</b></div><div class="track"><i style="width:' + Math.max(1.5, p.amount / max * 100).toFixed(1) + '%"></i></div></div>'; }).join("") +
-        "</div>" + (money_.sales ? '<p style="color:#5D6678;margin-top:20px">The Library sold ' + esc(money_.copies) + " " + plural(money_.copies, "copy", "copies") + " of our books, returning " + money(money_.sales) + " to the fund.</p>" : "") + "</div></section>");
+        "</div>" + (money_.sales ? '<p style="color:#5D6678;margin-top:20px">The Library sold ' + esc(money_.copies) + " " + plural(money_.copies, "copy", "copies") + " of our books, returning " + money(money_.sales) + " to the fund.</p>" : "") + (money_.enterprise ? '<p style="color:#5D6678;margin-top:12px">Our Transportation pillar returned ' + money(money_.enterprise) + " to the fund from the founder's share of go2rent.</p>" : "") + "</div></section>");
     }
     if (money_ && (money_.proofs || []).length) {
       h.push('<section><div class="wrap"><div class="mono eyebrow">Verify it yourself</div><h2>On the <em>public ledger</em></h2><p style="color:#5D6678;margin-top:-6px">Every transfer below can be checked on the Ethereum blockchain.</p><table class="proofs"><thead><tr><th>Date</th><th>Movement</th><th class="hide-s">Transaction</th><th class="r">Amount</th></tr></thead><tbody>' +

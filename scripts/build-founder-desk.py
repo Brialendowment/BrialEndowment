@@ -83,6 +83,16 @@ SECURITY_TILE = ("  }, {\n    id: \"security\",\n    label: \"Security\",\n    s
     "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M32 8 L52 16 V30 C52 42 43 52 32 56 C21 52 12 42 12 30 V16 Z\" }), "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M24 32 L30 38 L41 26\" }))\n")
+# Transportation tile (Pillars): the enterprise pillar, go2rent contributions
+TRANSPORT_TILE = ("  }, {\n    id: \"transport\",\n    label: \"Transportation\",\n    sub: \"Transportasi\",\n    accent: \"#E8834A\",\n"
+    "    d: \"The enterprise pillar. Record what you give the endowment from your go2rent returns, and curate the public Transportation page and its Rent with go2rent button.\",\n"
+    "    meta: (n => n + \" contribution\" + (n === 1 ? \"\" : \"s\") + \" recorded\")(store && store.listEnterpriseIncome ? store.listEnterpriseIncome(\"go2rent\").length : 0),\n"
+    "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M10 40 L10 32 L16 22 Q18 19 22 19 L42 19 Q46 19 48 22 L54 32 L54 40 Z\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M14 32 L50 32 M20 19 L17 32 M44 19 L47 32\" }), "
+    "/*#__PURE__*/React.createElement(\"circle\", { cx: \"20\", cy: \"42\", r: \"5\" }), "
+    "/*#__PURE__*/React.createElement(\"circle\", { cx: \"44\", cy: \"42\", r: \"5\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M6 50 H58\" }))\n")
 # Founder gate: a session that still needs the authenticator code is not "signed in"
 GATE_PATCHES = [
     ("const [authed, setAuthed] = useState(() => !!store.founderSessionSync());",
@@ -166,6 +176,9 @@ def inject(code):
     if "id: \"email\",\n    label: \"Email\"," not in s:  # the desk itself also has id: "email"
         assert s.count(TREASURY_ANCHOR) == 1, "email tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, EMAIL_TILE + TREASURY_ANCHOR)
+    if "id: \"transport\",\n    label: \"Transportation\"," not in s:
+        assert s.count(TREASURY_ANCHOR) == 1, "transport tile anchor not found"
+        s = s.replace(TREASURY_ANCHOR, TRANSPORT_TILE + TREASURY_ANCHOR)
     assert len(TOGGLE_RE.findall(s)) == 1, "pillar switch condition not found"
     s = TOGGLE_RE.sub(lambda m: "store && store.getPillarActive && " + " && ".join('c.id !== "%s"' % x for x in NOT_PILLARS) + " ? ", s)
     s = patch_portal_nav(s)

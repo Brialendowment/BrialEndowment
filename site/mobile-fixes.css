@@ -4,8 +4,14 @@
    applied here via class hooks + !important media overrides.
    ============================================================ */
 
+/* ---------- pillar grid: the last card fills the rest of its row, so no empty cell shows ---------- */
+.b-pillars > :nth-last-child(2):nth-child(3n+1) { grid-column: span 3; }
+.b-pillars > :nth-last-child(2):nth-child(3n+2) { grid-column: span 2; }
+
 /* ---------- tablets & small laptops ---------- */
 @media (max-width: 900px) {
+  .b-pillars > :nth-last-child(2) { grid-column: auto !important; }
+  .b-pillars > :nth-last-child(2):nth-child(odd) { grid-column: span 2 !important; }
   .b-hero-sub, .b-2col, .b-tiles3 {
     grid-template-columns: 1fr !important;
     gap: 40px !important;
@@ -45,6 +51,7 @@
   .b-2col { gap: 32px !important; margin-bottom: 48px !important; }
   .b-metrics4 { margin-top: 64px !important; }
   .b-pillars { grid-template-columns: 1fr !important; }
+  .b-pillars > :nth-last-child(2):nth-child(odd) { grid-column: auto !important; }
   .b-colophon { grid-column: 1 / -1 !important; padding: 34px 22px !important; }
   .b-portal2 { grid-template-columns: 1fr !important; }
 }

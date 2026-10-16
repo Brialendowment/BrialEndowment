@@ -73,9 +73,25 @@ def refresh_bundle(ref="HEAD"):
             e["data"] = base64.b64encode(gzip.compress(new) if comp else new).decode()
             hits.append(name)
     h = h[:m.start(2)] + json.dumps(man, separators=(",", ":")) + h[m.end(2):]
+    # Stylesheets are inlined in the page template (a JSON string): swap the old text for the new.
+    tm = re.search(r'(<script type="__bundler/template">)(.*?)(</script>)', h, re.S)
+    tpl = json.loads(tm.group(2))
+    css_hits = []
+    for f in SITE.glob("*.css"):
+        try:
+            old = subprocess.check_output(["git", "show", ref + ":site/" + f.name], cwd=ROOT, stderr=subprocess.DEVNULL).decode("utf-8")
+        except subprocess.CalledProcessError:
+            continue
+        new = f.read_text(encoding="utf-8")
+        if old != new and tpl.count(old) == 1:
+            tpl = tpl.replace(old, new)
+            css_hits.append(f.name)
+    if css_hits:
+        enc = json.dumps(tpl, ensure_ascii=False).replace("</", "<\\u002F")
+        h = h[:tm.start(2)] + enc + h[tm.end(2):]
     idx.write_text(h, encoding="utf-8")
     missing = sorted(set(n for n, _ in changed.values()) - set(hits))
-    print("bundle refreshed:", sorted(hits), "| not in bundle:", missing)
+    print("bundle refreshed:", sorted(hits + css_hits), "| not in bundle:", missing)
 
 
 if __name__ == "__main__":
