@@ -10756,6 +10756,14 @@ const PillarChooser = ({
     meta: (() => { const r = store && store.getImpactReports ? store.getImpactReports() : []; const pub = r.filter(x => x.status === "published").length; return r.length ? (pub + " published, " + (r.length - pub) + " draft" + (r.length - pub === 1 ? "" : "s")) : "No report yet"; })(),
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "52", height: "52", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M16 8 H40 L50 18 V56 H16 Z" }), /*#__PURE__*/React.createElement("path", { d: "M40 8 V18 H50" }), /*#__PURE__*/React.createElement("path", { d: "M24 46 V38 M32 46 V30 M40 46 V34" }), /*#__PURE__*/React.createElement("path", { d: "M32 14 l1.6 3.4 3.6.4 -2.7 2.4 .8 3.6 -3.3-1.9 -3.3 1.9 .8-3.6 -2.7-2.4 3.6-.4z" }))
   }, {
+    id: "email",
+    label: "Email",
+    sub: "Letters & receipts",
+    accent: "#9FC3E2",
+    d: "Write letters, send receipts and acknowledgements, and look after the notices and reminders that go out on their own.",
+    meta: "Sent from brialendowment.org",
+    icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "52", height: "52", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M56 10 L28 38" }), /*#__PURE__*/React.createElement("path", { d: "M56 10 L38 56 L28 38 L8 28 Z" }))
+  }, {
     id: "site",
     label: "Site Settings",
     sub: "Contact & social",

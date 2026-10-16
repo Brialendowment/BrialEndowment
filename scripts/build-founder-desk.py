@@ -137,7 +137,7 @@ def inject(code):
     if "id: \"impact\"," not in s:
         assert s.count(TREASURY_ANCHOR) == 1, "impact tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, IMPACT_TILE + TREASURY_ANCHOR)
-    if "id: \"email\"," not in s:
+    if "id: \"email\",\n    label: \"Email\"," not in s:  # the desk itself also has id: "email"
         assert s.count(TREASURY_ANCHOR) == 1, "email tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, EMAIL_TILE + TREASURY_ANCHOR)
     assert len(TOGGLE_RE.findall(s)) == 1, "pillar switch condition not found"
