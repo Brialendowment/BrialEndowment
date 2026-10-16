@@ -381,6 +381,8 @@
     const c = st.c;
     if (!c) return null;
     const showRent = !!st.link && !st.hidden;
+    const hideAmt = !!c.hideAmounts;
+    const n = st.income.length;
     const total = st.income.reduce((a, x) => a + (Number(x.amount) || 0), 0);
     const usd = n => "$" + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const pad = "clamp(20px, 4vw, 56px)";
@@ -486,16 +488,18 @@
         h("div", { style: { maxWidth: 1280, margin: "0 auto", border: "1px solid rgba(201,169,97,0.3)", background: "rgba(20,36,66,0.45)", padding: "clamp(28px, 4vw, 48px)" } },
           h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "end", gap: 24, flexWrap: "wrap" } },
             h("div", { style: { minWidth: 0 } },
-              eyebrow("§ Returned to the endowment"),
-              h("div", { style: { fontFamily: serif, fontSize: "clamp(48px, 6vw, 80px)", lineHeight: 1, marginTop: 16, color: CREAM } }, usd(total)),
-              h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(232,228,220,0.5)", marginTop: 10 } }, st.income.length + " " + (st.income.length === 1 ? "contribution" : "contributions") + " · verified on the open ledger")),
+              eyebrow("\u00a7 Returned to the endowment"),
+              hideAmt
+                ? (n ? h("div", { style: { fontFamily: serif, fontSize: "clamp(48px, 6vw, 80px)", lineHeight: 1, marginTop: 16, color: CREAM } }, n + " " + (n === 1 ? "contribution" : "contributions")) : null)
+                : h("div", { style: { fontFamily: serif, fontSize: "clamp(48px, 6vw, 80px)", lineHeight: 1, marginTop: 16, color: CREAM } }, usd(total)),
+              (!hideAmt || n) ? h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(232,228,220,0.5)", marginTop: 10 } }, hideAmt ? "Each one verified on the open ledger" : n + " " + (n === 1 ? "contribution" : "contributions") + " \u00b7 verified on the open ledger") : null),
             h("button", { onClick: goLedger, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "13px 22px", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" } }, "Open ledger →")),
           st.income.length
             ? h("div", { style: { marginTop: 28, borderTop: "1px solid rgba(201,169,97,0.18)" } },
                 st.income.slice(0, 12).map(x => h("div", { key: x.id, style: { display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", padding: "14px 0", borderBottom: "1px solid rgba(201,169,97,0.12)" } },
                   h("span", { style: { fontFamily: sans, fontSize: 14, color: "rgba(232,228,220,0.85)" } }, x.period || fmtDate(x.date)),
                   h("span", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.14em", color: "rgba(232,228,220,0.45)" } }, (x.txRef || "") + " · " + fmtDate(x.date)),
-                  h("span", { style: { fontFamily: serif, fontSize: 20, color: GOLD } }, usd(x.amount)))))
+                  hideAmt ? null : h("span", { style: { fontFamily: serif, fontSize: 20, color: GOLD } }, usd(x.amount)))))
             : h("p", { style: { fontFamily: sans, fontSize: 14, fontWeight: 300, color: "rgba(232,228,220,0.6)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.7 } }, "The first contribution will appear here, and on the open ledger, as soon as it is made."))),
 
       h(Stories, { articles: c.articles, title: "Word from the road.", shareKey: "transport" }),

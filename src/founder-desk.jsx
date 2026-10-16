@@ -860,6 +860,9 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const set = (k, v) => setF(p => ({ ...p, [k]: v }));
     const total = list.reduce((a, x) => a + (Number(x.amount) || 0), 0);
     const last = list[0];
+    const content = store.getPillarContent("transport");
+    const hide = !!content.hideAmounts;
+    const setHide = v => store.savePillarContent("transport", { ...store.getPillarContent("transport"), hideAmounts: !!v });
     const save = () => {
       store.addEnterpriseIncome({ source: "go2rent", amount: parseFloat(f.amount), period: f.period, txRef: f.txRef, note: f.note, date: new Date(f.date).toISOString() });
       setF(blank()); setOpen(false);
@@ -869,6 +872,12 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       <>
         <Head title="Contributions" lede="Money given to the endowment from your returns in go2rent. Each contribution enters the public ledger as verified income and shows on the Transportation page."><button className="fd-btn primary" onClick={() => setOpen(true)}>Record a contribution</button></Head>
         <Stats items={[{ label: "Returned to the endowment", value: money(total), tone: total > 0 ? "ok" : "" }, { label: "Contributions", value: list.length }, { label: "Latest", value: last ? fdate(last.date) : "None yet" }]} />
+        <div className="fd-card">
+          <div className="fd-card-head" style={{ marginBottom: 0 }}>
+            <div><h2 className="fd-h2">{hide ? "Amounts are hidden on the public page" : "Amounts are shown on the public page"}</h2><p className="fd-sub">{hide ? "The Transportation page lists each contribution by period, without the dollar figures. The open ledger still records every amount." : "The Transportation page shows the total returned to the endowment and the amount of each contribution."}</p></div>
+            <Switch on={!hide} onChange={v => setHide(!v)}>{hide ? "Hidden" : "Shown"}</Switch>
+          </div>
+        </div>
         <div className="fd-table">
           <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Period</div><div>Amount</div><div>Reference · date</div><div /></div>
           {list.length === 0 ? <Empty title="No contributions recorded yet.">When you give part of your go2rent returns to the endowment, record it here.</Empty> : list.map(x => (
