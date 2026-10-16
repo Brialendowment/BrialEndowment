@@ -407,6 +407,15 @@ window.BrialClipboard = { copy: copyToClipboard };
   }
   function getToken() { try { return localStorage.getItem(TOKEN_KEY) || null; } catch (e) { return null; } }
   function setToken(t) { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+  // True when a write comes from the Scholar Portal for the signed-in scholar's own
+  // record. Then it always takes the scholar route (server checks, consent gate),
+  // even if this browser is also signed in to the founder console.
+  function scholarActing(id) {
+    const tok = getToken();
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch (e) {}
+    return !!(tok && s && s.applicantId === id && /^#\/scholar(?![a-z])/.test(location.hash || ""));
+  }
   async function rpc(fn, args) {
     const c = anonClient();
     if (!c) throw new Error("Service not ready.");
@@ -473,7 +482,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         const doc = _pendingDoc[id];
         delete _pendingDoc[id];
         try {
-          if (_founderMode) {
+          if (_founderMode && !scholarActing(id)) {
             await upsertApplicant(doc);
           } else {
             const tok = getToken();
@@ -1401,7 +1410,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       const a = Store.getApplicant(id);
       if (!a) return { error: "Account not found." };
       const tok = getToken();
-      if (!_founderMode && tok) {
+      if ((!_founderMode || scholarActing(id)) && tok) {
         const e = email !== undefined && email !== null ? String(email).trim() : "";
         if (email !== undefined && email !== null && (!e || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))) return { error: "Please enter a valid email address." };
         const pw = password || "";
@@ -1802,7 +1811,8 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Reports -----
     submitReport({ applicantId, applicantName, applicantEmail, subject, message, category }) {
-      const id = _founderMode ? nextSeqId(_reports, "R-", 5001) : "R-pending-" + Date.now().toString(36);
+      const asFounder = _founderMode && !scholarActing(applicantId);
+      const id = asFounder ? nextSeqId(_reports, "R-", 5001) : "R-pending-" + Date.now().toString(36);
       const report = {
         id, applicantId, applicantName, applicantEmail,
         subject: (subject || "").trim(),
@@ -1813,7 +1823,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         reply: null,
       };
       _reports.unshift(report); saveCache(); notify({ key: id });
-      if (_founderMode) {
+      if (asFounder) {
         upsertReport(report).catch(e => console.error(e));
       } else {
         rpc("be_submit_report", { p_token: getToken(), p_report: { subject: report.subject, message: report.message, category: report.category } })
