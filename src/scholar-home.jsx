@@ -17,7 +17,7 @@ const SH = (() => {
     "View bill": "Lihat tagihan", "View transcript": "Lihat transkrip", "View": "Lihat",
     "Total received": "Total diterima", "Semesters paid": "Semester dibayar", "Cumulative GPA": "IPK kumulatif", "Awaiting payment": "Menunggu pembayaran",
     "Appears after your first transcript": "Muncul setelah transkrip pertama", "Keep it at 2.75 or higher to continue the award": "Pertahankan minimal 2,75 agar beasiswa berlanjut",
-    "Below the 2.75 minimum — talk to the foundation": "Di bawah batas 2,75 — hubungi yayasan",
+    "Below the 2.75 minimum: talk to the foundation": "Di bawah batas 2,75: hubungi yayasan",
     "Your semesters": "Semester Anda", "Semester": "Semester",
     "Tuition bill": "Tagihan UKT", "Transcript": "Transkrip nilai",
     "Not uploaded yet": "Belum diunggah", "Opens after tuition is paid": "Terbuka setelah UKT dibayar", "Opens when this semester starts": "Terbuka saat semester dimulai",
@@ -43,7 +43,7 @@ const SH = (() => {
     "What needs correcting?": "Apa yang perlu dikoreksi?", "Correct value": "Data yang benar", "Send request": "Kirim permintaan",
     "Request sent. The foundation will review it.": "Permintaan terkirim. Yayasan akan meninjaunya.", "Please enter the correct value.": "Isi data yang benar.",
     "Your requests": "Permintaan Anda", "Pending": "Menunggu", "Approved": "Disetujui", "Declined": "Ditolak", "Reason:": "Alasan:",
-    "Message the foundation": "Kirim pesan ke yayasan", "Questions about payments, documents or your account — we read every message.": "Pertanyaan soal pembayaran, dokumen, atau akun — setiap pesan kami baca.",
+    "Message the foundation": "Kirim pesan ke yayasan", "Questions about payments, documents or your account: we read every message.": "Pertanyaan soal pembayaran, dokumen, atau akun: setiap pesan kami baca.",
     "Topic": "Topik", "Subject": "Judul", "Message": "Pesan", "Send message": "Kirim pesan",
     "Payment": "Pembayaran", "My details": "Data saya", "Technical problem": "Masalah teknis", "Something else": "Lainnya",
     "Message sent. The reply will appear below.": "Pesan terkirim. Balasan akan muncul di bawah.",
@@ -482,7 +482,7 @@ select.bsp-input option{background:#0A1628}
     const [state, run] = useSubmit(() => store.submitGraduation(applicant.id, { ijazahFile: ij, transkripFile: tr }), onClose);
     return (
       <Modal title={L("Graduation documents", "Dokumen kelulusan")} sub={L("Upload your diploma and final transcript to complete your record with the foundation.", "Unggah ijazah dan transkrip akhir untuk melengkapi catatan Anda di yayasan.")} onClose={onClose}>
-        {state === "done" ? <Done text={L("Congratulations — your record is complete.", "Selamat — catatan Anda sudah lengkap.")} /> : (
+        {state === "done" ? <Done text={L("Congratulations, your record is complete.", "Selamat, catatan Anda sudah lengkap.")} /> : (
           <>
             <FilePick label={t("Diploma (ijazah)")} value={ij} onChange={setIj} />
             <FilePick label={t("Final transcript")} value={tr} onChange={setTr} />
@@ -568,15 +568,15 @@ select.bsp-input option{background:#0A1628}
       body = L("Send the official bill (UKT) from your university. Once it is reviewed, the foundation pays your tuition.", "Kirim tagihan UKT resmi dari kampus. Setelah ditinjau, yayasan membayar UKT Anda.");
       actions = <button className="bsp-btn primary" onClick={() => onBill(n.sem)}>{Icon.up()}{t("Upload bill")}</button>;
     } else if (n.kind === "ip") {
-      title = L(`${n.sem.label} is paid — add your results`, `${n.sem.label} sudah dibayar — tambahkan hasilnya`);
+      title = L(`${n.sem.label} is paid: add your results`, `${n.sem.label} sudah dibayar: tambahkan hasilnya`);
       body = L("When your grades are out, upload the transcript and your semester GPA.", "Setelah nilai keluar, unggah transkrip dan IP semester Anda.");
       actions = <button className="bsp-btn primary" onClick={() => onIp(n.sem)}>{Icon.up()}{t("Upload transcript")}</button>;
     } else if (n.kind === "review") {
       title = L(`We're reviewing your ${n.sem.label} bill`, `Tagihan ${n.sem.label} sedang ditinjau`);
-      body = L(`Sent on ${date(n.sem.bill?.uploadedAt)}. You don't need to do anything right now — the payment will appear here.`, `Dikirim pada ${date(n.sem.bill?.uploadedAt)}. Saat ini Anda tidak perlu melakukan apa pun — pembayarannya akan tampil di sini.`);
+      body = L(`Sent on ${date(n.sem.bill?.uploadedAt)}. You don't need to do anything right now. The payment will appear here.`, `Dikirim pada ${date(n.sem.bill?.uploadedAt)}. Saat ini Anda tidak perlu melakukan apa pun. Pembayarannya akan tampil di sini.`);
       actions = n.sem.bill ? <button className="bsp-btn ghost" onClick={() => window.BrialFiles.open(n.sem.bill)}>{t("View bill")}</button> : null;
     } else if (n.kind === "graduate") {
-      title = L("All semesters complete — time to graduate", "Semua semester selesai — saatnya lulus");
+      title = L("All semesters complete · time to graduate", "Semua semester selesai · saatnya lulus");
       body = L("Upload your diploma (ijazah) and final transcript to complete your record.", "Unggah ijazah dan transkrip akhir untuk melengkapi catatan Anda.");
       actions = <button className="bsp-btn primary" onClick={onGrad}>{Icon.up()}{t("Upload graduation documents")}</button>;
     } else if (n.kind === "empty") {
@@ -607,7 +607,7 @@ select.bsp-input option{background:#0A1628}
       <div className="bsp-card bsp-figs">
         <div className="bsp-fig"><span>{t("Total received")}</span><b>{money(d.received)}</b></div>
         <div className="bsp-fig"><span>{t("Semesters paid")}</span><b>{d.paid.length}<span style={{ display: "inline", fontSize: 22, color: "var(--faint)" }}> / {total}</span></b><div className="bsp-bar" aria-hidden="true"><i style={{ width: pct + "%" }} /></div></div>
-        <div className="bsp-fig"><span>{t("Cumulative GPA")}</span><b style={{ color: low ? "var(--rose)" : undefined }}>{d.ipk ? d.ipk.value.toFixed(2) : "—"}</b><small>{d.ipk ? t(low ? "Below the 2.75 minimum — talk to the foundation" : "Keep it at 2.75 or higher to continue the award") : t("Appears after your first transcript")}</small></div>
+        <div className="bsp-fig"><span>{t("Cumulative GPA")}</span><b style={{ color: low ? "var(--rose)" : undefined }}>{d.ipk ? d.ipk.value.toFixed(2) : "—"}</b><small>{d.ipk ? t(low ? "Below the 2.75 minimum: talk to the foundation" : "Keep it at 2.75 or higher to continue the award") : t("Appears after your first transcript")}</small></div>
         <div className="bsp-fig"><span>{t("Awaiting payment")}</span><b style={{ color: d.pending ? "var(--amber)" : undefined }}>{money(d.pending)}</b></div>
       </div>
     );
@@ -969,7 +969,7 @@ select.bsp-input option{background:#0A1628}
       <div className="bsp-row" style={{ marginTop: 0, alignItems: "start" }}>
         <div className="bsp-card">
           <h3 className="bsp-h3">{t("Message the foundation")}</h3>
-          <p className="bsp-sub" style={{ fontSize: 14 }}>{t("Questions about payments, documents or your account — we read every message.")}</p>
+          <p className="bsp-sub" style={{ fontSize: 14 }}>{t("Questions about payments, documents or your account: we read every message.")}</p>
           <div className="bsp-field"><span>{t("Topic")}</span>
             <div className="bsp-chips" role="group">{TOPICS.map(([id, l]) => <button key={id} className="bsp-pill" aria-pressed={topic === id} onClick={() => setTopic(id)}>{t(l)}</button>)}</div>
           </div>

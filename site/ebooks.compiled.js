@@ -28,7 +28,7 @@ const BookCover = ({
   }
 }, book.cover ? /*#__PURE__*/React.createElement("img", {
   src: book.cover,
-  alt: book.title + " — cover",
+  alt: book.title + " cover",
   loading: "lazy",
   style: {
     width: "100%",
@@ -338,7 +338,7 @@ const EBooksPage = ({
       color: "rgba(232,228,220,0.72)",
       margin: 0
     }
-  }, "Three complete master guides for scholarship hunters \u2014 in English, Bahasa Indonesia, and Fran\xE7ais. Everything you need to find, apply for, and secure fully-funded education abroad. Proceeds support the mission of The Brial Endowment."), (() => { const libLink = window.BrialStore?.getPillarLink?.("library") || ""; const libHidden = window.BrialStore?.getPillarLinkHidden?.("library") || false; return libLink && !libHidden ? /*#__PURE__*/React.createElement("a", { href: libLink, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 12, marginTop: 30, padding: "16px 30px", background: "linear-gradient(120deg, #EAD9A8, #C9A961 55%, #B08F4C)", color: "#131A33", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "View all books in our library \u2197") : null; })()), /*#__PURE__*/React.createElement("div", {
+  }, "Three complete master guides for scholarship hunters, in English, Bahasa Indonesia, and Fran\xE7ais. Everything you need to find, apply for, and secure fully-funded education abroad. Proceeds support the mission of The Brial Endowment."), (() => { const libLink = window.BrialStore?.getPillarLink?.("library") || ""; const libHidden = window.BrialStore?.getPillarLinkHidden?.("library") || false; return libLink && !libHidden ? /*#__PURE__*/React.createElement("a", { href: libLink, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 12, marginTop: 30, padding: "16px 30px", background: "linear-gradient(120deg, #EAD9A8, #C9A961 55%, #B08F4C)", color: "#131A33", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "View all books in our library \u2197") : null; })()), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 30
     }

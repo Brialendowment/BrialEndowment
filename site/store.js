@@ -163,7 +163,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       link: "https://lynk.id/brial/wqogzkdkvwml",
       getLabel: "Get the E-Book",
       supportNote: "A portion of every sale supports Brial Endowment scholarships.",
-      desc: "A step-by-step master guide for scholarship hunters worldwide — from finding the right programs and crafting a winning motivation letter, to acing interviews and securing full funding abroad. Written for ambitious students who refuse to let cost decide their future.",
+      desc: "A step-by-step master guide for scholarship hunters worldwide, from finding the right programs and crafting a winning motivation letter, to acing interviews and securing full funding abroad. Written for ambitious students who refuse to let cost decide their future.",
       points: [
         "Find and shortlist the right global scholarships",
         "Write essays & motivation letters that win",
@@ -178,7 +178,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       link: "https://lynk.id/brial/dj014gld156l",
       getLabel: "Dapatkan E-Book",
       supportNote: "Sebagian dari setiap penjualan digunakan untuk mendukung beasiswa Brial Endowment.",
-      desc: "Panduan lengkap berbahasa Indonesia yang merangkum 126 peluang beasiswa ke luar negeri — beserta strategi mendaftar, menyiapkan dokumen, menulis esai, dan lolos seleksi. Disusun khusus untuk pelajar dan mahasiswa Indonesia yang bercita-cita menembus kampus dunia.",
+      desc: "Panduan lengkap berbahasa Indonesia yang merangkum 126 peluang beasiswa ke luar negeri, beserta strategi mendaftar, menyiapkan dokumen, menulis esai, dan lolos seleksi. Disusun khusus untuk pelajar dan mahasiswa Indonesia yang bercita-cita menembus kampus dunia.",
       points: [
         "126 peluang beasiswa luar negeri terkurasi",
         "Strategi pendaftaran langkah demi langkah",
@@ -193,7 +193,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       link: "https://lynk.id/brial/wwzw8kx2z6y6",
       getLabel: "Obtenir le livre",
       supportNote: "Une partie de chaque vente soutient les bourses de la Brial Endowment.",
-      desc: "Un guide complet en français pour trouver, préparer et obtenir une bourse d'études à l'étranger — de la sélection des programmes à la lettre de motivation, jusqu'à l'entretien et le financement intégral. Pour les étudiants francophones déterminés à étudier dans le monde entier.",
+      desc: "Un guide complet en français pour trouver, préparer et obtenir une bourse d'études à l'étranger, de la sélection des programmes à la lettre de motivation, jusqu'à l'entretien et le financement intégral. Pour les étudiants francophones déterminés à étudier dans le monde entier.",
       points: [
         "Trouver les bourses internationales adaptées",
         "Rédiger une lettre de motivation convaincante",
@@ -783,7 +783,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       const iso = obj.date ? new Date(obj.date).toISOString() : now();
       const rec = {
         id: "SALE-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5).toUpperCase(),
-        name: "The Library — " + title + (qty > 1 ? " ×" + qty : ""),
+        name: "The Library · " + title + (qty > 1 ? " ×" + qty : ""),
         anonymous: false,
         amount: Number(obj.amount) || 0,
         message: (obj.note || "").trim(),
@@ -892,13 +892,13 @@ window.BrialClipboard = { copy: copyToClipboard };
         programme: "Trees for Life",
         partnerLine: "In partnership with Zaytoun CIC, London",
         trees: 5,
-        location: "Jenin \u00b7 Nablus \u00b7 Salfeet \u2014 Palestine",
-        intro: "Through Zaytoun's Trees for Life programme \u2014 run on the ground by the Palestine Fair Trade Association \u2014 the endowment sponsors olive saplings planted on Palestinian family land. Priority goes to young farmers and to women beginning their groves. Each sapling is two to three years old when it meets the soil, bears its first fruit within five to seven, and stands in full strength at fifteen. Planted once, fruiting for generations \u2014 the endowment's own principle, made literal.",
+        location: "Jenin \u00b7 Nablus \u00b7 Salfeet \u00b7 Palestine",
+        intro: "Through Zaytoun's Trees for Life programme, run on the ground by the Palestine Fair Trade Association, the endowment sponsors olive saplings planted on Palestinian family land. Priority goes to young farmers and to women beginning their groves. Each sapling is two to three years old when it meets the soil, bears its first fruit within five to seven, and stands in full strength at fifteen. Planted once, fruiting for generations: the endowment's own principle, made literal.",
         articles: [{
           id: "first-grove",
           date: "2026-07",
           title: "The first five trees",
-          body: "Five olive trees now stand in the soil of Jenin, Nablus and Salfeet \u2014 the first planting of the Food & Land pillar. The olive farmers of the Trees for Life programme certified the gift under the endowment's name; the trees will outlive every document we hold.",
+          body: "Five olive trees now stand in the soil of Jenin, Nablus and Salfeet, the first planting of the Food & Land pillar. The olive farmers of the Trees for Life programme certified the gift under the endowment's name; the trees will outlive every document we hold.",
           photo: null
         }]
       };
@@ -923,8 +923,8 @@ window.BrialClipboard = { copy: copyToClipboard };
         programme: "Houses of Worship",
         partnerLine: "In partnership with Minang Bandung Foundation",
         mosques: 1,
-        location: "Bandung \u2014 West Java, Indonesia",
-        intro: "Together with the Minang Bandung Foundation as builder, the endowment funds the construction of mosques \u2014 places that gather a community in prayer, learning and shelter. Each build is documented from land to minaret, and every house raised is held as waqf: owned by no one, serving everyone, enduring long after its builders.",
+        location: "Bandung \u00b7 West Java, Indonesia",
+        intro: "Together with the Minang Bandung Foundation as builder, the endowment funds the construction of mosques, places that gather a community in prayer, learning and shelter. Each build is documented from land to minaret, and every house raised is held as waqf: owned by no one, serving everyone, enduring long after its builders.",
         articles: []
       };
       const d = _donations.find(x => x.id === "WORSHIP-CONTENT");
@@ -950,7 +950,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         wells: 0,
         trees: 0,
         location: "",
-        intro: "Wells and water systems \u2014 the simplest gift that changes everything for a village. The endowment funds boreholes, hand pumps and spring protections built with local partners: each point surveyed where the need is greatest, built with the village rather than for it, and maintained so the water keeps flowing for generations.",
+        intro: "Wells and water systems, the simplest gift that changes everything for a village. The endowment funds boreholes, hand pumps and spring protections built with local partners: each point surveyed where the need is greatest, built with the village rather than for it, and maintained so the water keeps flowing for generations.",
         articles: []
       };
       const d = _donations.find(x => x.id === "WATER-CONTENT");
@@ -971,10 +971,10 @@ window.BrialClipboard = { copy: copyToClipboard };
     // ----- Generic pillar programme content (Hospitals, Schools, Livestock, Infrastructure) -----
     getPillarContent(key) {
       const DEFS = {
-        hospitals: { programme: "Hospitals", intro: "Care for those who cannot afford to be sick. The endowment funds clinics and wards with local health partners \u2014 each one assessed where illness costs families the most, built and equipped to last, and held to one rule: free at the point of need." },
-        schools: { programme: "Schools", intro: "Distance and fees decide who learns; a school nearby changes the arithmetic. The endowment funds classrooms with local partners \u2014 grounded where children walk farthest, raised and staffed to teach well, and open to every child of the village." },
-        livestock: { programme: "Livestock & Enterprise", intro: "Charity that multiplies. The endowment places productive capital \u2014 herds, tools and small enterprise \u2014 in the hands of families who tend it: the offspring and the profits stay with them, the dignity of earning returns, and the gift funds itself again." },
-        infra: { programme: "Sustainable Infrastructure", intro: "The quiet foundations. The endowment funds bridges, power and public works with local partners \u2014 surveyed with the community that will use them, built to endure, and maintained so a village can stand, trade and grow on its own." },
+        hospitals: { programme: "Hospitals", intro: "Care for those who cannot afford to be sick. The endowment funds clinics and wards with local health partners, each one assessed where illness costs families the most, built and equipped to last, and held to one rule: free at the point of need." },
+        schools: { programme: "Schools", intro: "Distance and fees decide who learns; a school nearby changes the arithmetic. The endowment funds classrooms with local partners, grounded where children walk farthest, raised and staffed to teach well, and open to every child of the village." },
+        livestock: { programme: "Livestock & Enterprise", intro: "Charity that multiplies. The endowment places productive capital (herds, tools and small enterprise) in the hands of families who tend it: the offspring and the profits stay with them, the dignity of earning returns, and the gift funds itself again." },
+        infra: { programme: "Sustainable Infrastructure", intro: "The quiet foundations. The endowment funds bridges, power and public works with local partners, surveyed with the community that will use them, built to endure, and maintained so a village can stand, trade and grow on its own." },
         transport: { programme: "Transportation", partnerLine: "go2rent", location: "T\u00fcrkiye and Northern Cyprus", fleet: "730+", regions: "9", airports: "9", support: "24/7", factsNote: "Fleet figures from go2rent, July 2026: 730 to 985 vehicles, growing for the summer season and smaller in winter.", intro: "Not every pillar gives. Some pillars earn, so that the others can keep giving. go2rent is a car rental company that serves travellers, families and companies across T\u00fcrkiye and Northern Cyprus. The founder of the Brial Endowment is a co-founder of go2rent, and a share of his returns from the company is given to the endowment. Every contribution is recorded on the open ledger, like every other gift." }
       };
       const def = { partnerLine: "", units: 0, location: "", articles: [], ...(DEFS[key] || { programme: key, intro: "" }) };
@@ -1985,10 +1985,10 @@ window.BrialClipboard = { copy: copyToClipboard };
         st.textContent = "@keyframes brialPulse{0%,100%{opacity:1}50%{opacity:0.25}}";
         document.head.appendChild(st);
       }
-      const msg = state === "savefail" ? "COULD NOT SAVE \u2014 YOUR LAST CHANGE WAS NOT STORED. CHECK YOUR CONNECTION AND TRY AGAIN" :
+      const msg = state === "savefail" ? "COULD NOT SAVE \u00b7 YOUR LAST CHANGE WAS NOT STORED. CHECK YOUR CONNECTION AND TRY AGAIN" :
         state === "syncing" ? "CONNECTING TO THE LEDGER\u2026" :
-        state === "cache" ? "CONNECTION LOST \u2014 SHOWING YOUR LAST SAVED COPY" :
-        "CAN'T REACH THE LEDGER \u2014 CHECK YOUR CONNECTION";
+        state === "cache" ? "CONNECTION LOST \u00b7 SHOWING YOUR LAST SAVED COPY" :
+        "CAN'T REACH THE LEDGER \u00b7 CHECK YOUR CONNECTION";
       _syncEl.innerHTML = dot + "<span style='min-width:0'>" + msg + "</span>" + (state === "syncing" || state === "savefail" ? "" : "<button id='brial-sync-retry' style='background:none;border:1px solid rgba(201,169,97,0.5);color:#C9A961;padding:6px 14px;cursor:pointer;font:inherit;letter-spacing:0.14em;flex:none'>RETRY</button>");
       const b = document.getElementById("brial-sync-retry");
       if (b) b.onclick = () => { syncBanner("syncing"); _attempt = 0; firstSync(); };

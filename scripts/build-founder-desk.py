@@ -35,7 +35,7 @@ PILLAR_STATE_NEW = "  const [pillar, setPillar] = window.useBrialNav ? window.us
 # Site settings tile on the chooser (before Vault Backup)
 TILE_ANCHOR = "  }, {\n    id: \"backup\",\n"
 TILE = ("  }, {\n    id: \"site\",\n    label: \"Site Settings\",\n    sub: \"Contact & social\",\n    accent: \"#9FB4D9\",\n"
-        "    d: \"The contact details and social links shown at the bottom of the public site \\u2014 each one can be shown or hidden.\",\n"
+        "    d: \"The contact details and social links shown at the bottom of the public site. Each one can be shown or hidden.\",\n"
         "    meta: (n => n + \" item\" + (n === 1 ? \"\" : \"s\") + \" shown\")(store && store.publicContacts ? store.publicContacts().length : 0),\n"
         "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
         "/*#__PURE__*/React.createElement(\"rect\", { x: \"10\", y: \"16\", width: \"44\", height: \"32\", rx: \"3\" }), "
@@ -105,7 +105,7 @@ NOT_PILLARS = ["backup", "site", "treasury", "impact", "email", "security"]
 TOGGLE_RE = re.compile(r'store && store\.getPillarActive && (?:c\.id !== "[a-z]+"(?: && )?)+ \? ')
 TREASURY_ANCHOR = "  }, {\n    id: \"site\",\n"
 TREASURY_TILE = ("  }, {\n    id: \"treasury\",\n    label: \"Treasury\",\n    sub: \"Money in & out\",\n    accent: \"#7FC9A8\",\n"
-    "    d: \"Every gift received and every payment made \\u2014 verify donations, pay tuition bills, and keep a ledger your accountant can read.\",\n"
+    "    d: \"Every gift received and every payment made: verify donations, pay tuition bills, and keep a ledger your accountant can read.\",\n"
     "    meta: (() => { const n = store && store.listDonations ? store.listDonations().filter(d => !(store.isInternalDonation && store.isInternalDonation(d)) && !d.verified).length : 0; return n ? n + \" to verify\" : \"all gifts verified\"; })(),\n"
     "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M8 24 L32 10 L56 24\" }), "

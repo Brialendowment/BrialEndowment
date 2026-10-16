@@ -52,7 +52,7 @@
     const openPartner = () => window.open(link, "_blank", "noopener,noreferrer");
     const articles = (content.articles || []).filter(a => a && (a.title || a.body));
 
-    return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both" }, "data-screen-label": "Food & Land — Trees for Life" },
+    return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both" }, "data-screen-label": "Food & Land · Trees for Life" },
 
       // ---- top bar ----
       h("div", { style: { position: "sticky", top: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px clamp(20px, 4vw, 56px)", background: "rgba(10,22,40,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: "1px solid rgba(201,169,97,0.15)" } },
@@ -63,17 +63,17 @@
 
       // ---- hero ----
       h("div", { style: { padding: "clamp(60px, 9vw, 110px) clamp(20px, 4vw, 56px) clamp(50px, 7vw, 80px)", maxWidth: 1280, margin: "0 auto" } },
-        h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, "\u00a7 The Fourth Pillar \u2014 Pangan"),
+        h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, "\u00a7 The Fourth Pillar \u00b7 Pangan"),
         h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(52px, 8vw, 108px)", lineHeight: 0.98, letterSpacing: "-0.02em", margin: "26px 0 0", maxWidth: 900 } },
           content.programme + "."),
         h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(20px, 2.4vw, 28px)", color: "rgba(232,228,220,0.75)", margin: "26px 0 0", maxWidth: 640, lineHeight: 1.45 } },
-          "Olive trees planted on Palestinian family land \u2014 food security that fruits for generations."),
+          "Olive trees planted on Palestinian family land, food security that fruits for generations."),
 
         // partnership lockup
         h("div", { style: { display: "inline-flex", alignItems: "center", gap: 18, marginTop: 44, padding: "16px 22px", background: "rgba(232,228,220,0.06)", border: "1px solid rgba(201,169,97,0.3)", flexWrap: "wrap" } },
           h("span", { style: { fontFamily: serif, fontSize: 17, fontStyle: "italic", color: GOLD } }, "The Brial Endowment"),
           h("span", { style: { color: "rgba(232,228,220,0.4)", fontSize: 16 } }, "\u00d7"),
-          zLogo ? h("img", { src: zLogo, alt: "Zaytoun \u2014 From Palestine", style: { height: 52, width: "auto", display: "block", borderRadius: 2 } }) : null,
+          zLogo ? h("img", { src: zLogo, alt: "Zaytoun \u00b7 From Palestine", style: { height: 52, width: "auto", display: "block", borderRadius: 2 } }) : null,
           h("span", { style: { fontFamily: sans, fontSize: 12, fontWeight: 500, color: "rgba(232,228,220,0.85)", lineHeight: 1.5 } }, "Zaytoun CIC \u00b7 London", h("br", null), h("span", { style: { color: "rgba(232,228,220,0.5)", fontWeight: 300 } }, "with the Palestine Fair Trade Association")))),
 
       // ---- stat band (cream) ----
@@ -87,7 +87,7 @@
             h("div", { style: { width: 44, height: 1, background: "#8B7A4A", marginBottom: 22 } }),
             h("div", { style: { fontFamily: serif, fontSize: "clamp(22px, 2.6vw, 30px)", fontStyle: "italic", lineHeight: 1.4, color: "rgba(10,22,40,0.85)" } }, content.location),
             h("div", { style: { fontFamily: sans, fontSize: 13.5, fontWeight: 300, lineHeight: 1.7, color: "rgba(10,22,40,0.65)", marginTop: 18, maxWidth: 460 } },
-              content.partnerLine + " \u2014 every sapling certified by the olive farmers of the programme, planted where it matters most.")))),
+              content.partnerLine + " every sapling certified by the olive farmers of the programme, planted where it matters most.")))),
 
       // ---- certificate quote ----
       h("div", { style: { padding: "clamp(70px, 9vw, 110px) clamp(20px, 4vw, 56px)" } },
@@ -96,8 +96,8 @@
           h("blockquote", { style: { fontFamily: serif, fontStyle: "italic", fontWeight: 300, fontSize: "clamp(24px, 3.2vw, 38px)", lineHeight: 1.5, color: CREAM, margin: "34px 0 0" } },
             "\u201cThe olive farmers of the Jenin, Nablus and Salfeet districts of Palestine participating in the Trees for Life programme sincerely thank ",
             h("em", { style: { color: GOLD } }, "The Brial Endowment"),
-            " \u2014 your sponsorship through Zaytoun will fund the planting of ", String(trees), " olive trees in Palestine.\u201d"),
-          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(232,228,220,0.45)", marginTop: 30 } }, "\u2014 Gift certificate \u00b7 Zaytoun \u00b7 Trees for Life"))),
+            " your sponsorship through Zaytoun will fund the planting of ", String(trees), " olive trees in Palestine.\u201d"),
+          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(232,228,220,0.45)", marginTop: 30 } }, "Gift certificate \u00b7 Zaytoun \u00b7 Trees for Life"))),
 
       // ---- how it works ----
       h("div", { style: { padding: "0 clamp(20px, 4vw, 56px) clamp(70px, 9vw, 100px)" } },
@@ -107,7 +107,7 @@
           h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginTop: 44 } },
             [
               { n: "01", t: "Planted young", d: "Saplings are two to three years old when they are set into family land each December and January." },
-              { n: "02", t: "First fruit", d: "Between the fifth and seventh year, the grove begins to bear \u2014 oil, income, and food on the farmer's own soil." },
+              { n: "02", t: "First fruit", d: "Between the fifth and seventh year, the grove begins to bear: oil, income, and food on the farmer's own soil." },
               { n: "03", t: "Full strength", d: "Around year fifteen the tree stands mature. Olive trees outlast their planters by centuries." }
             ].map(f => h("div", { key: f.n, style: { border: "1px solid rgba(201,169,97,0.22)", background: "rgba(232,228,220,0.04)", padding: "26px 24px" } },
               h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.2em" } }, f.n),

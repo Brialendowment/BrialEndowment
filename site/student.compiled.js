@@ -705,7 +705,7 @@ const ApplicantAuth = ({
       textAlign: "center",
       margin: "0 0 28px"
     }
-  }, mode === "signup" ? "Create an account first — you can then complete your application at your own pace." : "Sign in to continue your application or scholar dashboard."), /*#__PURE__*/React.createElement("div", {
+  }, mode === "signup" ? "Create an account first. You can then complete your application at your own pace." : "Sign in to continue your application or scholar dashboard."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 1,
@@ -1108,7 +1108,7 @@ const StatusPanel_Submitted = ({
   accent: "#C9A961",
   eyebrow: "Stage II \xB7 Tahap Administrasi",
   title: "Your application is under administrative review.",
-  body: `Submitted ${fmtDateShort(applicant.submittedAt)}. The reviewer panel checks completeness and eligibility first — typically within 5 business days. If your application advances, you will receive a Zoom interview invitation here.`,
+  body: `Submitted ${fmtDateShort(applicant.submittedAt)}. The reviewer panel checks completeness and eligibility first, typically within 5 business days. If your application advances, you will receive a Zoom interview invitation here.`,
   notes: [["Submitted", fmtDateShort(applicant.submittedAt)], ["Application ID", applicant.id], ["Reviewer panel", "9 anonymous trustees"]]
 });
 const StatusPanel_Interview = ({
@@ -2149,7 +2149,7 @@ const GraduationPanel = ({
     style: {
       color: "#E8E4DC"
     }
-  }, "transkrip akhir"), " (final transcript) to complete your record with the foundation. Once submitted, your status becomes Brial Alum \u2014 permanent and on-chain.")), /*#__PURE__*/React.createElement("button", {
+  }, "transkrip akhir"), " (final transcript) to complete your record with the foundation. Once submitted, your status becomes Brial Alum: permanent and on-chain.")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setOpen(true),
     style: {
       background: "#C9A961",
@@ -2212,7 +2212,7 @@ const ShowcasePhotoCard = ({
       return;
     }
     if (!(f.type || "").toLowerCase().startsWith("image/")) {
-      setError("Please upload an image (JPG, PNG, or WebP) — not a PDF.");
+      setError("Please upload an image (JPG, PNG, or WebP), not a PDF.");
       e.target.value = "";
       return;
     }
@@ -2301,7 +2301,7 @@ const ShowcasePhotoCard = ({
     style: {
       color: "#E8E4DC"
     }
-  }, "not"), " shown publicly \u2014 we display only your initials. Image files only (JPG, PNG, WebP)."), error && /*#__PURE__*/React.createElement("div", {
+  }, "not"), " shown publicly: we display only your initials. Image files only (JPG, PNG, WebP)."), error && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "8px 12px",
       marginBottom: 12,
@@ -3670,7 +3670,7 @@ const SH = (() => {
     "Awaiting payment": "Menunggu pembayaran",
     "Appears after your first transcript": "Muncul setelah transkrip pertama",
     "Keep it at 2.75 or higher to continue the award": "Pertahankan minimal 2,75 agar beasiswa berlanjut",
-    "Below the 2.75 minimum — talk to the foundation": "Di bawah batas 2,75 — hubungi yayasan",
+    "Below the 2.75 minimum: talk to the foundation": "Di bawah batas 2,75: hubungi yayasan",
     "Your semesters": "Semester Anda",
     "Semester": "Semester",
     "Tuition bill": "Tagihan UKT",
@@ -3740,7 +3740,7 @@ const SH = (() => {
     "Declined": "Ditolak",
     "Reason:": "Alasan:",
     "Message the foundation": "Kirim pesan ke yayasan",
-    "Questions about payments, documents or your account — we read every message.": "Pertanyaan soal pembayaran, dokumen, atau akun — setiap pesan kami baca.",
+    "Questions about payments, documents or your account: we read every message.": "Pertanyaan soal pembayaran, dokumen, atau akun: setiap pesan kami baca.",
     "Topic": "Topik",
     "Subject": "Judul",
     "Message": "Pesan",
@@ -4133,7 +4133,7 @@ select.bsp-input option{background:#0A1628}
     const [ij, setIj] = useState(null);
     const [tr, setTr] = useState(null);
     const [state, run] = useSubmit(() => store.submitGraduation(applicant.id, { ijazahFile: ij, transkripFile: tr }), onClose);
-    return /* @__PURE__ */ React.createElement(Modal, { title: L("Graduation documents", "Dokumen kelulusan"), sub: L("Upload your diploma and final transcript to complete your record with the foundation.", "Unggah ijazah dan transkrip akhir untuk melengkapi catatan Anda di yayasan."), onClose }, state === "done" ? /* @__PURE__ */ React.createElement(Done, { text: L("Congratulations — your record is complete.", "Selamat — catatan Anda sudah lengkap.") }) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(FilePick, { label: t("Diploma (ijazah)"), value: ij, onChange: setIj }), /* @__PURE__ */ React.createElement(FilePick, { label: t("Final transcript"), value: tr, onChange: setTr }), /* @__PURE__ */ React.createElement("div", { className: "bsp-actions", style: { marginTop: 24 } }, /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", disabled: !ij || !tr || state === "busy", onClick: run }, state === "busy" ? /* @__PURE__ */ React.createElement("span", { className: "bsp-spin" }) : L("Submit documents", "Kirim dokumen")), /* @__PURE__ */ React.createElement("button", { className: "bsp-btn ghost", onClick: onClose }, t("Cancel")))));
+    return /* @__PURE__ */ React.createElement(Modal, { title: L("Graduation documents", "Dokumen kelulusan"), sub: L("Upload your diploma and final transcript to complete your record with the foundation.", "Unggah ijazah dan transkrip akhir untuk melengkapi catatan Anda di yayasan."), onClose }, state === "done" ? /* @__PURE__ */ React.createElement(Done, { text: L("Congratulations, your record is complete.", "Selamat, catatan Anda sudah lengkap.") }) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(FilePick, { label: t("Diploma (ijazah)"), value: ij, onChange: setIj }), /* @__PURE__ */ React.createElement(FilePick, { label: t("Final transcript"), value: tr, onChange: setTr }), /* @__PURE__ */ React.createElement("div", { className: "bsp-actions", style: { marginTop: 24 } }, /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", disabled: !ij || !tr || state === "busy", onClick: run }, state === "busy" ? /* @__PURE__ */ React.createElement("span", { className: "bsp-spin" }) : L("Submit documents", "Kirim dokumen")), /* @__PURE__ */ React.createElement("button", { className: "bsp-btn ghost", onClick: onClose }, t("Cancel")))));
   }
   function useScholar(applicant, store) {
     return useMemo(() => {
@@ -4194,15 +4194,15 @@ select.bsp-input option{background:#0A1628}
       body = L("Send the official bill (UKT) from your university. Once it is reviewed, the foundation pays your tuition.", "Kirim tagihan UKT resmi dari kampus. Setelah ditinjau, yayasan membayar UKT Anda.");
       actions = /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", onClick: () => onBill(n.sem) }, Icon.up(), t("Upload bill"));
     } else if (n.kind === "ip") {
-      title = L(`${n.sem.label} is paid — add your results`, `${n.sem.label} sudah dibayar — tambahkan hasilnya`);
+      title = L(`${n.sem.label} is paid: add your results`, `${n.sem.label} sudah dibayar: tambahkan hasilnya`);
       body = L("When your grades are out, upload the transcript and your semester GPA.", "Setelah nilai keluar, unggah transkrip dan IP semester Anda.");
       actions = /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", onClick: () => onIp(n.sem) }, Icon.up(), t("Upload transcript"));
     } else if (n.kind === "review") {
       title = L(`We're reviewing your ${n.sem.label} bill`, `Tagihan ${n.sem.label} sedang ditinjau`);
-      body = L(`Sent on ${date((_a = n.sem.bill) == null ? void 0 : _a.uploadedAt)}. You don't need to do anything right now — the payment will appear here.`, `Dikirim pada ${date((_b = n.sem.bill) == null ? void 0 : _b.uploadedAt)}. Saat ini Anda tidak perlu melakukan apa pun — pembayarannya akan tampil di sini.`);
+      body = L(`Sent on ${date((_a = n.sem.bill) == null ? void 0 : _a.uploadedAt)}. You don't need to do anything right now. The payment will appear here.`, `Dikirim pada ${date((_b = n.sem.bill) == null ? void 0 : _b.uploadedAt)}. Saat ini Anda tidak perlu melakukan apa pun. Pembayarannya akan tampil di sini.`);
       actions = n.sem.bill ? /* @__PURE__ */ React.createElement("button", { className: "bsp-btn ghost", onClick: () => window.BrialFiles.open(n.sem.bill) }, t("View bill")) : null;
     } else if (n.kind === "graduate") {
-      title = L("All semesters complete — time to graduate", "Semua semester selesai — saatnya lulus");
+      title = L("All semesters complete · time to graduate", "Semua semester selesai · saatnya lulus");
       body = L("Upload your diploma (ijazah) and final transcript to complete your record.", "Unggah ijazah dan transkrip akhir untuk melengkapi catatan Anda.");
       actions = /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", onClick: onGrad }, Icon.up(), t("Upload graduation documents"));
     } else if (n.kind === "empty") {
@@ -4219,7 +4219,7 @@ select.bsp-input option{background:#0A1628}
     const total = d.sems.length;
     const pct = total ? Math.round(d.paid.length / total * 100) : 0;
     const low = d.ipk && d.ipk.value < 2.75;
-    return /* @__PURE__ */ React.createElement("div", { className: "bsp-card bsp-figs" }, /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Total received")), /* @__PURE__ */ React.createElement("b", null, money(d.received))), /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Semesters paid")), /* @__PURE__ */ React.createElement("b", null, d.paid.length, /* @__PURE__ */ React.createElement("span", { style: { display: "inline", fontSize: 22, color: "var(--faint)" } }, " / ", total)), /* @__PURE__ */ React.createElement("div", { className: "bsp-bar", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("i", { style: { width: pct + "%" } }))), /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Cumulative GPA")), /* @__PURE__ */ React.createElement("b", { style: { color: low ? "var(--rose)" : void 0 } }, d.ipk ? d.ipk.value.toFixed(2) : "—"), /* @__PURE__ */ React.createElement("small", null, d.ipk ? t(low ? "Below the 2.75 minimum — talk to the foundation" : "Keep it at 2.75 or higher to continue the award") : t("Appears after your first transcript"))), /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Awaiting payment")), /* @__PURE__ */ React.createElement("b", { style: { color: d.pending ? "var(--amber)" : void 0 } }, money(d.pending))));
+    return /* @__PURE__ */ React.createElement("div", { className: "bsp-card bsp-figs" }, /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Total received")), /* @__PURE__ */ React.createElement("b", null, money(d.received))), /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Semesters paid")), /* @__PURE__ */ React.createElement("b", null, d.paid.length, /* @__PURE__ */ React.createElement("span", { style: { display: "inline", fontSize: 22, color: "var(--faint)" } }, " / ", total)), /* @__PURE__ */ React.createElement("div", { className: "bsp-bar", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("i", { style: { width: pct + "%" } }))), /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Cumulative GPA")), /* @__PURE__ */ React.createElement("b", { style: { color: low ? "var(--rose)" : void 0 } }, d.ipk ? d.ipk.value.toFixed(2) : "—"), /* @__PURE__ */ React.createElement("small", null, d.ipk ? t(low ? "Below the 2.75 minimum: talk to the foundation" : "Keep it at 2.75 or higher to continue the award") : t("Appears after your first transcript"))), /* @__PURE__ */ React.createElement("div", { className: "bsp-fig" }, /* @__PURE__ */ React.createElement("span", null, t("Awaiting payment")), /* @__PURE__ */ React.createElement("b", { style: { color: d.pending ? "var(--amber)" : void 0 } }, money(d.pending))));
   }
   function StatusNotice({ applicant, d }) {
     if (d.status !== "suspended" && d.status !== "revoked") return null;
@@ -4369,7 +4369,7 @@ select.bsp-input option{background:#0A1628}
       setTimeout(() => setSent(false), 5e3);
     };
     const st = { open: ["warn", "Open"], replied: ["gold", "Replied"], resolved: ["ok", "Resolved"] };
-    return /* @__PURE__ */ React.createElement("div", { className: "bsp-row", style: { marginTop: 0, alignItems: "start" } }, /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Message the foundation")), /* @__PURE__ */ React.createElement("p", { className: "bsp-sub", style: { fontSize: 14 } }, t("Questions about payments, documents or your account — we read every message.")), /* @__PURE__ */ React.createElement("div", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Topic")), /* @__PURE__ */ React.createElement("div", { className: "bsp-chips", role: "group" }, TOPICS.map(([id, l]) => /* @__PURE__ */ React.createElement("button", { key: id, className: "bsp-pill", "aria-pressed": topic === id, onClick: () => setTopic(id) }, t(l))))), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Subject")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", value: subject, onChange: (e) => setSubject(e.target.value), maxLength: 300 })), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Message")), /* @__PURE__ */ React.createElement("textarea", { className: "bsp-input", value: message, onChange: (e) => setMessage(e.target.value), maxLength: 5e3 })), sent && /* @__PURE__ */ React.createElement("div", { className: "bsp-msg ok" }, t("Message sent. The reply will appear below.")), /* @__PURE__ */ React.createElement("div", { className: "bsp-actions", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", disabled: !subject.trim() || !message.trim(), onClick: send }, t("Send message")))), /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3", style: { marginBottom: 10 } }, t("Your messages")), mine.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "bsp-sub", style: { fontSize: 14 } }, t("No messages yet.")) : /* @__PURE__ */ React.createElement("ul", { className: "bsp-list" }, mine.map((r) => {
+    return /* @__PURE__ */ React.createElement("div", { className: "bsp-row", style: { marginTop: 0, alignItems: "start" } }, /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Message the foundation")), /* @__PURE__ */ React.createElement("p", { className: "bsp-sub", style: { fontSize: 14 } }, t("Questions about payments, documents or your account: we read every message.")), /* @__PURE__ */ React.createElement("div", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Topic")), /* @__PURE__ */ React.createElement("div", { className: "bsp-chips", role: "group" }, TOPICS.map(([id, l]) => /* @__PURE__ */ React.createElement("button", { key: id, className: "bsp-pill", "aria-pressed": topic === id, onClick: () => setTopic(id) }, t(l))))), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Subject")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", value: subject, onChange: (e) => setSubject(e.target.value), maxLength: 300 })), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Message")), /* @__PURE__ */ React.createElement("textarea", { className: "bsp-input", value: message, onChange: (e) => setMessage(e.target.value), maxLength: 5e3 })), sent && /* @__PURE__ */ React.createElement("div", { className: "bsp-msg ok" }, t("Message sent. The reply will appear below.")), /* @__PURE__ */ React.createElement("div", { className: "bsp-actions", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", disabled: !subject.trim() || !message.trim(), onClick: send }, t("Send message")))), /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3", style: { marginBottom: 10 } }, t("Your messages")), mine.length === 0 ? /* @__PURE__ */ React.createElement("p", { className: "bsp-sub", style: { fontSize: 14 } }, t("No messages yet.")) : /* @__PURE__ */ React.createElement("ul", { className: "bsp-list" }, mine.map((r) => {
       const s = st[r.status] || st.open;
       return /* @__PURE__ */ React.createElement("li", { key: r.id }, /* @__PURE__ */ React.createElement("div", { className: "bsp-li-head" }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("b", null, r.subject), /* @__PURE__ */ React.createElement("div", { className: "bsp-li-meta" }, date(r.submittedAt))), /* @__PURE__ */ React.createElement("span", { className: "bsp-tag " + s[0] }, t(s[1]))), /* @__PURE__ */ React.createElement("p", { style: { margin: "8px 0 0", color: "var(--muted)", fontSize: 14, whiteSpace: "pre-wrap" } }, r.message), r.reply && /* @__PURE__ */ React.createElement("div", { className: "bsp-reply" }, /* @__PURE__ */ React.createElement("span", null, t("Reply from the foundation"), " · ", date(r.reply.at)), /* @__PURE__ */ React.createElement("p", null, r.reply.text)));
     }))));

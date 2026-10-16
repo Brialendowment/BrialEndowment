@@ -355,7 +355,7 @@ const DonationForm = ({
       letterSpacing: "0.28em",
       textTransform: "uppercase"
     }
-  }, "\xA7 II \u2014 Record Your Donation"), /*#__PURE__*/React.createElement("h3", {
+  }, "\xA7 II \u00b7 Record Your Donation"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 30,
@@ -578,7 +578,7 @@ const DonationForm = ({
       fontSize: 13,
       color: "rgba(232,228,220,0.7)"
     }
-  }, "Donate anonymously \u2014 your name will not appear in our annual letter or public ledger.")), /*#__PURE__*/React.createElement("label", {
+  }, "Donate anonymously: your name will not appear in our annual letter or public ledger.")), /*#__PURE__*/React.createElement("label", {
     style: {
       display: "flex",
       gap: 10,
@@ -774,7 +774,7 @@ const DonatePage = ({
       margin: 0,
       maxWidth: 760
     }
-  }, "The Brial Endowment accepts USDT on Ethereum (ERC-20). Every dollar arrives in the foundation's wallet, is recorded on-chain, and is disbursed \u2014 in full \u2014 to a scholar's tuition account within the year. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just tuition, paid."), /*#__PURE__*/React.createElement("div", {
+  }, "The Brial Endowment accepts USDT on Ethereum (ERC-20). Every dollar arrives in the foundation's wallet, is recorded on-chain, and is disbursed, in full, to a scholar's tuition account within the year. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just tuition, paid."), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 40,
       display: "grid",
@@ -839,7 +839,7 @@ const DonatePage = ({
       letterSpacing: "0.28em",
       textTransform: "uppercase"
     }
-  }, "\xA7 I \u2014 Deposit Wallet"), /*#__PURE__*/React.createElement("h3", {
+  }, "\xA7 I \u00b7 Deposit Wallet"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 28,
@@ -966,7 +966,7 @@ const DonatePage = ({
       paddingLeft: 22,
       margin: 0
     }
-  }, /*#__PURE__*/React.createElement("li", null, "Open your wallet \u2014 MetaMask, Trust Wallet, exchange withdrawal page, etc."), /*#__PURE__*/React.createElement("li", null, "Choose ", /*#__PURE__*/React.createElement("strong", {
+  }, /*#__PURE__*/React.createElement("li", null, "Open your wallet: MetaMask, Trust Wallet, an exchange withdrawal page, or similar."), /*#__PURE__*/React.createElement("li", null, "Choose ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "#E8E4DC"
     }
@@ -1024,7 +1024,7 @@ const DonatePage = ({
       letterSpacing: "0.28em",
       textTransform: "uppercase"
     }
-  }, "\xA7 Alternatif \u2014 Transfer Rupiah"), /*#__PURE__*/React.createElement("h3", {
+  }, "\xA7 Alternatif \u00b7 Transfer Rupiah"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 26,
@@ -1179,7 +1179,7 @@ const DonatePage = ({
       letterSpacing: "0.28em",
       textTransform: "uppercase"
     }
-  }, "\xA7 Alternatif \u2014 Kartu / Card"), /*#__PURE__*/React.createElement("h3", {
+  }, "\xA7 Alternatif \u00b7 Kartu / Card"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 26,
@@ -1252,7 +1252,7 @@ const DonatePage = ({
       color: "rgba(232,228,220,0.75)",
       marginTop: 14
     }
-  }, "Tanpa dompet kripto dan tanpa aplikasi bank Indonesia \u2014 pembayaran kartu diproses melalui halaman mitra resmi kami yang aman. Nominal bebas."), /*#__PURE__*/React.createElement("button", {
+  }, "Tanpa dompet kripto dan tanpa aplikasi bank Indonesia: pembayaran kartu diproses melalui halaman mitra resmi kami yang aman. Nominal bebas."), /*#__PURE__*/React.createElement("button", {
     onClick: () => window.open(pay.card.link, "_blank", "noopener,noreferrer"),
     style: {
       marginTop: 18,
@@ -1280,7 +1280,7 @@ const DonatePage = ({
       color: "rgba(232,228,220,0.5)",
       marginTop: 12
     }
-  }, "Setelah pembayaran, isi formulir di samping \u2014 tulis ", /*#__PURE__*/React.createElement("strong", {
+  }, "Setelah pembayaran, isi formulir di samping, tulis ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "rgba(232,228,220,0.8)"
     }
@@ -1307,7 +1307,7 @@ const DonatePage = ({
       letterSpacing: "0.28em",
       textTransform: "uppercase"
     }
-  }, "\xA7 III \u2014 Recent Patrons"), /*#__PURE__*/React.createElement("h2", {
+  }, "\xA7 III \u00b7 Recent Patrons"), /*#__PURE__*/React.createElement("h2", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 36,

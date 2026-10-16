@@ -177,25 +177,25 @@
     if (!content) return null;
     const mosques = units > 0 ? units : (Number(content.mosques) || 0);
     return h(PillarPage, { onExit, onDonate, cfg: {
-      screenLabel: "Houses of Worship — Programme",
+      screenLabel: "Houses of Worship · Programme",
       shareKey: "worship",
       topTag: "PILLAR \u00b7 HOUSES OF WORSHIP",
-      eyebrow: "\u00a7 The Second Pillar \u2014 Masjid",
+      eyebrow: "\u00a7 The Second Pillar \u00b7 Masjid",
       title: content.programme || "Houses of Worship",
-      tagline: "Mosques raised as waqf \u2014 owned by no one, serving everyone, enduring beyond their builders.",
+      tagline: "Mosques raised as waqf, owned by no one, serving everyone, enduring beyond their builders.",
       lockup: { logo: (window.BRIAL_LOGOS || {}).minang, logoBg: "#F4F1E9", name: "Minang Bandung Foundation", sub: "builder \u00b7 amal jariyah \u00b7 Bandung" },
       statLabel: "Raised together",
       statValue: mosques,
       statUnit: "Mosques \u00b7 built as waqf",
-      location: content.location || "Bandung \u2014 West Java, Indonesia",
-      locationNote: (content.partnerLine || "In partnership with Minang Bandung Foundation") + " \u2014 every build documented from land to minaret, then opened for prayer in perpetuity.",
+      location: content.location || "Bandung \u00b7 West Java, Indonesia",
+      locationNote: (content.partnerLine || "In partnership with Minang Bandung Foundation") + " every build documented from land to minaret, then opened for prayer in perpetuity.",
       quote: ["\u201cWhoever builds a mosque for Allah, ", h("em", { key: 1, style: { color: GOLD } }, "Allah will build for him a house like it in Paradise"), ".\u201d"],
-      quoteAttr: "\u2014 Hadith \u00b7 Sahih al-Bukhari 450 \u00b7 Sahih Muslim 533",
+      quoteAttr: "Hadith \u00b7 Sahih al-Bukhari 450 \u00b7 Sahih Muslim 533",
       intro: content.intro,
       steps: [
-        { n: "01", t: "Land & niyyah", d: "A site is secured with the community it will serve \u2014 titled, permitted, and dedicated before the first stone." },
+        { n: "01", t: "Land & niyyah", d: "A site is secured with the community it will serve: titled, permitted, and dedicated before the first stone." },
         { n: "02", t: "Raising the walls", d: "The partner foundation builds; each milestone is documented and reported back to the endowment." },
-        { n: "03", t: "Opened as waqf", d: "The finished mosque is handed to its congregation \u2014 endowed in perpetuity, never bought or sold." }
+        { n: "03", t: "Opened as waqf", d: "The finished mosque is handed to its congregation, endowed in perpetuity, never bought or sold." }
       ],
       notesTitle: "Word from the site.",
       articles: content.articles,
@@ -214,25 +214,25 @@
     if (!content) return null;
     const wells = units > 0 ? units : (Number(content.trees) || Number(content.wells) || 0);
     return h(PillarPage, { onExit, onDonate, cfg: {
-      screenLabel: "Clean Water — Programme",
+      screenLabel: "Clean Water · Programme",
       shareKey: "water",
       topTag: "PILLAR \u00b7 CLEAN WATER",
-      eyebrow: "\u00a7 The Fifth Pillar \u2014 Sumur",
+      eyebrow: "\u00a7 The Fifth Pillar \u00b7 Sumur",
       title: content.programme || "Clean Water",
-      tagline: "Clean water, close to home \u2014 wells and springs that change a village for generations.",
+      tagline: "Clean water, close to home: wells and springs that change a village for generations.",
       lockup: content.partnerLine ? { logo: null, name: content.partnerLine, sub: "water partner" } : null,
       statLabel: "Flowing today",
       statValue: wells,
       statUnit: "Wells \u00b7 in service",
       location: content.location || "Sites announced as each build begins.",
-      locationNote: (content.partnerLine || "Built with local partners") + " \u2014 every point surveyed with the village it serves, and maintained so the water keeps flowing.",
+      locationNote: (content.partnerLine || "Built with local partners") + " every point surveyed with the village it serves, and maintained so the water keeps flowing.",
       quote: ["\u201cThe best charity is ", h("em", { key: 1, style: { color: GOLD } }, "giving water to drink"), ".\u201d"],
-      quoteAttr: "\u2014 Hadith \u00b7 Sunan Abi Dawud 1681 \u00b7 an-Nasa'i",
+      quoteAttr: "Hadith \u00b7 Sunan Abi Dawud 1681 \u00b7 an-Nasa'i",
       intro: content.intro,
       steps: [
-        { n: "01", t: "Survey", d: "The need is mapped with the village \u2014 groundwater, distance walked, and who the point will serve." },
-        { n: "02", t: "Build", d: "Borehole, hand pump or spring protection \u2014 built with local partners, documented from first dig to first draw." },
-        { n: "03", t: "Maintain", d: "Local stewards keep it flowing \u2014 spares, repairs and care, so the gift outlasts its givers." }
+        { n: "01", t: "Survey", d: "The need is mapped with the village: groundwater, distance walked, and who the point will serve." },
+        { n: "02", t: "Build", d: "Borehole, hand pump or spring protection, built with local partners, documented from first dig to first draw." },
+        { n: "03", t: "Maintain", d: "Local stewards keep it flowing: spares, repairs and care, so the gift outlasts its givers." }
       ],
       notesTitle: "Word from the wells.",
       articles: content.articles,
@@ -249,64 +249,64 @@
   // ---- Generic pillar pages (Hospitals, Schools, Livestock, Infrastructure) ----
   const GENERIC_PAGES = {
     hospitals: {
-      pillarName: "Hospitals", topTag: "PILLAR \u00b7 HOSPITALS", eyebrow: "\u00a7 The Pillar of Healing \u2014 Rumah Sakit",
-      tagline: "Care for those who cannot afford to be sick \u2014 clinics funded from the corpus, free at the point of need.",
+      pillarName: "Hospitals", topTag: "PILLAR \u00b7 HOSPITALS", eyebrow: "\u00a7 The Pillar of Healing \u00b7 Rumah Sakit",
+      tagline: "Care for those who cannot afford to be sick: clinics funded from the corpus, free at the point of need.",
       statLabel: "Care today", statUnit: "Clinics & wards \u00b7 in service",
-      locFallback: "Sites announced as each build begins.", locTail: " \u2014 every clinic assessed with local health workers, built to last, and open free at the point of need.",
+      locFallback: "Sites announced as each build begins.", locTail: " every clinic assessed with local health workers, built to last, and open free at the point of need.",
       quote: ["\u201cThere is no disease that Allah has sent down, except that ", h("em", { key: 1, style: { color: GOLD } }, "He has also sent down its cure"), ".\u201d"],
-      quoteAttr: "\u2014 Hadith \u00b7 Sahih al-Bukhari 5678",
+      quoteAttr: "Hadith \u00b7 Sahih al-Bukhari 5678",
       steps: [
-        { n: "01", t: "Assess", d: "Mapped with local health workers \u2014 where illness costs families the most, before a single brick is laid." },
-        { n: "02", t: "Build & equip", d: "Clinic and ward raised with the partner \u2014 documented from foundation to first patient." },
-        { n: "03", t: "Heal freely", d: "Open to all, free at the point of need \u2014 funded by the corpus so care never depends on a bill." }
+        { n: "01", t: "Assess", d: "Mapped with local health workers, where illness costs families the most, before a single brick is laid." },
+        { n: "02", t: "Build & equip", d: "Clinic and ward raised with the partner, documented from foundation to first patient." },
+        { n: "03", t: "Heal freely", d: "Open to all, free at the point of need, funded by the corpus so care never depends on a bill." }
       ],
       notesTitle: "Word from the wards.", ctaEyebrow: "Walk the wards", ctaLine1: "Meet the people", ctaLine2: "who heal with us.",
       stripFallback: "HOSPITALS \u00b7 BUILT WITH LOCAL HEALTH PARTNERS",
       proverb: "They healed so we may stand; we build so others may heal."
     },
     schools: {
-      pillarName: "Schools", topTag: "PILLAR \u00b7 SCHOOLS", eyebrow: "\u00a7 The Pillar of Knowledge \u2014 Sekolah",
-      tagline: "Classrooms raised where distance decides who learns \u2014 built once, teaching for generations.",
+      pillarName: "Schools", topTag: "PILLAR \u00b7 SCHOOLS", eyebrow: "\u00a7 The Pillar of Knowledge \u00b7 Sekolah",
+      tagline: "Classrooms raised where distance decides who learns, built once, teaching for generations.",
       statLabel: "In session today", statUnit: "Schools \u00b7 classrooms raised",
-      locFallback: "Sites announced as each build begins.", locTail: " \u2014 every school grounded where children walk farthest, raised and staffed to teach well.",
+      locFallback: "Sites announced as each build begins.", locTail: " every school grounded where children walk farthest, raised and staffed to teach well.",
       quote: ["\u201cSeeking knowledge is ", h("em", { key: 1, style: { color: GOLD } }, "an obligation upon every Muslim"), ".\u201d"],
-      quoteAttr: "\u2014 Hadith \u00b7 Sunan Ibn Majah 224",
+      quoteAttr: "Hadith \u00b7 Sunan Ibn Majah 224",
       steps: [
-        { n: "01", t: "Ground", d: "A site is chosen where children walk farthest \u2014 secured with the village the school will serve." },
-        { n: "02", t: "Raise & staff", d: "Classrooms built and teachers placed with local partners \u2014 documented from first stone to first lesson." },
-        { n: "03", t: "Teach forever", d: "Held as an endowed school \u2014 fees never decide who sits in its classrooms." }
+        { n: "01", t: "Ground", d: "A site is chosen where children walk farthest, secured with the village the school will serve." },
+        { n: "02", t: "Raise & staff", d: "Classrooms built and teachers placed with local partners, documented from first stone to first lesson." },
+        { n: "03", t: "Teach forever", d: "Held as an endowed school: fees never decide who sits in its classrooms." }
       ],
       notesTitle: "Word from the classrooms.", ctaEyebrow: "Visit the classrooms", ctaLine1: "Meet the children", ctaLine2: "who learn with us.",
       stripFallback: "SCHOOLS \u00b7 BUILT WITH LOCAL PARTNERS",
       proverb: "They taught so we may read; we build so they may learn."
     },
     livestock: {
-      pillarName: "Livestock & Enterprise", topTag: "PILLAR \u00b7 LIVESTOCK & ENTERPRISE", eyebrow: "\u00a7 The Pillar of Enterprise \u2014 Ternak",
-      tagline: "Productive capital in family hands \u2014 herds and enterprise that feed, earn, and fund the gift again.",
+      pillarName: "Livestock & Enterprise", topTag: "PILLAR \u00b7 LIVESTOCK & ENTERPRISE", eyebrow: "\u00a7 The Pillar of Enterprise \u00b7 Ternak",
+      tagline: "Productive capital in family hands: herds and enterprise that feed, earn, and fund the gift again.",
       statLabel: "Working today", statUnit: "Herds & ventures \u00b7 productive",
-      locFallback: "Placements announced as each begins.", locTail: " \u2014 every placement chosen with the family who will tend it, and documented season by season.",
+      locFallback: "Placements announced as each begins.", locTail: " every placement chosen with the family who will tend it, and documented season by season.",
       quote: ["\u201cIt is better for one of you to take a rope and ", h("em", { key: 1, style: { color: GOLD } }, "carry firewood on his back"), " than to beg from people.\u201d"],
-      quoteAttr: "\u2014 Hadith \u00b7 Sahih al-Bukhari 1471",
+      quoteAttr: "Hadith \u00b7 Sahih al-Bukhari 1471",
       steps: [
-        { n: "01", t: "Place", d: "Herds, tools or stock placed with a family as productive capital \u2014 chosen with those who will tend it." },
-        { n: "02", t: "Tend", d: "The family raises and works the asset \u2014 supported and documented through the hard seasons." },
-        { n: "03", t: "Multiply", d: "Offspring and profits stay with the family \u2014 the gift renews itself and funds the next placement." }
+        { n: "01", t: "Place", d: "Herds, tools or stock placed with a family as productive capital, chosen with those who will tend it." },
+        { n: "02", t: "Tend", d: "The family raises and works the asset, supported and documented through the hard seasons." },
+        { n: "03", t: "Multiply", d: "Offspring and profits stay with the family: the gift renews itself and funds the next placement." }
       ],
       notesTitle: "Word from the paddocks.", ctaEyebrow: "Meet the herds", ctaLine1: "Meet the families", ctaLine2: "who tend the gift.",
       stripFallback: "LIVESTOCK & ENTERPRISE \u00b7 PRODUCTIVE CAPITAL, FAMILY HANDS",
       proverb: "They kept so we may eat; we place so they may keep."
     },
     infra: {
-      pillarName: "Sustainable Infrastructure", topTag: "PILLAR \u00b7 INFRASTRUCTURE", eyebrow: "\u00a7 The Pillar of Foundations \u2014 Prasarana",
-      tagline: "Bridges, power and public works \u2014 the quiet foundations that let a community stand on its own.",
+      pillarName: "Sustainable Infrastructure", topTag: "PILLAR \u00b7 INFRASTRUCTURE", eyebrow: "\u00a7 The Pillar of Foundations \u00b7 Prasarana",
+      tagline: "Bridges, power and public works, the quiet foundations that let a community stand on its own.",
       statLabel: "Standing today", statUnit: "Public works \u00b7 in service",
-      locFallback: "Works announced as each survey begins.", locTail: " \u2014 every work surveyed with the community that will use it, built to endure.",
+      locFallback: "Works announced as each survey begins.", locTail: " every work surveyed with the community that will use it, built to endure.",
       quote: ["\u201cAmong what reaches a believer after death: ", h("em", { key: 1, style: { color: GOLD } }, "a canal he dug, a well he sank"), ", and a mosque he built.\u201d"],
-      quoteAttr: "\u2014 Hadith \u00b7 Sunan Ibn Majah 242",
+      quoteAttr: "Hadith \u00b7 Sunan Ibn Majah 242",
       steps: [
-        { n: "01", t: "Survey", d: "Every work is mapped with the community that will use it \u2014 need first, monument never." },
-        { n: "02", t: "Build", d: "Bridges, water-ways and power raised with local partners \u2014 documented from first survey to first crossing." },
-        { n: "03", t: "Endure", d: "Maintained by local stewards \u2014 built once, serving for generations." }
+        { n: "01", t: "Survey", d: "Every work is mapped with the community that will use it, need first, monument never." },
+        { n: "02", t: "Build", d: "Bridges, water-ways and power raised with local partners, documented from first survey to first crossing." },
+        { n: "03", t: "Endure", d: "Maintained by local stewards, built once, serving for generations." }
       ],
       notesTitle: "Word from the works.", ctaEyebrow: "Walk the works", ctaLine1: "Meet the people", ctaLine2: "who build to endure.",
       stripFallback: "SUSTAINABLE INFRASTRUCTURE \u00b7 BUILT WITH LOCAL PARTNERS",
@@ -333,7 +333,7 @@
       if (!c) return null;
       const units = st.units > 0 ? st.units : Number(c.units) || 0;
       return h(PillarPage, { onExit, onDonate, cfg: {
-        screenLabel: g.pillarName + " \u2014 Programme",
+        screenLabel: g.pillarName + " Programme",
         shareKey: key, topTag: g.topTag, eyebrow: g.eyebrow,
         title: c.programme || g.pillarName, tagline: g.tagline,
         lockup: c.partnerLine ? { logo: null, name: c.partnerLine, sub: "programme partner" } : null,

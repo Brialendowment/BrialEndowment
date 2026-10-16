@@ -508,13 +508,13 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   // PILLAR CONFIG
   // ============================================================
   const PILLARS = {
-    worship: { name: "Houses of Worship", grantName: "Houses of Worship", accent: "#C9A961", unit: ["mosque", "mosques"], unitLabel: "Mosques built", get: s => s.getWorship(), save: (s, v) => s.saveWorship(v), unitField: "mosques", partner: "Minang Bandung Foundation", project: "e.g. Masjid Al-Ikhlas — construction", note: "the site", firstEntry: "The first mosque", linkMode: "pillar", linkHelp: "Usually the partner foundation's construction or donation page (for example, Minang Bandung's mosque project page)." },
-    foodland: { name: "Food & Land", grantName: "Food & Land", accent: "#A8C97F", unit: ["tree", "trees"], unitLabel: "Trees planted", get: s => s.getFoodland(), save: (s, v) => s.saveFoodland(v), unitField: "trees", partner: "", project: "e.g. Trees for Life — olive saplings", firstEntry: "The first five trees", linkMode: "partner", linkHelp: "Usually Zaytoun's Trees for Life page (https://zaytoun.uk/plant-a-tree/)." },
-    water: { name: "Clean Water", grantName: "Clean Water", accent: "#7FB8C9", unit: ["well", "wells"], unitLabel: "Wells built", get: s => s.getWater(), save: (s, v) => s.saveWater(v), unitField: "trees", partner: "", project: "e.g. Village well — phase I", firstEntry: "The first well", linkMode: "partner", linkHelp: "The drilling or water partner's programme page. Hide the button while there is no active partner." },
-    hospitals: { name: "Hospitals", grantName: "Hospitals", accent: "#C9847F", unit: ["clinic", "clinics"], unitLabel: "Clinics opened", get: s => s.getPillarContent("hospitals"), save: (s, v) => s.savePillarContent("hospitals", v), unitField: "units", partner: "", project: "e.g. Village clinic — phase I", firstEntry: "The first clinic", linkMode: "partner", linkHelp: "The health partner's programme page. Hide the button while there is no active partner." },
-    schools: { name: "Schools", grantName: "Schools", accent: "#C9BC7F", unit: ["school", "schools"], unitLabel: "Schools raised", get: s => s.getPillarContent("schools"), save: (s, v) => s.savePillarContent("schools", v), unitField: "units", partner: "", project: "e.g. Primary school — phase I", firstEntry: "The first school", linkMode: "partner", linkHelp: "The education partner's programme page. Hide the button while there is no active partner." },
-    livestock: { name: "Livestock & Enterprise", grantName: "Livestock & Enterprise", accent: "#C9A07F", unit: ["placement", "placements"], unitLabel: "Placements", get: s => s.getPillarContent("livestock"), save: (s, v) => s.savePillarContent("livestock", v), unitField: "units", partner: "", project: "e.g. Goat herd — family batch I", firstEntry: "The first herd", linkMode: "partner", linkHelp: "The enterprise partner's programme page. Hide the button while there is no active partner." },
-    infra: { name: "Sustainable Infrastructure", grantName: "Sustainable Infrastructure", accent: "#9FA8B8", unit: ["work", "works"], unitLabel: "Works completed", get: s => s.getPillarContent("infra"), save: (s, v) => s.savePillarContent("infra", v), unitField: "units", partner: "", project: "e.g. Footbridge — phase I", firstEntry: "The first bridge", linkMode: "partner", linkHelp: "The works partner's programme page. Hide the button while there is no active partner." },
+    worship: { name: "Houses of Worship", grantName: "Houses of Worship", accent: "#C9A961", unit: ["mosque", "mosques"], unitLabel: "Mosques built", get: s => s.getWorship(), save: (s, v) => s.saveWorship(v), unitField: "mosques", partner: "Minang Bandung Foundation", project: "e.g. Masjid Al-Ikhlas construction", note: "the site", firstEntry: "The first mosque", linkMode: "pillar", linkHelp: "Usually the partner foundation's construction or donation page (for example, Minang Bandung's mosque project page)." },
+    foodland: { name: "Food & Land", grantName: "Food & Land", accent: "#A8C97F", unit: ["tree", "trees"], unitLabel: "Trees planted", get: s => s.getFoodland(), save: (s, v) => s.saveFoodland(v), unitField: "trees", partner: "", project: "e.g. Trees for Life olive saplings", firstEntry: "The first five trees", linkMode: "partner", linkHelp: "Usually Zaytoun's Trees for Life page (https://zaytoun.uk/plant-a-tree/)." },
+    water: { name: "Clean Water", grantName: "Clean Water", accent: "#7FB8C9", unit: ["well", "wells"], unitLabel: "Wells built", get: s => s.getWater(), save: (s, v) => s.saveWater(v), unitField: "trees", partner: "", project: "e.g. Village well, phase I", firstEntry: "The first well", linkMode: "partner", linkHelp: "The drilling or water partner's programme page. Hide the button while there is no active partner." },
+    hospitals: { name: "Hospitals", grantName: "Hospitals", accent: "#C9847F", unit: ["clinic", "clinics"], unitLabel: "Clinics opened", get: s => s.getPillarContent("hospitals"), save: (s, v) => s.savePillarContent("hospitals", v), unitField: "units", partner: "", project: "e.g. Village clinic, phase I", firstEntry: "The first clinic", linkMode: "partner", linkHelp: "The health partner's programme page. Hide the button while there is no active partner." },
+    schools: { name: "Schools", grantName: "Schools", accent: "#C9BC7F", unit: ["school", "schools"], unitLabel: "Schools raised", get: s => s.getPillarContent("schools"), save: (s, v) => s.savePillarContent("schools", v), unitField: "units", partner: "", project: "e.g. Primary school, phase I", firstEntry: "The first school", linkMode: "partner", linkHelp: "The education partner's programme page. Hide the button while there is no active partner." },
+    livestock: { name: "Livestock & Enterprise", grantName: "Livestock & Enterprise", accent: "#C9A07F", unit: ["placement", "placements"], unitLabel: "Placements", get: s => s.getPillarContent("livestock"), save: (s, v) => s.savePillarContent("livestock", v), unitField: "units", partner: "", project: "e.g. Goat herd, family batch I", firstEntry: "The first herd", linkMode: "partner", linkHelp: "The enterprise partner's programme page. Hide the button while there is no active partner." },
+    infra: { name: "Sustainable Infrastructure", grantName: "Sustainable Infrastructure", accent: "#9FA8B8", unit: ["work", "works"], unitLabel: "Works completed", get: s => s.getPillarContent("infra"), save: (s, v) => s.savePillarContent("infra", v), unitField: "units", partner: "", project: "e.g. Footbridge, phase I", firstEntry: "The first bridge", linkMode: "partner", linkHelp: "The works partner's programme page. Hide the button while there is no active partner." },
     library: { name: "The Library", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
     scholarships: { name: "Scholarships", accent: "#C9A961" },
     transport: { name: "Transportation", accent: "#E8834A", linkMode: "partner", linkHelp: "Where the Rent with go2rent button sends visitors, usually https://www.gotworent.com/.", note: "the road",
@@ -615,7 +615,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const setA = (id, patch) => setF(p => ({ ...p, articles: p.articles.map(a => (a.id === id ? { ...a, ...patch } : a)) }));
     const add = () => setF(p => ({ ...p, articles: [{ id: "note-" + Date.now(), date: today(), title: "", body: "", partner: "", link: "", photo: null, draft: true }, ...(p.articles || [])] }));
     const del = id => setF(p => ({ ...p, articles: p.articles.filter(a => a.id !== id) }));
-    const save = () => { cfg.save(store, f); setSaved(JSON.stringify(f)); flash("Saved — the public page is updated."); };
+    const save = () => { cfg.save(store, f); setSaved(JSON.stringify(f)); flash("Saved. The public page is updated."); };
     const unitsFromGrants = store.getPillarUnits ? store.getPillarUnits(cfg.grantName) : 0;
     useEffect(() => {
       const h = e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
@@ -629,7 +629,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
           <div className="fd-card-head"><h2 className="fd-h2">Page summary</h2></div>
           <div className="fd-form">
             <div className="fd-grid2">
-              <Field label="Location line"><input className="fd-input" value={f.location || ""} onChange={e => set({ location: e.target.value })} placeholder="Village · District — Country" /></Field>
+              <Field label="Location line"><input className="fd-input" value={f.location || ""} onChange={e => set({ location: e.target.value })} placeholder="Village · District · Country" /></Field>
               <Field label="Partner line"><input className="fd-input" value={f.partnerLine || ""} onChange={e => set({ partnerLine: e.target.value })} placeholder="In partnership with …" /></Field>
             </div>
             <Field label="Introduction" hint="How the programme works, in two or three sentences."><textarea className="fd-input" value={f.intro || ""} onChange={e => set({ intro: e.target.value })} /></Field>
@@ -988,7 +988,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       if (action === "reactivate") store.reactivateScholarship(app.id, reason.trim());
       setAction(null); setReason("");
     };
-    const copyT = { suspend: ["Pause scholarship", "The scholar sees your reason. No payments are made while paused.", "e.g. GPA for semester 3 fell below 2.75 — please explain before we continue."], revoke: ["End scholarship permanently", "The record is kept, but no further payments are made. Use only when reinstatement is not expected.", "e.g. Breach of the code of conduct: …"], reactivate: ["Reactivate scholarship", "The scholar can upload bills and transcripts again.", "e.g. Semester 4 GPA recovered to 3.20."] };
+    const copyT = { suspend: ["Pause scholarship", "The scholar sees your reason. No payments are made while paused.", "e.g. GPA for semester 3 fell below 2.75, please explain before we continue."], revoke: ["End scholarship permanently", "The record is kept, but no further payments are made. Use only when reinstatement is not expected.", "e.g. Breach of the code of conduct: …"], reactivate: ["Reactivate scholarship", "The scholar can upload bills and transcripts again.", "e.g. Semester 4 GPA recovered to 3.20."] };
     return (
       <div className="fd-card">
         <div className="fd-card-head">
@@ -1428,7 +1428,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const line = receiptLine(d, r);
     return (
       <Modal title={r ? `Receipt ${r.no}` : "Receipt"} sub={`${d.anonymous ? "Anonymous" : titleCase(d.name)} · ${money(d.amount)} · verified ${fdate(d.verifiedAt)}`} onClose={onClose}>
-        <p className={"fd-rc " + line.tone} style={{ textAlign: "left", marginTop: 0 }}>{line.text}{r && r.mail && r.mail.status === "failed" && r.mail.error ? ` — ${r.mail.error}` : ""}</p>
+        <p className={"fd-rc " + line.tone} style={{ textAlign: "left", marginTop: 0 }}>{line.text}{r && r.mail && r.mail.status === "failed" && r.mail.error ? ` ${r.mail.error}` : ""}</p>
         <Field label="Send the receipt to" hint="Usually the donor's own address."><input className="fd-input" type="email" value={to} onChange={e => setTo(e.target.value)} placeholder="donor@example.com" /></Field>
         <Field label="Personal note (optional)" hint="Shown above the receipt, signed with your name. Leave empty for the standard receipt." style={{ marginTop: 12 }}><textarea className="fd-input" rows={4} maxLength={2000} value={note} onChange={e => setNote(e.target.value)} placeholder="Dear …, thank you for…" /></Field>
         <div className="fd-actions" style={{ marginTop: 16 }}>
@@ -1456,13 +1456,13 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const [rc, reloadRc] = useReceipts(store, verified.length);
     const verify = d => {
       const p = store.markDonationVerified(d.id);
-      vflash(okEmail(d.email) ? `Verified. The receipt is being emailed to ${d.email}.` : "Verified. There is no email on file — download the receipt PDF if the donor asks for one.");
-      Promise.resolve(p).then(() => { setTimeout(reloadRc, 1500); setTimeout(reloadRc, 8000); }).catch(() => vflash("Could not verify — check your connection.", "err"));
+      vflash(okEmail(d.email) ? `Verified. The receipt is being emailed to ${d.email}.` : "Verified. There is no email on file. Download the receipt PDF if the donor asks for one.");
+      Promise.resolve(p).then(() => { setTimeout(reloadRc, 1500); setTimeout(reloadRc, 8000); }).catch(() => vflash("Could not verify. Check your connection.", "err"));
     };
     const G = "minmax(0,1.8fr) minmax(0,.7fr) minmax(0,1.3fr) minmax(0,.8fr) auto";
     return (
       <>
-        <Head title={title || "Donations"} lede="Gifts reported through the donate page. Check each one against your wallet or bank, then verify it — only verified gifts are final.">
+        <Head title={title || "Donations"} lede="Gifts reported through the donate page. Check each one against your wallet or bank, then verify it. Only verified gifts are final.">
           <button className="fd-btn ghost" onClick={() => setChan(true)}>Payment channels</button>
         </Head>
         <Stats items={[{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter(g => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }]} />
@@ -1580,9 +1580,9 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             <p className="fd-sub" style={{ margin: 0 }}>{mode === "merge" ? "Accounts in the file overwrite accounts with the same ID; new ones are added; everything else stays." : "Every applicant and donation is deleted and replaced by the file. Use only to rebuild after a fresh install."}</p>
             <input ref={ref} type="file" accept=".json,application/json" onChange={onFile} style={{ display: "none" }} />
             <div className="fd-actions">
-              {mode === "replace" && !armed ? <button className="fd-btn danger" onClick={() => setArmed(true)}>I understand — choose file</button> : <button className="fd-btn primary" disabled={busy} onClick={() => ref.current && ref.current.click()}>{busy ? "Restoring…" : "Choose backup file"}</button>}
+              {mode === "replace" && !armed ? <button className="fd-btn danger" onClick={() => setArmed(true)}>I understand · choose file</button> : <button className="fd-btn primary" disabled={busy} onClick={() => ref.current && ref.current.click()}>{busy ? "Restoring…" : "Choose backup file"}</button>}
             </div>
-            {res && <div className={"fd-msg " + (res.ok ? "ok" : "err")}>{res.ok ? (res.mode === "replace" ? `Restored — ${res.count} accounts loaded.` : `Merged — ${res.updated} accounts updated or added.`) : res.error}</div>}
+            {res && <div className={"fd-msg " + (res.ok ? "ok" : "err")}>{res.ok ? (res.mode === "replace" ? `Restored: ${res.count} accounts loaded.` : `Merged, ${res.updated} accounts updated or added.`) : res.error}</div>}
           </div>
         </details>
       </div>
@@ -1599,7 +1599,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const G = "minmax(0,1.5fr) minmax(0,1.5fr) minmax(0,.9fr) auto";
     return (
       <>
-        <Head title="Accounts" lede="Every portal account. Passwords are stored as secure hashes — nobody can read them, but you can set a new one." />
+        <Head title="Accounts" lede="Every portal account. Passwords are stored as secure hashes: nobody can read them, but you can set a new one." />
         <div className="fd-toolbar"><Seg value={filter} onChange={setFilter} items={[["all", "All", apps.length], ["registered", "Drafts", c("registered")], ["submitted", "To review", c("submitted")], ["interview-scheduled", "Interview", c("interview-scheduled")], ["interview-done", "Decision due", c("interview-done")], ["accepted", "Granted", c("accepted")], ["rejected", "Declined", c("rejected")]]} /></div>
         <div className="fd-toolbar"><Search value={q} onChange={setQ} placeholder="Search name, email, ID or university" /></div>
         <div className="fd-table">
@@ -1624,7 +1624,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             {(deleted || []).length === 0 ? <p className="fd-sub">The trash is empty.</p> : deleted.map(a => (
               <div key={a.id} className="fd-file" style={{ flexWrap: "wrap" }}>
                 <div style={{ minWidth: 0 }}><b style={{ fontWeight: 600 }}>{titleCase(a.name)}</b><div className="fd-sub" style={{ margin: 0 }}>{a.email} · deleted {fdate(a.deletedAt)} · {days(a.deletedAt)} days left</div></div>
-                <div className="fd-actions"><button className="fd-btn ghost sm" onClick={() => store.restoreApplicant(a.id)}>Restore</button><Confirm onConfirm={() => store.purgeApplicant(a.id)} armedLabel="Click again — this is permanent">Delete forever</Confirm></div>
+                <div className="fd-actions"><button className="fd-btn ghost sm" onClick={() => store.restoreApplicant(a.id)}>Restore</button><Confirm onConfirm={() => store.purgeApplicant(a.id)} armedLabel="Click again · this is permanent">Delete forever</Confirm></div>
               </div>
             ))}
           </div>
@@ -1846,7 +1846,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     };
     return (
       <>
-        <Head title="Ledger" lede="Every settled movement — verified gifts and sales in, payments out. Unverified gifts and unpaid bills are left out until they settle.">
+        <Head title="Ledger" lede="Every settled movement: verified gifts and sales in, payments out. Unverified gifts and unpaid bills are left out until they settle.">
           <button className="fd-btn ghost" onClick={exportCSV} disabled={!list.length}>Download CSV</button>
         </Head>
         <div className="fd-toolbar">
@@ -2869,7 +2869,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       try {
         await store.saveSiteContact(all.filter(x => x.value.trim() || x.type !== "link").map(({ type, value, label, shown }) => ({ type, value, label, shown })));
         setSaved(JSON.stringify(f));
-        flash("Saved — the footer is updated.");
+        flash("Saved. The footer is updated.");
       } catch (e) { flash("Could not save. Check your connection and try again.", "err"); }
       setBusy(false);
     };
@@ -2908,7 +2908,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             </div>
             <div className="fd-card">
               <div className="fd-card-head" style={{ marginBottom: 4 }}>
-                <div><h2 className="fd-h2">Other links</h2><p className="fd-sub">Anything else — a Linktree, a donation page, a podcast.</p></div>
+                <div><h2 className="fd-h2">Other links</h2><p className="fd-sub">Anything else: a Linktree, a donation page, a podcast.</p></div>
                 <button className="fd-btn ghost sm" onClick={addX}>Add a link</button>
               </div>
               {f.extra.length === 0 ? <p className="fd-sub" style={{ margin: "8px 0 0" }}>No other links.</p> : f.extra.map(it => (
@@ -2919,7 +2919,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
           </div>
           <aside className="fd-card fd-site-prev">
             <div className="fd-stage-k">Footer preview</div>
-            <p className="fd-sub" style={{ marginTop: 4 }}>{shownCount ? `${shownCount} ${plural(shownCount, "item", "items")} visible to visitors.` : "Nothing is shown yet — the footer keeps its usual look."}</p>
+            <p className="fd-sub" style={{ marginTop: 4 }}>{shownCount ? `${shownCount} ${plural(shownCount, "item", "items")} visible to visitors.` : "Nothing is shown yet. The footer keeps its usual look."}</p>
             <div className="fd-prev">
               <div className="fd-prev-brand">{ICON.star}<span>The Brial Endowment</span></div>
               <p>A sovereign philanthropic foundation. Direct-to-student. On-chain and fully transparent.</p>
@@ -2955,7 +2955,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       ["change_requested", "Change request", "A scholar asks to change a detail only you can approve."],
       ["report_new", "Help desk message", "A scholar writes to the help desk."],
       ["graduation", "Graduation submitted", "A scholar uploads the diploma and transcript."]] },
-    { title: "Applicants and scholars", sub: "From hello@brialendowment.org — replies come to you", items: [
+    { title: "Applicants and scholars", sub: "From hello@brialendowment.org, replies come to you", items: [
       ["application_received", "Application received", "Confirms the application arrived and explains the next steps."],
       ["interview", "Interview invitation", "Date, time in WIB and Istanbul, and the meeting link."],
       ["accepted", "Scholarship approved", "Welcome, scholar ID, and the first step."],
@@ -2987,7 +2987,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     return (
       <div>
         <div className="fd-actions" style={{ gap: 6 }}>
-          {value.length === 0 && <small className="fd-sub" style={{ margin: 0 }}>No dates — this reminder never goes out.</small>}
+          {value.length === 0 && <small className="fd-sub" style={{ margin: 0 }}>No dates: this reminder never goes out.</small>}
           {value.map(md => <span key={md} className="fd-tag gold">{mdLabel(md)}<button onClick={() => onChange(value.filter(x => x !== md))} aria-label={"Remove " + mdLabel(md)} style={{ background: "none", border: 0, color: "inherit", cursor: "pointer", padding: "0 0 0 4px" }}>×</button></span>)}
         </div>
         <div className="fd-actions" style={{ marginTop: 8, gap: 6 }}>
@@ -3003,7 +3003,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     ["hello", "The Brial Endowment", "hello@brialendowment.org", "The foundation's general address"],
     ["receipts", "The Brial Endowment", "receipts@brialendowment.org", "For anything about gifts and receipts"],
   ];
-  const PROGRAMMES = ["The Brial Endowment — general endowment fund", "Scholarships", "Clean Water — wells and water systems", "Food & Land — Trees for Life, olive trees in Palestine", "Houses of Worship", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure", "Library"];
+  const PROGRAMMES = ["The Brial Endowment · general endowment fund", "Scholarships", "Clean Water · wells and water systems", "Food & Land · Trees for Life, olive trees in Palestine", "Houses of Worship", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure", "Library"];
   const THANKS = "Dear …,\n\nThank you for your generous contribution of $… to …. Because of you, …\n\n…\n\nMay God accept it from you and multiply its reward.\n\nWith heartfelt thanks,";
   const splitTo = s => String(s || "").split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
   function Composer({ store, onClose, onSent }) {
@@ -3025,7 +3025,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const send = async () => {
       setBusy("send"); setErr("");
       try { const r = await store.sendMessage(msg()); onSent(r && r.queued ? r.queued : tos.length); onClose(); }
-      catch (e) { const c = String(e && (e.message || e)); setErr(c.indexOf("rate_limited") >= 0 ? "That's a lot of email in one hour — wait a little, then try again." : c.indexOf("invalid_email") >= 0 ? "One of the addresses doesn't look right." : "Could not send right now. Try again in a moment."); }
+      catch (e) { const c = String(e && (e.message || e)); setErr(c.indexOf("rate_limited") >= 0 ? "That's a lot of email in one hour. Wait a little, then try again." : c.indexOf("invalid_email") >= 0 ? "One of the addresses doesn't look right." : "Could not send right now. Try again in a moment."); }
       setBusy("");
     };
     const S = SENDERS.find(s => s[0] === f.from) || SENDERS[0];
@@ -3066,7 +3066,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
                 <div className="fd-grid2">
                   <Field label="Contributed by"><input className="fd-input" value={ack.name} onChange={e => setA("name", e.target.value)} placeholder="Full name" /></Field>
                   <Field label="Amount (USD)"><input className="fd-input" inputMode="decimal" value={ack.amount} onChange={e => setA("amount", e.target.value)} placeholder="35" /></Field>
-                  <Field label="Programme"><input className="fd-input" list="fd-programmes" value={ack.programme} onChange={e => setA("programme", e.target.value)} placeholder="Food & Land — …" /><datalist id="fd-programmes">{PROGRAMMES.map(x => <option key={x} value={x} />)}</datalist></Field>
+                  <Field label="Programme"><input className="fd-input" list="fd-programmes" value={ack.programme} onChange={e => setA("programme", e.target.value)} placeholder="Food & Land · …" /><datalist id="fd-programmes">{PROGRAMMES.map(x => <option key={x} value={x} />)}</datalist></Field>
                   <Field label="Date of contribution"><input className="fd-input" type="date" value={ack.date} onChange={e => setA("date", e.target.value)} /></Field>
                   <Field label="Reference (optional)"><input className="fd-input" value={ack.reference} onChange={e => setA("reference", e.target.value)} placeholder="Bank or grant reference" /></Field>
                   <div style={{ display: "flex", alignItems: "flex-end" }}><Switch on={ack.pdf} onChange={v => setA("pdf", v)}>Attach PDF</Switch></div>

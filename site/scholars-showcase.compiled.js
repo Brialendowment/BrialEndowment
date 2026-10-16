@@ -322,7 +322,7 @@ const ScholarsShowcase = ({
       margin: 0,
       maxWidth: 720
     }
-  }, "Every face here is a tuition bill that was paid, a semester that was saved, a future kept on course. These are the Brial scholars \u2014 funded directly, studying today, building what comes next.")), /*#__PURE__*/React.createElement("div", {
+  }, "Every face here is a tuition bill that was paid, a semester that was saved, a future kept on course. These are the Brial scholars, funded directly, studying today, building what comes next.")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "repeat(2, 1fr)",
@@ -410,7 +410,7 @@ const ScholarsShowcase = ({
       margin: "16px auto 28px",
       maxWidth: 560
     }
-  }, "Applications are open. Tell us the question you are trying to answer \u2014 we fund the people, not the institutions."), /*#__PURE__*/React.createElement("button", {
+  }, "Applications are open. Tell us the question you are trying to answer: we fund the people, not the institutions."), /*#__PURE__*/React.createElement("button", {
     onClick: onApply,
     style: {
       background: "#C9A961",

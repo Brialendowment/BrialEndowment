@@ -46,7 +46,7 @@
       h("div", { style: { padding: "clamp(56px, 8vw, 100px) clamp(20px, 4vw, 56px) clamp(40px, 5vw, 60px)", maxWidth: 1160, margin: "0 auto" } },
         h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, "\u00a7 Proof of giving"),
         h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(46px, 7vw, 92px)", lineHeight: 1, letterSpacing: "-0.02em", margin: "24px 0 0" } }, "The Open Ledger."),
-        h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(19px, 2.2vw, 26px)", color: "rgba(232,228,220,0.75)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.45 } }, "Every grant the endowment has made \u2014 dated, named, and totalled live from the public database. Nothing is withheld for overhead.")),
+        h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(19px, 2.2vw, 26px)", color: "rgba(232,228,220,0.75)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.45 } }, "Every grant the endowment has made: dated, named, and totalled live from the public database. Nothing is withheld for overhead.")),
 
       h("div", { style: { background: CREAM, color: NAVY, padding: "clamp(40px, 6vw, 64px) clamp(20px, 4vw, 56px)" } },
         h("div", { style: { maxWidth: 1160, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "clamp(26px, 4vw, 56px)" } },
@@ -60,7 +60,7 @@
           h("div", { style: { minWidth: 240 } },
             h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.26em", textTransform: "uppercase" } }, "\u00a7 Scholarships"),
             h("div", { style: { fontFamily: serif, fontSize: "clamp(26px, 3vw, 36px)", marginTop: 12 } }, fmtM(m.scholarsDisbursed), h("span", { style: { fontSize: "0.55em", color: "rgba(232,228,220,0.6)", fontStyle: "italic" } }, "  paid directly to students")),
-            h("div", { style: { fontFamily: sans, fontSize: 13.5, fontWeight: 300, color: "rgba(232,228,220,0.65)", marginTop: 10, maxWidth: 520, lineHeight: 1.7 } }, (m.awardeeCount || 0) + " scholar" + ((m.awardeeCount || 0) === 1 ? "" : "s") + " funded \u2014 tuition settled semester by semester, never through an intermediary. The scholars themselves stand in the public gallery.")),
+            h("div", { style: { fontFamily: sans, fontSize: 13.5, fontWeight: 300, color: "rgba(232,228,220,0.65)", marginTop: 10, maxWidth: 520, lineHeight: 1.7 } }, (m.awardeeCount || 0) + " scholar" + ((m.awardeeCount || 0) === 1 ? "" : "s") + " funded, tuition settled semester by semester, never through an intermediary. The scholars themselves stand in the public gallery.")),
           onScholars ? h("button", { onClick: onScholars, style: { background: "transparent", border: "1px solid rgba(201,169,97,0.5)", color: GOLD, padding: "14px 26px", cursor: "pointer", fontFamily: sans, fontSize: 12, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", flex: "none" } }, "Meet the scholars \u2192") : null),
 
         groups.length === 0 ? h("div", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 22, color: "rgba(232,228,220,0.55)", marginTop: 56, textAlign: "center" } }, "The first pillar entries are being written.") :

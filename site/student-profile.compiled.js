@@ -79,7 +79,7 @@ const FileField = ({
       return;
     }
     if (imageOnly && !(/^image\/(jpeg|jpg|png|webp)$/i.test(f.type || "") && /\.(jpe?g|png|webp)$/i.test(f.name || ""))) {
-      setError("Please upload a photo (JPG, JPEG, PNG or WebP) \u2014 not a PDF or other document.");
+      setError("Please upload a photo (JPG, JPEG, PNG or WebP), not a PDF or other document.");
       e.target.value = "";
       return;
     }
@@ -363,7 +363,7 @@ const SectionHighSchool = ({
       color: "rgba(232,228,220,0.55)",
       margin: "8px 0 12px"
     }
-  }, "Add the subjects you took (IPA, IPS, Agama, Bahasa, etc \u2014 whatever applied to you). For each, enter the ", /*#__PURE__*/React.createElement("strong", {
+  }, "Add the subjects you took (IPA, IPS, Agama, Bahasa, or whatever applied to you). For each, enter the ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "#E8E4DC"
     }
@@ -410,7 +410,7 @@ const SectionHighSchool = ({
     onChange: e => store.updateSubjectGrade(applicant.id, i, {
       grade: e.target.value
     }),
-    placeholder: "Avg \u2014",
+    placeholder: "Avg",
     title: "Average grade across all semesters",
     style: {
       background: "rgba(201,169,97,0.04)",
@@ -474,7 +474,7 @@ const SectionHighSchool = ({
     onChange: f => update({
       raporFile: f
     }),
-    hint: "Scanned PDF of your full rapor \u2014 all semesters \xB7 max 10MB"
+    hint: "Scanned PDF of your full rapor, all semesters \xB7 max 10MB"
   }));
 };
 
@@ -633,7 +633,7 @@ const SectionUniversity = ({
     style: {
       color: "#E8E4DC"
     }
-  }, currentLevel.totalSemesters, " semesters total"), ". Once accepted, the endowment underwrites every remaining semester after your current one \u2014 wired in USDC directly to you after each invoice upload.")));
+  }, currentLevel.totalSemesters, " semesters total"), ". Once accepted, the endowment underwrites every remaining semester after your current one, wired in USDC directly to you after each invoice upload.")));
 };
 
 // ============================================================
@@ -863,7 +863,7 @@ const ProfileEditor = ({
     store: store
   })), section === "highschool" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SectionHeader, {
     title: "High school record",
-    sub: "Your secondary education results \u2014 the rapor SMA is the official transcript of your last three years."
+    sub: "Your secondary education results: the rapor SMA is the official transcript of your last three years."
   }), /*#__PURE__*/React.createElement(SectionHighSchool, {
     applicant: applicant,
     store: store
