@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: write   # read the backup workflow's runs; keep scheduled workflows enabled
+  actions: write   # keep this scheduled workflow enabled (public repos idle 60 days)
   contents: read
 
 concurrency:

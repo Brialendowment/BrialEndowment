@@ -4,7 +4,7 @@
 # Checks what a visitor actually depends on: the website, the www redirect, the
 # Supabase database (the same public RPC the homepage calls), Supabase Auth and
 # the mail Edge Function. Once a day it also checks the domain's expiry date and
-# that a backup has succeeded recently.
+# that the monitor stays enabled.
 #
 # Emails the founder (via Resend) only when something changes: when the site goes
 # down, every 6 hours while it stays down, and once when it recovers. State is
@@ -124,22 +124,13 @@ if [ "$LAST_DAILY" != "$today" ]; then
     echo "domain expiry: could not read (not treated as an outage)"
   fi
 
+  # Public repositories switch scheduled workflows off after 60 days without
+  # commits. Re-enabling the monitor daily keeps it running. (Backups run from
+  # the private brialendowment-backups repository, which has no such limit and
+  # emails on its own failures.)
   if [ -n "${GH_TOKEN:-}" ]; then
-    last=$(gh api "repos/$REPO/actions/workflows/backup.yml/runs?status=success&per_page=1" \
-           --jq '.workflow_runs[0].created_at // empty' 2>/dev/null)
-    if [ -n "$last" ]; then
-      age=$(( (now - $(date -u -d "$last" +%s)) / 86400 ))
-      echo "last successful backup: $last ($age days ago)"
-      [ "$age" -gt 8 ] && warnings+=("The last successful database backup was $age days ago (weekly is expected). Open GitHub → Actions → Weekly backup to see why.")
-    else
-      echo "last successful backup: none yet"
-    fi
-    # Public repositories switch scheduled workflows off after 60 days without
-    # commits. Re-enabling them daily keeps the monitor and the backup running.
-    for wf in monitor.yml backup.yml; do
-      gh api -X PUT "repos/$REPO/actions/workflows/$wf/enable" >/dev/null 2>&1 \
-        && echo "keep-alive: $wf enabled" || echo "keep-alive: $wf (skipped)"
-    done
+    gh api -X PUT "repos/$REPO/actions/workflows/monitor.yml/enable" >/dev/null 2>&1 \
+      && echo "keep-alive: monitor.yml enabled" || echo "keep-alive: monitor.yml (skipped)"
   fi
   LAST_DAILY=$today
 fi
