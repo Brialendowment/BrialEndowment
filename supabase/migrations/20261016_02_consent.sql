@@ -106,7 +106,6 @@ begin
   end if;
   return new;
 end $$;
-drop trigger if exists be_keep_consent on public.applicants;
 create trigger be_keep_consent before update on public.applicants
   for each row execute function be_private.applicants_keep_consent();
 
