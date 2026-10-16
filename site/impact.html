@@ -193,7 +193,7 @@ h2 em{font-style:italic;color:var(--gold2)}
     }
     h.push('<div class="closing"><div class="wrap">' + STAR + '<q>We do not spend the gift. We plant it, so that it gives and keeps giving long after we are gone.</q><div class="mono src">The Brial Endowment, Founding Charter</div></div></div>');
     h.push('<div class="foot"><div class="wrap">' + (r.publishedAt ? "Published " + esc(fdate(r.publishedAt)) + " · " : "") + (P.computedAt ? "Figures as of " + esc(fdate(P.computedAt)) + " · " : "") +
-      '<a href="https://brialendowment.org/impact/' + esc(r.year) + '">brialendowment.org/impact/' + esc(r.year) + "</a></div></div>");
+      '<a href="https://brialendowment.org/impact/' + esc(r.year) + '">brialendowment.org/impact/' + esc(r.year) + '</a><div style="margin-top:10px"><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></div></div></div>');
     app.innerHTML = h.join("");
     if (printMode) {
       var imgs = Array.prototype.slice.call(document.images);

@@ -415,7 +415,9 @@ window.BrialClipboard = { copy: copyToClipboard };
     return data;
   }
   const ERR_CODES = ["invalid_session", "too_many_attempts", "email_exists", "weak_password", "invalid_email",
-                     "forbidden", "rate_limited", "invalid_amount", "too_large", "invalid_hash"];
+                     "forbidden", "rate_limited", "invalid_amount", "too_large", "invalid_hash", "consent_required"];
+  // Version of the Terms and Privacy Policy that accounts must accept (matches be_private.consent_version()).
+  const CONSENT_VERSION = "2026-10-16";
   function errCode(e) {
     const m = String((e && (e.message || e.details || e.hint)) || e || "");
     return ERR_CODES.find(k => m.indexOf(k) >= 0) || null;
@@ -1212,7 +1214,10 @@ window.BrialClipboard = { copy: copyToClipboard };
       try {
         // The server creates the row (id, password hash, status) — the
         // browser never sees other applicants or any password hash.
-        const res = await rpc("be_applicant_signup", { p_email: email, p_name: name, p_password: form.password, p_doc: { profile } });
+        const c = form.consent || {};
+        const consent = { version: CONSENT_VERSION, terms: !!c.terms, data: !!c.data, minor: !!c.minor, guardian: !!c.minor && !!c.guardian };
+        if (!consent.terms || !consent.data || (consent.minor && !consent.guardian)) return { error: "Please tick the boxes to agree before continuing." };
+        const res = await rpc("be_applicant_signup", { p_email: email, p_name: name, p_password: form.password, p_doc: { profile, consent } });
         setToken(res.token);
         const applicant = rowToApplicant(res.row);
         _applicants = [applicant, ..._applicants.filter(x => x.id !== applicant.id)];
@@ -1224,6 +1229,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         if (c === "email_exists") return { error: "An account with this email already exists. Please sign in instead." };
         if (c === "invalid_email") return { error: "Please enter a valid email address." };
         if (c === "weak_password") return { error: "Password must be at least 8 characters." };
+        if (c === "consent_required") return { error: "Please tick the boxes to agree before continuing." };
         return { error: "Could not create the account right now. Please check your connection and try again." };
       }
     },
@@ -1490,6 +1496,30 @@ window.BrialClipboard = { copy: copyToClipboard };
         graduation: { ijazahFile, transkripFile, graduatedAt: now() },
         statusHistory: history,
       });
+    },
+
+    // ----- Consent to the Terms and Privacy Policy -----
+    CONSENT_VERSION,
+    hasCurrentConsent(a) {
+      const c = a && a.consent;
+      return !!(c && c.version === CONSENT_VERSION && c.terms && c.data && (!c.minor || c.guardian));
+    },
+    async giveConsent(choice) {
+      const tok = getToken();
+      if (!tok) return { error: "Your session has ended. Please sign in again." };
+      const consent = { version: CONSENT_VERSION, terms: !!choice.terms, data: !!choice.data, minor: !!choice.minor, guardian: !!choice.minor && !!choice.guardian };
+      try {
+        const row = await rpc("be_applicant_consent", { p_token: tok, p_consent: consent });
+        const a = rowToApplicant(row);
+        _applicants = [a, ..._applicants.filter(x => x.id !== a.id)];
+        saveCache(); notify({ key: a.id });
+        return { applicant: a };
+      } catch (e) {
+        const c = errCode(e);
+        if (c === "invalid_session") return { error: "Your session has ended. Please sign in again." };
+        if (c === "consent_required") return { error: "Please tick the boxes to agree before continuing." };
+        return { error: "Could not save your agreement. Please check your connection and try again." };
+      }
     },
 
     // ----- Auth & sessions -----

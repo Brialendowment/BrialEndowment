@@ -2002,7 +2002,13 @@ const Footer = ({
     href: "#trustees"
   }, {
     t: "Annual Report",
-    href: "#transparency"
+    href: "/impact"
+  }, {
+    t: "Privacy Policy",
+    href: "/privacy"
+  }, {
+    t: "Terms",
+    href: "/terms"
   }]
 }, {
   h: "Ledger",

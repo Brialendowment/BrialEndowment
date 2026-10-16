@@ -603,7 +603,7 @@ const DonationForm = ({
       color: "rgba(232,228,220,0.7)",
       lineHeight: 1.55
     }
-  }, "I confirm I have already sent the USDT and understand donations are non-refundable. The foundation will allocate this gift to scholars at the trustees' discretion.")), error && /*#__PURE__*/React.createElement("div", {
+  }, "I confirm I have already sent the USDT, I understand that gifts are non-refundable and that blockchain transfers are public and permanent, and I agree to the ", /*#__PURE__*/React.createElement("a", { href: "/terms", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Terms"), " and the ", /*#__PURE__*/React.createElement("a", { href: "/privacy", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Privacy Policy"), ". The endowment uses every gift for its pillars at its discretion, honouring my wishes where it can.")), error && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: "10px 14px",

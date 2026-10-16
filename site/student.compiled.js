@@ -323,6 +323,210 @@ const HumanCheck = ({
 // ============================================================
 // AUTH — Sign up / Sign in toggle
 // ============================================================
+// ============================================================
+// CONSENT: Terms and Privacy Policy. Nothing continues until the
+// boxes are ticked; the server checks the same rules again.
+// ============================================================
+const consentOk = c => !!(c && c.terms && c.data && (!c.minor || c.guardian));
+const ConsentTick = ({
+  checked,
+  onChange,
+  children
+}) => /*#__PURE__*/React.createElement("label", {
+  style: {
+    display: "flex",
+    gap: 12,
+    alignItems: "flex-start",
+    cursor: "pointer",
+    fontFamily: "'Manrope', sans-serif",
+    fontSize: 13.5,
+    lineHeight: 1.55,
+    color: "rgba(232,228,220,0.82)",
+    marginBottom: 12
+  }
+}, /*#__PURE__*/React.createElement("input", {
+  type: "checkbox",
+  checked: !!checked,
+  onChange: e => onChange(e.target.checked),
+  style: {
+    width: 18,
+    height: 18,
+    marginTop: 2,
+    flex: "0 0 auto",
+    accentColor: "#C9A961",
+    cursor: "pointer"
+  }
+}), /*#__PURE__*/React.createElement("span", null, children));
+const consentLink = (href, label) => /*#__PURE__*/React.createElement("a", {
+  href: href,
+  target: "_blank",
+  rel: "noopener",
+  onClick: e => e.stopPropagation(),
+  style: {
+    color: "#E3C98A",
+    textDecoration: "underline"
+  }
+}, label);
+const ConsentBoxes = ({
+  value,
+  onChange
+}) => {
+  const v = value || {};
+  const set = patch => onChange({
+    ...v,
+    ...patch
+  });
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 16px 6px",
+      border: "1px solid rgba(201,169,97,0.25)",
+      background: "rgba(201,169,97,0.04)"
+    }
+  }, /*#__PURE__*/React.createElement(ConsentTick, {
+    checked: v.terms,
+    onChange: x => set({
+      terms: x
+    })
+  }, "I have read and agree to the ", consentLink("/terms", "Terms"), " and the ", consentLink("/privacy", "Privacy Policy"), ", and I am at least 14 years old."), /*#__PURE__*/React.createElement(ConsentTick, {
+    checked: v.data,
+    onChange: x => set({
+      data: x
+    })
+  }, "I agree that The Brial Endowment may store my personal details, photo and documents to assess my application and, if I become a scholar, keep them as part of its permanent records."), /*#__PURE__*/React.createElement(ConsentTick, {
+    checked: v.minor,
+    onChange: x => set({
+      minor: x,
+      guardian: x ? v.guardian : false
+    })
+  }, "I am under 18 years old."), v.minor && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginLeft: 30
+    }
+  }, /*#__PURE__*/React.createElement(ConsentTick, {
+    checked: v.guardian,
+    onChange: x => set({
+      guardian: x
+    })
+  }, "My parent or guardian knows about this application and agrees to it.")));
+};
+const ConsentGate = ({
+  applicant,
+  store,
+  onLogout
+}) => {
+  const [c, setC] = useState({
+    terms: false,
+    data: false,
+    minor: !!(applicant.consent && applicant.consent.minor),
+    guardian: false
+  });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const ready = consentOk(c) && !busy;
+  const agree = async () => {
+    if (!consentOk(c)) return;
+    setBusy(true);
+    setError(null);
+    const r = await store.giveConsent(c);
+    if (r.error) {
+      setError(r.error);
+      setBusy(false);
+    }
+  };
+  const first = (applicant.name || "").split(" ")[0];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      background: "radial-gradient(ellipse at 30% 20%, #142442 0%, #0A1628 60%, #060E1C 100%)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      maxWidth: 560,
+      border: "1px solid rgba(201,169,97,0.25)",
+      background: "rgba(10,22,40,0.7)",
+      padding: "clamp(24px, 5vw, 44px)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 10,
+      letterSpacing: "0.3em",
+      textTransform: "uppercase",
+      color: "#C9A961",
+      marginBottom: 14
+    }
+  }, "Scholar Portal · Before you continue"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontWeight: 300,
+      fontSize: "clamp(30px, 5vw, 40px)",
+      lineHeight: 1.1,
+      color: "#E8E4DC",
+      margin: "0 0 12px"
+    }
+  }, first ? "Welcome back, " + first + "." : "Welcome back."), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 14.5,
+      lineHeight: 1.65,
+      color: "rgba(232,228,220,0.7)",
+      margin: "0 0 22px"
+    }
+  }, "The Brial Endowment now has written Terms and a Privacy Policy that explain how scholarships work and how we look after your data. Please read them and agree to continue to your portal."), /*#__PURE__*/React.createElement(ConsentBoxes, {
+    value: c,
+    onChange: setC
+  }), error && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 14px",
+      marginTop: 16,
+      background: "rgba(229,134,134,0.08)",
+      border: "1px solid rgba(229,134,134,0.3)",
+      color: "#E58686",
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 13
+    }
+  }, error), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: agree,
+    disabled: !ready,
+    style: {
+      width: "100%",
+      marginTop: 20,
+      padding: "16px 0",
+      background: ready ? "#C9A961" : "rgba(201,169,97,0.25)",
+      color: ready ? "#0A1628" : "rgba(10,22,40,0.6)",
+      border: "none",
+      cursor: ready ? "pointer" : "not-allowed",
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 13,
+      letterSpacing: "0.18em",
+      textTransform: "uppercase",
+      fontWeight: 500
+    }
+  }, busy ? "Saving…" : "Agree and continue"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onLogout,
+    style: {
+      width: "100%",
+      marginTop: 10,
+      padding: "12px 0",
+      background: "none",
+      color: "rgba(232,228,220,0.6)",
+      border: "1px solid rgba(232,228,220,0.15)",
+      cursor: "pointer",
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 12,
+      letterSpacing: "0.16em",
+      textTransform: "uppercase"
+    }
+  }, "Sign out")));
+};
+
 const ApplicantAuth = ({
   onExit,
   initialMode = "signup"
@@ -339,6 +543,13 @@ const ApplicantAuth = ({
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [humanVerified, setHumanVerified] = useState(false);
+  const [consent, setConsent] = useState({
+    terms: false,
+    data: false,
+    minor: false,
+    guardian: false
+  });
+  const blocked = mode === "signup" && !consentOk(consent);
   const update = patch => setForm(f => ({
     ...f,
     ...patch
@@ -359,9 +570,16 @@ const ApplicantAuth = ({
         setError("Passwords do not match.");
         return;
       }
+      if (!consentOk(consent)) {
+        setError("Please tick the boxes to agree before continuing.");
+        return;
+      }
       setLoading(true);
       setTimeout(async () => {
-        const result = await store.signup(form);
+        const result = await store.signup({
+          ...form,
+          consent
+        });
         if (result.error) {
           setError(result.error);
           setLoading(false);
@@ -620,6 +838,13 @@ const ApplicantAuth = ({
     }
   }, /*#__PURE__*/React.createElement(HumanCheck, {
     onChange: setHumanVerified
+  })), mode === "signup" && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 24
+    }
+  }, /*#__PURE__*/React.createElement(ConsentBoxes, {
+    value: consent,
+    onChange: setConsent
   })), error && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "12px 14px",
@@ -633,14 +858,15 @@ const ApplicantAuth = ({
     }
   }, error), /*#__PURE__*/React.createElement("button", {
     type: "submit",
-    disabled: loading,
+    disabled: loading || blocked,
+    title: blocked ? "Tick the boxes above to continue" : undefined,
     style: {
       width: "100%",
       padding: "16px 0",
-      background: loading ? "rgba(201,169,97,0.5)" : "#C9A961",
-      color: "#0A1628",
+      background: loading ? "rgba(201,169,97,0.5)" : blocked ? "rgba(201,169,97,0.25)" : "#C9A961",
+      color: blocked ? "rgba(10,22,40,0.6)" : "#0A1628",
       border: "none",
-      cursor: loading ? "not-allowed" : "pointer",
+      cursor: loading || blocked ? "not-allowed" : "pointer",
       fontFamily: "'Manrope', sans-serif",
       fontSize: 13,
       letterSpacing: "0.18em",
@@ -4427,6 +4653,11 @@ const ScholarPortal = ({
       initialMode: initialMode
     });
   }
+  if (store.hasCurrentConsent && !store.hasCurrentConsent(applicant)) return /*#__PURE__*/React.createElement(ConsentGate, {
+    applicant: applicant,
+    store: store,
+    onLogout: () => store.clearSession()
+  });
   return /*#__PURE__*/React.createElement(PortalHome, {
     applicant: applicant,
     store: store,
