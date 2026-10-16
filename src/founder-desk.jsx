@@ -2182,7 +2182,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   const ACT_WORD = {
     "security.signed_in": "Signed in", "security.signed_out": "Signed out", "security.authenticator_added": "Turned on two-step verification",
     "security.authenticator_removed": "Turned off two-step verification", "security.recovery_codes_created": "Created new recovery codes",
-    "security.recovery_code_used": "Signed in with a recovery code", "security.recovery_code_failed": "A wrong recovery code was tried",
+    "security.recovery_code_used": "Signed in with a recovery code", "security.recovery_code_failed": "A wrong recovery code was tried", "security.authenticator_code_failed": "A wrong authenticator code was tried",
   };
   const actLabel = x => {
     if (ACT_WORD[x.action]) return ACT_WORD[x.action] + (x.action === "security.signed_in" && x.detail && x.detail.method ? (x.detail.method === "authenticator" ? " with the authenticator" : " with password") : "");
@@ -2200,6 +2200,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     if (d.status) parts.push(`status ${d.status.from || "none"} to ${d.status.to || "none"}`);
     if (Array.isArray(d.fields) && d.fields.length) parts.push("changed: " + d.fields.slice(0, 6).join(", ") + (d.fields.length > 6 ? ` and ${d.fields.length - 6} more` : ""));
     if (typeof d.remaining === "number") parts.push(`${d.remaining} recovery ${plural(d.remaining, "code", "codes")} left`);
+    if (d.ip) parts.push(`from IP ${d.ip}`);
     return parts.join(" · ");
   };
 
@@ -2275,6 +2276,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       <>
         <Head title="Security" lede="Two-step verification for the Founder Console, recovery codes for emergencies, and a record of every change." />
         {recovered && !on && <div className="fd-attn"><div className="fd-attn-i"><span className="fd-dot warn" /><div><b>You signed in with a recovery code</b><small>Your old authenticator was removed. Set up Google Authenticator again below.</small></div></div></div>}
+        {sec && sec.failedCodes7d > 0 && <div className="fd-attn"><div className="fd-attn-i"><span className="fd-dot warn" /><div><b>{sec.failedCodes7d} wrong {plural(sec.failedCodes7d, "code was", "codes were")} tried in the last 7 days</b><small>If that was not you, someone may know your password. Change it now. The details are in Activity below.</small></div></div></div>}
         {codes ? <RecoveryCodes codes={codes} onDone={() => { setCodes(null); flash("Recovery codes saved."); }} /> : (
           <div className="fd-card">
             <div className="fd-card-head">
