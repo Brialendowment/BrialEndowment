@@ -33,7 +33,7 @@ const SH = (() => {
     "Full name": "Nama lengkap", "Date of birth": "Tanggal lahir", "Phone": "Telepon", "Country": "Negara", "Address": "Alamat", "National ID": "NIK / Paspor", "Email": "Email",
     "University": "Universitas", "Study programme": "Program studi", "Current semester": "Semester saat ini", "GPA at application": "IPK saat mendaftar", "Tuition per semester": "UKT per semester",
     "High school": "Sekolah menengah", "Graduation year": "Tahun lulus", "Final grade": "Nilai akhir",
-    "Biometric photo": "Pas foto", "Report card": "Rapor", "Student card": "Kartu mahasiswa",
+    "ID card / passport": "KTP / paspor", "Profile photo": "Foto profil", "Report card": "Rapor", "Student card": "Kartu mahasiswa",
     "Not provided": "Tidak ada", "Spot a mistake? Request a correction from the Account tab.": "Ada yang salah? Ajukan koreksi dari tab Akun.",
     "Sign-in email": "Email masuk", "Change password": "Ganti password", "New password": "Password baru", "Confirm new password": "Ulangi password baru",
     "At least 8 characters.": "Minimal 8 karakter.", "Show passwords": "Tampilkan password", "Save new password": "Simpan password baru",
@@ -532,7 +532,7 @@ select.bsp-input option{background:#0A1628}
     const p = applicant.profile || {};
     const u = p.university || {};
     const per = p.personal || {};
-    const photo = per.showcasePhoto || (isImage(per.photoFile) ? per.photoFile : null);
+    const photo = per.showcasePhoto || null; // the ID card is never used as a portrait
     const url = fileUrl(photo);
     const chip = {
       active: ["ok", "Active scholar"], suspended: ["warn", "Scholarship paused"], revoked: ["bad", "Scholarship ended"], graduated: ["gold", "Brial alum"],
@@ -801,7 +801,7 @@ select.bsp-input option{background:#0A1628}
     const p = applicant.profile || {};
     const per = p.personal || {}, hs = p.highSchool || {}, u = p.university || {};
     const lvl = window.BrialStore.DEGREE_LEVELS && window.BrialStore.DEGREE_LEVELS[u.degreeLevel];
-    const docs = [["Biometric photo", per.photoFile], ["Report card", hs.raporFile], ["Student card", u.studentCardFile]];
+    const docs = [["ID card / passport", per.photoFile], ["Report card", hs.raporFile], ["Student card", u.studentCardFile]];
     return (
       <div className="bsp-two">
         <PublicPhoto applicant={applicant} store={store} />
@@ -1010,7 +1010,7 @@ select.bsp-input option{background:#0A1628}
     const [tab, setTabState] = window.useBrialNav ? window.useBrialNav("sh-tab", initTab) : useState(initTab);
     const setTab = k => { setTabState(k); try { sessionStorage.setItem("bsp-tab", k); } catch (e) {} window.scrollTo({ top: 0, behavior: "smooth" }); };
     const per = applicant.profile?.personal || {};
-    const avatar = fileUrl(per.showcasePhoto || (isImage(per.photoFile) ? per.photoFile : null));
+    const avatar = fileUrl(per.showcasePhoto || null);
     const replies = (store.listReports() || []).filter(r => r.applicantId === applicant.id && r.status === "replied").length;
     const pendingReq = (applicant.changeRequests || []).filter(r => r.status === "pending").length;
     return (

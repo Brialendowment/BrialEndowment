@@ -2,7 +2,7 @@
 // ============================================================
 // SCHOLARS SHOWCASE — public gallery of Brial scholars
 // Opens from the Scholarships pillar. Same vibe as the IG post.
-// Photo priority: showcasePhoto (selfie) → biometric image → monogram.
+// Photo priority: showcasePhoto (the profile photo) → monogram. The ID card is never shown.
 // ============================================================
 const {
   useState: useStateSS,
@@ -33,10 +33,6 @@ function photoUrlFor(applicant) {
   // 1. showcase selfie (preferred)
   if (p.showcasePhoto && (p.showcasePhoto.url || p.showcasePhoto.path)) {
     return p.showcasePhoto.url || window.brialSupabase && window.brialSupabase.publicUrl(p.showcasePhoto.path);
-  }
-  // 2. biometric photo, only if it's an image
-  if (p.photoFile && isImageFile(p.photoFile) && (p.photoFile.url || p.photoFile.path)) {
-    return p.photoFile.url || window.brialSupabase && window.brialSupabase.publicUrl(p.photoFile.path);
   }
   return null;
 }

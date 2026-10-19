@@ -64,7 +64,8 @@ const FileField = ({
   onChange,
   accept,
   hint,
-  imageOnly
+  imageOnly,
+  isPublic
 }) => {
   const [uploading, setUploading] = useStateP(false);
   const [error, setError] = useStateP(null);
@@ -85,7 +86,7 @@ const FileField = ({
     }
     setUploading(true);
     try {
-      const meta = await window.BrialFiles.put(f);
+      const meta = await window.BrialFiles.put(f, isPublic ? { public: true } : undefined);
       onChange(meta);
     } catch (err) {
       console.error("upload failed", err);
@@ -301,15 +302,48 @@ const SectionPersonal = ({
       nationalId: v
     }),
     placeholder: "NIK / Passport"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "bsp-photo-pair",
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 24
+    }
+  }, /*#__PURE__*/React.createElement(FileField, {
+    label: "Profile photo",
+    file: p.showcasePhoto,
+    onChange: f => update({
+      showcasePhoto: f
+    }),
+    imageOnly: true,
+    isPublic: true,
+    hint: "A recent, clear photo of your face \xB7 JPG/PNG/WebP \xB7 max 2MB"
   }), /*#__PURE__*/React.createElement(FileField, {
-    label: "Biometric Photo",
+    label: "ID card / Passport",
     file: p.photoFile,
     onChange: f => update({
       photoFile: f
     }),
-    imageOnly: true,
-    hint: "Clear, recent passport-style photo \xB7 JPG/PNG/WebP only \xB7 max 2MB"
-  }));
+    hint: "Photo or scan of your KTP or passport, with your face, full name and number readable \xB7 JPG/PNG/WebP/PDF \xB7 max 2MB"
+  })), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "-8px 0 0",
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 13,
+      lineHeight: 1.6,
+      color: "rgba(232,228,220,0.65)"
+    }
+  }, /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: "#C9A961",
+      fontWeight: 600
+    }
+  }, "Profile photo"), " is shown on the public Scholars page if you are awarded, so do not upload your ID card there. ", /*#__PURE__*/React.createElement("strong", {
+    style: {
+      color: "#C9A961",
+      fontWeight: 600
+    }
+  }, "ID card / passport"), " stays private: only the endowment sees it to verify your identity, and it is never published."));
 };
 
 // ============================================================

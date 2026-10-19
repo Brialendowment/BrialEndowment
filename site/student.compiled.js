@@ -2190,8 +2190,8 @@ const GraduationPanel = ({
 };
 
 // ============================================================
-// SHOWCASE PHOTO CARD — scholar uploads a public selfie shown
-// on the Scholars showcase page. Falls back to biometric photo.
+// SHOWCASE PHOTO CARD: the profile photo shown on the public
+// Scholars page. The ID card / passport is never used here.
 // ============================================================
 const ShowcasePhotoCard = ({
   applicant,
@@ -2271,7 +2271,7 @@ const ShowcasePhotoCard = ({
       textAlign: "center",
       padding: 10
     }
-  }, "NO SELFIE", /*#__PURE__*/React.createElement("br", null), "YET")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "NO PHOTO", /*#__PURE__*/React.createElement("br", null), "YET")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 10,
@@ -2279,7 +2279,7 @@ const ShowcasePhotoCard = ({
       letterSpacing: "0.22em",
       textTransform: "uppercase"
     }
-  }, "Showcase / Selfie Photo"), /*#__PURE__*/React.createElement("div", {
+  }, "Profile photo"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 22,
@@ -2297,11 +2297,11 @@ const ShowcasePhotoCard = ({
       margin: "8px 0 16px",
       maxWidth: 560
     }
-  }, "Upload a clear selfie or portrait you are happy to share publicly. Until you do, your private biometric photo is ", /*#__PURE__*/React.createElement("strong", {
+  }, "A recent photo of your face that you are happy to share publicly. Your ID card or passport is ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "#E8E4DC"
     }
-  }, "not"), " shown publicly: we display only your initials. Image files only (JPG, PNG, WebP)."), error && /*#__PURE__*/React.createElement("div", {
+  }, "never"), " shown publicly: without a profile photo we display only your initials. Image files only (JPG, PNG, WebP)."), error && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "8px 12px",
       marginBottom: 12,
@@ -2987,7 +2987,8 @@ const MyProfileView = ({
   const hs = p.highSchool || {};
   const u = p.university || {};
   const lvl = window.BrialStore.DEGREE_LEVELS && window.BrialStore.DEGREE_LEVELS[u.degreeLevel] || null;
-  const photoUrl = per.photoFile ? per.photoFile.url || (window.brialSupabase && (per.photoFile.path || per.photoFile.key) ? window.brialSupabase.publicUrl(per.photoFile.path || per.photoFile.key) : "") : "";
+  const pic = per.showcasePhoto || null;
+  const photoUrl = pic ? pic.url || (window.brialSupabase && (pic.path || pic.key) ? window.brialSupabase.publicUrl(pic.path || pic.key) : "") : "";
   return /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 28
@@ -3066,8 +3067,8 @@ const MyProfileView = ({
       textTransform: "uppercase",
       marginBottom: 8
     }
-  }, "Biometric Photo"), per.photoFile ? /*#__PURE__*/React.createElement("div", {
-    onClick: () => window.BrialFiles.open(per.photoFile),
+  }, "Profile photo"), pic ? /*#__PURE__*/React.createElement("div", {
+    onClick: () => window.BrialFiles.open(pic),
     style: {
       width: 120,
       height: 152,
@@ -3078,7 +3079,7 @@ const MyProfileView = ({
     }
   }, /*#__PURE__*/React.createElement("img", {
     src: photoUrl,
-    alt: "Biometric",
+    alt: "Profile",
     style: {
       width: "100%",
       height: "100%",
@@ -3099,7 +3100,21 @@ const MyProfileView = ({
       textAlign: "center",
       padding: 12
     }
-  }, "No photo")), /*#__PURE__*/React.createElement("div", {
+  }, "No photo"), per.photoFile && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => window.BrialFiles.open(per.photoFile),
+    style: {
+      marginTop: 10,
+      padding: 0,
+      background: "none",
+      border: "none",
+      color: "#C9A961",
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 12,
+      cursor: "pointer",
+      textDecoration: "underline"
+    }
+  }, "View ID card / passport")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
@@ -3712,7 +3727,8 @@ const SH = (() => {
     "High school": "Sekolah menengah",
     "Graduation year": "Tahun lulus",
     "Final grade": "Nilai akhir",
-    "Biometric photo": "Pas foto",
+    "ID card / passport": "KTP / paspor",
+    "Profile photo": "Foto profil",
     "Report card": "Rapor",
     "Student card": "Kartu mahasiswa",
     "Not provided": "Tidak ada",
@@ -4173,7 +4189,7 @@ select.bsp-input option{background:#0A1628}
     const p = applicant.profile || {};
     const u = p.university || {};
     const per = p.personal || {};
-    const photo = per.showcasePhoto || (isImage(per.photoFile) ? per.photoFile : null);
+    const photo = per.showcasePhoto || null;
     const url = fileUrl(photo);
     const chip = {
       active: ["ok", "Active scholar"],
@@ -4302,7 +4318,7 @@ select.bsp-input option{background:#0A1628}
     const p = applicant.profile || {};
     const per = p.personal || {}, hs = p.highSchool || {}, u = p.university || {};
     const lvl = window.BrialStore.DEGREE_LEVELS && window.BrialStore.DEGREE_LEVELS[u.degreeLevel];
-    const docs = [["Biometric photo", per.photoFile], ["Report card", hs.raporFile], ["Student card", u.studentCardFile]];
+    const docs = [["ID card / passport", per.photoFile], ["Report card", hs.raporFile], ["Student card", u.studentCardFile]];
     return /* @__PURE__ */ React.createElement("div", { className: "bsp-two" }, /* @__PURE__ */ React.createElement(PublicPhoto, { applicant, store }), /* @__PURE__ */ React.createElement("div", { className: "bsp-stack" }, /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Personal details")), /* @__PURE__ */ React.createElement("dl", { className: "bsp-dl" }, /* @__PURE__ */ React.createElement(Row, { label: "Full name", value: titleCase(per.fullName || applicant.name) }), /* @__PURE__ */ React.createElement(Row, { label: "Email", value: applicant.email }), /* @__PURE__ */ React.createElement(Row, { label: "Date of birth", value: per.dateOfBirth ? date(per.dateOfBirth) : "" }), /* @__PURE__ */ React.createElement(Row, { label: "Phone", value: per.phone }), /* @__PURE__ */ React.createElement(Row, { label: "Country", value: titleCase(per.country) }), /* @__PURE__ */ React.createElement(Row, { label: "National ID", value: per.nationalId }), /* @__PURE__ */ React.createElement(Row, { label: "Address", value: per.address, wide: true }))), /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Education")), /* @__PURE__ */ React.createElement("dl", { className: "bsp-dl" }, /* @__PURE__ */ React.createElement(Row, { label: "University", value: instCase(u.name) }), /* @__PURE__ */ React.createElement(Row, { label: "Study programme", value: instCase(u.program) }), /* @__PURE__ */ React.createElement(Row, { label: "Programme", value: lvl ? lvl.label : u.degreeLevel }), /* @__PURE__ */ React.createElement(Row, { label: "Current semester", value: u.currentSemester }), /* @__PURE__ */ React.createElement(Row, { label: "GPA at application", value: u.currentGPA }), /* @__PURE__ */ React.createElement(Row, { label: "Tuition per semester", value: u.uktPerSemester ? money(u.uktPerSemester) : "" }), /* @__PURE__ */ React.createElement(Row, { label: "High school", value: instCase(hs.schoolName) }), /* @__PURE__ */ React.createElement(Row, { label: "Graduation year", value: hs.graduationYear }), /* @__PURE__ */ React.createElement(Row, { label: "Final grade", value: hs.finalGPA })), Array.isArray(hs.subjects) && hs.subjects.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3", style: { marginTop: 26, fontSize: 14 } }, t("Subject grades")), /* @__PURE__ */ React.createElement("dl", { className: "bsp-dl", style: { gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", marginTop: 12 } }, hs.subjects.map((sj, i) => /* @__PURE__ */ React.createElement("div", { key: i }, /* @__PURE__ */ React.createElement("dt", null, sj.name || "—"), /* @__PURE__ */ React.createElement("dd", null, sj.grade || "—")))))), /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Documents")), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, docs.map(([l, f]) => /* @__PURE__ */ React.createElement("div", { className: "bsp-docrow", key: l }, /* @__PURE__ */ React.createElement("div", { className: "bsp-doc-l" }, /* @__PURE__ */ React.createElement("span", null, t(l)), /* @__PURE__ */ React.createElement("b", null, f ? f.name || f.filename : t("Not provided"))), f && /* @__PURE__ */ React.createElement("button", { className: "bsp-btn ghost small", onClick: () => window.BrialFiles.open(f) }, t("View")))))), (p.essay || "").trim() && /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Application essay")), /* @__PURE__ */ React.createElement("p", { style: { margin: "14px 0 0", color: "var(--muted)", whiteSpace: "pre-wrap", fontFamily: "'Cormorant Garamond',serif", fontSize: 18, lineHeight: 1.6, maxWidth: "68ch" } }, p.essay)), /* @__PURE__ */ React.createElement("p", { className: "bsp-hint", style: { fontSize: 13 } }, t("Spot a mistake? Request a correction from the Account tab."))));
   }
   const FIELDS = [
@@ -4397,7 +4413,7 @@ select.bsp-input option{background:#0A1628}
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
     const per = ((_a = applicant.profile) == null ? void 0 : _a.personal) || {};
-    const avatar = fileUrl(per.showcasePhoto || (isImage(per.photoFile) ? per.photoFile : null));
+    const avatar = fileUrl(per.showcasePhoto || null);
     const replies = (store.listReports() || []).filter((r) => r.applicantId === applicant.id && r.status === "replied").length;
     const pendingReq = (applicant.changeRequests || []).filter((r) => r.status === "pending").length;
     return /* @__PURE__ */ React.createElement("div", { className: "bsp" }, /* @__PURE__ */ React.createElement("header", { className: "bsp-top" }, /* @__PURE__ */ React.createElement("div", { className: "bsp-top-in" }, /* @__PURE__ */ React.createElement("a", { className: "bsp-brand", href: "#/", title: t("Back to website"), onClick: (e) => {

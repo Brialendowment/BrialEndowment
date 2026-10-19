@@ -76,7 +76,7 @@ export function layout(b: Block) {
     b.body ? "\n" + stripHtml(b.body) : "",
     b.cta ? `\n${b.cta.label}: ${b.cta.href}` : "",
     b.note ? "\n" + stripHtml(b.note) : "",
-    "", "—", "The Brial Endowment · brialendowment.org · " + HELLO,
+    "", "· · ·", "The Brial Endowment · brialendowment.org · " + HELLO,
   ].join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
   return { html, text };
 }
@@ -122,7 +122,7 @@ export function receiptEmail(d: any, rc: any, opts: { copy?: boolean; note?: str
     cta: { label: "See the public ledger", href: LEDGER },
     note: `Please keep this receipt for your records. No goods or services were provided in exchange for this gift. If any detail is wrong, simply reply to this email.`,
   });
-  return { subject: `Your receipt ${rc.no} — The Brial Endowment`, ...b };
+  return { subject: `Your receipt ${rc.no} from The Brial Endowment`, ...b };
 }
 
 // ---------------------------------------------------------------- founder alerts
@@ -130,16 +130,16 @@ const deskFoot = `Sent by your website to the founder's inbox &middot; <a href="
 
 export function donationReported(d: any) {
   const b = layout({
-    pre: `${usd(d.amount)} reported by ${d.name || "a donor"} — check it against your wallet or bank.`,
+    pre: `${usd(d.amount)} reported by ${d.name || "a donor"}. Check it against your wallet or bank.`,
     kicker: "Founder alert",
     title: `New gift reported: ${usd(d.amount)}`,
-    intro: `<p style="margin:0">Someone reported a gift on the donate page. Match it with your wallet or bank, then verify it in the Treasury — the donor's receipt goes out automatically when you do.</p>`,
+    intro: `<p style="margin:0">Someone reported a gift on the donate page. Match it with your wallet or bank, then verify it in the Treasury. The donor's receipt goes out automatically when you do.</p>`,
     rows: [
-      ["Donor", esc(titleCase(d.name) || "—") + (d.anonymous ? ` <span style="color:${MUTED};font-weight:400">(wants to stay anonymous)</span>` : "")],
-      ["Email", esc(d.email || "—")],
+      ["Donor", esc(titleCase(d.name) || "Not given") + (d.anonymous ? ` <span style="color:${MUTED};font-weight:400">(wants to stay anonymous)</span>` : "")],
+      ["Email", esc(d.email || "Not given")],
       ["Country", esc(d.country || "")],
       ["Amount", usd(d.amount)],
-      ["Reference", d.txHash ? `<span style="font-family:Consolas,Menlo,monospace;font-weight:500">${esc(d.txHash)}</span>` : "—"],
+      ["Reference", d.txHash ? `<span style="font-family:Consolas,Menlo,monospace;font-weight:500">${esc(d.txHash)}</span>` : "Not given"],
       ["Reference no.", esc(d.id)],
     ],
     body: d.message ? `<b>Message</b>${quote(d.message)}` : "",
@@ -215,7 +215,7 @@ export function graduationAlert(a: any) {
 
 export function reportNew(r: any, a: any) {
   const d = r.data || {};
-  return { subject: `Help desk: ${d.subject || "new message"} — ${titleCase(a?.name || d.applicantName)}`, ...layout({
+  return { subject: `Help desk: ${d.subject || "new message"}, from ${titleCase(a?.name || d.applicantName)}`, ...layout({
     pre: `${titleCase(a?.name || d.applicantName)} wrote to the help desk.`,
     kicker: "Founder alert", title: "New message on the help desk",
     intro: `<p style="margin:0">${esc(titleCase(a?.name || d.applicantName))} sent a message from the scholar portal.</p>`,
@@ -231,18 +231,18 @@ const scholarFoot = `The Brial Endowment &middot; <a href="${SITE}" style="color
 const hi = (a: any) => `<p style="margin:0 0 12px">Dear ${esc(firstName(a.name))},</p>`;
 
 export function applicationReceived(a: any) {
-  return { subject: "We've received your application — The Brial Endowment", ...layout({
+  return { subject: "We've received your application to The Brial Endowment", ...layout({
     pre: "Your scholarship application is in. Here is what happens next.",
     kicker: "Application", title: "Your application is in",
     intro: hi(a) + `<p style="margin:0">Thank you for applying to The Brial Endowment scholarship. We have received your application and will read it carefully.</p>`,
-    body: `<p style="margin:0"><b>What happens next</b></p><p style="margin:6px 0 0">We review every application ourselves. If yours is shortlisted, we will invite you to a short online interview — you will get an email with the date and the meeting link. You can follow your status at any time in your portal.</p>`,
+    body: `<p style="margin:0"><b>What happens next</b></p><p style="margin:6px 0 0">We review every application ourselves. If yours is shortlisted, we will invite you to a short online interview. You will get an email with the date and the meeting link. You can follow your status at any time in your portal.</p>`,
     cta: portalCta, foot: scholarFoot,
   }) };
 }
 
 export function interviewInvite(a: any) {
   const link = String(a.meetingLink || "").trim();
-  return { subject: "Your scholarship interview — The Brial Endowment", ...layout({
+  return { subject: "Your scholarship interview with The Brial Endowment", ...layout({
     pre: `Interview: ${whenBoth(a.interviewAt)}`,
     kicker: "Interview", title: "You're invited to an interview",
     intro: hi(a) + `<p style="margin:0">Your application has been shortlisted. We would like to meet you in a short online interview.</p>`,
@@ -254,7 +254,7 @@ export function interviewInvite(a: any) {
 
 export function accepted(a: any) {
   const cur = (a.semesters || []).find((s: any) => s.status === "current");
-  return { subject: "Congratulations — you are a Brial Scholar", ...layout({
+  return { subject: "Congratulations, you are a Brial Scholar", ...layout({
     pre: "Your scholarship has been approved. Welcome.",
     kicker: "Scholarship", title: "Welcome, Brial Scholar",
     intro: hi(a) + `<p style="margin:0">We are delighted to tell you that your scholarship application has been <b>approved</b>. From here on, the endowment pays your tuition directly to your university, semester by semester.</p>`,
@@ -265,7 +265,7 @@ export function accepted(a: any) {
 }
 
 export function rejected(a: any) {
-  return { subject: "About your scholarship application — The Brial Endowment", ...layout({
+  return { subject: "About your scholarship application to The Brial Endowment", ...layout({
     pre: "An update on your application.",
     kicker: "Application", title: "An update on your application",
     intro: hi(a) + `<p style="margin:0">Thank you for applying to The Brial Endowment scholarship and for the time you put into your application.</p>`,
@@ -281,7 +281,7 @@ export function tuitionPaid(a: any, sem: any) {
     kicker: "Tuition", title: "Your tuition has been paid",
     intro: hi(a) + `<p style="margin:0">The endowment has paid your tuition for <b>${esc(sem?.label || "this semester")}</b> to your university.</p>`,
     rows: [["Semester", esc(sem?.label)], ["Amount", amt ? usd(amt) : ""], ["Paid on", esc(day(sem?.paidAt))], ["Payment reference", sem?.txHash ? `<span style="font-family:Consolas,Menlo,monospace;font-weight:500">${esc(sem.txHash)}</span>` : ""]],
-    body: `<p style="margin:0">At the end of the semester, please upload your results (IP / KHS) in your portal. Keep studying well — we are proud of you.</p>`,
+    body: `<p style="margin:0">At the end of the semester, please upload your results (IP / KHS) in your portal. Keep studying well. We are proud of you.</p>`,
     cta: portalCta, foot: scholarFoot,
   }) };
 }
@@ -319,7 +319,7 @@ export function scholarStatus(a: any, status: string, from: string) {
   }) };
   return { subject: "Your scholarship is active again", ...layout({
     pre: "Your scholarship has been reactivated.", kicker: "Scholarship", title: "Your scholarship is active again",
-    intro: hi(a) + `<p style="margin:0">Good news — your scholarship is <b>active</b> again${from === "suspended" ? " after the pause" : ""}. Tuition payments continue as before.</p>`,
+    intro: hi(a) + `<p style="margin:0">Good news: your scholarship is <b>active</b> again${from === "suspended" ? " after the pause" : ""}. Tuition payments continue as before.</p>`,
     rows: reason, cta: portalCta, foot: scholarFoot,
   }) };
 }
@@ -336,7 +336,7 @@ export function reportReply(r: any, a: any) {
 }
 
 export function testEmail(to: string) {
-  return { subject: "Test email — The Brial Endowment", ...layout({
+  return { subject: "Test email from The Brial Endowment", ...layout({
     pre: "Email from brialendowment.org is working.",
     kicker: "Test", title: "Email is working",
     intro: `<p style="margin:0">This test was sent from the Founder Console. If you are reading it at <b>${esc(to)}</b>, the website can send email from brialendowment.org and your inbox receives it.</p>`,
@@ -392,7 +392,7 @@ export function billReminder(a: any, sem: any) {
     pre: `Upload your ${sem?.label || ""} UKT bill so the endowment can pay it on time.`,
     kicker: "Reminder", title: "Time to upload your tuition bill",
     intro: hi(a) + `<p style="margin:0">A new semester is coming. So that the endowment can pay your tuition for <b>${esc(sem?.label || "the next semester")}</b> on time, please upload the official bill (UKT) as soon as your university issues it.</p>`,
-    body: `<p style="margin:0"><b>How</b></p><p style="margin:6px 0 0">1. Download the bill from your university's portal.<br>2. Sign in to your Brial Scholar portal and open ${esc(sem?.label || "the semester")}.<br>3. Upload the bill with the amount and the payment deadline.</p><p style="margin:14px 0 0;color:${MUTED};font-size:14px">Already uploaded it? Then there is nothing to do — thank you.</p>`,
+    body: `<p style="margin:0"><b>How</b></p><p style="margin:6px 0 0">1. Download the bill from your university's portal.<br>2. Sign in to your Brial Scholar portal and open ${esc(sem?.label || "the semester")}.<br>3. Upload the bill with the amount and the payment deadline.</p><p style="margin:14px 0 0;color:${MUTED};font-size:14px">Already uploaded it? Then there is nothing to do. Thank you.</p>`,
     cta: portalCta, foot: scholarFoot,
   }) };
 }
@@ -402,7 +402,7 @@ export function resultsReminder(a: any, sem: any) {
     pre: `Upload your IP / KHS for ${sem?.label || "last semester"}.`,
     kicker: "Reminder", title: "How did your semester go?",
     intro: hi(a) + `<p style="margin:0">The results for <b>${esc(sem?.label || "your last semester")}</b> should be out by now. Please upload your IP / KHS in your portal, together with your GPA.</p>`,
-    body: `<p style="margin:0">Your results keep your scholarship record complete and help us support you well. Whatever the grades, we are behind you.</p><p style="margin:14px 0 0;color:${MUTED};font-size:14px">Already uploaded them? Then there is nothing to do — thank you.</p>`,
+    body: `<p style="margin:0">Your results keep your scholarship record complete and help us support you well. Whatever the grades, we are behind you.</p><p style="margin:14px 0 0;color:${MUTED};font-size:14px">Already uploaded them? Then there is nothing to do. Thank you.</p>`,
     cta: portalCta, foot: scholarFoot,
   }) };
 }

@@ -315,6 +315,15 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-mlog-i small{font-size:12px;color:var(--faint);overflow-wrap:anywhere}
 .fd-mlog-i .fd-tag{justify-self:end}
 .fd-mprev{width:100%;height:560px;border:0;border-radius:10px;background:#F5F2EA}
+button.fd-mlog-i{width:calc(100% + 16px);margin:0 -8px;padding:11px 8px;background:none;border:0;border-top:1px solid var(--line);border-radius:8px;color:inherit;font:inherit;text-align:left;cursor:pointer}
+button.fd-mlog-i:first-child{border-top:0}
+button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97,.07);outline:none}
+.fd-mread-meta{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;margin:0 0 14px;font-size:13px}
+.fd-mread-meta dt{color:var(--faint)}
+.fd-mread-meta dd{margin:0;overflow-wrap:anywhere}
+.fd-mread-note{margin:0 0 12px;padding:10px 12px;border-radius:8px;background:rgba(232,168,92,.08);border:1px solid rgba(232,168,92,.25);font-size:12.5px;color:var(--muted)}
+.fd-mread-text{white-space:pre-wrap;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;background:rgba(10,22,40,.45);border:1px solid var(--line);border-radius:10px;padding:16px;max-height:560px;overflow:auto;margin:0}
+.fd-mread-pdf{width:100%;height:640px;border:0;border-radius:10px;background:#fff}
 @media (max-width:1100px){.fd-mail{grid-template-columns:1fr}}
 .fd-mvis{display:none}
 @media (max-width:900px){
@@ -927,6 +936,13 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   };
   const Row = ({ label, value, wide }) => <div className={wide ? "wide" : ""}><dt>{label}</dt><dd className={value ? "" : "none"}>{value || "Not provided"}</dd></div>;
 
+  // One moment in the zones that matter: the scholar's (WIB / WITA) and the founder's (Istanbul).
+  const zonesLine = iso => {
+    const d = new Date(iso); if (isNaN(d)) return "";
+    const t = tz => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: tz });
+    return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Jakarta" }) + ", " + t("Asia/Jakarta") + " WIB · " + t("Asia/Makassar") + " WITA · " + t("Europe/Istanbul") + " Istanbul";
+  };
+
   function StagePanel({ app, store }) {
     const [date, setDate] = useState(() => new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10));
     const [time, setTime] = useState("14:30");
@@ -952,6 +968,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
               <Field label="Date"><input className="fd-input" type="date" value={date} onChange={e => setDate(e.target.value)} /></Field>
               <Field label="Time (your time zone)"><input className="fd-input" type="time" value={time} onChange={e => setTime(e.target.value)} /></Field>
             </div>
+            {!isNaN(new Date(`${date}T${time}:00`)) && <p className="fd-sub" style={{ margin: "8px 0 0" }}>{first} will see: <b style={{ color: "var(--text)" }}>{zonesLine(new Date(`${date}T${time}:00`).toISOString())}</b>. Check this before sending.</p>}
             <Field label="Meeting link" style={{ marginTop: 12 }}><input className="fd-input" type="url" value={link} onChange={e => setLink(e.target.value)} placeholder="https://meet.google.com/… or https://zoom.us/j/…" /></Field>
             <div className="fd-actions" style={{ marginTop: 14 }}><button className="fd-btn primary" disabled={!link.trim()} onClick={() => store.scheduleInterview(app.id, new Date(`${date}T${time}:00`).toISOString(), link.trim())}>Send invitation</button>{!link.trim() && <small className="fd-sub" style={{ margin: 0 }}>Add the meeting link first.</small>}</div>
           </>
@@ -960,6 +977,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
           <>
             <div className="fd-stage-k">Interview booked</div>
             <h3 className="fd-h3" style={{ marginTop: 4 }}>{fdatetime(app.interviewAt)}</h3>
+            <p className="fd-sub" style={{ margin: "4px 0 0" }}>{zonesLine(app.interviewAt)}</p>
             {app.meetingLink && <div className="fd-actions" style={{ marginTop: 10 }}><a className="fd-btn ghost sm" href={/^https?:\/\//i.test(app.meetingLink) ? app.meetingLink : "https://" + app.meetingLink} target="_blank" rel="noopener noreferrer">Open meeting {ICON.ext}</a><button className="fd-btn quiet sm" onClick={() => copy(app.meetingLink)}>Copy link</button></div>}
             <div className="fd-actions" style={{ marginTop: 14 }}><button className="fd-btn primary" onClick={() => store.markInterviewDone(app.id)}>Mark interview as done</button></div>
           </>
@@ -1053,7 +1071,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
   function ProfileBlock({ app }) {
     const p = app.profile || {}, per = p.personal || {}, hs = p.highSchool || {}, u = p.university || {};
     const lvl = window.BrialStore.DEGREE_LEVELS && window.BrialStore.DEGREE_LEVELS[u.degreeLevel];
-    const docs = [["Biometric photo", per.photoFile], ["Report card", hs.raporFile], ["Student card", u.studentCardFile]];
+    const docs = [["Profile photo", per.showcasePhoto], ["ID card / passport", per.photoFile], ["Report card", hs.raporFile], ["Student card", u.studentCardFile]];
     return (
       <>
         <details className="fd-details" open>
@@ -2965,6 +2983,63 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
       ["scholar_status", "Scholarship paused, resumed or ended", "Includes the note you wrote when you changed the status."],
       ["report_reply", "Help desk reply", "Your reply, with their original message."]] },
   ];
+  // One sent email, opened from the activity list: the HTML as it went out, its plain-text
+  // version, and any PDF attachment (rebuilt on request, PDFs are never stored).
+  function MailRead({ item, store, onClose }) {
+    const [m, setM] = useState(null);
+    const [err, setErr] = useState("");
+    const [view, setView] = useState("html");
+    const [pdf, setPdf] = useState(null);
+    const [busy, setBusy] = useState(false);
+    useEffect(() => {
+      let live = true;
+      store.mailView(item.id).then(r => { if (live) setM(r); }).catch(() => { if (live) setErr("Could not open this email. Check your connection and try again."); });
+      return () => { live = false; };
+    }, [item.id]);
+    useEffect(() => () => { if (pdf) URL.revokeObjectURL(pdf.url); }, [pdf]);
+    const openPdf = async i => {
+      setBusy(true);
+      try { const r = await store.mailPdf(item.id, i); setPdf(old => { if (old) URL.revokeObjectURL(old.url); return r; }); setView("pdf"); }
+      catch (e) { setErr("Could not rebuild the PDF. The record it came from may have changed."); }
+      setBusy(false);
+    };
+    const title = (m && m.subject) || item.subject || (item.kind === "message" ? MAIL_LABEL.message : MAIL_LABEL[item.kind] || item.kind);
+    const files = (m && m.attachments) || [];
+    return (
+      <Modal wide title={title} sub={[MAIL_WORD[item.status] || item.status, fdatetime(item.sentAt || item.createdAt)].filter(Boolean).join(" · ")} onClose={onClose}>
+        {err && <div className="fd-msg err" style={{ marginBottom: 12 }}>{err}</div>}
+        {!m && !err && <p className="fd-sub">Opening…</p>}
+        {m && m.skipped && (
+          <p className="fd-sub" style={{ marginTop: 0 }}>This email was not sent, so there is nothing to read. Reason: {m.skipped}.</p>
+        )}
+        {m && !m.skipped && (
+          <>
+            <dl className="fd-mread-meta">
+              <dt>From</dt><dd>{m.from || "Not recorded"}</dd>
+              <dt>To</dt><dd>{m.to || item.to || "Not recorded"}</dd>
+              {m.replyTo && <><dt>Replies go to</dt><dd>{m.replyTo}</dd></>}
+              <dt>Subject</dt><dd>{m.subject}</dd>
+              {files.length > 0 && <><dt>Attached</dt><dd>{files.join(", ")}</dd></>}
+              {item.status === "failed" && item.error && <><dt>Error</dt><dd style={{ color: "var(--rose)" }}>{item.error}</dd></>}
+            </dl>
+            {m.rebuilt && <p className="fd-mread-note">Sent before 19 October 2026, when copies started being kept. This is the same template rebuilt from today's records, so the wording matches what went out, but details that changed since (a date, a status) show their current value.</p>}
+            <div className="fd-actions" style={{ marginBottom: 12 }}>
+              <button className={"fd-btn sm " + (view === "html" ? "primary" : "ghost")} onClick={() => setView("html")}>Email</button>
+              <button className={"fd-btn sm " + (view === "text" ? "primary" : "ghost")} onClick={() => setView("text")}>Plain text</button>
+              {files.map((f, i) => (
+                <button key={f} className={"fd-btn sm " + (view === "pdf" && pdf && pdf.filename === f ? "primary" : "ghost")} disabled={busy} onClick={() => openPdf(i)}>{ICON.pdf}{busy ? "Preparing…" : files.length > 1 ? f : "PDF attachment"}</button>
+              ))}
+              {view === "pdf" && pdf && <><a className="fd-btn quiet sm" href={pdf.url} target="_blank" rel="noopener">Open in a new tab</a><a className="fd-btn quiet sm" href={pdf.url} download={pdf.filename}>Download</a></>}
+            </div>
+            {view === "html" && <iframe className="fd-mprev" title="Email as sent" sandbox="" srcDoc={m.html} />}
+            {view === "text" && <pre className="fd-mread-text">{m.text || "No plain-text version."}</pre>}
+            {view === "pdf" && pdf && <iframe className="fd-mread-pdf" title={pdf.filename} src={pdf.url} />}
+          </>
+        )}
+      </Modal>
+    );
+  }
+
   const MAIL_LABEL = { test: "Test email" };
   MAIL_GROUPS.forEach(g => g.items.forEach(([k, l]) => { MAIL_LABEL[k] = l; }));
   const MAIL_TONE = { sent: "ok", pending: "warn", sending: "warn", skipped: "", failed: "bad" };
@@ -3099,6 +3174,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
     const [busy, setBusy] = useState("");
     const [prev, setPrev] = useState(null);
     const [compose, setCompose] = useState(false);
+    const [reading, setReading] = useState(null);
     const [m, flash] = useFlash();
     const keep = st => { const norm = { founderTo: st.founderTo || "hello@brialendowment.org", paused: !!st.paused, kinds: st.kinds || {}, reminders: { ...DEFAULT_REM, ...(st.reminders || {}) } }; svRef.current = norm; setSv(norm); return norm; };
     const load = useCallback(async () => {
@@ -3194,14 +3270,14 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             ))}
           </div>
           <aside className="fd-card fd-site-prev">
-            <div className="fd-card-head" style={{ marginBottom: 6 }}><div><div className="fd-stage-k">Activity</div><p className="fd-sub" style={{ margin: "4px 0 0" }}>The latest emails, newest first.</p></div><button className="fd-btn quiet sm" onClick={load}>Refresh</button></div>
+            <div className="fd-card-head" style={{ marginBottom: 6 }}><div><div className="fd-stage-k">Activity</div><p className="fd-sub" style={{ margin: "4px 0 0" }}>The latest emails, newest first. Click one to read it.</p></div><button className="fd-btn quiet sm" onClick={load}>Refresh</button></div>
             {log.length === 0 ? <p className="fd-sub">Nothing sent yet.</p> : (
               <div className="fd-mlog">{log.map(x => (
-                <div className="fd-mlog-i" key={x.id}>
+                <button type="button" className="fd-mlog-i" key={x.id} onClick={() => setReading(x)} title="Open this email">
                   <b>{x.kind === "message" ? (x.subject || MAIL_LABEL.message) : (MAIL_LABEL[x.kind] || x.kind)}</b><Tag tone={MAIL_TONE[x.status]}>{MAIL_WORD[x.status] || x.status}</Tag>
-                  <small>{[x.to, fdatetime(x.sentAt || x.createdAt)].filter(Boolean).join(" · ")}</small><span />
+                  <small>{[x.to, fdatetime(x.sentAt || x.createdAt)].filter(Boolean).join(" · ")}{x.files > 0 ? " · PDF" : ""}</small><span />
                   {x.error && x.status !== "sent" && <small style={{ gridColumn: "1 / -1", color: x.status === "failed" ? "var(--rose)" : "var(--faint)" }}>{x.error}</small>}
-                </div>
+                </button>
               ))}</div>
             )}
           </aside>
@@ -3215,6 +3291,7 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
             </div>
           </div>
         )}
+        {reading && <MailRead item={reading} store={store} onClose={() => setReading(null)} />}
         {compose && <Composer store={store} onClose={() => setCompose(false)} onSent={n => { flash(`${n} ${plural(n, "email is", "emails are")} on the way.`); setTimeout(load, 5000); setTimeout(load, 15000); }} />}
         {prev && (
           <Modal wide title={prev.subject} sub={"From " + prev.from + " · sample data"} onClose={() => setPrev(null)}>

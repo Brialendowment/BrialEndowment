@@ -215,7 +215,8 @@ window.BrialClipboard = { copy: copyToClipboard };
   const emptyProfile = () => ({
     personal: {
       fullName: "", dateOfBirth: "", phone: "", country: "", address: "", nationalId: "",
-      photoFile: null,
+      showcasePhoto: null, // profile photo, public on the Scholars page once awarded
+      photoFile: null,     // ID card / passport, private
     },
     highSchool: {
       schoolName: "", graduationYear: "", finalGPA: "",
@@ -292,9 +293,8 @@ window.BrialClipboard = { copy: copyToClipboard };
     try {
       (_applicants || []).filter(a => a.status === "accepted" && !a.deleted).forEach(a => {
         const p = (a.profile && a.profile.personal) || {};
-        const sp = p.showcasePhoto, pf = p.photoFile;
+        const sp = p.showcasePhoto;
         if (sp && (sp.url || sp.path)) urls.push(sp.url || pub(sp.path));
-        else if (pf && /\.(png|jpe?g|webp|gif)$/i.test(pf.name || pf.filename || pf.path || "") && (pf.url || pf.path)) urls.push(pf.url || pub(pf.path));
       });
     } catch (e) {}
     try {
@@ -349,7 +349,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     const p = applicant.profile;
     const personalOk = p.personal.fullName && p.personal.dateOfBirth && p.personal.phone &&
       p.personal.country && p.personal.address && p.personal.nationalId &&
-      p.personal.photoFile;
+      p.personal.showcasePhoto && p.personal.photoFile;
     const hsOk = p.highSchool.schoolName && p.highSchool.graduationYear && p.highSchool.finalGPA &&
       p.highSchool.raporFile && p.highSchool.subjects.length >= 3 &&
       p.highSchool.subjects.every(s => (s.name || "").trim() && (s.grade || "").toString().trim());
@@ -365,7 +365,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     const personalFields = ["fullName","dateOfBirth","phone","country","address","nationalId"];
     const hsFields = ["schoolName","graduationYear","finalGPA"];
     const uniFields = ["name","program","degreeLevel","currentSemester","currentGPA","uktPerSemester"];
-    const personalDone = personalFields.filter(f => p.personal[f]).length + (p.personal.photoFile ? 1 : 0);
+    const personalDone = personalFields.filter(f => p.personal[f]).length + (p.personal.showcasePhoto ? 1 : 0) + (p.personal.photoFile ? 1 : 0);
     const hsBase = hsFields.filter(f => p.highSchool[f]).length;
     const subjectsTarget = Math.max(p.highSchool.subjects.length, 3);
     const hsGrades = p.highSchool.subjects.filter(s => (s.name || "").trim() && (s.grade || "").toString().trim()).length;
@@ -374,7 +374,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     const uniFile = p.university.studentCardFile ? 1 : 0;
     const essayLen = (p.essay || "").trim().length;
     return {
-      personal: personalDone / (personalFields.length + 1),
+      personal: personalDone / (personalFields.length + 2),
       hs: (hsBase + hsGrades + hsFile) / (hsFields.length + subjectsTarget + 1),
       uni: (uniDone + uniFile) / (uniFields.length + 1),
       essay: Math.min(1, essayLen / 100),
@@ -1079,6 +1079,16 @@ window.BrialClipboard = { copy: copyToClipboard };
     mailPreview() { return Store._mailFn({ action: "preview", kind: "receipt" }); },
     sendMessage(msg) { return Store._mailRpc("be_mail_send_message", { p_msg: msg }); },
     previewMessage(msg) { return Store._mailFn({ action: "preview_message", message: msg }); },
+    // A sent email as it went out (or rebuilt for emails older than 19 Oct 2026).
+    mailView(id) { return Store._mailFn({ action: "mail_view", id }); },
+    // A PDF that was attached to a sent email, rebuilt on request (PDFs are never stored).
+    async mailPdf(id, index) {
+      const r = await Store._mailFn({ action: "mail_pdf", id, index: index || 0 });
+      if (!r || !r.base64) throw new Error((r && r.skipped) || "no_attachment");
+      const bin = atob(r.base64); const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return { filename: r.filename || "attachment.pdf", url: URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })) };
+    },
     async downloadReceiptPdf(donationId, sample) {
       const r = await Store._mailFn(sample ? { action: "sample_pdf" } : { action: "receipt_pdf", donationId });
       const bin = atob(r.base64); const bytes = new Uint8Array(bin.length);

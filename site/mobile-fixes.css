@@ -180,6 +180,12 @@
   div[style*="grid-template-columns: 220px 1fr"] {
     grid-template-columns: 1fr !important;
   }
+  /* application form: section list above the form on phones */
+  div[style*="grid-template-columns: 280px 1fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 20px !important;
+  }
+  div[style*="grid-template-columns: 280px 1fr"] > aside { position: static !important; }
   div[style*="grid-template-columns: repeat(2, 1fr)"] {
     grid-template-columns: 1fr !important;
   }

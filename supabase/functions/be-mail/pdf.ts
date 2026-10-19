@@ -57,14 +57,14 @@ const fold = (s: string) =>
 
 const fmtDay = (iso?: string) => {
   const d = new Date(String(iso || ""));
-  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" });
+  return isNaN(d.getTime()) ? "Not recorded" : d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" });
 };
 const money = (n: number) => (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   const A = r.ack;
-  doc.setTitle(A ? `Acknowledgement ${r.no} — The Brial Endowment` : `Receipt ${r.no} — The Brial Endowment`);
+  doc.setTitle(A ? `Acknowledgement ${r.no}, The Brial Endowment` : `Receipt ${r.no}, The Brial Endowment`);
   doc.setAuthor("The Brial Endowment");
   doc.setSubject(A ? "Acknowledgement of contribution" : "Official donation receipt");
   doc.setCreator("brialendowment.org");
@@ -158,13 +158,13 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
     ["Programme", A.programme || "The Brial Endowment"],
     ["Date of contribution", fmtDay(A.date)],
     ["Delivered through", "The Brial Endowment"],
-    ["Payment reference", r.reference || "—"],
+    ["Payment reference", r.reference || "Not given"],
     ["Currency", "United States dollar (USD)"],
   ] : [
     ["Gift reported on", fmtDay(r.reportedAt)],
     ["Verified on", fmtDay(r.verifiedAt || r.issuedAt)],
-    ["Payment reference", r.reference || "—"],
-    ["Designation", "The Brial Endowment — general endowment fund"],
+    ["Payment reference", r.reference || "Not given"],
+    ["Designation", "General endowment fund"],
     ["Currency", "United States dollar (USD)"],
   ];
   page.drawRectangle({ x: M, y: y - rows.length * 30 + 8, width: W - 2 * M, height: rows.length * 30 + 14, color: PAPER, borderColor: LINE, borderWidth: 0.8 });
@@ -209,7 +209,7 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
   // footer
   page.drawLine({ start: { x: M, y: 70 }, end: { x: W - M, y: 70 }, thickness: 0.6, color: LINE });
   text(page, "The Brial Endowment  ·  brialendowment.org  ·  hello@brialendowment.org", M, 52, F.sans, 8.5, MUTED);
-  text(page, "Issued electronically — valid without a handwritten signature.", M, 39, F.sans, 8.5, MUTED);
+  text(page, "Issued electronically and valid without a handwritten signature.", M, 39, F.sans, 8.5, MUTED);
   text(page, r.no, W - M, 52, F.sansBold, 8.5, MUTED, { align: "right" });
 
   if (r.sample) {

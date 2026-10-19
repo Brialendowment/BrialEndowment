@@ -1,4 +1,4 @@
-// Brial Endowment — email worker (receipts and notices), sent through Resend.
+// Brial Endowment: email worker (receipts and notices), sent through Resend.
 //
 // POST { action: "drain" }            header x-be-hook: <secret from be_private.mail_settings>
 //   Called by the database (pg_net) right after an event is queued, and by a
@@ -8,6 +8,11 @@
 // POST { action: "receipt_pdf", donationId }   Authorization: founder session
 // POST { action: "sample_pdf" }                Authorization: founder session
 // POST { action: "preview", kind: "receipt" }  Authorization: founder session
+// POST { action: "mail_view", id }             Authorization: founder session
+//   The email as it went out (stored since 19 Oct 2026), or rebuilt from the
+//   current records for older ones.
+// POST { action: "mail_pdf", id, index }       Authorization: founder session
+//   A PDF attached to that email, rebuilt from the same records.
 //
 // Secrets: RESEND_API_KEY (a sending-only key limited to brialendowment.org).
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -76,18 +81,20 @@ function receiptData(d: any, rc: any): ReceiptData {
 type Mail = { to: string; from: string; replyTo?: string; subject: string; html: string; text: string; attachments?: { filename: string; content: string }[] };
 type Built = Mail | { skip: string };
 
-async function build(row: any, settings: any): Promise<Built> {
+// view = true rebuilds an email that was already sent, for reading: the checks that
+// stop a stale email from going out are skipped, nothing is sent.
+async function build(row: any, settings: any, view = false): Promise<Built> {
   const kind = row.kind as string, p = row.payload || {};
   const founderTo = isEmail(settings.founderTo) ? settings.founderTo : R.HELLO;
 
   if (kind === "test") return { to: founderTo, from: FROM.desk, replyTo: R.HELLO, ...R.testEmail(founderTo) };
-  if (kind === "message") return await composeMessage(p);
+  if (kind === "message") return await composeMessage(p, view ? row.sent_at || row.created_at : undefined);
 
   if (kind === "receipt" || kind === "donation_reported") {
     const d = donationDoc(await one("donations", row.ref));
     if (!d) return { skip: "gift no longer exists" };
     if (kind === "donation_reported") {
-      if (d.verified) return { skip: "already verified" };
+      if (d.verified && !view) return { skip: "already verified" };
       return { to: founderTo, from: FROM.desk, replyTo: isEmail(d.email) ? d.email : R.HELLO, ...R.donationReported(d) };
     }
     if (!d.verified) return { skip: "gift is not verified" };
@@ -123,10 +130,10 @@ async function build(row: any, settings: any): Promise<Built> {
     case "application_submitted": return toFounder(R.applicationSubmitted(a));
     case "application_received": return toScholar(R.applicationReceived(a));
     case "interview":
-      if (a.status !== "interview-scheduled") return { skip: "interview no longer scheduled" };
+      if (!view && a.status !== "interview-scheduled") return { skip: "interview no longer scheduled" };
       return toScholar(R.interviewInvite(a));
-    case "accepted": return a.status === "accepted" ? toScholar(R.accepted(a)) : { skip: "no longer accepted" };
-    case "rejected": return a.status === "rejected" ? toScholar(R.rejected(a)) : { skip: "decision changed" };
+    case "accepted": return view || a.status === "accepted" ? toScholar(R.accepted(a)) : { skip: "no longer accepted" };
+    case "rejected": return view || a.status === "rejected" ? toScholar(R.rejected(a)) : { skip: "decision changed" };
     case "tuition_paid": return sem ? toScholar(R.tuitionPaid(a, sem)) : { skip: "semester not found" };
     case "bill_uploaded": return sem ? toFounder(R.billUploaded(a, sem)) : { skip: "semester not found" };
     case "ip_uploaded": return sem ? toFounder(R.ipUploaded(a, sem)) : { skip: "semester not found" };
@@ -135,16 +142,16 @@ async function build(row: any, settings: any): Promise<Built> {
     case "scholar_status": return toScholar(R.scholarStatus(a, p.status, p.from));
     case "graduation": return toFounder(R.graduationAlert(a));
     case "interview_reminder":
-      if (a.status !== "interview-scheduled" || !(new Date(a.interviewAt).getTime() > Date.now())) return { skip: "interview no longer upcoming" };
+      if (!view && (a.status !== "interview-scheduled" || !(new Date(a.interviewAt).getTime() > Date.now()))) return { skip: "interview no longer upcoming" };
       return toScholar(R.interviewReminder(a));
-    case "bill_reminder": return sem && sem.status === "current" ? toScholar(R.billReminder(a, sem)) : { skip: "bill already uploaded" };
-    case "results_reminder": return sem && sem.status === "paid" ? toScholar(R.resultsReminder(a, sem)) : { skip: "results already uploaded" };
-    case "bill_due": return sem && sem.status === "bill-uploaded" ? toFounder(R.billDue(a, sem, p.stage)) : { skip: "bill already paid" };
+    case "bill_reminder": return sem && (view || sem.status === "current") ? toScholar(R.billReminder(a, sem)) : { skip: "bill already uploaded" };
+    case "results_reminder": return sem && (view || sem.status === "paid") ? toScholar(R.resultsReminder(a, sem)) : { skip: "results already uploaded" };
+    case "bill_due": return sem && (view || sem.status === "bill-uploaded") ? toFounder(R.billDue(a, sem, p.stage)) : { skip: "bill already paid" };
   }
   return { skip: "unknown kind " + kind };
 }
 
-async function composeMessage(p: any): Promise<Built> {
+async function composeMessage(p: any, issuedAt?: string): Promise<Built> {
   const to = String(p.to || "").trim();
   if (!isEmail(to)) return { skip: "no email address" };
   const ack = p.ack && Number(p.ack.amount) > 0 ? { ...p.ack, amount: Number(p.ack.amount), no: p.ack.no || ackNo(p.ack.date, to) } : null;
@@ -152,7 +159,7 @@ async function composeMessage(p: any): Promise<Built> {
   const out: Mail = { to, from: SENDERS[p.from] || SENDERS.hello, replyTo: R.HELLO, ...m };
   if (ack && ack.pdf) {
     const pdf = await receiptPdf({ no: ack.no, amount: ack.amount, donorName: String(ack.name || "").trim() || "A friend of the endowment", email: to,
-      issuedAt: new Date().toISOString(), reference: String(ack.reference || "").trim(), ack: { programme: String(ack.programme || ""), date: ack.date } });
+      issuedAt: issuedAt || new Date().toISOString(), reference: String(ack.reference || "").trim(), ack: { programme: String(ack.programme || ""), date: ack.date } });
     out.attachments = [{ filename: `Brial-Endowment-Acknowledgement-${ack.no}.pdf`, content: b64(pdf) }];
   }
   return out;
@@ -182,6 +189,13 @@ async function send(m: Mail, key: string): Promise<{ ok: true; id: string } | { 
   }
 }
 
+// The copy the founder can read later. Attachments are kept by name only; PDFs are rebuilt on request.
+async function keepCopy(id: number, m: Mail) {
+  const { error } = await admin.rpc("be_mail_store", { p_id: id, p_from: m.from, p_reply_to: m.replyTo || null, p_html: m.html, p_text: m.text,
+    p_attachments: (m.attachments || []).map(a => ({ filename: a.filename })) });
+  if (error) console.error("be-mail keepCopy", id, error.message);
+}
+
 const done = (id: number, status: string, to: string | null, subject: string | null, resendId: string | null, error: string | null) =>
   admin.rpc("be_mail_done", { p_id: id, p_status: status, p_to: to, p_subject: subject, p_resend_id: resendId, p_error: error });
 
@@ -198,11 +212,12 @@ async function drain() {
     for (const row of rows) {
       const enabled = row.kind === "test" || row.kind === "message" || (settings.kinds || {})[row.kind] !== false;
       if (!enabled) { await done(row.id, "skipped", null, null, null, "turned off in settings"); skipped++; continue; }
-      if (budget <= 0) { await done(row.id, "wait", null, null, null, "daily sending limit reached — will retry"); continue; }
+      if (budget <= 0) { await done(row.id, "wait", null, null, null, "daily sending limit reached, will retry"); continue; }
       let m: Built;
       try { m = await build(row, settings); }
       catch (e) { await done(row.id, "retry", null, null, null, "build: " + String((e as Error)?.message || e)); failed++; continue; }
       if ("skip" in m) { await done(row.id, "skipped", null, null, null, m.skip); skipped++; continue; }
+      await keepCopy(row.id, m);
       const r = await send(m, `be-mail-${row.id}`);
       if (r.ok) { await done(row.id, "sent", m.to, m.subject, r.id, null); sent++; budget--; }
       else { await done(row.id, r.retry ? "retry" : "failed", m.to, m.subject, null, r.error); failed++; }
@@ -260,6 +275,28 @@ Deno.serve(async (req) => {
       const ack = p.ack && Number(p.ack.amount) > 0 ? { ...p.ack, amount: Number(p.ack.amount) } : null;
       const m = R.messageEmail({ subject: String(p.subject || "(no subject)").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign !== false, ack });
       return json({ subject: m.subject, html: m.html, from: SENDERS[p.from] || SENDERS.hello });
+    }
+    if (body?.action === "mail_view" || body?.action === "mail_pdf") {
+      const id = Number(body.id);
+      if (!Number.isInteger(id) || id <= 0) return json({ error: "bad_request" }, 400);
+      const { data: row, error } = await admin.rpc("be_mail_row", { p_id: id });
+      if (error) throw new Error("row: " + error.message);
+      if (!row) return json({ error: "not_found" }, 404);
+      const meta = { id: row.id, kind: row.kind, status: row.status, sentAt: row.sent_at, createdAt: row.created_at, error: row.last_error };
+      if (body.action === "mail_view" && row.html) {
+        return json({ ...meta, stored: true, from: row.from_email, to: row.to_email, replyTo: row.reply_to, subject: row.subject,
+          html: row.html, text: row.body_text, attachments: (row.attachments || []).map((a: any) => a.filename) });
+      }
+      if (row.status === "skipped") return json({ ...meta, stored: false, skipped: row.last_error || "not sent" });
+      const m = await build(row, (await ctx()).settings || {}, true);
+      if ("skip" in m) return json({ ...meta, stored: false, skipped: m.skip });
+      if (body.action === "mail_pdf") {
+        const a = (m.attachments || [])[Number(body.index) || 0];
+        if (!a) return json({ error: "no_attachment" }, 404);
+        return json({ filename: a.filename, base64: a.content });
+      }
+      return json({ ...meta, stored: false, rebuilt: true, from: m.from, to: row.to_email || m.to, replyTo: m.replyTo || null, subject: row.subject || m.subject,
+        html: m.html, text: m.text, attachments: (m.attachments || []).map(a => a.filename) });
     }
     if (body?.action === "preview") {
       const m = R.receiptEmail(SAMPLE_D, SAMPLE_RC);
