@@ -315,6 +315,15 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-mlog-i small{font-size:12px;color:var(--faint);overflow-wrap:anywhere}
 .fd-mlog-i .fd-tag{justify-self:end}
 .fd-mprev{width:100%;height:560px;border:0;border-radius:10px;background:#F5F2EA}
+.fd-ivz{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px}
+.fd-ivz span{display:flex;flex-direction:column;gap:2px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(10,22,40,.35)}
+.fd-ivz small{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.fd-ivz b{font-weight:600;font-size:13px;color:var(--text);overflow-wrap:anywhere}
+.fd-ivprev{margin-top:12px;padding:12px 14px;border:1px solid rgba(201,169,97,.3);border-radius:10px;background:rgba(201,169,97,.05);display:grid;gap:6px}
+.fd-ivprev .fd-ivz{margin-top:2px}
+.fd-ivprev small{font-size:12px;color:var(--muted)}
+@media (max-width:900px){.fd-ivz{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.fd-ivz{grid-template-columns:minmax(0,1fr)}.fd-ivz span{flex-direction:row;justify-content:space-between;align-items:baseline;gap:10px}}
 button.fd-mlog-i{width:calc(100% + 16px);margin:0 -8px;padding:11px 8px;background:none;border:0;border-top:1px solid var(--line);border-radius:8px;color:inherit;font:inherit;text-align:left;cursor:pointer}
 button.fd-mlog-i:first-child{border-top:0}
 button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97,.07);outline:none}
@@ -936,17 +945,83 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   };
   const Row = ({ label, value, wide }) => <div className={wide ? "wide" : ""}><dt>{label}</dt><dd className={value ? "" : "none"}>{value || "Not provided"}</dd></div>;
 
-  // One moment in the zones that matter: the scholar's (WIB / WITA) and the founder's (Istanbul).
-  const zonesLine = iso => {
-    const d = new Date(iso); if (isNaN(d)) return "";
-    const t = tz => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: tz });
-    return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Jakarta" }) + ", " + t("Asia/Jakarta") + " WIB · " + t("Asia/Makassar") + " WITA · " + t("Europe/Istanbul") + " Istanbul";
+  // ---- Interview times ----
+  // The founder types a time in a zone she chooses (Istanbul by default). It is stored once,
+  // as an exact moment (UTC). Every reader then sees it in their own zone: the applicant's
+  // portal in the phone's local time, emails in WIB, WITA, WIT and Istanbul.
+  // None of these zones uses daylight saving, so fixed offsets are exact.
+  const IV_ZONES = [
+    { id: "Europe/Istanbul", off: 3, short: "TRT", label: "Istanbul time, TRT (UTC+3): your time" },
+    { id: "Asia/Jakarta", off: 7, short: "WIB", label: "WIB, Jakarta and western Indonesia (UTC+7)" },
+    { id: "Asia/Makassar", off: 8, short: "WITA", label: "WITA, Makassar and central Indonesia (UTC+8)" },
+    { id: "Asia/Jayapura", off: 9, short: "WIT", label: "WIT, Jayapura and eastern Indonesia (UTC+9)" },
+  ];
+  const ivZone = id => IV_ZONES.find(z => z.id === id) || IV_ZONES[0];
+  // "2026-10-19" + "16:00" typed in a zone → the exact moment (ISO, UTC)
+  const ivToIso = (date, time, zoneId) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date || ""), t = /^(\d{2}):(\d{2})$/.exec(time || "");
+    if (!m || !t) return null;
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1] - ivZone(zoneId).off, +t[2]));
+    return isNaN(d) ? null : d.toISOString();
   };
+  // the moment → the date and time as shown in a zone
+  const ivParts = (iso, zoneId) => {
+    const d = new Date(new Date(iso).getTime() + ivZone(zoneId).off * 3600000);
+    return { date: d.toISOString().slice(0, 10), time: d.toISOString().slice(11, 16) };
+  };
+  const ivIn = (iso, z) => {
+    const d = new Date(iso); if (isNaN(d)) return "";
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: z.id }) + ", " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: z.id }) + " " + z.short;
+  };
+  function IvZones({ iso }) {
+    return <div className="fd-ivz">{IV_ZONES.map(z => <span key={z.id}><small>{z.short === "TRT" ? "Istanbul" : z.short}</small><b>{ivIn(iso, z)}</b></span>)}</div>;
+  }
+
+  function InterviewForm({ app, store, onDone }) {
+    const first = titleCase((app.name || "").split(" ")[0]);
+    const [zone, setZoneS] = useState(() => { try { return localStorage.getItem("fd-iv-zone") || "Europe/Istanbul"; } catch (e) { return "Europe/Istanbul"; } });
+    const start = app.interviewAt ? ivParts(app.interviewAt, zone) : { date: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10), time: "16:00" };
+    const [date, setDate] = useState(start.date);
+    const [time, setTime] = useState(start.time);
+    const [link, setLink] = useState(app.meetingLink || "");
+    const setZone = z => {
+      // keep the same moment when the zone changes, so switching zones never moves the interview
+      const iso = ivToIso(date, time, zone);
+      setZoneS(z); try { localStorage.setItem("fd-iv-zone", z); } catch (e) {}
+      if (iso) { const p = ivParts(iso, z); setDate(p.date); setTime(p.time); }
+    };
+    const iso = ivToIso(date, time, zone);
+    const past = iso && new Date(iso).getTime() < Date.now();
+    const same = app.interviewAt && iso && new Date(iso).getTime() === new Date(app.interviewAt).getTime() && link.trim() === (app.meetingLink || "");
+    return (
+      <>
+        <div className="fd-grid2" style={{ marginTop: 14 }}>
+          <Field label="Date"><input className="fd-input" type="date" value={date} onChange={e => setDate(e.target.value)} /></Field>
+          <Field label={"Time, in " + ivZone(zone).short}><input className="fd-input" type="time" value={time} onChange={e => setTime(e.target.value)} /></Field>
+        </div>
+        <Field label="The time above is in" style={{ marginTop: 12 }}>
+          <select className="fd-input" value={zone} onChange={e => setZone(e.target.value)}>{IV_ZONES.map(z => <option key={z.id} value={z.id}>{z.label}</option>)}</select>
+        </Field>
+        {iso && (
+          <div className="fd-ivprev">
+            <div className="fd-stage-k">The same moment everywhere</div>
+            <IvZones iso={iso} />
+            <small>{first}'s portal shows it in the time of {first}'s phone, and the email lists WIB, WITA, WIT and Istanbul.</small>
+            {past && <small style={{ color: "var(--rose)" }}>This time has already passed. Check the date.</small>}
+          </div>
+        )}
+        <Field label="Meeting link" style={{ marginTop: 12 }}><input className="fd-input" type="url" value={link} onChange={e => setLink(e.target.value)} placeholder="https://meet.google.com/… or https://zoom.us/j/…" /></Field>
+        <div className="fd-actions" style={{ marginTop: 14 }}>
+          <button className="fd-btn primary" disabled={!link.trim() || !iso || same} onClick={() => { store.scheduleInterview(app.id, iso, link.trim()); onDone && onDone(); }}>{app.interviewAt ? "Save and send the new time" : "Send invitation"}</button>
+          {onDone && <button className="fd-btn quiet" onClick={onDone}>Cancel</button>}
+          {!link.trim() && <small className="fd-sub" style={{ margin: 0 }}>Add the meeting link first.</small>}
+        </div>
+      </>
+    );
+  }
 
   function StagePanel({ app, store }) {
-    const [date, setDate] = useState(() => new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10));
-    const [time, setTime] = useState("14:30");
-    const [link, setLink] = useState(app.meetingLink || "");
+    const [moving, setMoving] = useState(false);
     const first = titleCase((app.name || "").split(" ")[0]);
     const decide = (app.status === "submitted" || app.status === "interview-scheduled" || app.status === "interview-done") && (
       <div className="fd-actions" style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
@@ -963,23 +1038,29 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <>
             <div className="fd-stage-k">Next step</div>
             <h3 className="fd-h3" style={{ marginTop: 4 }}>Book an interview</h3>
-            <p className="fd-sub">{first} will see the time, the meeting link and a join button in the portal.</p>
-            <div className="fd-grid2" style={{ marginTop: 14 }}>
-              <Field label="Date"><input className="fd-input" type="date" value={date} onChange={e => setDate(e.target.value)} /></Field>
-              <Field label="Time (your time zone)"><input className="fd-input" type="time" value={time} onChange={e => setTime(e.target.value)} /></Field>
-            </div>
-            {!isNaN(new Date(`${date}T${time}:00`)) && <p className="fd-sub" style={{ margin: "8px 0 0" }}>{first} will see: <b style={{ color: "var(--text)" }}>{zonesLine(new Date(`${date}T${time}:00`).toISOString())}</b>. Check this before sending.</p>}
-            <Field label="Meeting link" style={{ marginTop: 12 }}><input className="fd-input" type="url" value={link} onChange={e => setLink(e.target.value)} placeholder="https://meet.google.com/… or https://zoom.us/j/…" /></Field>
-            <div className="fd-actions" style={{ marginTop: 14 }}><button className="fd-btn primary" disabled={!link.trim()} onClick={() => store.scheduleInterview(app.id, new Date(`${date}T${time}:00`).toISOString(), link.trim())}>Send invitation</button>{!link.trim() && <small className="fd-sub" style={{ margin: 0 }}>Add the meeting link first.</small>}</div>
+            <p className="fd-sub">{first} gets an email with the time and the meeting link, and sees both with a join button in the portal.</p>
+            <InterviewForm app={app} store={store} />
           </>
         )}
         {app.status === "interview-scheduled" && (
           <>
             <div className="fd-stage-k">Interview booked</div>
-            <h3 className="fd-h3" style={{ marginTop: 4 }}>{fdatetime(app.interviewAt)}</h3>
-            <p className="fd-sub" style={{ margin: "4px 0 0" }}>{zonesLine(app.interviewAt)}</p>
-            {app.meetingLink && <div className="fd-actions" style={{ marginTop: 10 }}><a className="fd-btn ghost sm" href={/^https?:\/\//i.test(app.meetingLink) ? app.meetingLink : "https://" + app.meetingLink} target="_blank" rel="noopener noreferrer">Open meeting {ICON.ext}</a><button className="fd-btn quiet sm" onClick={() => copy(app.meetingLink)}>Copy link</button></div>}
-            <div className="fd-actions" style={{ marginTop: 14 }}><button className="fd-btn primary" onClick={() => store.markInterviewDone(app.id)}>Mark interview as done</button></div>
+            {moving ? (
+              <>
+                <h3 className="fd-h3" style={{ marginTop: 4 }}>Change the time</h3>
+                <p className="fd-sub">{first} gets a new email with the new time. The old time stops showing in the portal.</p>
+                <InterviewForm app={app} store={store} onDone={() => setMoving(false)} />
+              </>
+            ) : (
+              <>
+                <IvZones iso={app.interviewAt} />
+                <div className="fd-actions" style={{ marginTop: 10 }}>
+                  {app.meetingLink && <><a className="fd-btn ghost sm" href={/^https?:\/\//i.test(app.meetingLink) ? app.meetingLink : "https://" + app.meetingLink} target="_blank" rel="noopener noreferrer">Open meeting {ICON.ext}</a><button className="fd-btn quiet sm" onClick={() => copy(app.meetingLink)}>Copy link</button></>}
+                  <button className="fd-btn quiet sm" onClick={() => setMoving(true)}>Change the time or link</button>
+                </div>
+                <div className="fd-actions" style={{ marginTop: 14 }}><button className="fd-btn primary" onClick={() => store.markInterviewDone(app.id)}>Mark interview as done</button></div>
+              </>
+            )}
           </>
         )}
         {app.status === "interview-done" && (
@@ -1147,7 +1228,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             <StageTag s={app.status} />
           </div>
           <dl className="fd-dl" style={{ marginTop: 18 }}>
-            <Row label="Email" value={app.email} /><Row label="Country" value={titleCase(app.profile?.personal?.country)} /><Row label="GPA at application" value={app.profile?.university?.currentGPA} /><Row label="Interview" value={app.interviewAt ? fdatetime(app.interviewAt) : "Not booked"} />
+            <Row label="Email" value={app.email} /><Row label="Country" value={titleCase(app.profile?.personal?.country)} /><Row label="GPA at application" value={app.profile?.university?.currentGPA} /><Row label="Interview" value={app.interviewAt ? ivIn(app.interviewAt, IV_ZONES[0]) + " (" + ivIn(app.interviewAt, IV_ZONES[1]) + ")" : "Not booked"} />
           </dl>
         </div>
         <div style={{ marginTop: 16 }}><StagePanel app={app} store={store} /></div>

@@ -36,6 +36,23 @@ const fmtDateTime = iso => {
     minute: "2-digit"
   });
 };
+// The interview is stored as one exact moment; each applicant sees it in their own phone's
+// time zone, labelled, with the same moment across Indonesia's three zones underneath.
+const BRIAL_TZ_SHORT = { "Asia/Jakarta": "WIB", "Asia/Pontianak": "WIB", "Asia/Makassar": "WITA", "Asia/Jayapura": "WIT", "Europe/Istanbul": "TRT" };
+const localZoneShort = () => {
+  try {
+    const z = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (BRIAL_TZ_SHORT[z]) return BRIAL_TZ_SHORT[z];
+    const p = new Intl.DateTimeFormat("en-GB", { timeZoneName: "short" }).formatToParts(new Date()).find(x => x.type === "timeZoneName");
+    return p ? p.value : "";
+  } catch (e) { return ""; }
+};
+const idZonesLine = iso => {
+  const d = new Date(iso);
+  if (!iso || isNaN(d)) return "";
+  const t = (tz, s) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: tz }) + ", " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz }) + " " + s;
+  return [t("Asia/Jakarta", "WIB"), t("Asia/Makassar", "WITA"), t("Asia/Jayapura", "WIT")].join(" \xB7 ");
+};
 
 // ============================================================
 // EYE TOGGLE (for password fields)
@@ -1009,6 +1026,7 @@ const TimelineNode = ({
     dotColor = "rgba(232,228,220,0.2)";
   }
   return /*#__PURE__*/React.createElement("div", {
+    className: "bsp-tl-node",
     style: {
       display: "flex",
       flexDirection: "column",
@@ -1064,6 +1082,7 @@ const StatusTimeline = ({
     arr
   } = stageStateFor(applicant);
   return /*#__PURE__*/React.createElement("div", {
+    className: "bsp-timeline",
     style: {
       padding: "32px 36px",
       background: "rgba(20,36,66,0.45)",
@@ -1073,6 +1092,7 @@ const StatusTimeline = ({
       position: "relative"
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "bsp-timeline-row",
     style: {
       display: "flex",
       alignItems: "flex-start",
@@ -1080,6 +1100,7 @@ const StatusTimeline = ({
       position: "relative"
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "bsp-tl-line",
     style: {
       position: "absolute",
       top: 22,
@@ -1144,7 +1165,15 @@ const StatusPanel_Interview = ({
         marginTop: 8,
         letterSpacing: "-0.01em"
       }
-    }, fmtDateTime(applicant.interviewAt)), applicant.meetingLink ? /*#__PURE__*/React.createElement("div", {
+    }, fmtDateTime(applicant.interviewAt) + (localZoneShort() ? " " + localZoneShort() : "")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: "'Manrope', sans-serif",
+        fontSize: 12.5,
+        lineHeight: 1.6,
+        color: "rgba(232,228,220,0.6)",
+        marginTop: 6
+      }
+    }, "Shown in your phone's time zone. Across Indonesia: ", idZonesLine(applicant.interviewAt), "."), applicant.meetingLink ? /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 14,
         display: "flex",
@@ -4011,16 +4040,19 @@ select.bsp-input option{background:#0A1628}
   .bsp-cred-grid{grid-template-columns:auto 1fr}
   .bsp-cred-status{grid-column:1/-1;order:-1}
 }
-@media (max-width:720px){
+/* header: tabs move to their own row below the brand on tablets and phones */
+@media (max-width:960px){
   .bsp-top-in{height:auto;flex-wrap:wrap;padding:12px 16px 0;gap:10px 16px}
   .bsp-brand small{display:none}
   .bsp-me{margin-left:auto}
-  .bsp-me .bsp-avatar{display:none}
-  .bsp-site span{display:none}
   .bsp-tabs{order:3;width:100%;margin:0 -16px;padding:0 6px;overflow-x:auto;scrollbar-width:none;height:46px}
   .bsp-tabs::-webkit-scrollbar{display:none}
   .bsp-tab{padding:0 10px;flex-shrink:0;font-size:13.5px}
   .bsp-tab[aria-selected=true]::after{left:10px;right:10px}
+}
+@media (max-width:720px){
+  .bsp-me .bsp-avatar{display:none}
+  .bsp-site span{display:none}
   .bsp-main{padding:24px 16px 120px}
   .bsp-cred{padding:24px 22px;border-radius:18px}
   .bsp-cred-grid{grid-template-columns:1fr;gap:18px}

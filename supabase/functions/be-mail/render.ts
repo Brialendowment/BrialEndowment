@@ -26,12 +26,19 @@ export function day(iso: unknown, tz = "UTC") {
   if (isNaN(d.getTime())) return "";
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: tz });
 }
+// One moment, written for readers across Indonesia and for the founder in Istanbul.
+// A zone whose calendar day differs from Jakarta's shows its own day.
 export function whenBoth(iso: unknown) {
   const d = new Date(String(iso || ""));
   if (isNaN(d.getTime())) return "";
   const date = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
-  const t = (tz: string) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz });
-  return `${date}, ${t("Asia/Jakarta")} WIB (Jakarta) · ${t("Europe/Istanbul")} Istanbul`;
+  const ymd = (tz: string) => d.toLocaleDateString("en-CA", { timeZone: tz });
+  const part = (tz: string, label: string) => {
+    const t = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz });
+    const other = ymd(tz) !== ymd("Asia/Jakarta") ? ` (${d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: tz })})` : "";
+    return `${t} ${label}${other}`;
+  };
+  return `${date}: ${part("Asia/Jakarta", "WIB")} · ${part("Asia/Makassar", "WITA")} · ${part("Asia/Jayapura", "WIT")} · ${part("Europe/Istanbul", "Istanbul")}`;
 }
 
 type Row = [string, string];

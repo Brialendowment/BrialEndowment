@@ -278,16 +278,19 @@ select.bsp-input option{background:#0A1628}
   .bsp-cred-grid{grid-template-columns:auto 1fr}
   .bsp-cred-status{grid-column:1/-1;order:-1}
 }
-@media (max-width:720px){
+/* header: tabs move to their own row below the brand on tablets and phones */
+@media (max-width:960px){
   .bsp-top-in{height:auto;flex-wrap:wrap;padding:12px 16px 0;gap:10px 16px}
   .bsp-brand small{display:none}
   .bsp-me{margin-left:auto}
-  .bsp-me .bsp-avatar{display:none}
-  .bsp-site span{display:none}
   .bsp-tabs{order:3;width:100%;margin:0 -16px;padding:0 6px;overflow-x:auto;scrollbar-width:none;height:46px}
   .bsp-tabs::-webkit-scrollbar{display:none}
   .bsp-tab{padding:0 10px;flex-shrink:0;font-size:13.5px}
   .bsp-tab[aria-selected=true]::after{left:10px;right:10px}
+}
+@media (max-width:720px){
+  .bsp-me .bsp-avatar{display:none}
+  .bsp-site span{display:none}
   .bsp-main{padding:24px 16px 120px}
   .bsp-cred{padding:24px 22px;border-radius:18px}
   .bsp-cred-grid{grid-template-columns:1fr;gap:18px}

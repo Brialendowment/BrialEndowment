@@ -213,3 +213,34 @@
   .b-story > div { order: 0 !important; }
   .b-story .b-story-photo, .b-story-photo { min-height: 220px !important; position: relative !important; }
 }
+
+/* Application progress (5 stages): a vertical list on phones, so long stage names never overlap */
+@media (max-width: 600px) {
+  .bsp-timeline { padding: 22px 20px !important; }
+  .bsp-timeline-row { flex-direction: column !important; gap: 14px !important; }
+  .bsp-tl-line { display: none !important; }
+  .bsp-tl-node { display: grid !important; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: center !important; text-align: left !important; width: 100%; }
+  .bsp-tl-node > :first-child { grid-row: span 2; }
+  .bsp-tl-node > :nth-child(2) { margin-top: 0 !important; align-self: end; }
+  .bsp-tl-node > :nth-child(3) { align-self: start; }
+}
+/* Application form on tablets: the section list sits above the form */
+@media (max-width: 1024px) {
+  div[style*="grid-template-columns: 280px 1fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 20px !important;
+  }
+  div[style*="grid-template-columns: 280px 1fr"] > aside { position: static !important; }
+}
+/* Donate page on tablets: wallet above the form, so the form is never cut off */
+@media (max-width: 900px) {
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 28px !important;
+  }
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] > div,
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] form {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
