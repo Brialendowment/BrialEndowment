@@ -11829,8 +11829,8 @@ With gratitude,`);
     }, [narrow]);
     return /* @__PURE__ */ React.createElement("div", { ref: host, className: "fg-scene" + (narrow ? " narrow" : ""), "aria-hidden": "true" });
   }
-  const GateSound = /* @__PURE__ */ (() => {
-    let ac = null, master = null, timers = [], running = false;
+  const GateSound = (() => {
+    let ac = null, master = null, hall = null, timers = [], running = false, sched = 0, nextBar = 0, bar = 0, music = null;
     const pref = () => {
       try {
         return localStorage.getItem("fg-sound") !== "off";
@@ -11844,52 +11844,266 @@ With gratitude,`);
       } catch (e) {
       }
     };
-    const noiseBuf = (sec, pink) => {
-      const b = ac.createBuffer(2, ac.sampleRate * sec, ac.sampleRate);
+    const hz = (n) => 440 * Math.pow(2, (n - 69) / 12);
+    const noiseBuf = (sec, kind) => {
+      const b = ac.createBuffer(2, Math.round(ac.sampleRate * sec), ac.sampleRate);
       for (let ch = 0; ch < 2; ch++) {
         const d = b.getChannelData(ch);
-        let b0 = 0, b1 = 0, b2 = 0;
+        let b0 = 0, b1 = 0, b2 = 0, last = 0;
         for (let i = 0; i < d.length; i++) {
           const w = Math.random() * 2 - 1;
-          if (pink) {
+          if (kind === "pink") {
             b0 = 0.99765 * b0 + w * 0.099046;
             b1 = 0.963 * b1 + w * 0.2965164;
             b2 = 0.57 * b2 + w * 1.0526913;
             d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.18;
+          } else if (kind === "brown") {
+            last = (last + 0.02 * w) / 1.02;
+            d[i] = last * 3.5;
           } else d[i] = w;
         }
       }
       return b;
     };
-    const reverb = () => {
-      const len = ac.sampleRate * 4.5, b = ac.createBuffer(2, len, ac.sampleRate);
+    const makeHall = () => {
+      const len = Math.round(ac.sampleRate * 5.5), b = ac.createBuffer(2, len, ac.sampleRate);
       for (let ch = 0; ch < 2; ch++) {
         const d = b.getChannelData(ch);
-        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6) * (i < 400 ? i / 400 : 1);
       }
       const c = ac.createConvolver();
       c.buffer = b;
+      const g = ac.createGain();
+      g.gain.value = 0.42;
+      c.connect(g);
+      g.connect(master);
       return c;
     };
-    let wet = null;
-    function bell(freq, when, gain, pan) {
-      const t = when || ac.currentTime, out = ac.createGain(), p = ac.createStereoPanner();
+    const out = (bus, pan, dry, wet) => {
+      const p = ac.createStereoPanner();
       p.pan.value = pan || 0;
-      out.connect(p);
-      p.connect(wet);
-      p.connect(master);
-      [[1, 1], [2.76, 0.45], [5.4, 0.22], [8.9, 0.08]].forEach(([m, a]) => {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = "sine";
-        o.frequency.value = freq * m;
+      const d = ac.createGain();
+      d.gain.value = dry;
+      const w = ac.createGain();
+      w.gain.value = wet;
+      p.connect(d);
+      p.connect(w);
+      d.connect(bus);
+      w.connect(hall);
+      return p;
+    };
+    function piano(n, t, dur, vel, bus) {
+      const f = hz(n), o = out(bus, (n - 64) / 48, 0.9, 0.35), lp = ac.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 2200 + vel * 2200;
+      lp.connect(o);
+      [[1, 1], [2, 0.42], [3, 0.18], [4, 0.09], [5.02, 0.05]].forEach(([m, a], k) => {
+        const os = ac.createOscillator(), g = ac.createGain();
+        os.type = k ? "sine" : "triangle";
+        os.frequency.value = f * m;
+        os.detune.value = (Math.random() - 0.5) * 4;
+        const decay = Math.max(0.6, 3.2 - (n - 50) * 0.03) / (1 + k * 0.6);
         g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(gain * a, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(1e-4, t + 3.6 / Math.sqrt(m));
-        o.connect(g);
-        g.connect(out);
-        o.start(t);
-        o.stop(t + 4);
+        g.gain.linearRampToValueAtTime(vel * a * 0.18, t + 6e-3);
+        g.gain.exponentialRampToValueAtTime(vel * a * 0.05, t + 0.25);
+        g.gain.exponentialRampToValueAtTime(1e-4, t + Math.min(dur + 0.6, decay * 1.6));
+        os.connect(g);
+        g.connect(lp);
+        os.start(t);
+        os.stop(t + decay * 1.7);
       });
+    }
+    function celesta(n, t, vel, bus) {
+      const f = hz(n), o = out(bus, (Math.random() - 0.5) * 0.8, 0.5, 0.7);
+      [[1, 1], [4, 0.3], [7.2, 0.08]].forEach(([m, a]) => {
+        const os = ac.createOscillator(), g = ac.createGain();
+        os.type = "sine";
+        os.frequency.value = f * m;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vel * a * 0.09, t + 4e-3);
+        g.gain.exponentialRampToValueAtTime(1e-4, t + 2.2 / m);
+        os.connect(g);
+        g.connect(o);
+        os.start(t);
+        os.stop(t + 2.4);
+      });
+    }
+    function harp(n, t, vel, bus) {
+      const f = hz(n), o = out(bus, (n - 66) / 40, 0.7, 0.6), lp = ac.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 3200;
+      lp.connect(o);
+      [[1, 1], [2, 0.3], [3, 0.12]].forEach(([m, a]) => {
+        const os = ac.createOscillator(), g = ac.createGain();
+        os.type = "triangle";
+        os.frequency.value = f * m;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vel * a * 0.11, t + 3e-3);
+        g.gain.exponentialRampToValueAtTime(1e-4, t + 1.8);
+        os.connect(g);
+        g.connect(lp);
+        os.start(t);
+        os.stop(t + 1.9);
+      });
+    }
+    function strings(notes, t, dur, vel, bus) {
+      const lp = ac.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 1500;
+      lp.Q.value = 0.4;
+      const o = out(bus, 0, 0.55, 0.6);
+      lp.connect(o);
+      const env = ac.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(vel * 0.05, t + Math.min(1.2, dur * 0.4));
+      env.gain.setValueAtTime(vel * 0.05, t + dur - 0.3);
+      env.gain.linearRampToValueAtTime(0, t + dur + 0.9);
+      env.connect(lp);
+      const vib = ac.createOscillator(), vg = ac.createGain();
+      vib.frequency.value = 5.2;
+      vg.gain.value = 6;
+      vib.connect(vg);
+      vib.start(t);
+      vib.stop(t + dur + 1);
+      notes.forEach((n) => [-9, 0, 8].forEach((det) => {
+        const os = ac.createOscillator();
+        os.type = "sawtooth";
+        os.frequency.value = hz(n);
+        os.detune.value = det;
+        vg.connect(os.detune);
+        const g = ac.createGain();
+        g.gain.value = 0.33;
+        os.connect(g);
+        g.connect(env);
+        os.start(t);
+        os.stop(t + dur + 1);
+      }));
+    }
+    function choir(notes, t, dur, vel, bus) {
+      const o = out(bus, 0, 0.35, 0.9), f1 = ac.createBiquadFilter(), f2 = ac.createBiquadFilter();
+      f1.type = f2.type = "bandpass";
+      f1.frequency.value = 780;
+      f2.frequency.value = 1150;
+      f1.Q.value = 5;
+      f2.Q.value = 7;
+      const env = ac.createGain();
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(vel * 0.16, t + 1.6);
+      env.gain.setValueAtTime(vel * 0.16, t + dur - 0.4);
+      env.gain.linearRampToValueAtTime(0, t + dur + 1.4);
+      env.connect(f1);
+      env.connect(f2);
+      f1.connect(o);
+      f2.connect(o);
+      notes.forEach((n) => [-7, 7].forEach((det) => {
+        const os = ac.createOscillator();
+        os.type = "sawtooth";
+        os.frequency.value = hz(n);
+        os.detune.value = det;
+        const g = ac.createGain();
+        g.gain.value = 0.25;
+        os.connect(g);
+        g.connect(env);
+        os.start(t);
+        os.stop(t + dur + 1.6);
+      }));
+    }
+    const BEAT = 60 / 76, BAR = BEAT * 3;
+    const CH = [
+      [38, [62, 66, 69]],
+      [42, [62, 66, 69]],
+      [43, [62, 67, 71]],
+      [45, [61, 64, 69]],
+      [47, [62, 66, 71]],
+      [42, [61, 66, 69]],
+      [43, [62, 67, 71]],
+      [45, [61, 64, 69]],
+      [38, [62, 66, 69]],
+      [37, [61, 64, 69]],
+      [47, [62, 66, 71]],
+      [43, [62, 67, 71]],
+      [40, [62, 64, 67]],
+      [45, [61, 64, 67]],
+      [38, [62, 66, 69]],
+      [45, [61, 64, 69]]
+    ];
+    const MEL = [
+      [[69, 1], [74, 1], [76, 1]],
+      [[78, 2], [76, 1]],
+      [[74, 1], [71, 1], [74, 1]],
+      [[76, 3]],
+      [[78, 1], [81, 1], [78, 1]],
+      [[76, 2], [73, 1]],
+      [[74, 1], [76, 1], [71, 1]],
+      [[69, 3]],
+      [[69, 1], [74, 1], [78, 1]],
+      [[81, 2], [79, 1]],
+      [[78, 1], [74, 1], [71, 1]],
+      [[74, 2], [76, 1]],
+      [[79, 1], [78, 1], [76, 1]],
+      [[73, 1], [76, 1], [81, 1]],
+      [[78, 3]],
+      [[76, 1.5], [73, 1.5]]
+    ];
+    function playBar(i, t) {
+      const [bass, tones] = CH[i % 16], cycle = Math.floor(i / 16);
+      [bass, bass + 7, tones[1] - 12 + 12, bass + 12, tones[2], bass + 7].forEach((n, k) => piano(n, t + k * BEAT / 2, BEAT, k ? 0.32 : 0.48, music));
+      let b = 0;
+      MEL[i % 16].forEach(([n, len]) => {
+        piano(n, t + b * BEAT, len * BEAT, cycle ? 0.6 : 0.5, music);
+        b += len;
+      });
+      strings(tones.map((n) => n - 12).concat([bass + 12]), t, BAR, cycle ? 0.9 : 0.6, music);
+      if (i % 16 >= 8 || cycle) choir([tones[0], tones[2]], t, BAR, 0.6, music);
+      if (i % 8 === 0) for (let k = 0; k < 12; k++) harp(tones[k % 3] - 12 + Math.floor(k / 3) * 12, t + k * 0.06, 0.55, music);
+      if (i % 4 === 3) [tones[2] + 12, tones[0] + 24, tones[1] + 24].forEach((n, k) => celesta(n, t + BEAT * (1 + k * 0.5), 0.7, music));
+    }
+    function schedule() {
+      if (!running) return;
+      while (nextBar < ac.currentTime + 1.2) {
+        playBar(bar, nextBar);
+        nextBar += BAR;
+        bar++;
+      }
+    }
+    function ambience() {
+      const air = ac.createBufferSource();
+      air.buffer = noiseBuf(6, "pink");
+      air.loop = true;
+      const lp = ac.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = 380;
+      const g = ac.createGain();
+      g.gain.value = 0.1;
+      air.connect(lp);
+      lp.connect(g);
+      g.connect(master);
+      air.start();
+      const cricket = (pan) => {
+        const p = ac.createStereoPanner();
+        p.pan.value = pan;
+        p.connect(master);
+        const chirp = () => {
+          if (!running) return;
+          const t = ac.currentTime + 0.05, n = 3 + (Math.random() * 3 | 0);
+          for (let i = 0; i < n; i++) {
+            const o = ac.createOscillator(), e = ac.createGain();
+            o.frequency.value = 4300 + Math.random() * 300;
+            const t0 = t + i * 0.045;
+            e.gain.setValueAtTime(0, t0);
+            e.gain.linearRampToValueAtTime(4e-3, t0 + 6e-3);
+            e.gain.linearRampToValueAtTime(0, t0 + 0.03);
+            o.connect(e);
+            e.connect(p);
+            o.start(t0);
+            o.stop(t0 + 0.04);
+          }
+          timers.push(setTimeout(chirp, 1100 + Math.random() * 3e3));
+        };
+        timers.push(setTimeout(chirp, 2e3 + Math.random() * 3e3));
+      };
+      cricket(-0.7);
+      cricket(0.65);
     }
     function start() {
       if (running || !pref()) return;
@@ -11902,110 +12116,26 @@ With gratitude,`);
       }
       if (ac.state === "suspended") ac.resume();
       running = true;
+      const lim = ac.createDynamicsCompressor();
+      lim.threshold.value = -10;
+      lim.knee.value = 8;
+      lim.ratio.value = 6;
+      lim.attack.value = 4e-3;
+      lim.release.value = 0.25;
+      lim.connect(ac.destination);
       master = ac.createGain();
       master.gain.value = 0;
-      master.connect(ac.destination);
-      master.gain.linearRampToValueAtTime(0.55, ac.currentTime + 4);
-      wet = reverb();
-      const wetG = ac.createGain();
-      wetG.gain.value = 0.5;
-      wet.connect(wetG);
-      wetG.connect(master);
-      const air = ac.createBufferSource();
-      air.buffer = noiseBuf(6, true);
-      air.loop = true;
-      const airF = ac.createBiquadFilter();
-      airF.type = "lowpass";
-      airF.frequency.value = 420;
-      const airG = ac.createGain();
-      airG.gain.value = 0.22;
-      const lfo = ac.createOscillator(), lfoG = ac.createGain();
-      lfo.frequency.value = 0.06;
-      lfoG.gain.value = 180;
-      lfo.connect(lfoG);
-      lfoG.connect(airF.frequency);
-      lfo.start();
-      air.connect(airF);
-      airF.connect(airG);
-      airG.connect(master);
-      air.start();
-      const wat = ac.createBufferSource();
-      wat.buffer = noiseBuf(5, false);
-      wat.loop = true;
-      const watF = ac.createBiquadFilter();
-      watF.type = "bandpass";
-      watF.frequency.value = 2400;
-      watF.Q.value = 0.6;
-      const watH = ac.createBiquadFilter();
-      watH.type = "highshelf";
-      watH.frequency.value = 5e3;
-      watH.gain.value = -12;
-      const watG = ac.createGain();
-      watG.gain.value = 0.012;
-      wat.connect(watF);
-      watF.connect(watH);
-      watH.connect(watG);
-      watG.connect(master);
-      watG.connect(wet);
-      wat.start();
-      const padF = ac.createBiquadFilter();
-      padF.type = "lowpass";
-      padF.frequency.value = 1100;
-      const padG = ac.createGain();
-      padG.gain.value = 0;
-      padG.gain.linearRampToValueAtTime(0.05, ac.currentTime + 8);
-      padF.connect(padG);
-      padG.connect(master);
-      padG.connect(wet);
-      [146.83, 220, 293.66, 369.99, 659.25].forEach((f, i) => [-6, 5].forEach((det) => {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = i < 2 ? "triangle" : "sine";
-        o.frequency.value = f;
-        o.detune.value = det;
-        const tr = ac.createOscillator(), trG = ac.createGain();
-        tr.frequency.value = 0.05 + i * 0.013;
-        trG.gain.value = 0.08;
-        tr.connect(trG);
-        trG.connect(g.gain);
-        tr.start();
-        g.gain.value = 0.16 / (i + 1.2);
-        o.connect(g);
-        g.connect(padF);
-        o.start();
-      }));
-      const cricket = (pan) => {
-        const p = ac.createStereoPanner();
-        p.pan.value = pan;
-        p.connect(master);
-        const chirp = () => {
-          if (!running) return;
-          const t = ac.currentTime + 0.05, n = 3 + (Math.random() * 3 | 0);
-          for (let i = 0; i < n; i++) {
-            const o = ac.createOscillator(), g = ac.createGain();
-            o.type = "sine";
-            o.frequency.value = 4300 + Math.random() * 300;
-            const t0 = t + i * 0.045;
-            g.gain.setValueAtTime(0, t0);
-            g.gain.linearRampToValueAtTime(6e-3, t0 + 6e-3);
-            g.gain.linearRampToValueAtTime(0, t0 + 0.03);
-            o.connect(g);
-            g.connect(p);
-            o.start(t0);
-            o.stop(t0 + 0.04);
-          }
-          timers.push(setTimeout(chirp, 900 + Math.random() * 2600));
-        };
-        timers.push(setTimeout(chirp, 1500 + Math.random() * 3e3));
-      };
-      cricket(-0.7);
-      cricket(0.65);
-      const scale = [587.33, 659.25, 739.99, 880, 987.77, 1174.66];
-      const chime = () => {
-        if (!running) return;
-        bell(scale[Math.random() * scale.length | 0], 0, 0.018, Math.random() * 1.2 - 0.6);
-        timers.push(setTimeout(chime, 7e3 + Math.random() * 9e3));
-      };
-      timers.push(setTimeout(chime, 3500));
+      master.connect(lim);
+      master.gain.linearRampToValueAtTime(2.8, ac.currentTime + 3);
+      hall = makeHall();
+      music = ac.createGain();
+      music.gain.value = 0.9;
+      music.connect(master);
+      ambience();
+      bar = 0;
+      nextBar = ac.currentTime + 0.4;
+      schedule();
+      sched = setInterval(schedule, 200);
       document.addEventListener("visibilitychange", onVis);
     }
     function onVis() {
@@ -12016,13 +12146,14 @@ With gratitude,`);
     function stop(fade) {
       if (!running || !ac) return;
       running = false;
+      clearInterval(sched);
       timers.forEach(clearTimeout);
       timers = [];
-      const m = master, c = ac;
+      const m = master, c = ac, f = fade || 0.4;
       document.removeEventListener("visibilitychange", onVis);
       m.gain.cancelScheduledValues(c.currentTime);
       m.gain.setValueAtTime(m.gain.value, c.currentTime);
-      m.gain.linearRampToValueAtTime(0, c.currentTime + (fade || 0.4));
+      m.gain.linearRampToValueAtTime(0, c.currentTime + f);
       setTimeout(() => {
         try {
           m.disconnect();
@@ -12033,9 +12164,93 @@ With gratitude,`);
             c.close();
           } catch (e) {
           }
-          ac = null;
+          if (ac === c) ac = null;
         }
-      }, ((fade || 0.4) + 0.2) * 1e3);
+      }, (f + 0.3) * 1e3);
+    }
+    function gate() {
+      const t = ac.currentTime + 0.02;
+      music.gain.cancelScheduledValues(t);
+      music.gain.setValueAtTime(music.gain.value, t);
+      music.gain.linearRampToValueAtTime(0, t + 1.2);
+      clearInterval(sched);
+      const fx = ac.createGain();
+      fx.gain.value = 0.5;
+      fx.connect(master);
+      const boom = ac.createOscillator(), bg = ac.createGain();
+      boom.type = "sine";
+      boom.frequency.setValueAtTime(78, t);
+      boom.frequency.exponentialRampToValueAtTime(34, t + 1.6);
+      bg.gain.setValueAtTime(0, t);
+      bg.gain.linearRampToValueAtTime(0.32, t + 0.03);
+      bg.gain.exponentialRampToValueAtTime(1e-3, t + 2.2);
+      boom.connect(bg);
+      bg.connect(fx);
+      bg.connect(hall);
+      boom.start(t);
+      boom.stop(t + 2.4);
+      const rum = ac.createBufferSource();
+      rum.buffer = noiseBuf(4, "brown");
+      const rl = ac.createBiquadFilter();
+      rl.type = "lowpass";
+      rl.frequency.value = 140;
+      const rg = ac.createGain();
+      rg.gain.setValueAtTime(0, t);
+      rg.gain.linearRampToValueAtTime(0.5, t + 0.9);
+      rg.gain.linearRampToValueAtTime(0.35, t + 2);
+      rg.gain.linearRampToValueAtTime(0, t + 3.4);
+      rum.connect(rl);
+      rl.connect(rg);
+      rg.connect(fx);
+      rum.start(t);
+      rum.stop(t + 3.6);
+      const gr = ac.createBufferSource();
+      gr.buffer = noiseBuf(3, "white");
+      const gb = ac.createBiquadFilter();
+      gb.type = "bandpass";
+      gb.frequency.setValueAtTime(320, t + 0.2);
+      gb.frequency.linearRampToValueAtTime(520, t + 2.4);
+      gb.Q.value = 1.4;
+      const gg = ac.createGain();
+      gg.gain.setValueAtTime(0, t + 0.2);
+      gg.gain.linearRampToValueAtTime(0.09, t + 0.6);
+      gg.gain.linearRampToValueAtTime(0.06, t + 2.1);
+      gg.gain.linearRampToValueAtTime(0, t + 2.7);
+      const fl = ac.createOscillator(), flg = ac.createGain();
+      fl.frequency.value = 11;
+      flg.gain.value = 0.04;
+      fl.connect(flg);
+      flg.connect(gg.gain);
+      fl.start(t);
+      fl.stop(t + 3);
+      gr.connect(gb);
+      gb.connect(gg);
+      gg.connect(fx);
+      gg.connect(hall);
+      gr.start(t + 0.2);
+      gr.stop(t + 3);
+      const wh = ac.createBufferSource();
+      wh.buffer = noiseBuf(3, "pink");
+      const wf = ac.createBiquadFilter();
+      wf.type = "bandpass";
+      wf.Q.value = 0.8;
+      wf.frequency.setValueAtTime(400, t + 0.6);
+      wf.frequency.exponentialRampToValueAtTime(5200, t + 2.6);
+      const wg = ac.createGain();
+      wg.gain.setValueAtTime(0, t + 0.6);
+      wg.gain.linearRampToValueAtTime(0.22, t + 1.9);
+      wg.gain.linearRampToValueAtTime(0, t + 3.1);
+      wh.connect(wf);
+      wf.connect(wg);
+      wg.connect(fx);
+      wg.connect(hall);
+      wh.start(t + 0.6);
+      wh.stop(t + 3.3);
+      for (let k = 0; k < 18; k++) harp([62, 66, 69, 71][k % 4] + Math.floor(k / 4) * 12 - 12, t + 1.1 + k * 0.045, 0.7, fx);
+      [86, 90, 93, 98].forEach((n, k) => celesta(n, t + 1.9 + k * 0.16, 1, fx));
+      strings([50, 57, 62, 66, 69], t + 1.3, 2.6, 1.4, fx);
+      choir([62, 69, 74, 78], t + 1.4, 2.4, 1.1, fx);
+      [50, 62, 69, 74, 78].forEach((n, k) => piano(n, t + 1.7 + k * 0.02, 3, 0.7, fx));
     }
     return {
       pref,
@@ -12047,19 +12262,36 @@ With gratitude,`);
         const on = !pref();
         setPref(on);
         if (on) start();
-        else stop(0.5);
+        else stop(0.6);
         return on;
       },
-      // a rising chord when the door opens, a soft low note for a wrong entry
       welcome() {
         if (!running) return;
-        [587.33, 739.99, 880, 1174.66].forEach((f, i) => bell(f, ac.currentTime + i * 0.12, 0.05, (i - 1.5) * 0.3));
-        stop(3.2);
+        gate();
+        running = false;
+        clearInterval(sched);
+        timers.forEach(clearTimeout);
+        timers = [];
+        document.removeEventListener("visibilitychange", onVis);
+        const c = ac, m = master, t = c.currentTime;
+        m.gain.cancelScheduledValues(t);
+        m.gain.setValueAtTime(m.gain.value, t);
+        m.gain.setValueAtTime(m.gain.value, t + 3.6);
+        m.gain.linearRampToValueAtTime(0, t + 6.2);
+        setTimeout(() => {
+          if (!running) {
+            try {
+              c.close();
+            } catch (e) {
+            }
+            if (ac === c) ac = null;
+          }
+        }, 6600);
       },
       wrong() {
         if (!running) return;
-        bell(196, 0, 0.04, 0);
-        bell(185, ac.currentTime + 0.18, 0.03, 0);
+        piano(50, ac.currentTime, 1.2, 0.5, music);
+        piano(49, ac.currentTime + 0.22, 1.2, 0.4, music);
       },
       stop
     };
