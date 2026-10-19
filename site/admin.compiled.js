@@ -10145,6 +10145,7 @@ With gratitude,`);
 @keyframes fgIn{from{opacity:0;filter:brightness(.4)}to{opacity:1;filter:none}}
 .fg-exit{position:absolute;top:20px;left:20px;z-index:5;display:inline-flex;align-items:center;gap:8px;background:rgba(6,14,28,.35);border:1px solid rgba(191,216,255,.22);color:rgba(239,233,220,.8);padding:8px 14px;border-radius:999px;font:500 13px 'Manrope',sans-serif;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .fg-exit:hover{color:#fff;border-color:rgba(226,201,142,.6)}
+.fg-snd{left:auto;right:20px}
 .fg-verse{position:absolute;z-index:3;top:clamp(64px,9vh,96px);left:50%;transform:translateX(-50%);width:min(620px,86vw);text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(16px,1.5vw,19px);line-height:1.5;color:rgba(214,228,250,.78);animation:fgUp 2.4s .6s both}
 .fg-verse small{display:block;margin-top:6px;font-family:'Manrope',sans-serif;font-style:normal;font-size:12px;letter-spacing:.04em;color:rgba(226,201,142,.75)}
 .fg-card{position:absolute;z-index:4;left:50%;bottom:max(2.5vh,16px);transform:translateX(-50%);width:min(320px,calc(100vw - 32px));padding:46px 26px 22px;background:linear-gradient(180deg,rgba(14,32,62,.58),rgba(8,20,42,.78));border:1px solid rgba(191,216,255,.2);border-radius:160px 160px 16px 16px / 110px 110px 16px 16px;backdrop-filter:blur(14px) saturate(130%);-webkit-backdrop-filter:blur(14px) saturate(130%);box-shadow:0 0 0 1px rgba(226,201,142,.08) inset,0 30px 80px -30px rgba(0,0,0,.9),0 0 60px -10px rgba(110,160,240,.25);animation:fgUp 1.6s 1s both}
@@ -11828,6 +11829,242 @@ With gratitude,`);
     }, [narrow]);
     return /* @__PURE__ */ React.createElement("div", { ref: host, className: "fg-scene" + (narrow ? " narrow" : ""), "aria-hidden": "true" });
   }
+  const GateSound = /* @__PURE__ */ (() => {
+    let ac = null, master = null, timers = [], running = false;
+    const pref = () => {
+      try {
+        return localStorage.getItem("fg-sound") !== "off";
+      } catch (e) {
+        return true;
+      }
+    };
+    const setPref = (on) => {
+      try {
+        localStorage.setItem("fg-sound", on ? "on" : "off");
+      } catch (e) {
+      }
+    };
+    const noiseBuf = (sec, pink) => {
+      const b = ac.createBuffer(2, ac.sampleRate * sec, ac.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = b.getChannelData(ch);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < d.length; i++) {
+          const w = Math.random() * 2 - 1;
+          if (pink) {
+            b0 = 0.99765 * b0 + w * 0.099046;
+            b1 = 0.963 * b1 + w * 0.2965164;
+            b2 = 0.57 * b2 + w * 1.0526913;
+            d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.18;
+          } else d[i] = w;
+        }
+      }
+      return b;
+    };
+    const reverb = () => {
+      const len = ac.sampleRate * 4.5, b = ac.createBuffer(2, len, ac.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = b.getChannelData(ch);
+        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+      }
+      const c = ac.createConvolver();
+      c.buffer = b;
+      return c;
+    };
+    let wet = null;
+    function bell(freq, when, gain, pan) {
+      const t = when || ac.currentTime, out = ac.createGain(), p = ac.createStereoPanner();
+      p.pan.value = pan || 0;
+      out.connect(p);
+      p.connect(wet);
+      p.connect(master);
+      [[1, 1], [2.76, 0.45], [5.4, 0.22], [8.9, 0.08]].forEach(([m, a]) => {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = "sine";
+        o.frequency.value = freq * m;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(gain * a, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(1e-4, t + 3.6 / Math.sqrt(m));
+        o.connect(g);
+        g.connect(out);
+        o.start(t);
+        o.stop(t + 4);
+      });
+    }
+    function start() {
+      if (running || !pref()) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try {
+        ac = ac || new AC();
+      } catch (e) {
+        return;
+      }
+      if (ac.state === "suspended") ac.resume();
+      running = true;
+      master = ac.createGain();
+      master.gain.value = 0;
+      master.connect(ac.destination);
+      master.gain.linearRampToValueAtTime(0.55, ac.currentTime + 4);
+      wet = reverb();
+      const wetG = ac.createGain();
+      wetG.gain.value = 0.5;
+      wet.connect(wetG);
+      wetG.connect(master);
+      const air = ac.createBufferSource();
+      air.buffer = noiseBuf(6, true);
+      air.loop = true;
+      const airF = ac.createBiquadFilter();
+      airF.type = "lowpass";
+      airF.frequency.value = 420;
+      const airG = ac.createGain();
+      airG.gain.value = 0.22;
+      const lfo = ac.createOscillator(), lfoG = ac.createGain();
+      lfo.frequency.value = 0.06;
+      lfoG.gain.value = 180;
+      lfo.connect(lfoG);
+      lfoG.connect(airF.frequency);
+      lfo.start();
+      air.connect(airF);
+      airF.connect(airG);
+      airG.connect(master);
+      air.start();
+      const wat = ac.createBufferSource();
+      wat.buffer = noiseBuf(5, false);
+      wat.loop = true;
+      const watF = ac.createBiquadFilter();
+      watF.type = "bandpass";
+      watF.frequency.value = 2400;
+      watF.Q.value = 0.6;
+      const watH = ac.createBiquadFilter();
+      watH.type = "highshelf";
+      watH.frequency.value = 5e3;
+      watH.gain.value = -12;
+      const watG = ac.createGain();
+      watG.gain.value = 0.012;
+      wat.connect(watF);
+      watF.connect(watH);
+      watH.connect(watG);
+      watG.connect(master);
+      watG.connect(wet);
+      wat.start();
+      const padF = ac.createBiquadFilter();
+      padF.type = "lowpass";
+      padF.frequency.value = 1100;
+      const padG = ac.createGain();
+      padG.gain.value = 0;
+      padG.gain.linearRampToValueAtTime(0.05, ac.currentTime + 8);
+      padF.connect(padG);
+      padG.connect(master);
+      padG.connect(wet);
+      [146.83, 220, 293.66, 369.99, 659.25].forEach((f, i) => [-6, 5].forEach((det) => {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = i < 2 ? "triangle" : "sine";
+        o.frequency.value = f;
+        o.detune.value = det;
+        const tr = ac.createOscillator(), trG = ac.createGain();
+        tr.frequency.value = 0.05 + i * 0.013;
+        trG.gain.value = 0.08;
+        tr.connect(trG);
+        trG.connect(g.gain);
+        tr.start();
+        g.gain.value = 0.16 / (i + 1.2);
+        o.connect(g);
+        g.connect(padF);
+        o.start();
+      }));
+      const cricket = (pan) => {
+        const p = ac.createStereoPanner();
+        p.pan.value = pan;
+        p.connect(master);
+        const chirp = () => {
+          if (!running) return;
+          const t = ac.currentTime + 0.05, n = 3 + (Math.random() * 3 | 0);
+          for (let i = 0; i < n; i++) {
+            const o = ac.createOscillator(), g = ac.createGain();
+            o.type = "sine";
+            o.frequency.value = 4300 + Math.random() * 300;
+            const t0 = t + i * 0.045;
+            g.gain.setValueAtTime(0, t0);
+            g.gain.linearRampToValueAtTime(6e-3, t0 + 6e-3);
+            g.gain.linearRampToValueAtTime(0, t0 + 0.03);
+            o.connect(g);
+            g.connect(p);
+            o.start(t0);
+            o.stop(t0 + 0.04);
+          }
+          timers.push(setTimeout(chirp, 900 + Math.random() * 2600));
+        };
+        timers.push(setTimeout(chirp, 1500 + Math.random() * 3e3));
+      };
+      cricket(-0.7);
+      cricket(0.65);
+      const scale = [587.33, 659.25, 739.99, 880, 987.77, 1174.66];
+      const chime = () => {
+        if (!running) return;
+        bell(scale[Math.random() * scale.length | 0], 0, 0.018, Math.random() * 1.2 - 0.6);
+        timers.push(setTimeout(chime, 7e3 + Math.random() * 9e3));
+      };
+      timers.push(setTimeout(chime, 3500));
+      document.addEventListener("visibilitychange", onVis);
+    }
+    function onVis() {
+      if (!ac) return;
+      if (document.hidden) ac.suspend();
+      else if (running) ac.resume();
+    }
+    function stop(fade) {
+      if (!running || !ac) return;
+      running = false;
+      timers.forEach(clearTimeout);
+      timers = [];
+      const m = master, c = ac;
+      document.removeEventListener("visibilitychange", onVis);
+      m.gain.cancelScheduledValues(c.currentTime);
+      m.gain.setValueAtTime(m.gain.value, c.currentTime);
+      m.gain.linearRampToValueAtTime(0, c.currentTime + (fade || 0.4));
+      setTimeout(() => {
+        try {
+          m.disconnect();
+        } catch (e) {
+        }
+        if (!running) {
+          try {
+            c.close();
+          } catch (e) {
+          }
+          ac = null;
+        }
+      }, ((fade || 0.4) + 0.2) * 1e3);
+    }
+    return {
+      pref,
+      start,
+      get running() {
+        return running;
+      },
+      toggle() {
+        const on = !pref();
+        setPref(on);
+        if (on) start();
+        else stop(0.5);
+        return on;
+      },
+      // a rising chord when the door opens, a soft low note for a wrong entry
+      welcome() {
+        if (!running) return;
+        [587.33, 739.99, 880, 1174.66].forEach((f, i) => bell(f, ac.currentTime + i * 0.12, 0.05, (i - 1.5) * 0.3));
+        stop(3.2);
+      },
+      wrong() {
+        if (!running) return;
+        bell(196, 0, 0.04, 0);
+        bell(185, ac.currentTime + 0.18, 0.03, 0);
+      },
+      stop
+    };
+  })();
+  const SoundIcon = ({ on }) => /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M4 9.5h3.5L12 5.5v13l-4.5-4H4z" }), on ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M15.5 9a4 4 0 0 1 0 6" }), /* @__PURE__ */ React.createElement("path", { d: "M18 6.5a7.5 7.5 0 0 1 0 11" })) : /* @__PURE__ */ React.createElement("path", { d: "M16 9.5l5 5M21 9.5l-5 5" }));
   const EyeIcon = ({ off }) => /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.6", strokeLinecap: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "3" }), off && /* @__PURE__ */ React.createElement("path", { d: "M4 4l16 16" }));
   function FounderGate({ onExit }) {
     useGateStyles();
@@ -11870,8 +12107,11 @@ With gratitude,`);
         setStep("code");
         setCode("");
         setLoading(false);
-      } else if (res && res.ok) opened();
-      else {
+      } else if (res && res.ok) {
+        GateSound.welcome();
+        opened();
+      } else {
+        GateSound.wrong();
         setError(res && res.error || "The email or password is not correct.");
         setLoading(false);
       }
@@ -11888,12 +12128,25 @@ With gratitude,`);
           } catch (x) {
           }
         }
+        GateSound.welcome();
         opened();
       } else {
+        GateSound.wrong();
         setError(res && res.error || "That code is not right.");
         setLoading(false);
       }
     };
+    const [soundOn, setSoundOn] = useState(GateSound.pref);
+    useEffect(() => {
+      const go = () => GateSound.start();
+      window.addEventListener("pointerdown", go, { once: true });
+      window.addEventListener("keydown", go, { once: true });
+      return () => {
+        window.removeEventListener("pointerdown", go);
+        window.removeEventListener("keydown", go);
+        GateSound.stop(2.5);
+      };
+    }, []);
     const otherAccount = () => {
       setError(null);
       setCode("");
@@ -11903,7 +12156,13 @@ With gratitude,`);
       }, () => {
       });
     };
-    return /* @__PURE__ */ React.createElement("div", { className: "fg", style: narrow ? { "--fg-top": window.innerWidth * 732 / 820 + 14 + "px" } : null }, /* @__PURE__ */ React.createElement(GateScene, { narrow }), /* @__PURE__ */ React.createElement("button", { className: "fg-exit", onClick: onExit }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M15 5l-7 7 7 7" })), "Public site"), /* @__PURE__ */ React.createElement("div", { className: narrow ? "fg-flow" : null }, /* @__PURE__ */ React.createElement("p", { className: "fg-verse" }, "“When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, and a righteous child who prays for them.”", /* @__PURE__ */ React.createElement("small", null, "Sahih Muslim")), step !== "password" ? /* @__PURE__ */ React.createElement("form", { className: "fg-card", onSubmit: submitCode }, /* @__PURE__ */ React.createElement("div", { className: "fg-mark" }, /* @__PURE__ */ React.createElement("svg", { width: "26", height: "26", viewBox: "0 0 36 36", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("g", { fill: "none", stroke: "#E2C98E", strokeWidth: "1.2" }, /* @__PURE__ */ React.createElement("path", { d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "18", r: "4", fill: "#E2C98E", stroke: "none" })))), /* @__PURE__ */ React.createElement("p", { className: "fg-k" }, "Two-step verification"), /* @__PURE__ */ React.createElement("h1", { className: "fg-h" }, step === "recovery" ? "Use a recovery code." : "Enter your code."), /* @__PURE__ */ React.createElement("div", { className: "fg-f" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "fg-code" }, step === "recovery" ? "One of your ten recovery codes" : "The 6 digits in Google Authenticator"), /* @__PURE__ */ React.createElement("div", { className: "fg-in" }, step === "recovery" ? /* @__PURE__ */ React.createElement("input", { id: "fg-code", autoFocus: true, value: code, onChange: (e) => setCode(e.target.value.toUpperCase().slice(0, 16)), autoComplete: "off", spellCheck: false, placeholder: "XXXXX-XXXXX" }) : /* @__PURE__ */ React.createElement("input", { id: "fg-code", autoFocus: true, inputMode: "numeric", pattern: "[0-9]*", autoComplete: "one-time-code", value: code, onChange: (e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6)), placeholder: "000000", style: { letterSpacing: ".4em", fontSize: 20, textAlign: "center" } }))), error && /* @__PURE__ */ React.createElement("div", { className: "fg-err", role: "alert" }, error), /* @__PURE__ */ React.createElement("button", { className: "fg-btn", type: "submit", disabled: loading || (step === "recovery" ? code.replace(/[^A-Z0-9]/g, "").length < 10 : code.length !== 6) }, loading ? "Checking…" : step === "recovery" ? "Use code and enter" : "Verify and enter"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 10, marginTop: 12, fontSize: 12.5 } }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+    return /* @__PURE__ */ React.createElement("div", { className: "fg", style: narrow ? { "--fg-top": window.innerWidth * 732 / 820 + 14 + "px" } : null }, /* @__PURE__ */ React.createElement(GateScene, { narrow }), /* @__PURE__ */ React.createElement("button", { className: "fg-exit", onClick: onExit }, /* @__PURE__ */ React.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M15 5l-7 7 7 7" })), "Public site"), /* @__PURE__ */ React.createElement("button", { className: "fg-exit fg-snd", "aria-pressed": soundOn, "aria-label": soundOn ? "Sound on. Turn it off" : "Sound off. Turn it on", onPointerDown: (e) => e.nativeEvent.stopPropagation(), onClick: (e) => {
+      e.stopPropagation();
+      if (GateSound.pref() && !GateSound.running) {
+        GateSound.start();
+        setSoundOn(true);
+      } else setSoundOn(GateSound.toggle());
+    } }, /* @__PURE__ */ React.createElement(SoundIcon, { on: soundOn }), soundOn ? "Sound on" : "Sound off"), /* @__PURE__ */ React.createElement("div", { className: narrow ? "fg-flow" : null }, /* @__PURE__ */ React.createElement("p", { className: "fg-verse" }, "“When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, and a righteous child who prays for them.”", /* @__PURE__ */ React.createElement("small", null, "Sahih Muslim")), step !== "password" ? /* @__PURE__ */ React.createElement("form", { className: "fg-card", onSubmit: submitCode }, /* @__PURE__ */ React.createElement("div", { className: "fg-mark" }, /* @__PURE__ */ React.createElement("svg", { width: "26", height: "26", viewBox: "0 0 36 36", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("g", { fill: "none", stroke: "#E2C98E", strokeWidth: "1.2" }, /* @__PURE__ */ React.createElement("path", { d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "18", r: "4", fill: "#E2C98E", stroke: "none" })))), /* @__PURE__ */ React.createElement("p", { className: "fg-k" }, "Two-step verification"), /* @__PURE__ */ React.createElement("h1", { className: "fg-h" }, step === "recovery" ? "Use a recovery code." : "Enter your code."), /* @__PURE__ */ React.createElement("div", { className: "fg-f" }, /* @__PURE__ */ React.createElement("label", { htmlFor: "fg-code" }, step === "recovery" ? "One of your ten recovery codes" : "The 6 digits in Google Authenticator"), /* @__PURE__ */ React.createElement("div", { className: "fg-in" }, step === "recovery" ? /* @__PURE__ */ React.createElement("input", { id: "fg-code", autoFocus: true, value: code, onChange: (e) => setCode(e.target.value.toUpperCase().slice(0, 16)), autoComplete: "off", spellCheck: false, placeholder: "XXXXX-XXXXX" }) : /* @__PURE__ */ React.createElement("input", { id: "fg-code", autoFocus: true, inputMode: "numeric", pattern: "[0-9]*", autoComplete: "one-time-code", value: code, onChange: (e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6)), placeholder: "000000", style: { letterSpacing: ".4em", fontSize: 20, textAlign: "center" } }))), error && /* @__PURE__ */ React.createElement("div", { className: "fg-err", role: "alert" }, error), /* @__PURE__ */ React.createElement("button", { className: "fg-btn", type: "submit", disabled: loading || (step === "recovery" ? code.replace(/[^A-Z0-9]/g, "").length < 10 : code.length !== 6) }, loading ? "Checking…" : step === "recovery" ? "Use code and enter" : "Verify and enter"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 10, marginTop: 12, fontSize: 12.5 } }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
       setError(null);
       setCode("");
       setStep(step === "recovery" ? "code" : "recovery");
