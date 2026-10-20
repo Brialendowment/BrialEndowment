@@ -1112,9 +1112,9 @@ const Philosophy = ({
       y2: "51"
     }))
   }, {
-    t: "Food & Land",
+    t: "Reforestation & Land",
     k: "foodland",
-    sub: "Pangan",
+    sub: "Penghijauan",
     status: "active",
     action: "foodland",
     cta: "Visit the groves →",
@@ -1122,7 +1122,7 @@ const Philosophy = ({
       src: (window.BRIAL_LOGOS || {}).zaytoun,
       name: "Zaytoun · Palestine"
     },
-    d: "In partnership with Zaytoun, London: olive trees planted on Palestinian family land through the Trees for Life programme. A harvest that renews itself, season after season.",
+    d: "Trees planted where the land needs them most, beginning with olive groves on Palestinian family land through Zaytoun's Trees for Life programme. Planted once, growing for generations.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
       width: "56",
@@ -1140,6 +1140,15 @@ const Philosophy = ({
       d: "M14 52 Q32 44 50 52",
       strokeWidth: "1.3"
     }))
+  }, {
+    t: "Food & Clothing",
+    k: "foodclothing",
+    sub: "Sandang & Pangan",
+    status: "active",
+    action: "foodclothing",
+    cta: "Share the table \u2192",
+    d: "Staple food and clothing in good condition, shared with orphanages, families and people in need. Every kilogram and every garment is counted in the open.",
+    icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M10 34 H54 Q52 50 32 52 Q12 50 10 34 Z" }), /*#__PURE__*/React.createElement("path", { d: "M25 27 Q22 23 25 19 Q28 15 25 11 M32 27 Q29 23 32 19 Q35 15 32 11 M39 27 Q36 23 39 19 Q42 15 39 11" }), /*#__PURE__*/React.createElement("line", { x1: "20", y1: "57", x2: "44", y2: "57", strokeWidth: "1.4" }))
   }, {
     t: "Clean Water",
     k: "water",
@@ -2104,9 +2113,9 @@ const Footer = ({
 // APP
 // ============================================================
 const App = () => {
-  const BRIAL_VIEWS = ["scholars", "donate", "ebooks", "foodland", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "scholar", "admin", "proof"];
+  const BRIAL_VIEWS = ["scholars", "donate", "ebooks", "foodland", "foodclothing", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "scholar", "admin", "proof"];
   // Public views have clean addresses (/transport); the portals stay on #/ (/#/scholar, /#/admin).
-  const BRIAL_PATHS = ["scholars", "donate", "ebooks", "foodland", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "proof"];
+  const BRIAL_PATHS = ["scholars", "donate", "ebooks", "foodland", "foodclothing", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "proof"];
   const parseHashView = () => {
     const m = (location.hash || "").match(/^#\/([a-z]+)/);
     if (m) return BRIAL_VIEWS.indexOf(m[1]) >= 0 ? m[1] : "landing";
@@ -2139,7 +2148,7 @@ const App = () => {
 
   // Tab title follows the view
   useEffect(() => {
-    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "The Library", foodland: "Food & Land", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
+    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "The Library", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
     try { document.title = T[view] ? T[view] + " | The Brial Endowment" : "The Brial Endowment | A Perpetual Philanthropic Endowment"; } catch (e) {}
   }, [view]);
   // Always start a new view at the top (fixes landing on previous scroll position)

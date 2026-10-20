@@ -288,7 +288,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       (Store.listEbooks() || []).forEach(b => { if (b.cover) urls.push(b.cover); });
     } catch (e) {}
     try {
-      [Store.getWorship(), Store.getWater(), Store.getPillarContent("hospitals"), Store.getPillarContent("schools"), Store.getPillarContent("livestock"), Store.getPillarContent("infra"), Store.getPillarContent("transport")].forEach(c => (c.articles || []).forEach(a => { if (a.photo && (a.photo.url || a.photo.path)) urls.push(a.photo.url || pub(a.photo.path)); }));
+      [Store.getWorship(), Store.getWater(), Store.getPillarContent("hospitals"), Store.getPillarContent("schools"), Store.getPillarContent("livestock"), Store.getPillarContent("infra"), Store.getPillarContent("transport"), Store.getPillarContent("foodclothing")].forEach(c => (c.articles || []).forEach(a => { if (a.photo && (a.photo.url || a.photo.path)) urls.push(a.photo.url || pub(a.photo.path)); }));
     } catch (e) {}
     try {
       (_applicants || []).filter(a => a.status === "accepted" && !a.deleted).forEach(a => {
@@ -702,9 +702,13 @@ window.BrialClipboard = { copy: copyToClipboard };
     },
 
     // ----- Pillar grants (non-scholarship distributions, e.g. Houses of Worship) -----
+    // Pillars renamed since a grant was recorded keep their history under the new name
+    PILLAR_RENAMES: { "Food & Land": "Reforestation & Land" },
     getPillarGrants() {
       const d = _donations.find(x => x.id === "PILLAR-GRANTS");
-      return (d && d.data && Array.isArray(d.data.grants)) ? d.data.grants : [];
+      const list = (d && d.data && Array.isArray(d.data.grants)) ? d.data.grants : [];
+      const R = Store.PILLAR_RENAMES;
+      return list.some(g => g && R[g.pillar]) ? list.map(g => (g && R[g.pillar] ? { ...g, pillar: R[g.pillar] } : g)) : list;
     },
     _savePillarGrants(grants) {
       const total = grants.reduce((a, g) => a + (Number(g.amount) || 0), 0);
@@ -721,7 +725,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       const ref = "WQF-" + ymd + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
       const g = {
         id: "PG-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-        pillar: obj.pillar || "Houses of Worship",
+        pillar: Store.PILLAR_RENAMES[obj.pillar] || obj.pillar || "Houses of Worship",
         partner: (obj.partner || "").trim(),
         project: (obj.project || "").trim(),
         country: (obj.country || "").trim(),
@@ -764,6 +768,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     },
     // Sum of per-grant units (trees, mosques, wells) for one pillar
     getPillarUnits(pillarName) {
+      pillarName = Store.PILLAR_RENAMES[pillarName] || pillarName;
       return Store.getPillarGrants().filter(g => g.pillar === pillarName && !g.archived).reduce((a, g) => a + (Number(g.units) || 0), 0);
     },
 
@@ -886,7 +891,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       upsertDonation(rec).catch(e => console.error(e));
     },
 
-    // ----- Food & Land programme content (founder-managed page copy) -----
+    // ----- Reforestation & Land programme content (key "foodland", once Food & Land) (founder-managed page copy) -----
     getFoodland() {
       const defaults = {
         programme: "Trees for Life",
@@ -898,7 +903,7 @@ window.BrialClipboard = { copy: copyToClipboard };
           id: "first-grove",
           date: "2026-07",
           title: "The first five trees",
-          body: "Five olive trees now stand in the soil of Jenin, Nablus and Salfeet, the first planting of the Food & Land pillar. The olive farmers of the Trees for Life programme certified the gift under the endowment's name; the trees will outlive every document we hold.",
+          body: "Five olive trees now stand in the soil of Jenin, Nablus and Salfeet, the first planting of the Reforestation & Land pillar. The olive farmers of the Trees for Life programme certified the gift under the endowment's name; the trees will outlive every document we hold.",
           photo: null
         }]
       };
@@ -975,6 +980,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         schools: { programme: "Schools", intro: "Distance and fees decide who learns; a school nearby changes the arithmetic. The endowment funds classrooms with local partners, grounded where children walk farthest, raised and staffed to teach well, and open to every child of the village." },
         livestock: { programme: "Livestock & Enterprise", intro: "Charity that multiplies. The endowment places productive capital (herds, tools and small enterprise) in the hands of families who tend it: the offspring and the profits stay with them, the dignity of earning returns, and the gift funds itself again." },
         infra: { programme: "Sustainable Infrastructure", intro: "The quiet foundations. The endowment funds bridges, power and public works with local partners, surveyed with the community that will use them, built to endure, and maintained so a village can stand, trade and grow on its own." },
+        foodclothing: { programme: "Food & Clothing", intro: "Food on the table and clothes to wear, given where the need is plain to see. The endowment shares staple food (rice, pasta, cooking oil) and clothing in good condition with orphanages, families and people on the street, at Ramadan and through the year. Every kilogram and every garment is counted, and the people who receive them are never named or photographed." },
         transport: { programme: "Transportation", partnerLine: "go2rent", location: "T\u00fcrkiye and Northern Cyprus", fleet: "730+", regions: "9", airports: "9", support: "24/7", factsNote: "Fleet figures from go2rent, July 2026: 730 to 985 vehicles, growing for the summer season and smaller in winter.", intro: "Not every pillar gives. Some pillars earn, so that the others can keep giving. go2rent is a car rental company that serves travellers, families and companies across T\u00fcrkiye and Northern Cyprus. The founder of the Brial Endowment is a co-founder of go2rent, and a share of his returns from the company is given to the endowment. Every contribution is recorded on the open ledger, like every other gift." }
       };
       const def = { partnerLine: "", units: 0, location: "", articles: [], ...(DEFS[key] || { programme: key, intro: "" }) };
@@ -992,6 +998,34 @@ window.BrialClipboard = { copy: copyToClipboard };
       if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
       saveCache(); notify({ key: "pillar-" + key });
       upsertDonation(rec).catch(e => console.error(e));
+    },
+    // ----- Food & Clothing counters: kilograms of food shared and garments given -----
+    // Kept per year inside PILLAR-CONTENT-FOODCLOTHING (counts: { "2026": { kg, garments } }),
+    // so the public page shows the running total and each Impact Report its own year.
+    getFoodClothingCounts() {
+      const c = Store.getPillarContent("foodclothing");
+      const raw = c.counts && typeof c.counts === "object" ? c.counts : {};
+      const byYear = {};
+      Object.keys(raw).forEach(y => {
+        if (!/^\d{4}$/.test(y)) return;
+        const r = raw[y] || {};
+        byYear[y] = { kg: Math.max(0, Number(r.kg) || 0), garments: Math.max(0, Math.round(Number(r.garments) || 0)) };
+      });
+      const years = Object.keys(byYear).sort();
+      const kg = years.reduce((a, y) => a + byYear[y].kg, 0);
+      const garments = years.reduce((a, y) => a + byYear[y].garments, 0);
+      return { byYear, years, kg: Math.round(kg * 10) / 10, garments, since: years[0] || "" };
+    },
+    setFoodClothingCount(year, field, value) {
+      if (!/^\d{4}$/.test(String(year)) || (field !== "kg" && field !== "garments")) return;
+      const c = Store.getPillarContent("foodclothing");
+      const counts = { ...(c.counts && typeof c.counts === "object" ? c.counts : {}) };
+      const row = { kg: 0, garments: 0, ...(counts[year] || {}) };
+      let v = Math.max(0, Number(value) || 0);
+      v = field === "kg" ? Math.round(v * 10) / 10 : Math.round(v);
+      row[field] = v;
+      counts[year] = row;
+      Store.savePillarContent("foodclothing", { ...c, counts, countsUpdatedAt: now() });
     },
     // ----- Contact & social links shown in the site footer (founder-managed) -----
     // items: [{ type, value, label?, shown }] in display order. Only items with
@@ -1135,7 +1169,7 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Pillar visibility: which pillars are live on the public site -----
     getPillarActive(key) {
-      const DEF = { scholarships: true, worship: true, library: true, foodland: true, water: true, hospitals: false, schools: false, livestock: false, infra: false, transport: true };
+      const DEF = { scholarships: true, worship: true, library: true, foodland: true, water: true, hospitals: false, schools: false, livestock: false, infra: false, transport: true, foodclothing: true };
       const d = _donations.find(x => x.id === "PILLAR-STATUS");
       const map = (d && d.data && d.data.active) || {};
       if (map[key] !== undefined) return !!map[key];
@@ -1163,6 +1197,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         livestock: "",
         infra: "",
         transport: "https://www.gotworent.com/",
+        foodclothing: "",
       };
       const d = _donations.find(x => x.id === "PILLAR-LINKS");
       if (d && d.data && d.data.links) return { ...defaults, ...d.data.links };
@@ -1221,7 +1256,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       const pillarGrants = Store.getPillarGrants().filter(g => !g.archived);
       const pillarTotal = pillarGrants.reduce((a, g) => a + (Number(g.amount) || 0), 0);
       disbursed += pillarTotal;
-      // Grant countries (e.g. Palestine via Food & Land) grow "Nations represented"
+      // Grant countries (e.g. Palestine via Reforestation & Land) grow "Nations represented"
       pillarGrants.forEach(g => {
         const c = (g.country || "").trim();
         if (c) nationsLower.add(c.toLowerCase());

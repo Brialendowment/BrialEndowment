@@ -7,6 +7,7 @@
 <url><loc>https://brialendowment.org/worship</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 <url><loc>https://brialendowment.org/water</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 <url><loc>https://brialendowment.org/foodland</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+<url><loc>https://brialendowment.org/foodclothing</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 <url><loc>https://brialendowment.org/ebooks</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 <url><loc>https://brialendowment.org/transport</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 <url><loc>https://brialendowment.org/impact</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>

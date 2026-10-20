@@ -131,10 +131,14 @@
 
       h("div", { style: { background: CREAM, color: NAVY, padding: "clamp(56px, 8vw, 90px) clamp(20px, 4vw, 56px)" } },
         h("div", { style: { maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "clamp(30px, 5vw, 70px)", alignItems: "center" } },
-          h("div", null,
-            h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(10,22,40,0.55)" } }, cfg.statLabel),
-            h("div", { style: { fontFamily: serif, fontSize: "clamp(90px, 12vw, 150px)", lineHeight: 0.9, marginTop: 10, color: NAVY } }, String(cfg.statValue)),
-            h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "#8B7A4A", marginTop: 12 } }, cfg.statUnit)),
+          ...(cfg.stats || [{ label: cfg.statLabel, value: cfg.statValue, unit: cfg.statUnit }]).map((st, si) => {
+            const v = String(st.value);
+            const fs = v.length <= 3 ? "clamp(90px, 12vw, 150px)" : v.length <= 5 ? "clamp(72px, 9vw, 120px)" : "clamp(54px, 7vw, 96px)";
+            return h("div", { key: "st" + si, style: { minWidth: 0 } },
+              h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(10,22,40,0.55)" } }, st.label),
+              h("div", { style: { fontFamily: serif, fontSize: fs, lineHeight: 0.9, marginTop: 10, color: NAVY, overflowWrap: "anywhere" } }, v),
+              h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "#8B7A4A", marginTop: 12 } }, st.unit));
+          }),
           h("div", null,
             h("div", { style: { width: 44, height: 1, background: "#8B7A4A", marginBottom: 22 } }),
             h("div", { style: { fontFamily: serif, fontSize: "clamp(22px, 2.6vw, 30px)", fontStyle: "italic", lineHeight: 1.4, color: "rgba(10,22,40,0.85)" } }, cfg.location),
@@ -354,6 +358,64 @@
   const LivestockPage = makeGenericPage("livestock");
   const InfraPage = makeGenericPage("infra");
 
+  // ---- Food & Clothing: staple food and clothing shared with people in need ----
+  // Counts: BrialStore.getFoodClothingCounts() (kilograms of food, garments; kept per year).
+  // Recipients are never named or photographed on this page.
+  const fmtNum = n => (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 1 });
+  const FoodClothingPage = ({ onExit, onDonate }) => {
+    const read = () => {
+      const S = window.BrialStore;
+      return {
+        c: S && S.getPillarContent ? S.getPillarContent("foodclothing") : null,
+        n: S && S.getFoodClothingCounts ? S.getFoodClothingCounts() : { kg: 0, garments: 0, since: "" },
+        link: S && S.getPillarLink ? S.getPillarLink("foodclothing") : "",
+        hidden: S && S.getPillarLinkHidden ? S.getPillarLinkHidden("foodclothing") : false
+      };
+    };
+    const [st, setSt] = useState(read);
+    useEffect(() => {
+      const f = () => setSt(read());
+      window.addEventListener("brial:change", f);
+      window.addEventListener("brial:ready", f);
+      return () => { window.removeEventListener("brial:change", f); window.removeEventListener("brial:ready", f); };
+    }, []);
+    const c = st.c;
+    if (!c) return null;
+    const since = st.n.since || String(new Date().getFullYear());
+    return h(PillarPage, { onExit, onDonate, cfg: {
+      screenLabel: "Food & Clothing Programme",
+      shareKey: "foodclothing",
+      topTag: "PILLAR \u00b7 FOOD & CLOTHING",
+      eyebrow: "\u00a7 The Pillar of Provision \u00b7 Sandang & Pangan",
+      title: c.programme || "Food & Clothing",
+      tagline: "Food on the table and clothes to wear, shared at Ramadan and through the year.",
+      lockup: c.partnerLine ? { logo: null, name: c.partnerLine, sub: "programme partner" } : null,
+      stats: [
+        { label: "Shared so far", value: fmtNum(st.n.kg), unit: "Kilograms of food \u00b7 shared" },
+        { label: "Given so far", value: fmtNum(st.n.garments), unit: "Garments \u00b7 given" }
+      ],
+      location: c.location || "Wherever the need is plain to see.",
+      locationNote: (c.partnerLine || "Given directly and with local partners,") + " counted since " + since + ", and never with the names or faces of those who receive.",
+      quote: ["\u201cThey give food, despite their love for it, to the poor, the orphan and the captive: ", h("em", { key: 1, style: { color: GOLD } }, "we feed you only for the sake of Allah"), "; we want no reward from you, nor thanks.\u201d"],
+      quoteAttr: "Qur'an \u00b7 al-Insan 76:8-9",
+      intro: c.intro,
+      steps: [
+        { n: "01", t: "Gather", d: "Staple food is bought and clothing in good condition is collected, then weighed and counted before it leaves." },
+        { n: "02", t: "Give", d: "Shared with orphanages, families and people in need, quietly, without names or photographs of those who receive." },
+        { n: "03", t: "Count", d: "Every kilogram and every garment is added to the open count on this page, year by year." }
+      ],
+      notesTitle: "Word from the tables.",
+      articles: c.articles,
+      ctaEyebrow: "Share the table",
+      ctaLine1: "Meet the people",
+      ctaLine2: "who share with us.",
+      showPartner: !!st.link && !st.hidden,
+      link: st.link,
+      partnerStrip: (c.partnerLine || "FOOD & CLOTHING \u00b7 SHARED WITH PEOPLE IN NEED").toUpperCase(),
+      proverb: "They fed us so we may grow; we share so none go without."
+    }});
+  };
+
   // ---- Transportation: the enterprise pillar (go2rent) ----
   // A pillar that earns: a share of the founder's returns from go2rent is given to
   // the endowment. Content: BrialStore.getPillarContent("transport");
@@ -522,5 +584,5 @@
   window.BrialStories = Stories;
   window.WorshipPage = WorshipPage;
   window.WaterPage = WaterPage;
-  window.BrialPillarPages = { worship: WorshipPage, water: WaterPage, hospitals: HospitalsPage, schools: SchoolsPage, livestock: LivestockPage, infra: InfraPage, transport: TransportPage };
+  window.BrialPillarPages = { worship: WorshipPage, water: WaterPage, hospitals: HospitalsPage, schools: SchoolsPage, livestock: LivestockPage, infra: InfraPage, transport: TransportPage, foodclothing: FoodClothingPage };
 })();

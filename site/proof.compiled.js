@@ -11,8 +11,8 @@
   const sans = "'Manrope', sans-serif";
   const fmtM = n => "$" + (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
   const fmtD = s => { const d = new Date(s); return isNaN(d) ? "" : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase(); };
-  const UNIT_NOUN = { "Houses of Worship": ["mosque", "mosques"], "Food & Land": ["tree", "trees"], "Clean Water": ["well", "wells"], "Hospitals": ["clinic", "clinics"], "Schools": ["school", "schools"], "Livestock & Enterprise": ["placement", "placements"], "Sustainable Infrastructure": ["work", "works"] };
-  const PILLAR_ORDER = ["Houses of Worship", "Food & Land", "Clean Water", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure"];
+  const UNIT_NOUN = { "Houses of Worship": ["mosque", "mosques"], "Reforestation & Land": ["tree", "trees"], "Clean Water": ["well", "wells"], "Hospitals": ["clinic", "clinics"], "Schools": ["school", "schools"], "Livestock & Enterprise": ["placement", "placements"], "Sustainable Infrastructure": ["work", "works"] };
+  const PILLAR_ORDER = ["Houses of Worship", "Reforestation & Land", "Food & Clothing", "Clean Water", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure"];
 
   const Seal = ({ size = 26 }) => h("svg", { width: size, height: size, viewBox: "0 0 36 36" },
     h("g", { fill: "none", stroke: GOLD, strokeWidth: "1.2" },

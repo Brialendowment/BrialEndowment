@@ -315,6 +315,21 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-mlog-i small{font-size:12px;color:var(--faint);overflow-wrap:anywhere}
 .fd-mlog-i .fd-tag{justify-self:end}
 .fd-mprev{width:100%;height:560px;border:0;border-radius:10px;background:#F5F2EA}
+.fd-ctrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:16px}
+.fd-ctr{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:20px 20px 18px;min-width:0}
+.fd-ctr-k{font-size:12.5px;color:var(--muted)}
+.fd-ctr-row{display:flex;align-items:center;gap:10px;margin-top:12px}
+.fd-ctr-b{flex:0 0 52px;height:52px;border-radius:12px;border:1px solid var(--line2);background:rgba(10,22,40,.5);color:var(--text);font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;user-select:none}
+.fd-ctr-b:hover{border-color:var(--accent);color:var(--accent)}
+.fd-ctr-b:disabled{opacity:.35;cursor:default;border-color:var(--line2);color:var(--text)}
+.fd-ctr-v{flex:1;min-width:0;display:flex;align-items:baseline;justify-content:center;gap:6px;border:1px solid var(--line2);border-radius:12px;background:rgba(10,22,40,.6);padding:4px 12px;height:52px}
+.fd-ctr-v:focus-within{border-color:var(--accent)}
+.fd-ctr-v input{width:100%;min-width:0;background:none;border:0;outline:none;color:var(--text);text-align:right;font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;font-variant-numeric:lining-nums tabular-nums;-moz-appearance:textfield}
+.fd-ctr-v input::-webkit-outer-spin-button,.fd-ctr-v input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.fd-ctr-v em{font-style:normal;font-size:13px;color:var(--faint);white-space:nowrap}
+.fd-ctr-steps{display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap;font-size:12px;color:var(--faint)}
+.fd-ctr-steps .fd-chip{padding:4px 11px;font-size:12.5px}
+.fd-ctr small{display:block;margin-top:12px;font-size:12px;color:var(--faint);line-height:1.5}
 .fd-ivz{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px}
 .fd-ivz span{display:flex;flex-direction:column;gap:2px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:rgba(10,22,40,.35)}
 .fd-ivz small{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
@@ -404,6 +419,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     worship: I(<><path d="M12 3c-2 2-4 3.5-4 6h8c0-2.5-2-4-4-6z" /><path d="M6 21V12h12v9M10 21v-4h4v4M4 21h16" /></>),
     library: I(<><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" /><path d="M12 6v14" /></>),
     foodland: I(<><path d="M12 21v-9" /><path d="M12 12c0-4 3-7 7-7 0 4-3 7-7 7zM12 14c0-3-2.5-5.5-6-5.5 0 3.5 2.5 5.5 6 5.5z" /></>),
+    foodclothing: I(<><path d="M3 12h18c-.5 4.5-4 7-9 7s-8.5-2.5-9-7z" /><path d="M9 9c-1-1.5 1-2.5 0-4M12 9c-1-1.5 1-2.5 0-4M15 9c-1-1.5 1-2.5 0-4" /></>),
     water: I(<><path d="M12 3c3.5 4.5 6 7.8 6 11a6 6 0 0 1-12 0c0-3.2 2.5-6.5 6-11z" /></>),
     hospitals: I(<><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M12 8v8M8 12h8" /></>),
     schools: I(<><path d="M3 10l9-6 9 6" /><path d="M5 9.5V20h14V9.5M10 20v-5h4v5" /></>),
@@ -527,7 +543,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // ============================================================
   const PILLARS = {
     worship: { name: "Houses of Worship", grantName: "Houses of Worship", accent: "#C9A961", unit: ["mosque", "mosques"], unitLabel: "Mosques built", get: s => s.getWorship(), save: (s, v) => s.saveWorship(v), unitField: "mosques", partner: "Minang Bandung Foundation", project: "e.g. Masjid Al-Ikhlas construction", note: "the site", firstEntry: "The first mosque", linkMode: "pillar", linkHelp: "Usually the partner foundation's construction or donation page (for example, Minang Bandung's mosque project page)." },
-    foodland: { name: "Food & Land", grantName: "Food & Land", accent: "#A8C97F", unit: ["tree", "trees"], unitLabel: "Trees planted", get: s => s.getFoodland(), save: (s, v) => s.saveFoodland(v), unitField: "trees", partner: "", project: "e.g. Trees for Life olive saplings", firstEntry: "The first five trees", linkMode: "partner", linkHelp: "Usually Zaytoun's Trees for Life page (https://zaytoun.uk/plant-a-tree/)." },
+    foodland: { name: "Reforestation & Land", grantName: "Reforestation & Land", accent: "#A8C97F", unit: ["tree", "trees"], unitLabel: "Trees planted", get: s => s.getFoodland(), save: (s, v) => s.saveFoodland(v), unitField: "trees", partner: "", project: "e.g. Trees for Life olive saplings", firstEntry: "The first five trees", linkMode: "partner", linkHelp: "Usually Zaytoun's Trees for Life page (https://zaytoun.uk/plant-a-tree/)." },
+    foodclothing: { name: "Food & Clothing", grantName: "Food & Clothing", accent: "#D9A97A", unit: ["kg of food", "kg of food"], unitLabel: "Food shared (kg)", noUnits: true,
+      get: s => s.getPillarContent("foodclothing"), save: (s, v) => { const cur = s.getPillarContent("foodclothing"); s.savePillarContent("foodclothing", { ...v, counts: cur.counts, countsUpdatedAt: cur.countsUpdatedAt }); },
+      partner: "", project: "e.g. Ramadan 2027, Panti Asuhan Bandung", firstEntry: "The first Ramadan table", note: "the table", linkMode: "partner", linkHelp: "A partner's programme page, if you give through one. Hide the button while there is no partner." },
     water: { name: "Clean Water", grantName: "Clean Water", accent: "#7FB8C9", unit: ["well", "wells"], unitLabel: "Wells built", get: s => s.getWater(), save: (s, v) => s.saveWater(v), unitField: "trees", partner: "", project: "e.g. Village well, phase I", firstEntry: "The first well", linkMode: "partner", linkHelp: "The drilling or water partner's programme page. Hide the button while there is no active partner." },
     hospitals: { name: "Hospitals", grantName: "Hospitals", accent: "#C9847F", unit: ["clinic", "clinics"], unitLabel: "Clinics opened", get: s => s.getPillarContent("hospitals"), save: (s, v) => s.savePillarContent("hospitals", v), unitField: "units", partner: "", project: "e.g. Village clinic, phase I", firstEntry: "The first clinic", linkMode: "partner", linkHelp: "The health partner's programme page. Hide the button while there is no active partner." },
     schools: { name: "Schools", grantName: "Schools", accent: "#C9BC7F", unit: ["school", "schools"], unitLabel: "Schools raised", get: s => s.getPillarContent("schools"), save: (s, v) => s.savePillarContent("schools", v), unitField: "units", partner: "", project: "e.g. Primary school, phase I", firstEntry: "The first school", linkMode: "partner", linkHelp: "The education partner's programme page. Hide the button while there is no active partner." },
@@ -560,9 +579,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             <Field label="Partner"><input className="fd-input" value={f.partner} onChange={e => set("partner", e.target.value)} placeholder="Organisation that carries out the work" /></Field>
             <Field label="Country"><input className="fd-input" value={f.country} onChange={e => set("country", e.target.value)} placeholder="e.g. Indonesia" /></Field>
           </div>
-          <div className="fd-grid3">
+          <div className={cfg.noUnits ? "fd-grid2" : "fd-grid3"}>
             <Field label="Amount (USD)"><div className="fd-money"><input className="fd-input" inputMode="decimal" value={f.amount} onChange={e => set("amount", e.target.value)} placeholder="0" /></div></Field>
-            <Field label={cfg.unitLabel + " (this grant)"}><input className="fd-input" type="number" min="0" value={f.units} onChange={e => set("units", e.target.value)} placeholder="0" /></Field>
+            {!cfg.noUnits && <Field label={cfg.unitLabel + " (this grant)"}><input className="fd-input" type="number" min="0" value={f.units} onChange={e => set("units", e.target.value)} placeholder="0" /></Field>}
             <Field label="Date"><input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} /></Field>
           </div>
           <Field label="Note (optional)"><input className="fd-input" value={f.note} onChange={e => set("note", e.target.value)} placeholder="Short description" /></Field>
@@ -596,7 +615,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         <Head title="Grants" lede={`Every payment to a ${cfg.name} partner. Archived grants stay on record but leave the public totals.`}>
           <button className="fd-btn primary" onClick={() => setEdit("new")}>Record a grant</button>
         </Head>
-        <Stats items={[{ label: "Total granted", value: money(total) }, { label: cfg.unitLabel, value: units }, { label: "Countries", value: nations }, { label: "Grants on record", value: all.length, sub: all.length - live.length ? `${all.length - live.length} archived` : null }]} />
+        {cfg.noUnits && <p className="fd-sub" style={{ marginTop: -6, marginBottom: 16 }}>Kilograms and garments are kept on the Counts tab. A grant here records the money spent.</p>}
+        <Stats items={[{ label: "Total granted", value: money(total) }, ...(cfg.noUnits ? [] : [{ label: cfg.unitLabel, value: units }]), { label: "Countries", value: nations }, { label: "Grants on record", value: all.length, sub: all.length - live.length ? `${all.length - live.length} archived` : null }]} />
         <div className="fd-toolbar"><Seg value={filter} onChange={setFilter} items={[["live", "Counted", live.length], ["archived", "Archived", all.length - live.length], ["all", "All", all.length]]} /><div style={{ marginLeft: "auto" }}><Flash m={m} /></div></div>
         <div className="fd-table">
           <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Project</div><div>Partner</div><div>Country</div><div>Amount</div><div>Reference · date</div><div /></div>
@@ -708,6 +728,62 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>
           </div>
         )}
+      </>
+    );
+  }
+
+  // ============================================================
+  // COUNTS (Food & Clothing): kilograms of food shared, garments given, per year
+  // ============================================================
+  const fmtCount = n => (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 1 });
+  function Counter({ label, unit, value, decimals, onCommit, hint }) {
+    const [draft, setDraft] = useState(String(value));
+    const [stepBy, setStepBy] = useState(1);
+    const timer = useRef(0);
+    const clean = v => { let n = Math.max(0, Number(String(v).replace(",", ".")) || 0); return decimals ? Math.round(n * 10) / 10 : Math.round(n); };
+    useEffect(() => { setDraft(String(value)); }, [value]);
+    useEffect(() => () => clearTimeout(timer.current), []);
+    const commitSoon = v => { clearTimeout(timer.current); timer.current = setTimeout(() => onCommit(clean(v)), 700); };
+    const bump = d => { const v = clean(clean(draft) + d); setDraft(String(v)); commitSoon(v); };
+    const cur = clean(draft);
+    return (
+      <div className="fd-ctr">
+        <div className="fd-ctr-k">{label}</div>
+        <div className="fd-ctr-row">
+          <button className="fd-ctr-b" aria-label={"Minus " + stepBy + " " + unit} disabled={cur <= 0} onClick={() => bump(-stepBy)}>−</button>
+          <label className="fd-ctr-v"><input inputMode={decimals ? "decimal" : "numeric"} value={draft} aria-label={label}
+            onChange={e => setDraft(e.target.value.replace(/[^0-9.,]/g, ""))} onKeyDown={e => { if (e.key === "Enter") e.target.blur(); }}
+            onBlur={() => { clearTimeout(timer.current); const v = clean(draft); setDraft(String(v)); if (v !== value) onCommit(v); }} /><em>{unit}</em></label>
+          <button className="fd-ctr-b" aria-label={"Plus " + stepBy + " " + unit} onClick={() => bump(stepBy)}>+</button>
+        </div>
+        <div className="fd-ctr-steps">Each tap: {[1, 5, 10, 50].map(n => <button key={n} className="fd-chip" aria-pressed={stepBy === n} onClick={() => setStepBy(n)}>{n}</button>)}</div>
+        {hint && <small>{hint}</small>}
+      </div>
+    );
+  }
+  function CountsView({ store }) {
+    const n = store.getFoodClothingCounts();
+    const thisYear = String(new Date().getFullYear());
+    const years = Array.from(new Set([...n.years, thisYear])).sort().reverse();
+    const [year, setYear] = useState(thisYear);
+    const [m, flash] = useFlash();
+    const row = n.byYear[year] || { kg: 0, garments: 0 };
+    const commit = field => v => { store.setFoodClothingCount(year, field, v); flash("Saved. The public page shows the new total."); };
+    const nextBack = String(Number(years[years.length - 1]) - 1);
+    return (
+      <>
+        <Head title="Counts" lede="What the public Food & Clothing page shows. Tap plus or minus, or type the number. Rough figures from your notes are fine; the page says when counting began." />
+        <Stats items={[{ label: "Food shared, all years", value: fmtCount(n.kg) + " kg" }, { label: "Garments given, all years", value: fmtCount(n.garments) }, { label: "Counting since", value: n.since || thisYear }]} />
+        <div className="fd-toolbar">
+          <Seg value={year} onChange={setYear} items={years.map(y => [y, y])} />
+          <button className="fd-btn quiet sm" onClick={() => setYear(nextBack)}>Add {nextBack}</button>
+          <div style={{ marginLeft: "auto" }}><Flash m={m} /></div>
+        </div>
+        <div className="fd-ctrs">
+          <Counter key={year + "-kg"} label={"Food shared in " + year} unit="kg" decimals value={row.kg} onCommit={commit("kg")} hint="Rice, pasta, cooking oil and other staples, by weight. Half kilograms are fine (2.5)." />
+          <Counter key={year + "-g"} label={"Clothing given in " + year} unit="garments" value={row.garments} onCommit={commit("garments")} hint="Each piece once: a shirt, a pair of trousers, a headscarf, a pair of shoes." />
+        </div>
+        <p className="fd-sub" style={{ marginTop: 18 }}>Each year is kept apart, so the Impact Report for {year} shows only what was given in {year}, while the public page shows the total of every year. Names and photographs of the people who receive are never asked for or shown.</p>
       </>
     );
   }
@@ -2040,6 +2116,12 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       units[g.pillar] = units[g.pillar] || { n: 0, unit: cfg && cfg.unit ? cfg.unit : ["unit", "units"] };
       units[g.pillar].n += n;
     });
+    // Food & Clothing: counted per year (kilograms of food, garments), not per grant
+    const fc = store.getFoodClothingCounts ? store.getFoodClothingCounts() : { years: [], byYear: {} };
+    const fcIn = fc.years.filter(y => Number(y) <= rep.year && (rep.founding || Number(y) === Number(rep.year)));
+    const fcKg = Math.round(fcIn.reduce((a, y) => a + fc.byYear[y].kg, 0) * 10) / 10, fcG = fcIn.reduce((a, y) => a + fc.byYear[y].garments, 0);
+    if (fcKg > 0) units["Food & Clothing"] = { n: fcKg, unit: ["kg of food shared", "kg of food shared"] };
+    if (fcG > 0) units["Food & Clothing "] = { n: fcG, unit: ["garment given", "garments given"], pillar: "Food & Clothing" };
     // people and places
     const scholars = F.scholars.filter(s => !s.deleted && (!s.acceptedAt || new Date(s.acceptedAt) <= to));
     const nations = new Map(), insts = new Set();
@@ -2058,12 +2140,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     ].sort((a, b) => (a.date < b.date ? -1 : 1));
     const pillarNames = Object.keys(byPillar);
     if ((scholars.length + legacyCount) > 0 && pillarNames.indexOf("Scholarships") < 0) pillarNames.unshift("Scholarships");
+    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf("Food & Clothing") < 0) pillarNames.push("Food & Clothing");
     return {
       computedAt: new Date().toISOString(),
       period: { label: rep.founding ? "From the beginning to 31 December " + rep.year : "1 January to 31 December " + rep.year, from: from ? ymdOf(from) : null, to: rep.year + "-12-31" },
       people: { scholars: scholars.length + legacyCount, newScholars, nations: nations.size, nationList: [...nations.values()], institutions: insts.size, semesters },
       pillars: pillarNames,
-      built: Object.entries(units).map(([pillar, u]) => ({ pillar, n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
+      built: Object.entries(units).map(([pillar, u]) => ({ pillar: u.pillar || pillar, n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
       gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
       money: {
         received: F.sum(gifts), sales: F.sum(sales), copies, enterprise: F.sum(enterprise),
@@ -2354,7 +2437,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // ============================================================
   // SECURITY: two-step verification, recovery codes, activity log
   // ============================================================
-  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Food & Land page", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
+  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Reforestation & Land page", "PILLAR-CONTENT-FOODCLOTHING": "Food & Clothing page and counts", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
   const ACT_WORD = {
     "security.signed_in": "Signed in", "security.signed_out": "Signed out", "security.authenticator_added": "Turned on two-step verification",
     "security.authenticator_removed": "Turned off two-step verification", "security.recovery_codes_created": "Created new recovery codes",
@@ -2519,7 +2602,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // FOUNDER HOME — the chooser, in two swipeable groups
   // ============================================================
   const GROUPS = [
-    { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "water", "hospitals", "schools", "livestock", "infra", "transport"] },
+    { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "foodclothing", "water", "hospitals", "schools", "livestock", "infra", "transport"] },
     { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, security, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "security", "site", "backup"] },
   ];
   function FounderHome(props) {
@@ -3845,7 +3928,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     ["hello", "The Brial Endowment", "hello@brialendowment.org", "The foundation's general address"],
     ["receipts", "The Brial Endowment", "receipts@brialendowment.org", "For anything about gifts and receipts"],
   ];
-  const PROGRAMMES = ["The Brial Endowment · general endowment fund", "Scholarships", "Clean Water · wells and water systems", "Food & Land · Trees for Life, olive trees in Palestine", "Houses of Worship", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure", "Library"];
+  const PROGRAMMES = ["The Brial Endowment · general endowment fund", "Scholarships", "Clean Water · wells and water systems", "Reforestation & Land · Trees for Life, olive trees in Palestine", "Food & Clothing · staple food and clothing for people in need", "Houses of Worship", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure", "Library"];
   const THANKS = "Dear …,\n\nThank you for your generous contribution of $… to …. Because of you, …\n\n…\n\nMay God accept it from you and multiply its reward.\n\nWith heartfelt thanks,";
   const splitTo = s => String(s || "").split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
   function Composer({ store, onClose, onSent }) {
@@ -3908,7 +3991,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                 <div className="fd-grid2">
                   <Field label="Contributed by"><input className="fd-input" value={ack.name} onChange={e => setA("name", e.target.value)} placeholder="Full name" /></Field>
                   <Field label="Amount (USD)"><input className="fd-input" inputMode="decimal" value={ack.amount} onChange={e => setA("amount", e.target.value)} placeholder="35" /></Field>
-                  <Field label="Programme"><input className="fd-input" list="fd-programmes" value={ack.programme} onChange={e => setA("programme", e.target.value)} placeholder="Food & Land · …" /><datalist id="fd-programmes">{PROGRAMMES.map(x => <option key={x} value={x} />)}</datalist></Field>
+                  <Field label="Programme"><input className="fd-input" list="fd-programmes" value={ack.programme} onChange={e => setA("programme", e.target.value)} placeholder="Reforestation & Land · …" /><datalist id="fd-programmes">{PROGRAMMES.map(x => <option key={x} value={x} />)}</datalist></Field>
                   <Field label="Date of contribution"><input className="fd-input" type="date" value={ack.date} onChange={e => setA("date", e.target.value)} /></Field>
                   <Field label="Reference (optional)"><input className="fd-input" value={ack.reference} onChange={e => setA("reference", e.target.value)} placeholder="Bank or grant reference" /></Field>
                   <div style={{ display: "flex", alignItems: "flex-end" }}><Switch on={ack.pdf} onChange={v => setA("pdf", v)}>Attach PDF</Switch></div>
@@ -4164,6 +4247,18 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       ];
       const t = nav.some(n => n.id === tab) ? tab : "contrib";
       view = t === "contrib" ? <ContributionsView store={store} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
+    }
+    if (pillar === "foodclothing") {
+      const cfg = PILLARS.foodclothing;
+      nav = [
+        { id: "counts", label: "Counts", icon: ICON.overview },
+        { id: "grants", label: "Grants", icon: ICON.grant, count: store.getPillarGrants().filter(g => g.pillar === cfg.grantName && !g.archived).length },
+        { id: "story", label: "Programme page", icon: ICON.story },
+        { id: "link", label: "Partner button", icon: ICON.link },
+      ];
+      const t = nav.some(n => n.id === tab) ? tab : "counts";
+      view = t === "counts" ? <CountsView store={store} /> : t === "grants" ? <GrantsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     const cfg = PILLARS[pillar];
