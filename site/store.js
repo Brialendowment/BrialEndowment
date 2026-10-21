@@ -681,6 +681,8 @@ window.BrialClipboard = { copy: copyToClipboard };
         usdt: { enabled: true, address: WALLET.address, network: "ERC-20", asset: "USDT (Tether)", confirmations: 12 },
         bank: { enabled: true, bank: "Bank Jago", account: "107540735665", holder: "Brial Asif Hayi Paka", currency: "IDR \u00b7 Rupiah" },
         card: { enabled: true, link: "https://lynk.id/brial/s/e1896978jwq9" },
+        // Static QRIS from DANA Bisnis (NMID ID1026621752462, MCC 8398 charitable organisations), registered 21 Oct 2026
+        qris: { enabled: true, provider: "DANA Bisnis", payload: "00020101021126570011ID.DANA.WWW011893600915303626423802090362642380303UMI51440014ID.CO.QRIS.WWW0215ID10266217524620303UMI5204839853033605802ID5925The Brial Endowment, Orga6013Pasaman Barat61052656663048428" },
       };
       const d = _donations.find(x => x.id === "PAYMENT-CONFIG");
       if (d && d.data && d.data.payments) {
@@ -689,6 +691,7 @@ window.BrialClipboard = { copy: copyToClipboard };
           usdt: { ...defaults.usdt, ...(p.usdt || {}) },
           bank: { ...defaults.bank, ...(p.bank || {}) },
           card: { ...defaults.card, ...(p.card || {}) },
+          qris: { ...defaults.qris, ...(p.qris || {}) },
         };
       }
       return defaults;
@@ -699,6 +702,19 @@ window.BrialClipboard = { copy: copyToClipboard };
       if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
       saveCache(); notify({ key: "payments" });
       upsertDonation(rec).catch(e => console.error(e));
+    },
+
+    // Reads a QRIS payload (EMVCo TLV): checks the CRC and returns the merchant name, NMID and city.
+    parseQris(payload) {
+      const p = String(payload || "").trim();
+      if (!/^000201/.test(p) || p.length < 40) return { ok: false, error: "This is not a QRIS code." };
+      const crc = s => { let c = 0xFFFF; for (let i = 0; i < s.length; i++) { c ^= s.charCodeAt(i) << 8; for (let k = 0; k < 8; k++) c = c & 0x8000 ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; } return c.toString(16).toUpperCase().padStart(4, "0"); };
+      const tags = {}; let i = 0;
+      try { while (i < p.length) { const t = p.slice(i, i + 2), l = parseInt(p.slice(i + 2, i + 4), 10); if (isNaN(l)) throw 0; tags[t] = p.slice(i + 4, i + 4 + l); i += 4 + l; } } catch (e) { return { ok: false, error: "The code could not be read." }; }
+      if (!tags["63"] || crc(p.slice(0, -4)) !== tags["63"].toUpperCase()) return { ok: false, error: "The checksum does not match. Copy the code again." };
+      const sub = v => { const o = {}; let j = 0; while (v && j < v.length) { const t = v.slice(j, j + 2), l = parseInt(v.slice(j + 2, j + 4), 10); if (isNaN(l)) break; o[t] = v.slice(j + 4, j + 4 + l); j += 4 + l; } return o; };
+      const nat = sub(tags["51"] || "");
+      return { ok: true, merchant: tags["59"] || "", city: tags["60"] || "", nmid: nat["02"] || "", mcc: tags["52"] || "", dynamic: tags["01"] === "12" };
     },
 
     // ----- Pillar grants (non-scholarship distributions, e.g. Houses of Worship) -----

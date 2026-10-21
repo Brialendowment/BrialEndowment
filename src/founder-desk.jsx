@@ -1646,14 +1646,64 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     if (!qr) return null;
     return <span className="fd-qr"><svg width="96" height="96" viewBox={`0 0 ${qr.n} ${qr.n}`} shapeRendering="crispEdges"><path d={qr.d} fill="#0A1628" /></svg></span>;
   }
+  // QRIS: the payload is read from the official QRIS image (BarcodeDetector, or jsQR from the CDN when
+  // the browser has none), checked (CRC), and the donate page draws the code from it.
+  async function readQrFromImage(file) {
+    const bmp = await createImageBitmap(file);
+    if ("BarcodeDetector" in window) {
+      try { const r = await new window.BarcodeDetector({ formats: ["qr_code"] }).detect(bmp); if (r && r[0] && r[0].rawValue) return r[0].rawValue; } catch (e) {}
+    }
+    if (!window.jsQR) await new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
+    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    const x = c.getContext("2d"); x.drawImage(bmp, 0, 0, c.width, c.height);
+    const r = window.jsQR(x.getImageData(0, 0, c.width, c.height).data, c.width, c.height);
+    return r ? r.data : "";
+  }
+  function QrisChannel({ cfg, set, store }) {
+    const q = cfg.qris || {};
+    const on = q.enabled !== false;
+    const info = q.payload ? store.parseQris(q.payload) : null;
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const pick = async e => {
+      const f = e.target.files && e.target.files[0]; e.target.value = "";
+      if (!f) return;
+      setBusy(true); setErr("");
+      try { const v = await readQrFromImage(f); if (!v) setErr("No QR code found in that image. Try a sharper screenshot."); else set("qris", "payload", v); }
+      catch (x) { setErr("Could not read the image."); }
+      setBusy(false);
+    };
+    return (
+      <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
+        <div className="fd-card-head" style={{ marginBottom: 10 }}><h3 className="fd-h2">QRIS (Indonesia)</h3><Switch on={on} onChange={v => set("qris", "enabled", v)}>{on ? "Shown" : "Hidden"}</Switch></div>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <div className="fd-form" style={{ flex: "1 1 300px" }}>
+            {info && info.ok
+              ? <div className="fd-sum"><div><b>{info.merchant}</b>{info.city ? " · " + info.city : ""}</div><div>NMID <b>{info.nmid || "not found"}</b> · checksum OK{info.dynamic ? " · dynamic code" : " · static code"}</div></div>
+              : <div className="fd-sum">{info ? info.error : "No QRIS yet. Upload the QRIS image from your QRIS app."}</div>}
+            <div className="fd-actions">
+              <span className="fd-upload"><span className="fd-btn ghost sm">{ICON.up}{busy ? "Reading…" : "Upload the QRIS image"}</span><input type="file" accept="image/*" onChange={pick} disabled={busy} aria-label="Upload the QRIS image" /></span>
+              {err && <small className="fd-rc bad" style={{ margin: 0 }}>{err}</small>}
+            </div>
+            <Field label="Provider" hint="Shown under the code, e.g. DANA Bisnis."><input className="fd-input" value={q.provider || ""} onChange={e => set("qris", "provider", e.target.value)} /></Field>
+            <Field label="QRIS code (text)" hint="Filled in from the image. Only paste here if you know what you are doing."><textarea className="fd-input fd-mono" rows={3} value={q.payload || ""} onChange={e => set("qris", "payload", e.target.value.trim())} spellCheck={false} /></Field>
+          </div>
+          {info && info.ok && <QR value={q.payload} />}
+        </div>
+      </div>
+    );
+  }
   function ChannelsDialog({ store, onClose }) {
     const [cfg, setCfg] = useState(() => store.getPaymentConfig());
     const set = (g, k, v) => setCfg(p => ({ ...p, [g]: { ...p[g], [k]: v } }));
     const on = g => cfg[g].enabled !== false;
     const head = (g, title) => <div className="fd-card-head" style={{ marginBottom: 10 }}><h3 className="fd-h2">{title}</h3><Switch on={on(g)} onChange={v => set(g, "enabled", v)}>{on(g) ? "Shown" : "Hidden"}</Switch></div>;
     const cardBad = cfg.card.link && !/^https?:\/\//i.test(cfg.card.link.trim());
+    const qrisBad = cfg.qris && cfg.qris.payload && !store.parseQris(cfg.qris.payload).ok;
     return (
       <Modal wide title="Payment channels" sub="How donors can give on the public donate page." onClose={onClose}>
+        <QrisChannel cfg={cfg} set={set} store={store} />
         <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
           {head("usdt", "USDT (on-chain)")}
           <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -1680,7 +1730,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           {cardBad && <div className="fd-msg err" style={{ marginTop: 8 }}>Use a full address that starts with https://</div>}
           <Field label="Lynk fee (%)" hint="What Lynk keeps from each card payment. Used when you verify a card gift; the receipt shows the full gift." style={{ maxWidth: 220, marginTop: 12 }}><input className="fd-input" inputMode="decimal" value={cfg.card.feePct ?? 5} onChange={e => set("card", "feePct", e.target.value.replace(",", "."))} /></Field>
         </div>
-        <div className="fd-actions" style={{ marginTop: 18 }}><button className="fd-btn primary" disabled={cardBad} onClick={() => { store.savePaymentConfig(cfg); onClose(); }}>Save channels</button><button className="fd-btn ghost" onClick={onClose}>Cancel</button></div>
+        <div className="fd-actions" style={{ marginTop: 18 }}><button className="fd-btn primary" disabled={cardBad || qrisBad} onClick={() => { store.savePaymentConfig(cfg); onClose(); }}>Save channels</button><button className="fd-btn ghost" onClick={onClose}>Cancel</button></div>
       </Modal>
     );
   }
@@ -1763,7 +1813,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   }
 
   // ---------------- gifts paid by bank or card: confirm what arrived ----------------
-  const METHOD_LABEL = { usdt: "USDT", bank: "Bank transfer", card: "Card via Lynk", cash: "Cash", other: "Other" };
+  const METHOD_LABEL = { qris: "QRIS", usdt: "USDT", bank: "Bank transfer", card: "Card via Lynk", cash: "Cash", other: "Other" };
   const payWhen = p => { if (!p || !p.paidAt) return ""; const d = new Date(p.paidAt); return isNaN(d) ? String(p.paidAt) : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); };
   function VerifyGiftDialog({ store, d, onClose, onDone }) {
     const fx = useFx(store);
@@ -1787,16 +1837,16 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       onDone(r, payment); onClose();
     };
     return (
-      <Modal title={"Verify " + (card ? "card gift" : "bank transfer")} sub={`${d.anonymous ? "Anonymous" : titleCase(d.name)} · reported ${fdate(d.submittedAt)}`} onClose={onClose}>
+      <Modal title={"Verify " + (card ? "card gift" : p.method === "qris" ? "QRIS gift" : "bank transfer")} sub={`${d.anonymous ? "Anonymous" : titleCase(d.name)} · reported ${fdate(d.submittedAt)}`} onClose={onClose}>
         <div className="fd-sum">
           <div>The donor reported <b>{fmtCur(cur, p.paid)}</b>{payWhen(p) && <> on <b>{payWhen(p)}</b></>}.</div>
           {p.sender && <div>Sender's account name: <b>{p.sender}</b></div>}
-          {p.ref && <div>Lynk order: <b>{p.ref}</b></div>}
-          <div>{card ? "Find it in your Lynk dashboard" : "Find it in your " + (store.getPaymentConfig().bank.bank || "bank") + " statement"}, then confirm what arrived.</div>
+          {p.ref && <div>{p.method === "qris" ? "Reference" : "Lynk order"}: <b>{p.ref}</b></div>}
+          <div>{card ? "Find it in your Lynk dashboard" : p.method === "qris" ? "Find it under Transaksi in DANA Bisnis" : "Find it in your " + (store.getPaymentConfig().bank.bank || "bank") + " statement"}, then confirm what arrived.</div>
         </div>
         <div className="fd-form" style={{ marginTop: 14 }}>
           <div className="fd-grid2">
-            <Field label={card ? `Paid by the donor (${cur})` : "Arrived in your account (Rp)"}><input className="fd-input" inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value.replace(",", "."))} /></Field>
+            <Field label={card ? `Paid by the donor (${cur})` : p.method === "qris" ? "Arrived in DANA Bisnis (Rp)" : "Arrived in your account (Rp)"}><input className="fd-input" inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value.replace(",", "."))} /></Field>
             {card ? <Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={feePct} onChange={e => setFeePct(e.target.value.replace(",", "."))} /></Field>
               : <Field label="Value in US dollars" hint={rate ? `1 USD = ${fmtCur("IDR", rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : "Getting today's rate…"}><input className="fd-input" inputMode="decimal" value={usd} onChange={e => { setUsdTouched(true); setUsd(e.target.value.replace(",", ".")); }} /></Field>}
           </div>
@@ -1819,7 +1869,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const set = (k, v) => setF(p => ({ ...p, [k]: v }));
     const rate = f.cur === "USD" || f.cur === "USDT" ? 1 : fx && fx[f.cur] ? fx[f.cur] : null;
     useEffect(() => { if (!f.usdTouched && rate && parseFloat(f.paid) > 0) set("usd", ((parseFloat(f.paid) || 0) / rate).toFixed(2)); }, [rate, f.paid, f.cur]);
-    const setMethod = mth => setF(p => ({ ...p, method: mth, cur: mth === "usdt" ? "USDT" : mth === "bank" ? "IDR" : p.cur === "USDT" ? "USD" : p.cur }));
+    const setMethod = mth => setF(p => ({ ...p, method: mth, cur: mth === "usdt" ? "USDT" : mth === "bank" || mth === "qris" ? "IDR" : p.cur === "USDT" ? "USD" : p.cur }));
     const card = f.method === "card";
     const fee = card ? (parseFloat(f.paid) || 0) * (parseFloat(f.feePct) || 0) / 100 : 0;
     const [busy, setBusy] = useState(false);
@@ -1839,7 +1889,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     return (
       <Modal wide title="Record a gift" sub="For a gift that arrived without a form from the donor. It is verified straight away and the receipt is emailed if you add an email." onClose={onClose}>
         <div className="fd-form">
-          <Field label="How it was given"><div className="fd-seg">{["bank", "card", "usdt", "cash", "other"].map(k => <button key={k} type="button" className="fd-chip" aria-pressed={f.method === k} onClick={() => setMethod(k)}>{METHOD_LABEL[k]}</button>)}</div></Field>
+          <Field label="How it was given"><div className="fd-seg">{["qris", "bank", "card", "usdt", "cash", "other"].map(k => <button key={k} type="button" className="fd-chip" aria-pressed={f.method === k} onClick={() => setMethod(k)}>{METHOD_LABEL[k]}</button>)}</div></Field>
           <div className="fd-grid2">
             <Field label="Donor's name"><input className="fd-input" value={f.name} disabled={f.anonymous} onChange={e => set("name", e.target.value)} placeholder={f.anonymous ? "Anonymous" : "Name or organisation"} /></Field>
             <Field label="Email for the receipt (optional)"><input className="fd-input" type="email" value={f.email} onChange={e => set("email", e.target.value)} placeholder="donor@example.com" /></Field>
@@ -1907,7 +1957,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <button className="fd-btn primary" onClick={() => setAddGift(true)}>Record a gift</button>
           <button className="fd-btn ghost" onClick={() => setChan(true)}>Payment channels</button>
         </Head>
-        <Stats items={[{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter(g => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }]} />
+        <Stats items={[{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["qris", "usdt", "bank", "card"].filter(g => cfg[g] && cfg[g].enabled !== false && (g !== "qris" || cfg.qris.payload)).length, sub: [cfg.qris && cfg.qris.enabled !== false && cfg.qris.payload && "QRIS", cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }]} />
         <div className="fd-toolbar"><Seg value={filter} onChange={setFilter} items={[["pending", "To verify", pending.length], ["verified", "Verified", verified.length], ["anonymous", "Anonymous", list.filter(d => d.anonymous).length], ["all", "All", list.length]]} /></div>
         <div className="fd-toolbar"><Search value={q} onChange={setQ} placeholder="Search donor, email, country or reference" /></div>
         {vm && <div style={{ marginBottom: 12 }}><Flash m={vm} /></div>}
@@ -1928,7 +1978,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                   <div className="fd-actions" style={{ justifyContent: "flex-end" }}>
                     {d.verified
                       ? <><Tag tone="ok" dot>{d.verifiedBy === "chain" ? "Verified on chain" : "Verified"}</Tag>{!isSale(d) && <button className="fd-btn quiet sm" onClick={() => setOpen(d.id)}>Receipt</button>}</>
-                      : d.payment && (d.payment.method === "bank" || d.payment.method === "card")
+                      : d.payment && (d.payment.method === "bank" || d.payment.method === "card" || d.payment.method === "qris")
                         ? <button className="fd-btn ok sm" onClick={() => setCheckGift(d.id)}>Verify…</button>
                         : <Confirm className="fd-btn ok sm" armedLabel={okEmail(d.email) ? "Confirm · email receipt" : "Confirm verify"} onConfirm={() => verify(d)}>Verify</Confirm>}
                     <Confirm onConfirm={() => store.deleteDonation(d.id)}>Delete</Confirm>
@@ -2324,7 +2374,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   function ChannelsView({ store }) {
     const [open, setOpen] = useState(false);
     const c = store.getPaymentConfig();
+    const qi = c.qris && c.qris.payload ? store.parseQris(c.qris.payload) : null;
     const rows = [
+      ["qris", "QRIS (Indonesia)", c.qris && c.qris.enabled !== false && qi && qi.ok, qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set", qi && qi.ok ? "NMID " + qi.nmid : ""],
       ["usdt", "USDT (on-chain)", c.usdt.enabled !== false, [c.usdt.network, c.usdt.asset].filter(Boolean).join(" · "), c.usdt.address],
       ["bank", "Bank transfer", c.bank.enabled !== false, [c.bank.bank, c.bank.currency].filter(Boolean).join(" · "), [c.bank.account, c.bank.holder].filter(Boolean).join(" · ")],
       ["card", "Card (Mastercard / Visa)", c.card.enabled !== false, "Checkout page", c.card.link],

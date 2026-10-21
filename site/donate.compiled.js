@@ -203,16 +203,58 @@ const DonateNav = ({
 //           against the Lynk dashboard (Lynk keeps a fee before paying out).
 // The ledger is in US dollars; Rupiah amounts are converted at today's rate and
 // the founder confirms the final figure when verifying.
+// ---------- QRIS (Indonesia): one static code that every Indonesian bank and e-wallet app can pay ----------
+// The QR is drawn from the stored QRIS payload, so it stays sharp. On a phone the donor cannot scan
+// their own screen, so "Save QR image" writes a PNG they can pick from the gallery in their bank app.
+const saveQrisImage = (payload, info) => {
+  const qr = makeQR(payload, "M");
+  if (!qr) return;
+  const n = qr.getModuleCount(), cell = 12, quiet = 4, qsize = (n + quiet * 2) * cell;
+  const W = qsize + 120, H = qsize + 300;
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d");
+  x.fillStyle = "#FFFFFF"; x.fillRect(0, 0, W, H);
+  x.fillStyle = "#0A1628"; x.textAlign = "center";
+  x.font = "600 44px Manrope, Arial, sans-serif"; x.fillText("QRIS", W / 2, 80);
+  x.font = "500 34px Manrope, Arial, sans-serif"; x.fillText("The Brial Endowment", W / 2, 136);
+  x.font = "26px 'JetBrains Mono', monospace"; x.fillStyle = "#4A5568"; x.fillText(info.nmid ? "NMID " + info.nmid : "", W / 2, 180);
+  const ox = (W - qsize) / 2, oy = 210;
+  x.fillStyle = "#0A1628";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) x.fillRect(ox + (k + quiet) * cell, oy + (r + quiet) * cell, cell, cell);
+  x.font = "24px Manrope, Arial, sans-serif"; x.fillStyle = "#4A5568"; x.fillText("brialendowment.org/donate", W / 2, H - 36);
+  const a = document.createElement("a"); a.download = "QRIS-The-Brial-Endowment.png"; a.href = c.toDataURL("image/png");
+  document.body.appendChild(a); a.click(); a.remove();
+};
+const QrisCard = ({ qris }) => {
+  const h = React.createElement;
+  const store = useDonateStore();
+  const info = (store.parseQris && store.parseQris(qris.payload)) || {};
+  if (!info.ok) return null;
+  const mono = "'JetBrains Mono', monospace", serif = "'Cormorant Garamond', serif", sans = "'Manrope', sans-serif";
+  return h("div", { style: { padding: 32, background: "rgba(20,36,66,0.5)", border: "1px solid rgba(201,169,97,0.25)", marginBottom: 18 } },
+    h("div", { style: { fontFamily: mono, fontSize: 10, color: "#C9A961", letterSpacing: "0.28em", textTransform: "uppercase" } }, "\xA7 Indonesia \u00b7 QRIS"),
+    h("h3", { style: { fontFamily: serif, fontSize: 28, fontWeight: 400, color: "#E8E4DC", letterSpacing: "-0.01em", margin: "10px 0 8px", lineHeight: 1.1 } }, "Scan to give with QRIS."),
+    h("p", { style: { fontFamily: sans, fontSize: 13, lineHeight: 1.6, color: "rgba(232,228,220,0.65)", margin: "0 0 20px" } }, "Any Indonesian bank or e-wallet app: BCA, BRI, Mandiri, BSI, Jago, GoPay, OVO, DANA, ShopeePay. Enter any amount."),
+    h("div", { style: { display: "flex", justifyContent: "center", padding: 18, background: "#FFFFFF" } }, h(QRCode, { value: qris.payload, size: 220, bg: "#FFFFFF" })),
+    h("div", { style: { textAlign: "center", marginTop: 12 } },
+      h("div", { style: { fontFamily: sans, fontSize: 14, fontWeight: 600, color: "#E8E4DC" } }, "The Brial Endowment"),
+      info.nmid ? h("div", { style: { fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", color: "rgba(232,228,220,0.55)", marginTop: 4 } }, "NMID " + info.nmid + (qris.provider ? " \u00b7 " + qris.provider : "")) : null),
+    h("div", { style: { display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 16 } },
+      h("button", { type: "button", onClick: () => saveQrisImage(qris.payload, info), style: { padding: "10px 16px", background: "#C9A961", color: "#0A1628", border: "none", cursor: "pointer", fontFamily: sans, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em" } }, "Save QR image \u2193"),
+      h(RecordMethodBtn, { method: "qris", flat: true }, "Record my gift \u2192")),
+    h("div", { style: { fontFamily: sans, fontSize: 12, lineHeight: 1.6, color: "rgba(232,228,220,0.55)", marginTop: 14, textAlign: "center" } },
+      "On your phone? Save the image, then in your bank app choose Scan QR and pick it from your gallery."));
+};
 // Switches the form to a payment method and brings it into view
-const RecordMethodBtn = ({ method, children }) => /*#__PURE__*/React.createElement("button", {
+const RecordMethodBtn = ({ method, children, flat }) => /*#__PURE__*/React.createElement("button", {
   type: "button",
   onClick: () => {
     window.dispatchEvent(new CustomEvent("brial:donate-method", { detail: method }));
     setTimeout(() => { const f = document.getElementById("donate-form"); if (f) f.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
   },
-  style: { marginTop: 12, padding: "9px 14px", background: "transparent", border: "1px solid rgba(201,169,97,0.45)", color: "#E3C98A", cursor: "pointer", fontFamily: "'Manrope', sans-serif", fontSize: 12, letterSpacing: "0.08em" }
+  style: { marginTop: flat ? 0 : 12, padding: "9px 14px", background: "transparent", border: "1px solid rgba(201,169,97,0.45)", color: "#E3C98A", cursor: "pointer", fontFamily: "'Manrope', sans-serif", fontSize: 12, letterSpacing: "0.08em" }
 }, children);
-const DONATE_METHODS = [["usdt", "USDT (crypto)"], ["bank", "Bank transfer (IDR)"], ["card", "Card via Lynk"]];
+const DONATE_METHODS = [["qris", "QRIS (Indonesia)"], ["usdt", "USDT (crypto)"], ["bank", "Bank transfer (IDR)"], ["card", "Card via Lynk"]];
 const fmtIDR = n => "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
 const fmtUSD = n => "$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const blankDonation = method => ({ method: method || "usdt", name: "", email: "", country: "", amount: "", idr: "", cardAmount: "", cardCur: "IDR", paidAt: "", sender: "", ref: "", message: "", txHash: "", anonymous: false, agreement: false });
@@ -223,7 +265,7 @@ const DonationForm = ({
   const h = React.createElement;
   const store = useDonateStore();
   const pay = store.getPaymentConfig ? store.getPaymentConfig() : { usdt: {}, bank: {}, card: {} };
-  const methods = DONATE_METHODS.filter(([k]) => !pay[k] || pay[k].enabled !== false);
+  const methods = DONATE_METHODS.filter(([k]) => k === "qris" ? !!(pay.qris && pay.qris.enabled !== false && store.parseQris && store.parseQris(pay.qris.payload).ok) : (!pay[k] || pay[k].enabled !== false));
   const [form, setForm] = useStateD(() => blankDonation(methods[0] ? methods[0][0] : "usdt"));
   const [error, setError] = useStateD(null);
   const [step, setStep] = useStateD("form"); // form | submitting | done
@@ -241,7 +283,7 @@ const DonationForm = ({
   const m = form.method;
   const usd = (() => {
     if (m === "usdt") return parseFloat(form.amount) || 0;
-    if (m === "bank") return (parseFloat(form.idr) || 0) / rate("IDR");
+    if (m === "bank" || m === "qris") return (parseFloat(form.idr) || 0) / rate("IDR");
     const v = parseFloat(form.cardAmount) || 0;
     return form.cardCur === "USD" ? v : v / rate("IDR");
   })();
@@ -251,17 +293,17 @@ const DonationForm = ({
     if (m === "usdt") {
       if (!(parseFloat(form.amount) > 0)) return setError("Please enter the amount you sent.");
       if (!form.txHash.trim()) return setError("Please paste your transaction hash so we can verify it on chain.");
-    } else if (m === "bank") {
-      if (!(parseFloat(form.idr) >= 1000)) return setError("Please enter the amount you transferred, in Rupiah.");
+    } else if (m === "bank" || m === "qris") {
+      if (!(parseFloat(form.idr) >= 1000)) return setError(m === "qris" ? "Please enter the amount you paid, in Rupiah." : "Please enter the amount you transferred, in Rupiah.");
     } else if (!(parseFloat(form.cardAmount) > 0)) return setError("Please enter the amount you paid on Lynk.");
     if (!form.agreement) return setError("Please confirm you understand donations are non-refundable.");
     const when = form.paidAt ? new Date(form.paidAt) : null;
     const whenTxt = when && !isNaN(when) ? when.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + when.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
     let txHash = form.txHash.trim(), payment;
     if (m === "usdt") payment = { method: "usdt", currency: "USDT", paid: parseFloat(form.amount) };
-    else if (m === "bank") {
-      txHash = ["Bank transfer", fmtIDR(form.idr), whenTxt].filter(Boolean).join(" · ");
-      payment = { method: "bank", currency: "IDR", paid: parseFloat(form.idr), rate: rate("IDR"), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
+    else if (m === "bank" || m === "qris") {
+      txHash = [m === "qris" ? "QRIS" : "Bank transfer", fmtIDR(form.idr), whenTxt].filter(Boolean).join(" · ");
+      payment = { method: m, currency: "IDR", paid: parseFloat(form.idr), rate: rate("IDR"), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
     } else {
       const paidTxt = form.cardCur === "USD" ? fmtUSD(form.cardAmount) : fmtIDR(form.cardAmount);
       txHash = ["Card via Lynk", paidTxt, whenTxt].filter(Boolean).join(" · ");
@@ -290,19 +332,19 @@ const DonationForm = ({
 
   if (step === "done" && sent) {
     const auto = sent.method === "usdt" && wallet.autoVerify !== false;
-    const where = sent.method === "bank" ? "our Bank Jago statement" : sent.method === "card" ? "our Lynk dashboard" : "the blockchain";
+    const where = sent.method === "qris" ? "our QRIS records" : sent.method === "bank" ? "our Bank Jago statement" : sent.method === "card" ? "our Lynk dashboard" : "the blockchain";
     return h("div", { style: { padding: 44, background: "linear-gradient(180deg, rgba(134,229,167,0.08), rgba(134,229,167,0.02))", border: "1px solid rgba(134,229,167,0.4)", position: "relative" } },
       h("div", { style: { fontFamily: serif, fontSize: 64, color: "#86E5A7", lineHeight: 1 } }, "✓"),
       h("div", { style: { fontFamily: mono, fontSize: 10, color: "#86E5A7", letterSpacing: "0.28em", textTransform: "uppercase", marginTop: 16 } }, "Submission Received"),
       h("h3", { style: { fontFamily: serif, fontSize: 38, fontWeight: 400, color: "#E8E4DC", margin: "12px 0 14px", lineHeight: 1.1, letterSpacing: "-0.01em" } }, "Thank you, truly."),
       h("p", { style: { fontFamily: sans, fontSize: 14, lineHeight: 1.7, color: "rgba(232,228,220,0.75)", margin: 0 } },
         auto ? "We are reading your transaction on chain now. " : "We will match your gift against " + where + ", usually within one or two days. ",
-        sent.email ? h(React.Fragment, null, "Your receipt for ", h("strong", { style: { color: "#86E5A7" } }, sent.method === "bank" ? fmtIDR(sent.payment.paid) : fmtUSD(sent.amount)), " will arrive at ", h("strong", { style: { color: "#E8E4DC" } }, sent.email), auto ? " once the deposit clears " + wallet.confirmations + " confirmations, usually within a few minutes." : " as soon as it is matched.")
+        sent.email ? h(React.Fragment, null, "Your receipt for ", h("strong", { style: { color: "#86E5A7" } }, sent.method === "bank" || sent.method === "qris" ? fmtIDR(sent.payment.paid) : fmtUSD(sent.amount)), " will arrive at ", h("strong", { style: { color: "#E8E4DC" } }, sent.email), auto ? " once the deposit clears " + wallet.confirmations + " confirmations, usually within a few minutes." : " as soon as it is matched.")
           : "Your gift will appear on our open ledger as soon as it is matched."),
       h("button", { onClick: () => { setStep("form"); setSent(null); setForm(blankDonation(m)); }, style: { marginTop: 28, padding: "12px 22px", background: "transparent", border: "1px solid rgba(232,228,220,0.2)", color: "rgba(232,228,220,0.8)", cursor: "pointer", fontFamily: sans, fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Record another donation"));
   }
 
-  const intro = m === "usdt" ? "Send your USDT first using the wallet on the left, then fill this form. We check the transaction on chain and send your receipt."
+  const intro = m === "qris" ? "Scan the QRIS code with your bank or e-wallet app and pay any amount, then fill this form with the amount and the time so we can match it." : m === "usdt" ? "Send your USDT first using the wallet on the left, then fill this form. We check the transaction on chain and send your receipt."
     : m === "bank" ? "Transfer to our Bank Jago account first, then fill this form. The amount and the time of the transfer are enough for us to find it; no hash needed."
     : "Pay on our Lynk page first, then fill this form with the amount and, if you have it, the order number from your Lynk receipt.";
   return h("form", { id: "donate-form", onSubmit: submit, style: { padding: 36, background: "rgba(20,36,66,0.5)", border: "1px solid rgba(201,169,97,0.18)", scrollMarginTop: 90 } },
@@ -322,8 +364,8 @@ const DonationForm = ({
         lab("Amount in USDT"),
         bigAmount("$", form.amount, v => update({ amount: v }), "1,000", h("span", { style: { fontFamily: mono, fontSize: 11, color: "rgba(232,228,220,0.5)", letterSpacing: "0.14em" } }, "USDT")),
         h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [100, 500, 1000, 5000, 10000].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ amount: String(amt) }), style: { padding: "6px 12px", background: "transparent", border: "1px solid rgba(201,169,97,0.3)", color: "#C9A961", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.12em" } }, "$", amt.toLocaleString()))))
-      : m === "bank" ? h(React.Fragment, null,
-        lab("Amount transferred, in Rupiah"),
+      : m === "bank" || m === "qris" ? h(React.Fragment, null,
+        lab(m === "qris" ? "Amount paid, in Rupiah" : "Amount transferred, in Rupiah"),
         bigAmount("Rp", form.idr, v => update({ idr: v }), "500000"),
         h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [100000, 250000, 500000, 1000000, 5000000].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ idr: String(amt) }), style: { padding: "6px 12px", background: "transparent", border: "1px solid rgba(201,169,97,0.3)", color: "#C9A961", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.08em" } }, fmtIDR(amt)))),
         approx)
@@ -341,10 +383,12 @@ const DonationForm = ({
       hint("Paste from your wallet (MetaMask \xB7 Trust Wallet \xB7 Binance \xB7 Exchange withdrawal page). Used to verify the transfer on chain."))
     : h("div", { className: "b-don-2col", style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 22 } },
       h("div", null, lab("When you paid"), boxInput({ type: "datetime-local", value: form.paidAt, onChange: e => update({ paidAt: e.target.value }), mono: false })),
-      m === "bank"
+      m === "qris"
+        ? h("div", null, lab("Reference in your app"), boxInput({ value: form.ref, onChange: e => update({ ref: e.target.value }), placeholder: "optional", spellCheck: false }))
+        : m === "bank"
         ? h("div", null, lab("Sender's account name"), boxInput({ value: form.sender, onChange: e => update({ sender: e.target.value }), placeholder: "as shown by your bank", mono: false }))
         : h("div", null, lab("Lynk order number"), boxInput({ value: form.ref, onChange: e => update({ ref: e.target.value }), placeholder: "from your Lynk receipt", spellCheck: false }))),
-    m !== "usdt" ? hint(m === "bank" ? "Optional, but they help us find your transfer quickly. Your account name stays private and never appears on the site." : "Optional, but it helps us find your payment quickly. It stays private.") : null,
+    m !== "usdt" ? hint(m === "qris" ? "The time of payment is usually enough for us to find it. Anything you add stays private." : m === "bank" ? "Optional, but they help us find your transfer quickly. Your account name stays private and never appears on the site." : "Optional, but it helps us find your payment quickly. It stays private.") : null,
 
     // message
     h("div", { style: { marginTop: 22 } },
@@ -554,7 +598,7 @@ const DonatePage = ({
       gap: 32,
       alignItems: "start"
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, pay.qris && pay.qris.enabled !== false && pay.qris.payload ? /*#__PURE__*/React.createElement(QrisCard, { qris: pay.qris }) : null, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 32,
       background: "rgba(20,36,66,0.5)",
@@ -568,7 +612,7 @@ const DonatePage = ({
       letterSpacing: "0.28em",
       textTransform: "uppercase"
     }
-  }, "\xA7 I \u00b7 Deposit Wallet"), /*#__PURE__*/React.createElement("h3", {
+  }, "\xA7 Worldwide \u00b7 USDT"), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 28,
@@ -877,7 +921,7 @@ const DonatePage = ({
       lineHeight: 1.6,
       color: "rgba(232,228,220,0.75)"
     }
-  }, "Setelah transfer, catat donasi Anda di formulir dengan pilihan ", /*#__PURE__*/React.createElement("strong", {
+  }, "Transfer langsung: 100% sampai ke endowment, tanpa potongan. Setelah transfer, catat donasi Anda di formulir dengan pilihan ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "#E8E4DC"
     }
