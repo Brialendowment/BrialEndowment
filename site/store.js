@@ -729,13 +729,18 @@ window.BrialClipboard = { copy: copyToClipboard };
         partner: (obj.partner || "").trim(),
         project: (obj.project || "").trim(),
         country: (obj.country || "").trim(),
-        amount: Number(obj.amount) || 0,
+        amount: Math.round((Number(obj.amount) || 0) * 100) / 100,
         units: Math.max(0, Math.round(Number(obj.units) || 0)),
         note: (obj.note || "").trim(),
         txRef: obj.txRef ? String(obj.txRef).trim() : ref,
         date: obj.date || now(),
         createdAt: now(),
       };
+      // Food & Clothing distributions: kilograms, garments, the date if known, and what was paid in which currency
+      if (obj.kg !== undefined) g.kg = Math.max(0, Math.round((Number(obj.kg) || 0) * 10) / 10);
+      if (obj.garments !== undefined) g.garments = Math.max(0, Math.round(Number(obj.garments) || 0));
+      if (obj.dateUnknown) g.dateUnknown = true;
+      if (obj.paid && obj.paid.currency && obj.paid.currency !== "USD") g.paid = { currency: String(obj.paid.currency), value: Number(obj.paid.value) || 0, rate: Number(obj.paid.rate) || 0 };
       Store._savePillarGrants([g, ...grants]);
       return g;
     },
@@ -745,7 +750,10 @@ window.BrialClipboard = { copy: copyToClipboard };
     updatePillarGrant(id, patch) {
       const clean = { ...patch };
       if (clean.units !== undefined) clean.units = Math.max(0, Math.round(Number(clean.units) || 0));
-      if (clean.amount !== undefined) clean.amount = Number(clean.amount) || 0;
+      if (clean.amount !== undefined) clean.amount = Math.round((Number(clean.amount) || 0) * 100) / 100;
+      if (clean.kg !== undefined) clean.kg = Math.max(0, Math.round((Number(clean.kg) || 0) * 10) / 10);
+      if (clean.garments !== undefined) clean.garments = Math.max(0, Math.round(Number(clean.garments) || 0));
+      if (clean.paid !== undefined && !(clean.paid && clean.paid.currency && clean.paid.currency !== "USD")) clean.paid = null;
       Store._savePillarGrants(Store.getPillarGrants().map(g => g.id === id ? { ...g, ...clean } : g));
     },
     // ----- Impact reports: one a year, written in the Founder Console. -----
@@ -1002,19 +1010,32 @@ window.BrialClipboard = { copy: copyToClipboard };
     // ----- Food & Clothing counters: kilograms of food shared and garments given -----
     // Kept per year inside PILLAR-CONTENT-FOODCLOTHING (counts: { "2026": { kg, garments } }),
     // so the public page shows the running total and each Impact Report its own year.
+    // Two sources, added together: rough yearly totals typed in (manual) and the
+    // distributions recorded one by one (logged, from the pillar's grants).
     getFoodClothingCounts() {
       const c = Store.getPillarContent("foodclothing");
       const raw = c.counts && typeof c.counts === "object" ? c.counts : {};
-      const byYear = {};
+      const manual = {}, logged = {}, byYear = {};
       Object.keys(raw).forEach(y => {
         if (!/^\d{4}$/.test(y)) return;
         const r = raw[y] || {};
-        byYear[y] = { kg: Math.max(0, Number(r.kg) || 0), garments: Math.max(0, Math.round(Number(r.garments) || 0)) };
+        manual[y] = { kg: Math.max(0, Number(r.kg) || 0), garments: Math.max(0, Math.round(Number(r.garments) || 0)) };
       });
-      const years = Object.keys(byYear).sort();
+      Store.getPillarGrants().filter(g => g && g.pillar === "Food & Clothing" && !g.archived).forEach(g => {
+        const kg = Math.max(0, Number(g.kg) || 0), gar = Math.max(0, Math.round(Number(g.garments) || 0));
+        if (!kg && !gar) return;
+        const d = new Date(g.date || g.createdAt || Date.now());
+        const y = String(isNaN(d) ? new Date().getFullYear() : d.getFullYear());
+        logged[y] = logged[y] || { kg: 0, garments: 0, entries: 0 };
+        logged[y].kg += kg; logged[y].garments += gar; logged[y].entries += 1;
+      });
+      new Set([...Object.keys(manual), ...Object.keys(logged)]).forEach(y => {
+        byYear[y] = { kg: Math.round(((manual[y] ? manual[y].kg : 0) + (logged[y] ? logged[y].kg : 0)) * 10) / 10, garments: (manual[y] ? manual[y].garments : 0) + (logged[y] ? logged[y].garments : 0) };
+      });
+      const years = Object.keys(byYear).filter(y => byYear[y].kg || byYear[y].garments || manual[y]).sort();
       const kg = years.reduce((a, y) => a + byYear[y].kg, 0);
       const garments = years.reduce((a, y) => a + byYear[y].garments, 0);
-      return { byYear, years, kg: Math.round(kg * 10) / 10, garments, since: years[0] || "" };
+      return { byYear, manual, logged, years, kg: Math.round(kg * 10) / 10, garments, since: years[0] || "" };
     },
     setFoodClothingCount(year, field, value) {
       if (!/^\d{4}$/.test(String(year)) || (field !== "kg" && field !== "garments")) return;
@@ -1110,6 +1131,20 @@ window.BrialClipboard = { copy: copyToClipboard };
     },
     sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
+    // ----- Exchange rates, units of currency per 1 USD (ECB via frankfurter, then open.er-api, then a rough fallback) -----
+    FX_FALLBACK: { IDR: 16500, TRY: 42, USD: 1 },
+    _fx: null,
+    fxRates() {
+      if (Store._fx && Date.now() - Store._fx.at < 6 * 3600e3) return Promise.resolve(Store._fx);
+      const ok = r => r && r.IDR > 1000 && r.TRY > 1;
+      const done = (rates, source) => (Store._fx = { ...Store.FX_FALLBACK, ...rates, USD: 1, at: Date.now(), source });
+      const get = (u, pick) => fetch(u, { cache: "no-store" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(pick);
+      return get("https://api.frankfurter.app/latest?from=USD&to=IDR,TRY", j => j && j.rates)
+        .then(r => (ok(r) ? done(r, "European Central Bank") : Promise.reject("bad")))
+        .catch(() => get("https://open.er-api.com/v6/latest/USD", j => j && j.rates && { IDR: j.rates.IDR, TRY: j.rates.TRY })
+          .then(r => (ok(r) ? done(r, "open.er-api.com") : Promise.reject("bad"))))
+        .catch(() => ({ ...Store.FX_FALLBACK, at: Date.now(), source: "estimate" }));
+    },
     // ----- USDT gifts checked on chain by the be-chain worker (founder only) -----
     chainStatus() { return Store._mailRpc("be_chain_status"); },
     chainRecheck(id) { return Store._mailRpc("be_chain_recheck", { p_id: id }); },
@@ -1871,6 +1906,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         submittedAt: now(),
         verified: false,
       };
+      if (d.payment && typeof d.payment === "object") donation.payment = d.payment;
       _donations.unshift(donation); saveCache(); notify({ key: id });
       // Public form → server RPC (always lands unverified; can't touch config rows)
       rpc("be_submit_donation", { p_donation: donation }).then(row => {
@@ -1883,13 +1919,37 @@ window.BrialClipboard = { copy: copyToClipboard };
       });
       return donation;
     },
-    markDonationVerified(id) {
+    // patch: what the founder confirmed (amount in USD, payment details); kept on the record
+    markDonationVerified(id, patch) {
       const idx = _donations.findIndex(d => d.id === id);
       if (idx < 0) return;
-      _donations[idx] = { ..._donations[idx], verified: true, verifiedAt: now() };
+      const extra = patch && typeof patch === "object" ? patch : {};
+      _donations[idx] = { ..._donations[idx], ...extra, verified: true, verifiedAt: now(), verifiedBy: "founder" };
       saveCache(); notify({ key: id });
       // the database issues the receipt number and queues the receipt email
       return upsertDonation(_donations[idx]).catch(e => { console.error(e); throw e; });
+    },
+    // A gift the founder saw arrive (bank, card, cash, crypto) without a form from the donor.
+    // Saved unverified first, then verified, so the database issues the receipt the usual way.
+    async recordGiftByFounder(g) {
+      const id = nextDonationId();
+      const rec = {
+        id,
+        name: (g.name || "").trim() || "Anonymous patron",
+        anonymous: !!g.anonymous,
+        amount: Math.round((Number(g.amount) || 0) * 100) / 100,
+        message: (g.message || "").trim(),
+        txHash: (g.txHash || "").trim(),
+        email: (g.email || "").trim(),
+        country: (g.country || "").trim(),
+        submittedAt: g.date ? new Date(g.date).toISOString() : now(),
+        verified: false,
+        founderEntry: true,
+        payment: g.payment || null,
+      };
+      _donations.unshift(rec); saveCache(); notify({ key: id });
+      await upsertDonation(rec);
+      return Store.markDonationVerified(id);
     },
     deleteDonation(id) {
       _donations = _donations.filter(d => d.id !== id);

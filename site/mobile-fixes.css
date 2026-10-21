@@ -244,3 +244,6 @@
     max-width: 100% !important;
   }
 }
+
+/* donate form: two-up fields stack on phones */
+@media (max-width: 600px) { .b-don-2col { grid-template-columns: 1fr !important; gap: 14px !important; } }

@@ -195,444 +195,173 @@ const DonateNav = ({
 }, "Apply for Scholarship"));
 
 // ---------- Donation form (right column) ----------
+// The donation form. Three ways to give, each recorded the way it can be checked:
+//   USDT  - the transaction hash; the be-chain worker verifies it on chain.
+//   Bank  - the amount in Rupiah, when it was sent and the sender's account name;
+//           the founder matches it against the Bank Jago statement.
+//   Card  - the amount paid on Lynk and the order number; the founder matches it
+//           against the Lynk dashboard (Lynk keeps a fee before paying out).
+// The ledger is in US dollars; Rupiah amounts are converted at today's rate and
+// the founder confirms the final figure when verifying.
+// Switches the form to a payment method and brings it into view
+const RecordMethodBtn = ({ method, children }) => /*#__PURE__*/React.createElement("button", {
+  type: "button",
+  onClick: () => {
+    window.dispatchEvent(new CustomEvent("brial:donate-method", { detail: method }));
+    setTimeout(() => { const f = document.getElementById("donate-form"); if (f) f.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+  },
+  style: { marginTop: 12, padding: "9px 14px", background: "transparent", border: "1px solid rgba(201,169,97,0.45)", color: "#E3C98A", cursor: "pointer", fontFamily: "'Manrope', sans-serif", fontSize: 12, letterSpacing: "0.08em" }
+}, children);
+const DONATE_METHODS = [["usdt", "USDT (crypto)"], ["bank", "Bank transfer (IDR)"], ["card", "Card via Lynk"]];
+const fmtIDR = n => "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
+const fmtUSD = n => "$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const blankDonation = method => ({ method: method || "usdt", name: "", email: "", country: "", amount: "", idr: "", cardAmount: "", cardCur: "IDR", paidAt: "", sender: "", ref: "", message: "", txHash: "", anonymous: false, agreement: false });
 const DonationForm = ({
   wallet,
   onSubmitted
 }) => {
+  const h = React.createElement;
   const store = useDonateStore();
-  const [form, setForm] = useStateD({
-    name: "",
-    email: "",
-    country: "",
-    amount: "",
-    message: "",
-    txHash: "",
-    anonymous: false,
-    agreement: false
-  });
+  const pay = store.getPaymentConfig ? store.getPaymentConfig() : { usdt: {}, bank: {}, card: {} };
+  const methods = DONATE_METHODS.filter(([k]) => !pay[k] || pay[k].enabled !== false);
+  const [form, setForm] = useStateD(() => blankDonation(methods[0] ? methods[0][0] : "usdt"));
   const [error, setError] = useStateD(null);
   const [step, setStep] = useStateD("form"); // form | submitting | done
-
-  const update = patch => setForm(f => ({
-    ...f,
-    ...patch
-  }));
+  const [fx, setFx] = useStateD(null);
+  const [sent, setSent] = useStateD(null);
+  const update = patch => setForm(f => ({ ...f, ...patch }));
+  useEffectD(() => { if (store.fxRates) store.fxRates().then(setFx).catch(() => {}); }, []);
+  // "Record my transfer" buttons beside the bank and card details switch the form
+  useEffectD(() => {
+    const f = e => { const m = e && e.detail; if (m && DONATE_METHODS.some(([k]) => k === m)) { update({ method: m }); setStep("form"); setError(null); } };
+    window.addEventListener("brial:donate-method", f);
+    return () => window.removeEventListener("brial:donate-method", f);
+  }, []);
+  const rate = cur => (cur === "USD" ? 1 : fx && fx[cur] ? fx[cur] : (store.FX_FALLBACK || { IDR: 16500 })[cur] || 0);
+  const m = form.method;
+  const usd = (() => {
+    if (m === "usdt") return parseFloat(form.amount) || 0;
+    if (m === "bank") return (parseFloat(form.idr) || 0) / rate("IDR");
+    const v = parseFloat(form.cardAmount) || 0;
+    return form.cardCur === "USD" ? v : v / rate("IDR");
+  })();
   const submit = e => {
     e?.preventDefault();
     setError(null);
-    if (!form.amount || parseFloat(form.amount) <= 0) {
-      setError("Please enter a donation amount.");
-      return;
+    if (m === "usdt") {
+      if (!(parseFloat(form.amount) > 0)) return setError("Please enter the amount you sent.");
+      if (!form.txHash.trim()) return setError("Please paste your transaction hash so we can verify it on chain.");
+    } else if (m === "bank") {
+      if (!(parseFloat(form.idr) >= 1000)) return setError("Please enter the amount you transferred, in Rupiah.");
+    } else if (!(parseFloat(form.cardAmount) > 0)) return setError("Please enter the amount you paid on Lynk.");
+    if (!form.agreement) return setError("Please confirm you understand donations are non-refundable.");
+    const when = form.paidAt ? new Date(form.paidAt) : null;
+    const whenTxt = when && !isNaN(when) ? when.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + when.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
+    let txHash = form.txHash.trim(), payment;
+    if (m === "usdt") payment = { method: "usdt", currency: "USDT", paid: parseFloat(form.amount) };
+    else if (m === "bank") {
+      txHash = ["Bank transfer", fmtIDR(form.idr), whenTxt].filter(Boolean).join(" · ");
+      payment = { method: "bank", currency: "IDR", paid: parseFloat(form.idr), rate: rate("IDR"), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
+    } else {
+      const paidTxt = form.cardCur === "USD" ? fmtUSD(form.cardAmount) : fmtIDR(form.cardAmount);
+      txHash = ["Card via Lynk", paidTxt, whenTxt].filter(Boolean).join(" · ");
+      payment = { method: "card", currency: form.cardCur, paid: parseFloat(form.cardAmount), rate: form.cardCur === "USD" ? 1 : rate("IDR"), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
     }
-    if (!form.txHash.trim()) {
-      setError("Please paste your transaction hash so we can verify on-chain.");
-      return;
-    }
-    if (!form.agreement) {
-      setError("Please confirm you understand donations are non-refundable.");
-      return;
-    }
+    const amount = Math.max(0.01, Math.round(usd * 100) / 100);
     setStep("submitting");
     setTimeout(() => {
-      const d = store.submitDonation(form);
+      const d = store.submitDonation({ ...form, amount, txHash, payment });
+      setSent({ method: m, amount, payment, email: form.email });
       setStep("done");
       onSubmitted?.(d);
-    }, 900);
+    }, 700);
   };
-  if (step === "done") {
-    return /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: 44,
-        background: "linear-gradient(180deg, rgba(134,229,167,0.08), rgba(134,229,167,0.02))",
-        border: "1px solid rgba(134,229,167,0.4)",
-        position: "relative"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 64,
-        color: "#86E5A7",
-        lineHeight: 1
-      }
-    }, "\u2713"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
-        color: "#86E5A7",
-        letterSpacing: "0.28em",
-        textTransform: "uppercase",
-        marginTop: 16
-      }
-    }, "Submission Received"), /*#__PURE__*/React.createElement("h3", {
-      style: {
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 38,
-        fontWeight: 400,
-        color: "#E8E4DC",
-        margin: "12px 0 14px",
-        lineHeight: 1.1,
-        letterSpacing: "-0.01em"
-      }
-    }, "Thank you, ", form.anonymous ? "friend of the foundation" : form.name.split(" ")[0] || "patron", "."), /*#__PURE__*/React.createElement("p", {
-      style: {
-        fontFamily: "'Manrope', sans-serif",
-        fontSize: 16,
-        lineHeight: 1.7,
-        color: "rgba(232,228,220,0.75)",
-        margin: 0
-      }
-    }, "We will reconcile your transaction on-chain and add ", /*#__PURE__*/React.createElement("strong", {
-      style: {
-        color: "#86E5A7"
-      }
-    }, fmtAmount(form.amount)), " to the foundation's corpus. ", form.email && /*#__PURE__*/React.createElement(React.Fragment, null, "A confirmation receipt will arrive at ", /*#__PURE__*/React.createElement("strong", {
-      style: {
-        color: "#E8E4DC"
-      }
-    }, form.email), " once the deposit clears ", wallet.confirmations, " confirmations", wallet.autoVerify !== false ? ", usually within a few minutes." : ".")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 28,
-        padding: "16px 18px",
-        background: "rgba(10,22,40,0.5)",
-        border: "1px solid rgba(201,169,97,0.18)"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 9,
-        color: "#C9A961",
-        letterSpacing: "0.22em",
-        textTransform: "uppercase"
-      }
-    }, "Your gift becomes:"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: "'Cormorant Garamond', serif",
-        fontSize: 22,
-        color: "#E8E4DC",
-        marginTop: 8,
-        lineHeight: 1.5
-      }
-    }, "\u2248 ", Math.max(1, Math.round(parseFloat(form.amount) / 13000)), " semester", Math.max(1, Math.round(parseFloat(form.amount) / 13000)) === 1 ? "" : "s", " of tuition for a Brial scholar.")), /*#__PURE__*/React.createElement("button", {
-      onClick: () => {
-        setStep("form");
-        setForm({
-          name: "",
-          email: "",
-          country: "",
-          amount: "",
-          message: "",
-          txHash: "",
-          anonymous: false,
-          agreement: false
-        });
-      },
-      style: {
-        marginTop: 28,
-        padding: "12px 22px",
-        background: "transparent",
-        border: "1px solid rgba(232,228,220,0.2)",
-        color: "rgba(232,228,220,0.8)",
-        cursor: "pointer",
-        fontFamily: "'Manrope', sans-serif",
-        fontSize: 12,
-        letterSpacing: "0.16em",
-        textTransform: "uppercase"
-      }
-    }, "Record another donation"));
+  const mono = "'JetBrains Mono', monospace", serif = "'Cormorant Garamond', serif", sans = "'Manrope', sans-serif";
+  const lab = (t, extra) => h("div", { style: { fontFamily: mono, fontSize: 10, color: "rgba(232,228,220,0.5)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 10 } }, t, extra || null);
+  const hint = t => h("div", { style: { fontFamily: mono, fontSize: 10, color: "rgba(232,228,220,0.45)", marginTop: 6, letterSpacing: "0.06em", lineHeight: 1.5 } }, "↳ ", t);
+  const boxInput = (props) => h("input", { ...props, style: { width: "100%", padding: "12px 14px", background: "rgba(232,228,220,0.04)", border: "1px solid rgba(232,228,220,0.18)", color: "#E8E4DC", fontSize: 13, fontFamily: props.mono === false ? sans : mono, outline: "none", letterSpacing: "0.04em", colorScheme: "dark" }, mono: undefined });
+  const bigAmount = (cur, value, onChange, placeholder, after) => h("div", { style: { display: "flex", alignItems: "baseline", gap: 10, borderBottom: "1px solid rgba(232,228,220,0.2)" } },
+    h("span", { style: { fontFamily: serif, fontSize: cur === "Rp" ? 24 : 32, color: "#C9A961" } }, cur),
+    h("input", { type: "number", inputMode: "decimal", min: "0", step: "any", value, onChange: e => onChange(e.target.value), placeholder, style: { flex: 1, minWidth: 0, padding: "12px 0", background: "transparent", border: "none", color: "#E8E4DC", fontSize: 28, fontFamily: serif, outline: "none" } }),
+    after || null);
+  const approx = usd > 0 && m !== "usdt" && !(m === "card" && form.cardCur === "USD")
+    ? hint("About " + fmtUSD(usd) + " at today's rate (1 USD = " + fmtIDR(rate("IDR")) + (fx && fx.source && fx.source !== "estimate" ? ", " + fx.source : ", estimate") + "). We confirm the final figure when we match your transfer.")
+    : null;
+
+  if (step === "done" && sent) {
+    const auto = sent.method === "usdt" && wallet.autoVerify !== false;
+    const where = sent.method === "bank" ? "our Bank Jago statement" : sent.method === "card" ? "our Lynk dashboard" : "the blockchain";
+    return h("div", { style: { padding: 44, background: "linear-gradient(180deg, rgba(134,229,167,0.08), rgba(134,229,167,0.02))", border: "1px solid rgba(134,229,167,0.4)", position: "relative" } },
+      h("div", { style: { fontFamily: serif, fontSize: 64, color: "#86E5A7", lineHeight: 1 } }, "✓"),
+      h("div", { style: { fontFamily: mono, fontSize: 10, color: "#86E5A7", letterSpacing: "0.28em", textTransform: "uppercase", marginTop: 16 } }, "Submission Received"),
+      h("h3", { style: { fontFamily: serif, fontSize: 38, fontWeight: 400, color: "#E8E4DC", margin: "12px 0 14px", lineHeight: 1.1, letterSpacing: "-0.01em" } }, "Thank you, truly."),
+      h("p", { style: { fontFamily: sans, fontSize: 14, lineHeight: 1.7, color: "rgba(232,228,220,0.75)", margin: 0 } },
+        auto ? "We are reading your transaction on chain now. " : "We will match your gift against " + where + ", usually within one or two days. ",
+        sent.email ? h(React.Fragment, null, "Your receipt for ", h("strong", { style: { color: "#86E5A7" } }, sent.method === "bank" ? fmtIDR(sent.payment.paid) : fmtUSD(sent.amount)), " will arrive at ", h("strong", { style: { color: "#E8E4DC" } }, sent.email), auto ? " once the deposit clears " + wallet.confirmations + " confirmations, usually within a few minutes." : " as soon as it is matched.")
+          : "Your gift will appear on our open ledger as soon as it is matched."),
+      h("button", { onClick: () => { setStep("form"); setSent(null); setForm(blankDonation(m)); }, style: { marginTop: 28, padding: "12px 22px", background: "transparent", border: "1px solid rgba(232,228,220,0.2)", color: "rgba(232,228,220,0.8)", cursor: "pointer", fontFamily: sans, fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Record another donation"));
   }
-  return /*#__PURE__*/React.createElement("form", {
-    onSubmit: submit,
-    style: {
-      padding: 36,
-      background: "rgba(20,36,66,0.5)",
-      border: "1px solid rgba(201,169,97,0.18)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "#C9A961",
-      letterSpacing: "0.28em",
-      textTransform: "uppercase"
-    }
-  }, "\xA7 II \u00b7 Record Your Donation"), /*#__PURE__*/React.createElement("h3", {
-    style: {
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: 30,
-      fontWeight: 400,
-      color: "#E8E4DC",
-      letterSpacing: "-0.01em",
-      margin: "10px 0 6px",
-      lineHeight: 1.1
-    }
-  }, "Tell us who to thank."), /*#__PURE__*/React.createElement("p", {
-    style: {
-      fontFamily: "'Manrope', sans-serif",
-      fontSize: 13,
-      lineHeight: 1.65,
-      color: "rgba(232,228,220,0.6)",
-      margin: "0 0 24px"
-    }
-  }, "Send your USDT first using the wallet on the left, then fill this form so we can match your transaction on-chain and acknowledge you in our annual letter (if you wish)."), /*#__PURE__*/React.createElement(DonateInput, {
-    label: "Your name or organisation",
-    value: form.name,
-    onChange: v => update({
-      name: v
-    }),
-    placeholder: form.anonymous ? "(anonymous)" : "Maria Fitri / Pertiwi Foundation",
-    disabled: form.anonymous
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 18,
-      marginTop: 18
-    }
-  }, /*#__PURE__*/React.createElement(DonateInput, {
-    label: "Email (for receipt)",
-    type: "email",
-    value: form.email,
-    onChange: v => update({
-      email: v
-    }),
-    placeholder: "optional"
-  }), /*#__PURE__*/React.createElement(DonateInput, {
-    label: "Country",
-    value: form.country,
-    onChange: v => update({
-      country: v
-    }),
-    placeholder: "optional"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
-      textTransform: "uppercase",
-      marginBottom: 10
-    }
-  }, "Amount in USDT"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      gap: 10,
-      borderBottom: "1px solid rgba(232,228,220,0.2)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: 32,
-      color: "#C9A961"
-    }
-  }, "$"), /*#__PURE__*/React.createElement("input", {
-    type: "number",
-    inputMode: "decimal",
-    min: "1",
-    step: "any",
-    value: form.amount,
-    onChange: e => update({
-      amount: e.target.value
-    }),
-    placeholder: "1,000",
-    style: {
-      flex: 1,
-      padding: "12px 0",
-      background: "transparent",
-      border: "none",
-      color: "#E8E4DC",
-      fontSize: 28,
-      fontFamily: "'Cormorant Garamond', serif",
-      outline: "none"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 11,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.14em"
-    }
-  }, "USDT")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 8,
-      marginTop: 10,
-      flexWrap: "wrap"
-    }
-  }, [100, 500, 1000, 5000, 10000].map(amt => /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    key: amt,
-    onClick: () => update({
-      amount: String(amt)
-    }),
-    style: {
-      padding: "6px 12px",
-      background: "transparent",
-      border: "1px solid rgba(201,169,97,0.3)",
-      color: "#C9A961",
-      cursor: "pointer",
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      letterSpacing: "0.12em"
-    }
-  }, "$", amt.toLocaleString())))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
-      textTransform: "uppercase",
-      marginBottom: 10
-    }
-  }, "Transaction hash ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "#4FD1C5",
-      marginLeft: 4
-    }
-  }, "\xB7 required")), /*#__PURE__*/React.createElement("input", {
-    value: form.txHash,
-    onChange: e => update({
-      txHash: e.target.value
-    }),
-    placeholder: "0x8a4f7d3c\u2026",
-    style: {
-      width: "100%",
-      padding: "12px 14px",
-      background: "rgba(232,228,220,0.04)",
-      border: "1px solid rgba(232,228,220,0.18)",
-      color: "#E8E4DC",
-      fontSize: 13,
-      fontFamily: "'JetBrains Mono', monospace",
-      outline: "none",
-      letterSpacing: "0.04em"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.45)",
-      marginTop: 6,
-      letterSpacing: "0.06em",
-      lineHeight: 1.5
-    }
-  }, "\u21B3 Paste from your wallet (MetaMask \xB7 Trust Wallet \xB7 Binance \xB7 Exchange withdrawal page). Used to verify the transfer.")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 22
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
-      textTransform: "uppercase",
-      marginBottom: 10
-    }
-  }, "Message to the scholars (optional)"), /*#__PURE__*/React.createElement("textarea", {
-    value: form.message,
-    onChange: e => update({
-      message: e.target.value
-    }),
-    placeholder: "A line of encouragement or in-honour-of\u2026",
-    style: {
-      width: "100%",
-      minHeight: 90,
-      resize: "vertical",
-      background: "rgba(232,228,220,0.04)",
-      border: "1px solid rgba(232,228,220,0.18)",
-      color: "#E8E4DC",
-      padding: 14,
-      fontSize: 14,
-      fontFamily: "'Cormorant Garamond', serif",
-      lineHeight: 1.6,
-      outline: "none"
-    }
-  })), /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "flex",
-      gap: 10,
-      alignItems: "center",
-      marginTop: 22,
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: form.anonymous,
-    onChange: e => update({
-      anonymous: e.target.checked
-    }),
-    style: {
-      accentColor: "#C9A961"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Manrope', sans-serif",
-      fontSize: 13,
-      color: "rgba(232,228,220,0.7)"
-    }
-  }, "Donate anonymously: your name will not appear in our annual letter or public ledger.")), /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "flex",
-      gap: 10,
-      alignItems: "start",
-      marginTop: 14,
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: form.agreement,
-    onChange: e => update({
-      agreement: e.target.checked
-    }),
-    style: {
-      accentColor: "#C9A961",
-      marginTop: 3
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Manrope', sans-serif",
-      fontSize: 13,
-      color: "rgba(232,228,220,0.7)",
-      lineHeight: 1.55
-    }
-  }, "I confirm I have already sent the USDT, I understand that gifts are non-refundable and that blockchain transfers are public and permanent, and I agree to the ", /*#__PURE__*/React.createElement("a", { href: "/terms", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Terms"), " and the ", /*#__PURE__*/React.createElement("a", { href: "/privacy", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Privacy Policy"), ". The endowment uses every gift for its pillars at its discretion, honouring my wishes where it can.")), error && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 18,
-      padding: "10px 14px",
-      background: "rgba(229,134,134,0.08)",
-      border: "1px solid rgba(229,134,134,0.35)",
-      color: "#E58686",
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 11,
-      letterSpacing: "0.06em"
-    }
-  }, error), /*#__PURE__*/React.createElement("button", {
-    type: "submit",
-    disabled: step === "submitting",
-    style: {
-      width: "100%",
-      marginTop: 26,
-      padding: "16px 0",
-      background: step === "submitting" ? "rgba(201,169,97,0.5)" : "#C9A961",
-      color: "#0A1628",
-      border: "none",
-      cursor: step === "submitting" ? "wait" : "pointer",
-      fontFamily: "'Manrope', sans-serif",
-      fontSize: 13,
-      letterSpacing: "0.18em",
-      textTransform: "uppercase",
-      fontWeight: 500,
-      boxShadow: "0 16px 32px -16px rgba(201,169,97,0.5)"
-    }
-  }, step === "submitting" ? "Recording…" : "Record Donation →"));
+
+  const intro = m === "usdt" ? "Send your USDT first using the wallet on the left, then fill this form. We check the transaction on chain and send your receipt."
+    : m === "bank" ? "Transfer to our Bank Jago account first, then fill this form. The amount and the time of the transfer are enough for us to find it; no hash needed."
+    : "Pay on our Lynk page first, then fill this form with the amount and, if you have it, the order number from your Lynk receipt.";
+  return h("form", { id: "donate-form", onSubmit: submit, style: { padding: 36, background: "rgba(20,36,66,0.5)", border: "1px solid rgba(201,169,97,0.18)", scrollMarginTop: 90 } },
+    h("div", { style: { fontFamily: mono, fontSize: 10, color: "#C9A961", letterSpacing: "0.28em", textTransform: "uppercase" } }, "\xA7 II · Record Your Donation"),
+    h("h3", { style: { fontFamily: serif, fontSize: 30, fontWeight: 400, color: "#E8E4DC", letterSpacing: "-0.01em", margin: "10px 0 16px", lineHeight: 1.1 } }, "Tell us who to thank."),
+    methods.length > 1 ? h("div", { role: "radiogroup", "aria-label": "How did you give?", style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 } },
+      methods.map(([k, label]) => h("button", { key: k, type: "button", role: "radio", "aria-checked": m === k, onClick: () => { update({ method: k }); setError(null); }, style: { flex: "1 1 auto", padding: "10px 12px", background: m === k ? "rgba(201,169,97,0.16)" : "transparent", border: "1px solid " + (m === k ? "#C9A961" : "rgba(232,228,220,0.18)"), color: m === k ? "#E8E4DC" : "rgba(232,228,220,0.65)", cursor: "pointer", fontFamily: sans, fontSize: 12.5, letterSpacing: "0.04em" } }, label))) : null,
+    h("p", { style: { fontFamily: sans, fontSize: 13, lineHeight: 1.65, color: "rgba(232,228,220,0.6)", margin: "0 0 24px" } }, intro),
+    h(DonateInput, { label: "Your name or organisation", value: form.name, onChange: v => update({ name: v }), placeholder: form.anonymous ? "(anonymous)" : "Maria Fitri / Pertiwi Foundation", disabled: form.anonymous }),
+    h("div", { className: "b-don-2col", style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 18 } },
+      h(DonateInput, { label: "Email (for receipt)", type: "email", value: form.email, onChange: v => update({ email: v }), placeholder: "optional" }),
+      h(DonateInput, { label: "Country", value: form.country, onChange: v => update({ country: v }), placeholder: "optional" })),
+
+    // amount
+    h("div", { style: { marginTop: 22 } },
+      m === "usdt" ? h(React.Fragment, null,
+        lab("Amount in USDT"),
+        bigAmount("$", form.amount, v => update({ amount: v }), "1,000", h("span", { style: { fontFamily: mono, fontSize: 11, color: "rgba(232,228,220,0.5)", letterSpacing: "0.14em" } }, "USDT")),
+        h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [100, 500, 1000, 5000, 10000].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ amount: String(amt) }), style: { padding: "6px 12px", background: "transparent", border: "1px solid rgba(201,169,97,0.3)", color: "#C9A961", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.12em" } }, "$", amt.toLocaleString()))))
+      : m === "bank" ? h(React.Fragment, null,
+        lab("Amount transferred, in Rupiah"),
+        bigAmount("Rp", form.idr, v => update({ idr: v }), "500000"),
+        h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [100000, 250000, 500000, 1000000, 5000000].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ idr: String(amt) }), style: { padding: "6px 12px", background: "transparent", border: "1px solid rgba(201,169,97,0.3)", color: "#C9A961", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.08em" } }, fmtIDR(amt)))),
+        approx)
+      : h(React.Fragment, null,
+        lab("Amount paid on Lynk"),
+        bigAmount(form.cardCur === "USD" ? "$" : "Rp", form.cardAmount, v => update({ cardAmount: v }), form.cardCur === "USD" ? "50" : "250000",
+          h("select", { value: form.cardCur, onChange: e => update({ cardCur: e.target.value }), "aria-label": "Currency", style: { background: "transparent", border: "1px solid rgba(232,228,220,0.2)", color: "#E8E4DC", fontFamily: mono, fontSize: 11, padding: "4px 6px", colorScheme: "dark" } },
+            h("option", { value: "IDR" }, "IDR"), h("option", { value: "USD" }, "USD"))),
+        approx)),
+
+    // reference
+    m === "usdt" ? h("div", { style: { marginTop: 22 } },
+      lab("Transaction hash ", h("span", { style: { color: "#4FD1C5", marginLeft: 4 } }, "\xB7 required")),
+      boxInput({ value: form.txHash, onChange: e => update({ txHash: e.target.value }), placeholder: "0x8a4f7d3c…", spellCheck: false }),
+      hint("Paste from your wallet (MetaMask \xB7 Trust Wallet \xB7 Binance \xB7 Exchange withdrawal page). Used to verify the transfer on chain."))
+    : h("div", { className: "b-don-2col", style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 22 } },
+      h("div", null, lab("When you paid"), boxInput({ type: "datetime-local", value: form.paidAt, onChange: e => update({ paidAt: e.target.value }), mono: false })),
+      m === "bank"
+        ? h("div", null, lab("Sender's account name"), boxInput({ value: form.sender, onChange: e => update({ sender: e.target.value }), placeholder: "as shown by your bank", mono: false }))
+        : h("div", null, lab("Lynk order number"), boxInput({ value: form.ref, onChange: e => update({ ref: e.target.value }), placeholder: "from your Lynk receipt", spellCheck: false }))),
+    m !== "usdt" ? hint(m === "bank" ? "Optional, but they help us find your transfer quickly. Your account name stays private and never appears on the site." : "Optional, but it helps us find your payment quickly. It stays private.") : null,
+
+    // message
+    h("div", { style: { marginTop: 22 } },
+      lab("Message to the scholars (optional)"),
+      h("textarea", { value: form.message, onChange: e => update({ message: e.target.value }), placeholder: "A line of encouragement or in-honour-of…", style: { width: "100%", minHeight: 90, resize: "vertical", background: "rgba(232,228,220,0.04)", border: "1px solid rgba(232,228,220,0.18)", color: "#E8E4DC", padding: 14, fontSize: 14, fontFamily: serif, lineHeight: 1.6, outline: "none" } })),
+    h("label", { style: { display: "flex", gap: 10, alignItems: "center", marginTop: 22, cursor: "pointer" } },
+      h("input", { type: "checkbox", checked: form.anonymous, onChange: e => update({ anonymous: e.target.checked }), style: { accentColor: "#C9A961" } }),
+      h("span", { style: { fontFamily: sans, fontSize: 13, color: "rgba(232,228,220,0.7)" } }, "Donate anonymously: your name will not appear in our annual letter or public ledger.")),
+    h("label", { style: { display: "flex", gap: 10, alignItems: "start", marginTop: 14, cursor: "pointer" } },
+      h("input", { type: "checkbox", checked: form.agreement, onChange: e => update({ agreement: e.target.checked }), style: { accentColor: "#C9A961", marginTop: 3 } }),
+      h("span", { style: { fontFamily: sans, fontSize: 13, color: "rgba(232,228,220,0.7)", lineHeight: 1.55 } },
+        m === "usdt" ? "I confirm I have already sent the USDT, I understand that gifts are non-refundable and that blockchain transfers are public and permanent, and I agree to the " : "I confirm I have already made this payment, I understand that gifts are non-refundable, and I agree to the ",
+        h("a", { href: "/terms", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Terms"), " and the ",
+        h("a", { href: "/privacy", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Privacy Policy"),
+        ". The endowment uses every gift for its pillars at its discretion, honouring my wishes where it can.")),
+    error && h("div", { role: "alert", style: { marginTop: 18, padding: "10px 14px", background: "rgba(229,134,134,0.08)", border: "1px solid rgba(229,134,134,0.35)", color: "#E58686", fontFamily: mono, fontSize: 11, letterSpacing: "0.06em" } }, error),
+    h("button", { type: "submit", disabled: step === "submitting", style: { width: "100%", marginTop: 26, padding: "16px 0", background: step === "submitting" ? "rgba(201,169,97,0.5)" : "#C9A961", color: "#0A1628", border: "none", cursor: step === "submitting" ? "wait" : "pointer", fontFamily: sans, fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 500, boxShadow: "0 16px 32px -16px rgba(201,169,97,0.5)" } }, step === "submitting" ? "Recording…" : "Record Donation →"));
 };
 const DonateInput = ({
   label,
@@ -688,7 +417,7 @@ const DonatePage = ({
   // Real public gifts only — drop internal aggregates, fold in pillar grants as their own rows
   const donations = (() => {
     const real = (rawDonations || []).filter(d => d.id !== "LEGACY-SUMMARY" && d.id !== "PILLAR-GRANTS" && d.id !== "PILLAR-LINKS" && d.id !== "EBOOKS-CATALOG" && d.id !== "FOODLAND-CONTENT" && d.id !== "PAYMENT-CONFIG" && d.id !== "WORSHIP-CONTENT" && d.id !== "WATER-CONTENT" && d.id !== "PILLAR-STATUS" && String(d.id || "").indexOf("PILLAR-CONTENT-") !== 0 && String(d.name || "").slice(0, 2) !== "__");
-    const pillarRows = (store.getPillarGrants ? store.getPillarGrants().filter(g => !g.archived) : []).map(g => ({
+    const pillarRows = (store.getPillarGrants ? store.getPillarGrants().filter(g => !g.archived && Number(g.amount) > 0) : []).map(g => ({
       id: g.id,
       name: (g.partner || "Pillar grant") + (g.project ? " · " + g.project : ""),
       anonymous: false,
@@ -1148,15 +877,11 @@ const DonatePage = ({
       lineHeight: 1.6,
       color: "rgba(232,228,220,0.75)"
     }
-  }, "Setelah transfer, isi formulir di samping dengan nama dan nominal Anda. Pada kolom ", /*#__PURE__*/React.createElement("strong", {
+  }, "Setelah transfer, catat donasi Anda di formulir dengan pilihan ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "#E8E4DC"
     }
-  }, "transaction hash"), ", cukup tulis ", /*#__PURE__*/React.createElement("strong", {
-    style: {
-      color: "#E8E4DC"
-    }
-  }, "\"Transfer " + pay.bank.bank + "\""), " beserta tanggal/jam transfer agar kami dapat mencocokkan donasi Anda."))), pay.card.enabled !== false && pay.card.link && /*#__PURE__*/React.createElement("div", {
+  }, "Bank transfer (IDR)"), ": cukup nominal dalam Rupiah dan jam transfer, tanpa hash. Kuitansi dikirim setelah transfer Anda kami cocokkan dengan mutasi " + pay.bank.bank + "."), /*#__PURE__*/React.createElement(RecordMethodBtn, { method: "bank" }, "Catat transfer saya \u2192"))), pay.card.enabled !== false && pay.card.link && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 32,
@@ -1280,11 +1005,11 @@ const DonatePage = ({
       color: "rgba(232,228,220,0.5)",
       marginTop: 12
     }
-  }, "Setelah pembayaran, isi formulir di samping, tulis ", /*#__PURE__*/React.createElement("strong", {
+  }, "Setelah pembayaran, catat donasi Anda di formulir dengan pilihan ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "rgba(232,228,220,0.8)"
     }
-  }, "\"Card / Lynk\""), " pada kolom transaction hash."))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(DonationForm, {
+  }, "Card via Lynk"), ": nominal yang dibayar dan nomor pesanan Lynk bila ada."), /*#__PURE__*/React.createElement(RecordMethodBtn, { method: "card" }, "Catat pembayaran saya \u2192"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(DonationForm, {
     wallet: wallet
   }))), donations.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {

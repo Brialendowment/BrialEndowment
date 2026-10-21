@@ -315,6 +315,13 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-mlog-i small{font-size:12px;color:var(--faint);overflow-wrap:anywhere}
 .fd-mlog-i .fd-tag{justify-self:end}
 .fd-mprev{width:100%;height:560px;border:0;border-radius:10px;background:#F5F2EA}
+.fd-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.fd-check input{accent-color:var(--accent)}
+.fd-nodate{text-align:left;color:var(--faint);cursor:pointer}
+.fd-pay{display:block;font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.fd-pay b{font-weight:600;color:var(--text)}
+.fd-sum{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:rgba(10,22,40,.35);font-size:13px;line-height:1.7;color:var(--muted)}
+.fd-sum b{color:var(--text);font-weight:600}
 .fd-autov{margin-top:6px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(10,22,40,.35)}
 .fd-autov small{display:block;margin-top:8px;font-size:12px;line-height:1.5;color:var(--faint)}
 .fd-chain{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:-4px;padding:0 0 2px}
@@ -771,13 +778,14 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const years = Array.from(new Set([...n.years, thisYear])).sort().reverse();
     const [year, setYear] = useState(thisYear);
     const [m, flash] = useFlash();
-    const row = n.byYear[year] || { kg: 0, garments: 0 };
+    const row = n.manual[year] || { kg: 0, garments: 0 };
+    const logged = n.logged[year];
     const commit = field => v => { store.setFoodClothingCount(year, field, v); flash("Saved. The public page shows the new total."); };
     const nextBack = String(Number(years[years.length - 1]) - 1);
     return (
       <>
-        <Head title="Counts" lede="What the public Food & Clothing page shows. Tap plus or minus, or type the number. Rough figures from your notes are fine; the page says when counting began." />
-        <Stats items={[{ label: "Food shared, all years", value: fmtCount(n.kg) + " kg" }, { label: "Garments given, all years", value: fmtCount(n.garments) }, { label: "Counting since", value: n.since || thisYear }]} />
+        <Head title="Rough totals" lede="For giving you did not record one by one: a rough total per year from your notes. Tap plus or minus, or type the number. Distributions you record one by one are added on top." />
+        <Stats items={[{ label: "Food shared, all years", value: fmtCount(n.kg) + " kg", sub: "rough totals and distributions" }, { label: "Garments given, all years", value: fmtCount(n.garments) }, { label: "Counting since", value: n.since || thisYear }]} />
         <div className="fd-toolbar">
           <Seg value={year} onChange={setYear} items={years.map(y => [y, y])} />
           <button className="fd-btn quiet sm" onClick={() => setYear(nextBack)}>Add {nextBack}</button>
@@ -787,7 +795,107 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <Counter key={year + "-kg"} label={"Food shared in " + year} unit="kg" decimals value={row.kg} onCommit={commit("kg")} hint="Rice, pasta, cooking oil and other staples, by weight. Half kilograms are fine (2.5)." />
           <Counter key={year + "-g"} label={"Clothing given in " + year} unit="garments" value={row.garments} onCommit={commit("garments")} hint="Each piece once: a shirt, a pair of trousers, a headscarf, a pair of shoes." />
         </div>
+        {logged && <p className="fd-sub" style={{ marginTop: 14 }}>Also recorded under Distributions in {year}: {fmtCount(logged.kg)} kg of food and {fmtCount(logged.garments)} {logged.garments === 1 ? "garment" : "garments"} ({logged.entries} {logged.entries === 1 ? "entry" : "entries"}). Do not count those here again.</p>}
         <p className="fd-sub" style={{ marginTop: 18 }}>Each year is kept apart, so the Impact Report for {year} shows only what was given in {year}, while the public page shows the total of every year. Names and photographs of the people who receive are never asked for or shown.</p>
+      </>
+    );
+  }
+
+  // ============================================================
+  // DISTRIBUTIONS (Food & Clothing): one entry per day of giving.
+  // Every field is optional except one of money, kilograms or garments.
+  // ============================================================
+  const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"]];
+  const curSym = c => (CURS.find(x => x[0] === c) || ["", c + " "])[1];
+  const fmtCur = (c, v) => c === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : curSym(c) + (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  function useFx(store) {
+    const [fx, setFx] = useState(null);
+    useEffect(() => { let on = true; if (store.fxRates) store.fxRates().then(r => { if (on) setFx(r); }); return () => { on = false; }; }, []);
+    return fx;
+  }
+  function DistributionForm({ store, initial, onSave, onClose }) {
+    const fx = useFx(store);
+    const [f, setF] = useState(() => initial || { project: "", partner: "", country: "", date: today(), noDate: false, cur: "USD", paid: "", kg: "", garments: "", note: "" });
+    const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+    const rate = f.cur === "USD" ? 1 : fx && fx[f.cur] ? fx[f.cur] : null;
+    const usd = (parseFloat(f.paid) || 0) / (rate || 1);
+    const ok = (parseFloat(f.paid) > 0 && (f.cur === "USD" || rate)) || parseFloat(f.kg) > 0 || parseInt(f.garments, 10) > 0;
+    const save = () => onSave({
+      project: f.project.trim() || "Food & clothing", partner: f.partner, country: f.country, note: f.note,
+      date: f.noDate || !f.date ? new Date().toISOString() : new Date(f.date + "T12:00:00").toISOString(), dateUnknown: !!(f.noDate || !f.date),
+      amount: Math.round(usd * 100) / 100, paid: f.cur !== "USD" && parseFloat(f.paid) > 0 ? { currency: f.cur, value: parseFloat(f.paid), rate } : null,
+      kg: parseFloat(f.kg) || 0, garments: parseInt(f.garments, 10) || 0,
+    });
+    return (
+      <Modal title={initial ? "Edit distribution" : "Record a distribution"} sub="One day of giving. Fill in what you know: the money, the kilograms, the garments, or any of them." onClose={onClose}>
+        <div className="fd-form">
+          <Field label="What and where (optional)"><input className="fd-input" value={f.project} onChange={e => set("project", e.target.value)} placeholder="e.g. Rice for Panti Asuhan Al-Ikhlas, Bandung" autoFocus /></Field>
+          <div className="fd-grid3">
+            <Field label="Food (kg)"><input className="fd-input" inputMode="decimal" value={f.kg} onChange={e => set("kg", e.target.value.replace(",", "."))} placeholder="0" /></Field>
+            <Field label="Clothing (pieces)"><input className="fd-input" inputMode="numeric" value={f.garments} onChange={e => set("garments", e.target.value.replace(/\D/g, ""))} placeholder="0" /></Field>
+            <Field label="Date">{f.noDate ? <button type="button" className="fd-input fd-nodate" onClick={() => set("noDate", false)}>Not known · set a date</button> : <input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} />}</Field>
+          </div>
+          <label className="fd-check"><input type="checkbox" checked={!!f.noDate} onChange={e => set("noDate", e.target.checked)} /> I don't remember the date</label>
+          <div className="fd-grid2" style={{ gridTemplateColumns: "minmax(0,1fr) 120px" }}>
+            <Field label="Money spent (optional)" hint={f.cur !== "USD" && parseFloat(f.paid) > 0 ? (rate ? `About $${usd.toFixed(2)} at today's rate, 1 USD = ${fmtCur(f.cur, rate)}.` : "Getting today's rate…") : "Counts in Total granted and the public ledger."}><input className="fd-input" inputMode="decimal" value={f.paid} onChange={e => set("paid", e.target.value.replace(",", "."))} placeholder="0" /></Field>
+            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => set("cur", e.target.value)}>{CURS.map(([c]) => <option key={c} value={c}>{c}</option>)}</select></Field>
+          </div>
+          <div className="fd-grid2">
+            <Field label="Given with (optional)"><input className="fd-input" value={f.partner} onChange={e => set("partner", e.target.value)} placeholder="Partner, if any" /></Field>
+            <Field label="Country (optional)"><input className="fd-input" value={f.country} onChange={e => set("country", e.target.value)} placeholder="e.g. Indonesia" /></Field>
+          </div>
+          <Field label="Note (optional)"><input className="fd-input" value={f.note} onChange={e => set("note", e.target.value)} placeholder="Never the names of the people who receive" /></Field>
+        </div>
+        <div className="fd-actions" style={{ marginTop: 20 }}>
+          <button className="fd-btn primary" disabled={!ok} onClick={() => { save(); onClose(); }}>{initial ? "Save changes" : "Record"}</button>
+          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+          {!ok && <small className="fd-sub" style={{ margin: 0 }}>Enter at least the money, the kilograms or the garments.</small>}
+        </div>
+      </Modal>
+    );
+  }
+  function DistributionsView({ store, cfg }) {
+    const all = store.getPillarGrants().filter(g => g.pillar === cfg.grantName).slice().sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const live = all.filter(g => !g.archived);
+    const [filter, setFilter] = useState("live");
+    const [edit, setEdit] = useState(null);
+    const [m, flash] = useFlash();
+    const n = store.getFoodClothingCounts();
+    const spent = live.reduce((a, g) => a + (Number(g.amount) || 0), 0);
+    const shown = filter === "live" ? live : filter === "archived" ? all.filter(g => g.archived) : all;
+    const save = f => {
+      if (edit && edit !== "new") { store.updatePillarGrant(edit.id, f); flash("Saved."); }
+      else { store.addPillarGrant({ ...f, pillar: cfg.grantName }); flash("Recorded. The public page shows the new totals."); }
+    };
+    const toForm = g => ({ project: g.project === "Food & clothing" ? "" : g.project || "", partner: g.partner || "", country: g.country || "", date: g.date && !g.dateUnknown ? String(g.date).slice(0, 10) : today(), noDate: !!g.dateUnknown,
+      cur: g.paid && g.paid.currency ? g.paid.currency : "USD", paid: g.paid && g.paid.currency ? String(g.paid.value || "") : g.amount ? String(g.amount) : "", kg: g.kg ? String(g.kg) : "", garments: g.garments ? String(g.garments) : "", note: g.note || "" });
+    const G = "minmax(0,2fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr) auto";
+    return (
+      <>
+        <Head title="Distributions" lede="Each day of giving: what it cost, how much food, how many garments, and when. Every field is optional except one of money, kilograms or garments.">
+          <button className="fd-btn primary" onClick={() => setEdit("new")}>Record a distribution</button>
+        </Head>
+        <Stats items={[{ label: "Food shared", value: fmtCount(n.kg) + " kg", sub: "with your rough totals" }, { label: "Garments given", value: fmtCount(n.garments) }, { label: "Money spent", value: money(spent) }, { label: "Distributions", value: live.length, sub: all.length - live.length ? `${all.length - live.length} archived` : null }]} />
+        <div className="fd-toolbar"><Seg value={filter} onChange={setFilter} items={[["live", "Counted", live.length], ["archived", "Archived", all.length - live.length], ["all", "All", all.length]]} /><div style={{ marginLeft: "auto" }}><Flash m={m} /></div></div>
+        <div className="fd-table">
+          <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>What and where</div><div>Food</div><div>Clothing</div><div>Spent</div><div>Date</div><div /></div>
+          {shown.length === 0 ? <Empty title="Nothing recorded yet.">Record the first day of giving.</Empty> : shown.map(g => (
+            <div key={g.id} className={"fd-tr" + (g.archived ? " dim" : "")} style={{ gridTemplateColumns: G }}>
+              <div className="fd-td full"><b>{g.project || "Food & clothing"}</b>{(g.partner || g.country) && <small>{[g.partner, g.country].filter(Boolean).join(" · ")}</small>}{g.note && <small>{g.note}</small>}{g.archived && <Tag>Archived</Tag>}</div>
+              <div className="fd-td" data-l="Food"><span className="num">{Number(g.kg) > 0 ? fmtCount(g.kg) + " kg" : "—"}</span></div>
+              <div className="fd-td" data-l="Clothing"><span className="num">{Number(g.garments) > 0 ? fmtCount(g.garments) : "—"}</span></div>
+              <div className="fd-td" data-l="Spent"><span className="num">{Number(g.amount) > 0 ? money(g.amount) : "—"}</span>{g.paid && g.paid.currency && <small>{fmtCur(g.paid.currency, g.paid.value)}</small>}</div>
+              <div className="fd-td" data-l="Date">{g.dateUnknown ? <small>Date not known</small> : fdate(g.date)}</div>
+              <div className="fd-td full"><div className="fd-actions" style={{ justifyContent: "flex-end" }}>
+                <button className="fd-btn ghost sm" onClick={() => setEdit({ id: g.id, initial: toForm(g) })}>Edit</button>
+                <button className="fd-btn quiet sm" onClick={() => store.updatePillarGrant(g.id, { archived: !g.archived })}>{g.archived ? "Restore" : "Archive"}</button>
+                <Confirm onConfirm={() => store.deletePillarGrant(g.id)}>Delete</Confirm>
+              </div></div>
+            </div>
+          ))}
+        </div>
+        <p className="fd-sub" style={{ marginTop: 12 }}>Money spent counts in the endowment's totals and the open ledger. Kilograms and garments go to the public Food & Clothing page and, by year, to the Impact Report.</p>
+        {edit && <DistributionForm store={store} initial={edit === "new" ? null : edit.initial} onSave={save} onClose={() => setEdit(null)} />}
       </>
     );
   }
@@ -1570,6 +1678,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           {head("card", "Card (Mastercard / Visa)")}
           <Field label="Checkout page" hint="The card button on the donate page opens this address in a new tab."><input className="fd-input" value={cfg.card.link} onChange={e => set("card", "link", e.target.value)} placeholder="https://lynk.id/brial/s/…" /></Field>
           {cardBad && <div className="fd-msg err" style={{ marginTop: 8 }}>Use a full address that starts with https://</div>}
+          <Field label="Lynk fee (%)" hint="What Lynk keeps from each card payment. Used when you verify a card gift; the receipt shows the full gift." style={{ maxWidth: 220, marginTop: 12 }}><input className="fd-input" inputMode="decimal" value={cfg.card.feePct ?? 5} onChange={e => set("card", "feePct", e.target.value.replace(",", "."))} /></Field>
         </div>
         <div className="fd-actions" style={{ marginTop: 18 }}><button className="fd-btn primary" disabled={cardBad} onClick={() => { store.savePaymentConfig(cfg); onClose(); }}>Save channels</button><button className="fd-btn ghost" onClick={onClose}>Cancel</button></div>
       </Modal>
@@ -1653,6 +1762,110 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     }
   }
 
+  // ---------------- gifts paid by bank or card: confirm what arrived ----------------
+  const METHOD_LABEL = { usdt: "USDT", bank: "Bank transfer", card: "Card via Lynk", cash: "Cash", other: "Other" };
+  const payWhen = p => { if (!p || !p.paidAt) return ""; const d = new Date(p.paidAt); return isNaN(d) ? String(p.paidAt) : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); };
+  function VerifyGiftDialog({ store, d, onClose, onDone }) {
+    const fx = useFx(store);
+    const p = d.payment || {};
+    const card = p.method === "card";
+    const cur = p.currency === "USD" ? "USD" : "IDR";
+    const feeDefault = Number(store.getPaymentConfig().card.feePct ?? 5) || 0;
+    const [paid, setPaid] = useState(String(p.paid || ""));
+    const [feePct, setFeePct] = useState(String(card ? feeDefault : 0));
+    const [usdTouched, setUsdTouched] = useState(false);
+    const [usd, setUsd] = useState(String(d.amount || ""));
+    const rate = cur === "USD" ? 1 : fx && fx.IDR ? fx.IDR : Number(p.rate) || 0;
+    useEffect(() => { if (!usdTouched && rate && parseFloat(paid) > 0) setUsd(((parseFloat(paid) || 0) / rate).toFixed(2)); }, [rate, paid]);
+    const fee = card ? (parseFloat(paid) || 0) * (parseFloat(feePct) || 0) / 100 : 0;
+    const net = (parseFloat(paid) || 0) - fee;
+    const ok = parseFloat(paid) > 0 && parseFloat(usd) > 0;
+    const go = () => {
+      const r = Math.round(parseFloat(usd) * 100) / 100;
+      const payment = { ...p, received: parseFloat(paid), rateUsed: rate ? Math.round(rate * 10000) / 10000 : null, confirmedAt: new Date().toISOString() };
+      if (card) { payment.feePct = parseFloat(feePct) || 0; payment.fee = Math.round(fee * 100) / 100; payment.net = Math.round(net * 100) / 100; payment.netUsd = Math.round((r * net / (parseFloat(paid) || 1)) * 100) / 100; }
+      onDone(r, payment); onClose();
+    };
+    return (
+      <Modal title={"Verify " + (card ? "card gift" : "bank transfer")} sub={`${d.anonymous ? "Anonymous" : titleCase(d.name)} · reported ${fdate(d.submittedAt)}`} onClose={onClose}>
+        <div className="fd-sum">
+          <div>The donor reported <b>{fmtCur(cur, p.paid)}</b>{payWhen(p) && <> on <b>{payWhen(p)}</b></>}.</div>
+          {p.sender && <div>Sender's account name: <b>{p.sender}</b></div>}
+          {p.ref && <div>Lynk order: <b>{p.ref}</b></div>}
+          <div>{card ? "Find it in your Lynk dashboard" : "Find it in your " + (store.getPaymentConfig().bank.bank || "bank") + " statement"}, then confirm what arrived.</div>
+        </div>
+        <div className="fd-form" style={{ marginTop: 14 }}>
+          <div className="fd-grid2">
+            <Field label={card ? `Paid by the donor (${cur})` : "Arrived in your account (Rp)"}><input className="fd-input" inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value.replace(",", "."))} /></Field>
+            {card ? <Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={feePct} onChange={e => setFeePct(e.target.value.replace(",", "."))} /></Field>
+              : <Field label="Value in US dollars" hint={rate ? `1 USD = ${fmtCur("IDR", rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : "Getting today's rate…"}><input className="fd-input" inputMode="decimal" value={usd} onChange={e => { setUsdTouched(true); setUsd(e.target.value.replace(",", ".")); }} /></Field>}
+          </div>
+          {card && <div className="fd-grid2">
+            <Field label="Value of the gift in US dollars" hint={rate && cur !== "USD" ? `1 USD = ${fmtCur("IDR", rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : "The receipt shows the full gift."}><input className="fd-input" inputMode="decimal" value={usd} onChange={e => { setUsdTouched(true); setUsd(e.target.value.replace(",", ".")); }} /></Field>
+            <div className="fd-sum" style={{ alignSelf: "end" }}>Lynk keeps <b>{fmtCur(cur, fee)}</b>; you receive <b>{fmtCur(cur, net)}</b>.</div>
+          </div>}
+        </div>
+        <div className="fd-actions" style={{ marginTop: 18 }}>
+          <button className="fd-btn ok" disabled={!ok} onClick={go}>{okEmail(d.email) ? "Verify and email the receipt" : "Verify"}</button>
+          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </Modal>
+    );
+  }
+  // A gift that arrived without a form from the donor (seen in the bank, on Lynk, in the wallet, or handed over)
+  function RecordGiftDialog({ store, onClose, onSaved }) {
+    const fx = useFx(store);
+    const [f, setF] = useState({ method: "bank", name: "", anonymous: false, email: "", country: "", date: today(), cur: "IDR", paid: "", feePct: String(store.getPaymentConfig().card.feePct ?? 5), usd: "", usdTouched: false, ref: "", message: "" });
+    const set = (k, v) => setF(p => ({ ...p, [k]: v }));
+    const rate = f.cur === "USD" || f.cur === "USDT" ? 1 : fx && fx[f.cur] ? fx[f.cur] : null;
+    useEffect(() => { if (!f.usdTouched && rate && parseFloat(f.paid) > 0) set("usd", ((parseFloat(f.paid) || 0) / rate).toFixed(2)); }, [rate, f.paid, f.cur]);
+    const setMethod = mth => setF(p => ({ ...p, method: mth, cur: mth === "usdt" ? "USDT" : mth === "bank" ? "IDR" : p.cur === "USDT" ? "USD" : p.cur }));
+    const card = f.method === "card";
+    const fee = card ? (parseFloat(f.paid) || 0) * (parseFloat(f.feePct) || 0) / 100 : 0;
+    const [busy, setBusy] = useState(false);
+    const ok = parseFloat(f.paid) > 0 && parseFloat(f.usd) > 0 && !busy;
+    const save = async () => {
+      setBusy(true);
+      const amount = Math.round(parseFloat(f.usd) * 100) / 100;
+      const payment = { method: f.method, currency: f.cur, paid: parseFloat(f.paid), received: parseFloat(f.paid), rateUsed: rate || null, paidAt: f.date || "", ref: f.ref.trim(), recordedBy: "founder" };
+      if (card) { payment.feePct = parseFloat(f.feePct) || 0; payment.fee = Math.round(fee * 100) / 100; payment.net = Math.round(((parseFloat(f.paid) || 0) - fee) * 100) / 100; }
+      const label = METHOD_LABEL[f.method] || "Gift";
+      const txHash = f.method === "usdt" && f.ref.trim() ? f.ref.trim() : [label, fmtCur(f.cur === "USDT" ? "USD" : f.cur, f.paid), f.ref.trim()].filter(Boolean).join(" · ");
+      try {
+        await store.recordGiftByFounder({ name: f.anonymous ? "" : f.name, anonymous: f.anonymous, email: f.email, country: f.country, amount, txHash, message: f.message, date: f.date ? f.date + "T12:00:00" : null, payment });
+        onSaved(okEmail(f.email) ? `Recorded and verified. The receipt is on its way to ${f.email.trim()}.` : "Recorded and verified."); onClose();
+      } catch (e) { setBusy(false); alert("Could not save: " + ((e && e.message) || e)); }
+    };
+    return (
+      <Modal wide title="Record a gift" sub="For a gift that arrived without a form from the donor. It is verified straight away and the receipt is emailed if you add an email." onClose={onClose}>
+        <div className="fd-form">
+          <Field label="How it was given"><div className="fd-seg">{["bank", "card", "usdt", "cash", "other"].map(k => <button key={k} type="button" className="fd-chip" aria-pressed={f.method === k} onClick={() => setMethod(k)}>{METHOD_LABEL[k]}</button>)}</div></Field>
+          <div className="fd-grid2">
+            <Field label="Donor's name"><input className="fd-input" value={f.name} disabled={f.anonymous} onChange={e => set("name", e.target.value)} placeholder={f.anonymous ? "Anonymous" : "Name or organisation"} /></Field>
+            <Field label="Email for the receipt (optional)"><input className="fd-input" type="email" value={f.email} onChange={e => set("email", e.target.value)} placeholder="donor@example.com" /></Field>
+          </div>
+          <label className="fd-check"><input type="checkbox" checked={f.anonymous} onChange={e => set("anonymous", e.target.checked)} /> Anonymous on the public ledger</label>
+          <div className="fd-grid3">
+            <Field label="Amount"><input className="fd-input" inputMode="decimal" value={f.paid} onChange={e => set("paid", e.target.value.replace(",", "."))} placeholder="0" /></Field>
+            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => setF(p => ({ ...p, cur: e.target.value, usdTouched: false }))}>{(f.method === "usdt" ? ["USDT"] : ["IDR", "USD", "TRY"]).map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+            <Field label="Value in US dollars" hint={rate && rate !== 1 ? `1 USD = ${fmtCur(f.cur, rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : null}><input className="fd-input" inputMode="decimal" value={f.usd} onChange={e => setF(p => ({ ...p, usd: e.target.value.replace(",", "."), usdTouched: true }))} /></Field>
+          </div>
+          {card && <div className="fd-grid2"><Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={f.feePct} onChange={e => set("feePct", e.target.value.replace(",", "."))} /></Field><div className="fd-sum" style={{ alignSelf: "end" }}>Lynk keeps <b>{fmtCur(f.cur, fee)}</b>; the receipt shows the full gift.</div></div>}
+          <div className="fd-grid3">
+            <Field label="Date received"><input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} /></Field>
+            <Field label={f.method === "usdt" ? "Transaction hash" : "Reference (optional)"}><input className="fd-input fd-mono" value={f.ref} onChange={e => set("ref", e.target.value)} placeholder={f.method === "card" ? "Lynk order number" : f.method === "usdt" ? "0x…" : "Bank reference"} spellCheck={false} /></Field>
+            <Field label="Country (optional)"><input className="fd-input" value={f.country} onChange={e => set("country", e.target.value)} /></Field>
+          </div>
+          <Field label="Message from the donor (optional)"><input className="fd-input" value={f.message} onChange={e => set("message", e.target.value)} /></Field>
+        </div>
+        <div className="fd-actions" style={{ marginTop: 18 }}>
+          <button className="fd-btn primary" disabled={!ok} onClick={save}>{busy ? "Saving…" : okEmail(f.email) ? "Record and email the receipt" : "Record gift"}</button>
+          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </Modal>
+    );
+  }
+
   function DonationsView({ store, donations, title }) {
     const [filter, setFilter] = useState("pending");
     const [q, setQ] = useState("");
@@ -1669,6 +1882,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const [rc, reloadRc] = useReceipts(store, verified.length);
     const [chain, reloadChain] = useChainChecks(store, list.map(d => d.id + (d.verified ? "v" : "")).join(","));
     const [rechecking, setRechecking] = useState({});
+    const [checkGift, setCheckGift] = useState(null);
+    const [addGift, setAddGift] = useState(false);
+    const verifyWith = (d, amount, payment) => {
+      const p = store.markDonationVerified(d.id, { amount, payment });
+      vflash(okEmail(d.email) ? `Verified. The receipt is being emailed to ${d.email}.` : "Verified. There is no email on file. Download the receipt PDF if the donor asks for one.");
+      Promise.resolve(p).then(() => { setTimeout(reloadRc, 1500); setTimeout(reloadRc, 8000); }).catch(() => vflash("Could not verify. Check your connection.", "err"));
+    };
     const recheck = d => {
       setRechecking(p => ({ ...p, [d.id]: true }));
       store.chainRecheck(d.id).then(() => { vflash("Checking the chain again. This takes a minute or two."); setTimeout(reloadChain, 6000); setTimeout(reloadChain, 20000); })
@@ -1683,7 +1903,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const G = "minmax(0,1.8fr) minmax(0,.7fr) minmax(0,1.3fr) minmax(0,.8fr) auto";
     return (
       <>
-        <Head title={title || "Donations"} lede={cfg.usdt.autoVerify !== false ? "Gifts reported through the donate page. USDT gifts are checked on chain and verified on their own when everything matches; bank and card gifts, and anything the chain check could not confirm, wait for you." : "Gifts reported through the donate page. Check each one against your wallet or bank, then verify it. Only verified gifts are final."}>
+        <Head title={title || "Donations"} lede={cfg.usdt.autoVerify !== false ? "Gifts reported through the donate page. USDT gifts are checked on chain and verified on their own. Bank and card gifts wait for you: open Verify, match them against your bank or Lynk, and confirm what arrived. Record a gift that came without a form." : "Gifts reported through the donate page. Check each one against your wallet or bank, then verify it. Only verified gifts are final."}>
+          <button className="fd-btn primary" onClick={() => setAddGift(true)}>Record a gift</button>
           <button className="fd-btn ghost" onClick={() => setChan(true)}>Payment channels</button>
         </Head>
         <Stats items={[{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter(g => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }]} />
@@ -1701,13 +1922,15 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
               <div key={d.id} className="fd-tr" style={{ gridTemplateColumns: G }}>
                 <div className="fd-td full"><b>{d.anonymous ? "Anonymous" : d.name}{d.anonymous && d.name && d.name !== "Anonymous patron" ? <span className="fd-sub" style={{ fontWeight: 400 }}> ({d.name})</span> : null}</b><small>{[d.email, d.country].filter(Boolean).join(" · ")}</small>{d.message && <small style={{ fontStyle: "italic" }}>“{d.message}”</small>}{isSale(d) && <Tag tone="sky">Library sale</Tag>}</div>
                 <div className="fd-td" data-l="Amount"><span className="num">{money(d.amount)}</span></div>
-                <div className="fd-td" data-l="Reference">{d.txHash ? <>{eth ? <a className="fd-mono" href={txUrl} target="_blank" rel="noopener noreferrer">{d.txHash.slice(0, 10)}…{d.txHash.slice(-6)}</a> : <span className="fd-mono">{d.txHash}</span>}<button className="fd-btn quiet sm" onClick={() => copy(d.txHash)}>Copy</button></> : <small>—</small>}</div>
+                <div className="fd-td" data-l="Reference">{d.txHash ? <>{eth ? <a className="fd-mono" href={txUrl} target="_blank" rel="noopener noreferrer">{d.txHash.slice(0, 10)}…{d.txHash.slice(-6)}</a> : <span className="fd-mono">{d.txHash}</span>}<button className="fd-btn quiet sm" onClick={() => copy(d.txHash)}>Copy</button></> : <small>—</small>}{d.payment && d.payment.method !== "usdt" && (d.payment.sender || d.payment.ref || d.payment.fee) ? <small className="fd-pay">{[d.payment.sender && "from " + d.payment.sender, d.payment.ref && "order " + d.payment.ref, d.payment.fee ? `Lynk fee ${d.payment.feePct}%: ${fmtCur(d.payment.currency === "USD" ? "USD" : "IDR", d.payment.fee)}` : null].filter(Boolean).join(" · ")}</small> : null}{d.founderEntry && <small className="fd-pay">Recorded by you</small>}</div>
                 <div className="fd-td" data-l="Date">{fdate(d.submittedAt)}</div>
                 <div className="fd-td full">
                   <div className="fd-actions" style={{ justifyContent: "flex-end" }}>
                     {d.verified
                       ? <><Tag tone="ok" dot>{d.verifiedBy === "chain" ? "Verified on chain" : "Verified"}</Tag>{!isSale(d) && <button className="fd-btn quiet sm" onClick={() => setOpen(d.id)}>Receipt</button>}</>
-                      : <Confirm className="fd-btn ok sm" armedLabel={okEmail(d.email) ? "Confirm · email receipt" : "Confirm verify"} onConfirm={() => verify(d)}>Verify</Confirm>}
+                      : d.payment && (d.payment.method === "bank" || d.payment.method === "card")
+                        ? <button className="fd-btn ok sm" onClick={() => setCheckGift(d.id)}>Verify…</button>
+                        : <Confirm className="fd-btn ok sm" armedLabel={okEmail(d.email) ? "Confirm · email receipt" : "Confirm verify"} onConfirm={() => verify(d)}>Verify</Confirm>}
                     <Confirm onConfirm={() => store.deleteDonation(d.id)}>Delete</Confirm>
                   </div>
                   {d.verified && !isSale(d) && (() => { const l = receiptLine(d, rc[d.id]); return <small className={"fd-rc " + l.tone}>{l.text}</small>; })()}
@@ -1721,6 +1944,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         </div>
         <p className="fd-sub" style={{ marginTop: 12 }}>Grants to partners are listed under each pillar, not here. Verifying a gift issues its receipt number and emails the receipt to the donor.</p>
         {chan && <ChannelsDialog store={store} onClose={() => setChan(false)} />}
+        {checkGift && (() => { const d = list.find(x => x.id === checkGift); return d ? <VerifyGiftDialog store={store} d={d} onClose={() => setCheckGift(null)} onDone={(amount, payment) => verifyWith(d, amount, payment)} /> : null; })()}
+        {addGift && <RecordGiftDialog store={store} onClose={() => setAddGift(false)} onSaved={t => { vflash(t); setTimeout(reloadRc, 2000); setTimeout(reloadRc, 9000); }} />}
         {open && (() => { const d = list.find(x => x.id === open); return d ? <ReceiptDialog store={store} d={d} r={rc[d.id]} onClose={() => setOpen(null)} onSent={() => { setTimeout(reloadRc, 1500); setTimeout(reloadRc, 8000); }} /> : null; })()}
       </>
     );
@@ -1895,7 +2120,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       else if (sem.status === "bill-uploaded") due.push(row);
     }));
     const allGrants = store.getPillarGrants();
-    const grants = allGrants.map(g => ({ id: g.id, dir: "out", date: g.date, category: "Grant", pillar: g.pillar, title: g.project || "Grant", detail: [g.partner, g.country].filter(Boolean).join(" · "), amount: Number(g.amount) || 0, ref: g.txRef || "", settled: !g.archived, archived: !!g.archived }));
+    const grants = allGrants.filter(g => Number(g.amount) > 0).map(g => ({ id: g.id, dir: "out", date: g.date, category: "Grant", pillar: g.pillar, title: g.project || "Grant", detail: [g.partner, g.country].filter(Boolean).join(" · "), amount: Number(g.amount) || 0, ref: g.txRef || "", settled: !g.archived, archived: !!g.archived }));
     const legacy = store.getLegacy();
     const legacyRow = Number(legacy.totalFunds) > 0 ? [{ id: "LEGACY", dir: "out", date: null, category: "Founding era", pillar: "Scholarships", title: "Support before the website", detail: `${legacy.count || (legacy.scholars || []).length || 0} scholars, recorded as one total`, amount: Number(legacy.totalFunds) || 0, ref: "", settled: true }] : [];
     const outflow = [...tuition, ...grants, ...legacyRow];
@@ -4305,13 +4530,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     if (pillar === "foodclothing") {
       const cfg = PILLARS.foodclothing;
       nav = [
-        { id: "counts", label: "Counts", icon: ICON.overview },
-        { id: "grants", label: "Grants", icon: ICON.grant, count: store.getPillarGrants().filter(g => g.pillar === cfg.grantName && !g.archived).length },
+        { id: "grants", label: "Distributions", icon: ICON.grant, count: store.getPillarGrants().filter(g => g.pillar === cfg.grantName && !g.archived).length },
+        { id: "counts", label: "Rough totals", icon: ICON.overview },
         { id: "story", label: "Programme page", icon: ICON.story },
         { id: "link", label: "Partner button", icon: ICON.link },
       ];
-      const t = nav.some(n => n.id === tab) ? tab : "counts";
-      view = t === "counts" ? <CountsView store={store} /> : t === "grants" ? <GrantsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
+      const t = nav.some(n => n.id === tab) ? tab : "grants";
+      view = t === "counts" ? <CountsView store={store} /> : t === "grants" ? <DistributionsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     const cfg = PILLARS[pillar];
