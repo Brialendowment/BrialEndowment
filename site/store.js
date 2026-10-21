@@ -1132,7 +1132,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
     // ----- Exchange rates, units of currency per 1 USD (ECB via frankfurter, then open.er-api, then a rough fallback) -----
-    FX_FALLBACK: { IDR: 16500, TRY: 42, USD: 1 },
+    FX_FALLBACK: { IDR: 18000, TRY: 49.5, USD: 1 }, // Oct 2026, used only when both rate services fail
     _fx: null,
     fxRates() {
       if (Store._fx && Date.now() - Store._fx.at < 6 * 3600e3) return Promise.resolve(Store._fx);
