@@ -289,7 +289,7 @@ const DonationForm = ({
       style: {
         color: "#E8E4DC"
       }
-    }, form.email), " once the deposit clears ", wallet.confirmations, " confirmations.")), /*#__PURE__*/React.createElement("div", {
+    }, form.email), " once the deposit clears ", wallet.confirmations, " confirmations", wallet.autoVerify !== false ? ", usually within a few minutes." : ".")), /*#__PURE__*/React.createElement("div", {
       style: {
         marginTop: 28,
         padding: "16px 18px",

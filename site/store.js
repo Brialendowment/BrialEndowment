@@ -672,7 +672,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     listReports() { return _reports; },
     walletInfo() {
       const u = Store.getPaymentConfig().usdt;
-      return { address: u.address, network: u.network, asset: u.asset, confirmations: Number(u.confirmations) || 12 };
+      return { address: u.address, network: u.network, asset: u.asset, confirmations: Number(u.confirmations) || 12, autoVerify: u.autoVerify !== false };
     },
 
     // ----- Payment channels (founder-managed: USDT wallet, bank transfer, card link) -----
@@ -1110,6 +1110,9 @@ window.BrialClipboard = { copy: copyToClipboard };
     },
     sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
+    // ----- USDT gifts checked on chain by the be-chain worker (founder only) -----
+    chainStatus() { return Store._mailRpc("be_chain_status"); },
+    chainRecheck(id) { return Store._mailRpc("be_chain_recheck", { p_id: id }); },
     mailPreview() { return Store._mailFn({ action: "preview", kind: "receipt" }); },
     sendMessage(msg) { return Store._mailRpc("be_mail_send_message", { p_msg: msg }); },
     previewMessage(msg) { return Store._mailFn({ action: "preview_message", message: msg }); },

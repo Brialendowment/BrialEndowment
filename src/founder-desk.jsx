@@ -315,6 +315,10 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-mlog-i small{font-size:12px;color:var(--faint);overflow-wrap:anywhere}
 .fd-mlog-i .fd-tag{justify-self:end}
 .fd-mprev{width:100%;height:560px;border:0;border-radius:10px;background:#F5F2EA}
+.fd-autov{margin-top:6px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(10,22,40,.35)}
+.fd-autov small{display:block;margin-top:8px;font-size:12px;line-height:1.5;color:var(--faint)}
+.fd-chain{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:-4px;padding:0 0 2px}
+.fd-chain .fd-rc{margin:0;text-align:right}
 .fd-ctrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:16px}
 .fd-ctr{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:20px 20px 18px;min-width:0}
 .fd-ctr-k{font-size:12.5px;color:var(--muted)}
@@ -1548,6 +1552,12 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             <div className="fd-form" style={{ flex: "1 1 300px" }}>
               <Field label="Wallet address"><input className="fd-input fd-mono" value={cfg.usdt.address} onChange={e => set("usdt", "address", e.target.value)} spellCheck={false} /></Field>
               <div className="fd-grid3"><Field label="Network"><input className="fd-input" value={cfg.usdt.network} onChange={e => set("usdt", "network", e.target.value)} /></Field><Field label="Asset"><input className="fd-input" value={cfg.usdt.asset} onChange={e => set("usdt", "asset", e.target.value)} /></Field><Field label="Confirmations"><input className="fd-input" type="number" min="1" value={cfg.usdt.confirmations} onChange={e => set("usdt", "confirmations", e.target.value)} /></Field></div>
+              <div className="fd-autov">
+                <Switch on={cfg.usdt.autoVerify !== false} onChange={v => set("usdt", "autoVerify", v)}>Verify USDT gifts automatically</Switch>
+                <small>{cfg.usdt.autoVerify !== false
+                  ? "Each reported hash is read from the chain. When the USDT reached this wallet with enough confirmations and the amount matches, the gift is verified and the receipt is emailed. Anything else waits for you."
+                  : "Off. Every USDT gift waits for you to check it and press Verify."}</small>
+              </div>
             </div>
             <QR value={cfg.usdt.address} />
           </div>
@@ -1615,6 +1625,34 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     );
   }
 
+  // ---------------- on-chain checks (USDT) ----------------
+  function useChainChecks(store, dep) {
+    const [st, setSt] = useState({ loaded: false, checks: {}, config: {} });
+    const alive = useRef(true);
+    const load = useCallback(() => { if (!store.chainStatus) return; store.chainStatus().then(r => { if (alive.current) setSt({ loaded: true, checks: (r && r.checks) || {}, config: (r && r.config) || {} }); }).catch(() => { if (alive.current) setSt(p => ({ ...p, loaded: true })); }); }, [store]);
+    useEffect(() => { alive.current = true; load(); return () => { alive.current = false; }; }, [load, dep]);
+    // while a check is under way, look again every 20 seconds
+    const busy = Object.values(st.checks).some(c => ["queued", "checking", "waiting", "retry"].indexOf(c.status) >= 0);
+    useEffect(() => { if (!busy) return; const t = setInterval(load, 20000); return () => clearInterval(t); }, [busy, load]);
+    return [st, load];
+  }
+  function chainLine(c, cfg) {
+    if (cfg && cfg.autoVerify === false) return { text: "Automatic checks are off. Check the hash on the explorer, then verify.", tone: "", again: false };
+    if (!c) return { text: "Not checked on chain yet.", tone: "", again: true };
+    const on = c.network ? " on " + c.network : "";
+    switch (c.status) {
+      case "queued": case "checking": return { text: "Checking on chain…", tone: "warn", again: false };
+      case "waiting": return { text: c.required ? `Found${on}. Waiting for confirmations: ${c.confirmations || 0} of ${c.required}.` : "Sent, waiting for the block.", tone: "warn", again: false };
+      case "retry": return { text: (c.reason || "Not found yet.") + " Looking again " + (c.nextTryAt ? "at " + new Date(c.nextTryAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "soon") + ".", tone: "warn", again: true };
+      case "verified": return { text: "Verified on chain.", tone: "ok", again: false };
+      case "duplicate": return { text: "Needs you: " + (c.reason || "another gift claims this transaction."), tone: "bad", again: true };
+      case "not_found": return { text: "Needs you: the transaction was not found on chain after two days. Ask the donor for the right hash.", tone: "bad", again: true };
+      case "manual": return { text: c.reason || "Check this one by hand.", tone: "", again: false };
+      case "error": return { text: "Needs you: the networks could not be reached. " + (c.reason || ""), tone: "bad", again: true };
+      default: return { text: "Needs you: " + (c.reason || "the transfer did not match.") + (c.received && !/Received/.test(c.reason || "") ? ` Received ${Number(c.received).toFixed(2)} USDT${on}.` : c.network ? ` (${c.network})` : ""), tone: "bad", again: true };
+    }
+  }
+
   function DonationsView({ store, donations, title }) {
     const [filter, setFilter] = useState("pending");
     const [q, setQ] = useState("");
@@ -1629,6 +1667,14 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       .filter(d => { const s = q.trim().toLowerCase(); return !s || [d.name, d.email, d.country, d.txHash, d.id].some(x => (x || "").toLowerCase().includes(s)); });
     const cfg = store.getPaymentConfig();
     const [rc, reloadRc] = useReceipts(store, verified.length);
+    const [chain, reloadChain] = useChainChecks(store, list.map(d => d.id + (d.verified ? "v" : "")).join(","));
+    const [rechecking, setRechecking] = useState({});
+    const recheck = d => {
+      setRechecking(p => ({ ...p, [d.id]: true }));
+      store.chainRecheck(d.id).then(() => { vflash("Checking the chain again. This takes a minute or two."); setTimeout(reloadChain, 6000); setTimeout(reloadChain, 20000); })
+        .catch(e => vflash(/not_a_chain_hash/.test(String(e && e.message)) ? "That reference is not an on-chain transaction hash." : "Could not start the check. Try again in a moment.", "err"))
+        .finally(() => setTimeout(() => setRechecking(p => ({ ...p, [d.id]: false })), 4000));
+    };
     const verify = d => {
       const p = store.markDonationVerified(d.id);
       vflash(okEmail(d.email) ? `Verified. The receipt is being emailed to ${d.email}.` : "Verified. There is no email on file. Download the receipt PDF if the donor asks for one.");
@@ -1637,7 +1683,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const G = "minmax(0,1.8fr) minmax(0,.7fr) minmax(0,1.3fr) minmax(0,.8fr) auto";
     return (
       <>
-        <Head title={title || "Donations"} lede="Gifts reported through the donate page. Check each one against your wallet or bank, then verify it. Only verified gifts are final.">
+        <Head title={title || "Donations"} lede={cfg.usdt.autoVerify !== false ? "Gifts reported through the donate page. USDT gifts are checked on chain and verified on their own when everything matches; bank and card gifts, and anything the chain check could not confirm, wait for you." : "Gifts reported through the donate page. Check each one against your wallet or bank, then verify it. Only verified gifts are final."}>
           <button className="fd-btn ghost" onClick={() => setChan(true)}>Payment channels</button>
         </Head>
         <Stats items={[{ label: "Verified gifts", value: money(sum(verified)), sub: `${verified.length} ${plural(verified.length, "gift", "gifts")}`, tone: "ok" }, { label: "Waiting for verification", value: money(sum(pending)), sub: `${pending.length} reported`, tone: pending.length ? "warn" : "" }, { label: "Channels on the donate page", value: ["usdt", "bank", "card"].filter(g => cfg[g].enabled !== false).length, sub: [cfg.usdt.enabled !== false && "USDT", cfg.bank.enabled !== false && cfg.bank.bank, cfg.card.enabled !== false && "Card"].filter(Boolean).join(", ") }]} />
@@ -1648,21 +1694,27 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Donor</div><div>Amount</div><div>Reference</div><div>Date</div><div /></div>
           {shown.length === 0 ? <Empty title={filter === "pending" ? "Nothing to verify." : "No donations match."} /> : shown.map(d => {
             const eth = /^0x[0-9a-f]{10,}$/i.test(d.txHash || "");
+            const onChain = /^0x[0-9a-f]{64}$/i.test((d.txHash || "").trim());
+            const ch = chain.checks && chain.checks[d.id];
+            const txUrl = (d.chain && d.chain.explorer) || (ch && ch.explorer) || `https://etherscan.io/tx/${d.txHash}`;
             return (
               <div key={d.id} className="fd-tr" style={{ gridTemplateColumns: G }}>
                 <div className="fd-td full"><b>{d.anonymous ? "Anonymous" : d.name}{d.anonymous && d.name && d.name !== "Anonymous patron" ? <span className="fd-sub" style={{ fontWeight: 400 }}> ({d.name})</span> : null}</b><small>{[d.email, d.country].filter(Boolean).join(" · ")}</small>{d.message && <small style={{ fontStyle: "italic" }}>“{d.message}”</small>}{isSale(d) && <Tag tone="sky">Library sale</Tag>}</div>
                 <div className="fd-td" data-l="Amount"><span className="num">{money(d.amount)}</span></div>
-                <div className="fd-td" data-l="Reference">{d.txHash ? <>{eth ? <a className="fd-mono" href={`https://etherscan.io/tx/${d.txHash}`} target="_blank" rel="noopener noreferrer">{d.txHash.slice(0, 10)}…{d.txHash.slice(-6)}</a> : <span className="fd-mono">{d.txHash}</span>}<button className="fd-btn quiet sm" onClick={() => copy(d.txHash)}>Copy</button></> : <small>—</small>}</div>
+                <div className="fd-td" data-l="Reference">{d.txHash ? <>{eth ? <a className="fd-mono" href={txUrl} target="_blank" rel="noopener noreferrer">{d.txHash.slice(0, 10)}…{d.txHash.slice(-6)}</a> : <span className="fd-mono">{d.txHash}</span>}<button className="fd-btn quiet sm" onClick={() => copy(d.txHash)}>Copy</button></> : <small>—</small>}</div>
                 <div className="fd-td" data-l="Date">{fdate(d.submittedAt)}</div>
                 <div className="fd-td full">
                   <div className="fd-actions" style={{ justifyContent: "flex-end" }}>
                     {d.verified
-                      ? <><Tag tone="ok" dot>Verified</Tag>{!isSale(d) && <button className="fd-btn quiet sm" onClick={() => setOpen(d.id)}>Receipt</button>}</>
+                      ? <><Tag tone="ok" dot>{d.verifiedBy === "chain" ? "Verified on chain" : "Verified"}</Tag>{!isSale(d) && <button className="fd-btn quiet sm" onClick={() => setOpen(d.id)}>Receipt</button>}</>
                       : <Confirm className="fd-btn ok sm" armedLabel={okEmail(d.email) ? "Confirm · email receipt" : "Confirm verify"} onConfirm={() => verify(d)}>Verify</Confirm>}
                     <Confirm onConfirm={() => store.deleteDonation(d.id)}>Delete</Confirm>
                   </div>
                   {d.verified && !isSale(d) && (() => { const l = receiptLine(d, rc[d.id]); return <small className={"fd-rc " + l.tone}>{l.text}</small>; })()}
                 </div>
+                {d.verified && d.verifiedBy === "chain" && d.chain && <div className="fd-chain"><small className="fd-rc ok">Received {Number(d.chain.received || d.amount).toFixed(2)} USDT on {d.chain.network}{Number(d.claimedAmount) && Math.abs(Number(d.claimedAmount) - Number(d.amount)) >= 0.01 ? ` (reported ${money(d.claimedAmount)})` : ""}</small></div>}
+                {!d.verified && onChain && chain.loaded && (() => { const l = chainLine(ch, chain.config); return (
+                  <div className="fd-chain"><small className={"fd-rc " + l.tone}>{l.text}</small>{l.again && <button className="fd-btn quiet sm" disabled={!!rechecking[d.id]} onClick={() => recheck(d)}>{rechecking[d.id] ? "Checking…" : "Check again"}</button>}</div>); })()}
               </div>
             );
           })}
@@ -2061,6 +2113,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
               <div className="fd-card-head" style={{ marginBottom: 6 }}><h2 className="fd-h2">{name}</h2><Tag tone={on ? "ok" : ""} dot>{on ? "Shown" : "Hidden"}</Tag></div>
               <p className="fd-sub" style={{ margin: 0 }}>{sub}</p>
               <p className="fd-mono" style={{ margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" }}>{val || "Not set"}</p>
+              {k === "usdt" && <p className="fd-sub" style={{ margin: "10px 0 0" }}>{c.usdt.autoVerify !== false ? "Checked on chain automatically: Ethereum, BNB Chain, Polygon and Arbitrum." : "Automatic checks are off. Each gift waits for you."}</p>}
             </div>
           ))}
         </div>
