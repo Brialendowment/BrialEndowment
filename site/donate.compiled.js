@@ -20,6 +20,16 @@ const useDonateStore = () => {
   return window.BrialStore;
 };
 
+// USDT network label from the configured network (BEP-20 since Oct 2026; the exchange gives one address per network)
+const usdtNet = n => {
+  const s = String(n || "");
+  if (/bep|bsc|bnb|binance/i.test(s)) return { code: "BEP-20", chain: "BNB Smart Chain" };
+  if (/polygon|matic/i.test(s)) return { code: "Polygon", chain: "Polygon PoS" };
+  if (/arb/i.test(s)) return { code: "Arbitrum", chain: "Arbitrum One" };
+  if (/trc|tron/i.test(s)) return { code: "TRC-20", chain: "Tron" };
+  return { code: "ERC-20", chain: "Ethereum" };
+};
+const usdtNetNow = () => usdtNet(window.BrialStore && window.BrialStore.walletInfo ? window.BrialStore.walletInfo().network : "");
 // ---------- QR code generator (vendored: qrcode-generator v1.4.4 condensed) ----------
 // Source pattern adapted from Kazuhiko Arase's qrcode-generator (MIT).
 // We use a tiny native implementation to avoid CDN dependency in standalone HTML.
@@ -178,7 +188,7 @@ const DonateNav = ({
     color: "#C9A961",
     marginTop: 2
   }
-}, "PATRONAGE \xB7 USDT (ERC-20)"))), /*#__PURE__*/React.createElement("button", {
+}, "PATRONAGE \xB7 USDT (" + usdtNetNow().code + ") \xB7 QRIS"))), /*#__PURE__*/React.createElement("button", {
   onClick: onApply,
   style: {
     background: "transparent",
@@ -231,7 +241,7 @@ const QrisCard = ({ qris }) => {
   const info = (store.parseQris && store.parseQris(qris.payload)) || {};
   if (!info.ok) return null;
   const mono = "'JetBrains Mono', monospace", serif = "'Cormorant Garamond', serif", sans = "'Manrope', sans-serif";
-  return h("div", { style: { padding: 32, background: "rgba(20,36,66,0.5)", border: "1px solid rgba(201,169,97,0.25)", marginBottom: 18 } },
+  return h("div", { style: { padding: 32, background: "rgba(20,36,66,0.5)", border: "1px solid rgba(201,169,97,0.25)", marginTop: 18 } },
     h("div", { style: { fontFamily: mono, fontSize: 10, color: "#C9A961", letterSpacing: "0.28em", textTransform: "uppercase" } }, "\xA7 Indonesia \u00b7 QRIS"),
     h("h3", { style: { fontFamily: serif, fontSize: 28, fontWeight: 400, color: "#E8E4DC", letterSpacing: "-0.01em", margin: "10px 0 8px", lineHeight: 1.1 } }, "Scan to give with QRIS."),
     h("p", { style: { fontFamily: sans, fontSize: 13, lineHeight: 1.6, color: "rgba(232,228,220,0.65)", margin: "0 0 20px" } }, "Any Indonesian bank or e-wallet app: BCA, BRI, Mandiri, BSI, Jago, GoPay, OVO, DANA, ShopeePay. Enter any amount."),
@@ -254,7 +264,7 @@ const RecordMethodBtn = ({ method, children, flat }) => /*#__PURE__*/React.creat
   },
   style: { marginTop: flat ? 0 : 12, padding: "9px 14px", background: "transparent", border: "1px solid rgba(201,169,97,0.45)", color: "#E3C98A", cursor: "pointer", fontFamily: "'Manrope', sans-serif", fontSize: 12, letterSpacing: "0.08em" }
 }, children);
-const DONATE_METHODS = [["qris", "QRIS (Indonesia)"], ["usdt", "USDT (crypto)"], ["bank", "Bank transfer (IDR)"], ["card", "Card via Lynk"]];
+const DONATE_METHODS = [["usdt", "USDT (crypto)"], ["qris", "QRIS (Indonesia)"], ["bank", "Bank transfer (IDR)"], ["card", "Card via Lynk"]];
 const fmtIDR = n => "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
 const fmtUSD = n => "$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const blankDonation = method => ({ method: method || "usdt", name: "", email: "", country: "", amount: "", idr: "", cardAmount: "", cardCur: "IDR", paidAt: "", sender: "", ref: "", message: "", txHash: "", anonymous: false, agreement: false });
@@ -547,7 +557,7 @@ const DonatePage = ({
       margin: 0,
       maxWidth: 760
     }
-  }, "The Brial Endowment accepts USDT on Ethereum (ERC-20). Every dollar arrives in the foundation's wallet, is recorded on-chain, and is disbursed, in full, to a scholar's tuition account within the year. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just tuition, paid."), /*#__PURE__*/React.createElement("div", {
+  }, "The Brial Endowment accepts USDT on " + usdtNet(wallet.network).chain + " (" + usdtNet(wallet.network).code + ") from anywhere, and QRIS, bank transfers and cards in Indonesia. Every dollar arrives in the foundation's wallet, is recorded on-chain, and is disbursed, in full, to a scholar's tuition account within the year. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just tuition, paid."), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 40,
       display: "grid",
@@ -598,7 +608,7 @@ const DonatePage = ({
       gap: 32,
       alignItems: "start"
     }
-  }, /*#__PURE__*/React.createElement("div", null, pay.qris && pay.qris.enabled !== false && pay.qris.payload ? /*#__PURE__*/React.createElement(QrisCard, { qris: pay.qris }) : null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 32,
       background: "rgba(20,36,66,0.5)",
@@ -698,7 +708,7 @@ const DonatePage = ({
       marginTop: 6,
       fontWeight: 500
     }
-  }, wallet.network, " \xB7 Ethereum")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, usdtNet(wallet.network).code, " \xB7 ", usdtNet(wallet.network).chain)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 9,
@@ -730,7 +740,7 @@ const DonatePage = ({
       textTransform: "uppercase",
       marginBottom: 14
     }
-  }, "How to donate \xB7 USDT (ERC-20)"), /*#__PURE__*/React.createElement("ol", {
+  }, "How to donate \xB7 USDT (" + usdtNet(wallet.network).code + ")"), /*#__PURE__*/React.createElement("ol", {
     style: {
       fontFamily: "'Manrope', sans-serif",
       fontSize: 13,
@@ -747,7 +757,7 @@ const DonatePage = ({
     style: {
       color: "#E8E4DC"
     }
-  }, "Ethereum (ERC-20)"), " network."), /*#__PURE__*/React.createElement("li", null, "Paste the deposit address above (or scan the QR with your phone)."), /*#__PURE__*/React.createElement("li", null, "Enter the amount you wish to donate."), /*#__PURE__*/React.createElement("li", null, "Confirm and complete the transaction. Save the ", /*#__PURE__*/React.createElement("strong", {
+  }, usdtNet(wallet.network).chain + " (" + usdtNet(wallet.network).code + ")"), " network."), /*#__PURE__*/React.createElement("li", null, "Paste the deposit address above (or scan the QR with your phone)."), /*#__PURE__*/React.createElement("li", null, "Enter the amount you wish to donate."), /*#__PURE__*/React.createElement("li", null, "Confirm and complete the transaction. Save the ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "#E8E4DC"
     }
@@ -778,11 +788,11 @@ const DonatePage = ({
     style: {
       color: "#E8E4DC"
     }
-  }, "only USDT on ERC-20"), ". Sending other tokens (or USDT on TRC-20/BSC) to this address will result in permanent loss. Deposit appears on our ledger after ", /*#__PURE__*/React.createElement("strong", {
+  }, "only USDT on " + usdtNet(wallet.network).chain + " (" + usdtNet(wallet.network).code + ")"), ". Sending other tokens, or USDT on any other network, to this address may be lost. Deposit appears on our ledger after ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: "#E8E4DC"
     }
-  }, wallet.confirmations, " confirmations"), ". No deposit fee."))), pay.bank.enabled !== false && /*#__PURE__*/React.createElement("div", {
+  }, wallet.confirmations, " confirmations"), ". No deposit fee."))), pay.qris && pay.qris.enabled !== false && pay.qris.payload ? /*#__PURE__*/React.createElement(QrisCard, { qris: pay.qris }) : null, pay.bank.enabled !== false && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 32,

@@ -2390,7 +2390,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
               <div className="fd-card-head" style={{ marginBottom: 6 }}><h2 className="fd-h2">{name}</h2><Tag tone={on ? "ok" : ""} dot>{on ? "Shown" : "Hidden"}</Tag></div>
               <p className="fd-sub" style={{ margin: 0 }}>{sub}</p>
               <p className="fd-mono" style={{ margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" }}>{val || "Not set"}</p>
-              {k === "usdt" && <p className="fd-sub" style={{ margin: "10px 0 0" }}>{c.usdt.autoVerify !== false ? "Checked on chain automatically: Ethereum, BNB Chain, Polygon and Arbitrum." : "Automatic checks are off. Each gift waits for you."}</p>}
+              {k === "usdt" && <p className="fd-sub" style={{ margin: "10px 0 0" }}>{c.usdt.autoVerify !== false ? "Checked on chain automatically. Only gifts on the network above are verified on their own; anything sent on another network waits for you." : "Automatic checks are off. Each gift waits for you."}</p>}
             </div>
           ))}
         </div>

@@ -12,8 +12,10 @@
 //
 // A gift is verified on its own only when ALL of these hold:
 //   * the transaction succeeded and moved USDT (the official Tether contract)
-//     to the endowment's wallet, on the configured network or another EVM
-//     network the same wallet address lives on;
+//     to the endowment's wallet ON THE CONFIGURED NETWORK. The wallet is an
+//     exchange deposit address that credits one network only (BEP-20 since
+//     Oct 2026), so a transfer found on another network is shown to the
+//     founder for review, never verified on its own;
 //   * it has the required confirmations;
 //   * it is dated between 60 days before and 6 hours after the report;
 //   * the amount received is at least the reported amount less 3% and $1
@@ -124,9 +126,14 @@ async function check(it: Item, cfg: Cfg) {
   }
   if (!r) return down ? { status: "error", reason: "Could not reach the network: " + down } : { status: "not_found", reason: "The transaction is not on Ethereum, BNB Chain, Polygon or Arbitrum yet." };
   const base = { network: r.net.name, chainId: r.net.chainId, token: "USDT", explorer: r.net.explorer + tx };
-  if (r.pending) return { ...base, status: "waiting", reason: "Sent, not yet in a block.", confirmations: 0, required: r.net.key === "eth" ? Math.max(1, cfg.confirmations || r.net.minConf) : r.net.minConf };
+  if (r.net.key !== pref) {
+    const want = NETS.find(n => n.key === pref)!;
+    return { ...base, status: "review", block: r.block, received: r.received, from: r.from,
+      reason: `Sent on ${r.net.name}, but the wallet takes USDT only on ${want.name}. Check with the exchange that it arrived before you verify it.` };
+  }
+  if (r.pending) return { ...base, status: "waiting", reason: "Sent, not yet in a block.", confirmations: 0, required: Math.max(r.net.minConf, Number(cfg.confirmations) || 0) };
   if (r.failed) return { ...base, status: "review", reason: "The transaction failed on chain, so nothing arrived.", block: r.block };
-  const required = r.net.key === "eth" ? Math.max(1, Number(cfg.confirmations) || r.net.minConf) : r.net.minConf;
+  const required = Math.max(r.net.minConf, Number(cfg.confirmations) || 0);
   const detail = { ...base, received: r.received, from: r.from, block: r.block, confirmations: r.confirmations, required, blockTime: r.blockTime };
   if (!r.received) {
     return { ...detail, status: "review", reason: r.otherTokens && r.otherTokens.length
@@ -143,7 +150,7 @@ async function check(it: Item, cfg: Cfg) {
   if (r.received! < claimed * 0.97 - 1) {
     return { ...detail, status: "review", reason: `Received ${r.received!.toFixed(2)} USDT, but ${claimed.toFixed(2)} was reported.` };
   }
-  return { ...detail, status: "verified", reason: r.net.key === pref ? "" : `Sent on ${r.net.name} rather than ${NETS.find(n => n.key === pref)!.name}; it reached the same wallet.` };
+  return { ...detail, status: "verified", reason: "" };
 }
 
 async function ctx() {

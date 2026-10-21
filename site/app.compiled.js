@@ -1847,7 +1847,7 @@ const Footer = ({
     maxWidth: 620,
     lineHeight: 1.6
   }
-}, "Send USDT on Ethereum (ERC-20). 100% goes to the work of the endowment, with no fees and no overhead, and every transfer is recorded on chain.")), /*#__PURE__*/React.createElement("div", {
+}, "Send USDT on " + ((w => /bep|bsc|bnb/i.test(w) ? "BNB Smart Chain (BEP-20)" : "Ethereum (ERC-20)")(window.BrialStore && window.BrialStore.walletInfo ? window.BrialStore.walletInfo().network : "")) + ", or scan QRIS from any Indonesian bank. 100% goes to the work of the endowment, with no fees and no overhead, and every gift is recorded in the open.")), /*#__PURE__*/React.createElement("div", {
   className: "b-donate-pill",
   style: {
     padding: "16px 28px",

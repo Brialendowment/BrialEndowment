@@ -147,10 +147,10 @@ window.BrialClipboard = { copy: copyToClipboard };
   } catch (e) { /* ignore */ }
 
   const WALLET = {
-    address: "0x51b3c34464349619b6dAFb13268730d5CFa82d5F",
-    network: "ERC-20",
+    address: "0x89d3115cb07293D3d208B56AEEEA78A80079321e", // exchange deposit address, BEP-20 only (new since 30 Sep 2026)
+    network: "BEP-20",
     asset: "USDT (Tether)",
-    confirmations: 12,
+    confirmations: 15,
   };
   const FOUNDER = { name: "Brial" };
 
@@ -678,7 +678,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     // ----- Payment channels (founder-managed: USDT wallet, bank transfer, card link) -----
     getPaymentConfig() {
       const defaults = {
-        usdt: { enabled: true, address: WALLET.address, network: "ERC-20", asset: "USDT (Tether)", confirmations: 12 },
+        usdt: { enabled: true, address: WALLET.address, network: WALLET.network, asset: "USDT (Tether)", confirmations: WALLET.confirmations },
         bank: { enabled: true, bank: "Bank Jago", account: "107540735665", holder: "Brial Asif Hayi Paka", currency: "IDR \u00b7 Rupiah" },
         card: { enabled: true, link: "https://lynk.id/brial/s/e1896978jwq9" },
         // Static QRIS from DANA Bisnis (NMID ID1026621752462, MCC 8398 charitable organisations), registered 21 Oct 2026
