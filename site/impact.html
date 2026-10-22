@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#0A1628;--navy2:#132746;--stone:#E8E4DC;--paper:#F6F2EA;--ink:#14213A;--muted:#5D6678;--gold:#C9A961;--gold2:#9C7F3E;--line:rgba(20,33,58,.14)}
+:root{--navy:#0A1628;--navy2:#132746;--stone:#E8E4DC;--paper:#F6F2EA;--ink:#14213A;--muted:#5D6678;--gold:#C9A961;--gold2:#7D6431;--line:rgba(20,33,58,.14)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--paper);color:var(--ink)}
 body{font-family:'Manrope',system-ui,sans-serif;font-size:17px;line-height:1.7;-webkit-font-smoothing:antialiased}
@@ -102,7 +102,7 @@ h2 em{font-style:italic;color:var(--gold2)}
 </style>
 </head>
 <body>
-<div id="app"><div class="notice"><div class="mono" style="color:#9C7F3E">The Brial Endowment</div><h1>Opening the report…</h1></div></div>
+<div id="app"><div class="notice"><div class="mono" style="color:#7D6431">The Brial Endowment</div><h1>Opening the report…</h1></div></div>
 <script>
 (function () {
   "use strict";
@@ -126,7 +126,7 @@ h2 em{font-style:italic;color:var(--gold2)}
 
   function notice(title, text) {
     document.title = title + " | The Brial Endowment";
-    app.innerHTML = '<div class="notice">' + STAR + '<div class="mono" style="color:#9C7F3E;margin-top:14px">The Brial Endowment</div><h1>' + esc(title) + '</h1><p style="color:#5D6678">' + text + '</p><p><a class="btn" style="color:#9C7F3E;border-color:#C9A961" href="/">Return to the Endowment</a></p></div>';
+    app.innerHTML = '<div class="notice">' + STAR + '<div class="mono" style="color:#7D6431;margin-top:14px">The Brial Endowment</div><h1>' + esc(title) + '</h1><p style="color:#5D6678">' + text + '</p><p><a class="btn" style="color:#7D6431;border-color:#C9A961" href="/">Return to the Endowment</a></p></div>';
   }
 
   function render(r, isPreview) {

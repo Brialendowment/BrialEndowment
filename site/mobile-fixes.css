@@ -247,3 +247,27 @@
 
 /* donate form: two-up fields stack on phones */
 @media (max-width: 600px) { .b-don-2col { grid-template-columns: 1fr !important; gap: 14px !important; } }
+
+/* ---- donate page (Oct 2026 redesign) ---- */
+@media (max-width: 760px) {
+  .b-don-methods { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .b-don-methods button { min-height: 100px !important; padding: 14px 12px 12px !important; }
+  .b-don-row { grid-template-columns: minmax(0, 1fr) auto !important; gap: 8px 14px !important; padding: 16px 16px !important; }
+  .b-don-row-name { grid-column: 1 / -1; }
+  .b-don-row-amt { font-size: 24px !important; grid-column: 1; grid-row: 2; }
+  .b-don-row-ref { grid-column: 1 / -1; grid-row: 3; }
+  .b-don-row-status { grid-column: 2; grid-row: 2; }
+  div.b-don-stats { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  div.b-don-stats > div { padding: 14px 12px !important; }
+  div.b-don-stats > div > div:first-child { letter-spacing: 0.06em !important; line-height: 1.35 !important; }
+  .b-don-stat-v { font-size: 24px !important; }
+}
+@media (max-width: 600px) {
+  .b-hide-sm { display: none !important; }
+  .b-don-nav { padding: 12px 16px !important; }
+}
+@media (min-width: 761px) { .b-don-record { display: none !important; } }
+@media (max-width: 600px) {
+  .b-portal-gate:has(> .b-portal-back) { flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; padding: 16px 16px 40px !important; gap: 18px !important; }
+  .b-portal-back { position: static !important; align-self: flex-start !important; }
+}

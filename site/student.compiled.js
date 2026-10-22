@@ -104,9 +104,9 @@ const PasswordField = ({
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: mismatch ? "#E58686" : "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: mismatch ? "#E58686" : "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -140,7 +140,7 @@ const PasswordField = ({
     style: {
       background: "transparent",
       border: "none",
-      color: "rgba(232,228,220,0.55)",
+      color: "rgba(232,228,220,0.66)",
       cursor: "pointer",
       padding: 8,
       display: "flex"
@@ -235,9 +235,9 @@ const HumanCheck = ({
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8,
       display: "flex",
@@ -329,8 +329,8 @@ const HumanCheck = ({
   }))))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      color: "rgba(232,228,220,0.4)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 6,
       letterSpacing: "0.1em"
     }
@@ -452,6 +452,7 @@ const ConsentGate = ({
   };
   const first = (applicant.name || "").split(" ")[0];
   return /*#__PURE__*/React.createElement("div", {
+    className: "b-portal-gate",
     style: {
       minHeight: "100vh",
       background: "radial-gradient(ellipse at 30% 20%, #142442 0%, #0A1628 60%, #060E1C 100%)",
@@ -471,8 +472,8 @@ const ConsentGate = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      letterSpacing: "0.3em",
+      fontSize: 11,
+      letterSpacing: "0.24em",
       textTransform: "uppercase",
       color: "#C9A961",
       marginBottom: 14
@@ -625,6 +626,7 @@ const ApplicantAuth = ({
   };
   const passwordMismatch = mode === "signup" && form.confirmPassword.length > 0 && form.password !== form.confirmPassword;
   return /*#__PURE__*/React.createElement("div", {
+    className: "b-portal-gate",
     style: {
       minHeight: "100vh",
       background: "radial-gradient(ellipse at 30% 20%, #142442 0%, #0A1628 60%, #060E1C 100%)",
@@ -645,10 +647,12 @@ const ApplicantAuth = ({
     }
   }), /*#__PURE__*/React.createElement("button", {
     onClick: onExit,
+    className: "b-portal-back",
     style: {
       position: "absolute",
       top: 24,
       left: 24,
+      minHeight: 40,
       background: "transparent",
       border: "1px solid rgba(232,228,220,0.2)",
       color: "rgba(232,228,220,0.7)",
@@ -695,9 +699,9 @@ const ApplicantAuth = ({
   })))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#C9A961",
-      letterSpacing: "0.28em",
+      letterSpacing: "0.22em",
       textTransform: "uppercase",
       textAlign: "center",
       marginBottom: 12
@@ -746,7 +750,7 @@ const ApplicantAuth = ({
       padding: "10px 0",
       border: "none",
       background: mode === t.id ? "rgba(201,169,97,0.18)" : "rgba(20,36,66,0.7)",
-      color: mode === t.id ? "#C9A961" : "rgba(232,228,220,0.6)",
+      color: mode === t.id ? "#E3C98A" : "rgba(232,228,220,0.72)",
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 11,
       letterSpacing: "0.18em",
@@ -762,9 +766,9 @@ const ApplicantAuth = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -793,9 +797,9 @@ const ApplicantAuth = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -844,7 +848,7 @@ const ApplicantAuth = ({
   }), passwordMismatch && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#E58686",
       marginTop: 6,
       letterSpacing: "0.08em"
@@ -1060,14 +1064,14 @@ const TimelineNode = ({
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 16,
-      color: isDone || isCurrent || isAccepted || isRejected ? "#E8E4DC" : "rgba(232,228,220,0.45)",
+      color: isDone || isCurrent || isAccepted || isRejected ? "#E8E4DC" : "rgba(232,228,220,0.66)",
       marginTop: 12,
       lineHeight: 1.1
     }
   }, label), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
+      fontSize: 11,
       color: dotColor,
       letterSpacing: "0.16em",
       marginTop: 4,
@@ -1152,9 +1156,9 @@ const StatusPanel_Interview = ({
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
+        fontSize: 11,
         color: "#4FD1C5",
-        letterSpacing: "0.22em",
+        letterSpacing: "0.16em",
         textTransform: "uppercase"
       }
     }, "Interview slot"), /*#__PURE__*/React.createElement("div", {
@@ -1203,7 +1207,7 @@ const StatusPanel_Interview = ({
       style: {
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: 11,
-        color: "rgba(232,228,220,0.55)",
+        color: "rgba(232,228,220,0.66)",
         overflowWrap: "anywhere"
       }
     }, applicant.meetingLink)) : /*#__PURE__*/React.createElement("div", {
@@ -1253,9 +1257,9 @@ const Panel = ({
 }, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: accent,
-    letterSpacing: "0.26em",
+    letterSpacing: "0.2em",
     textTransform: "uppercase"
   }
 }, eyebrow), /*#__PURE__*/React.createElement("h2", {
@@ -1293,9 +1297,9 @@ const Panel = ({
 }, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9,
-    color: "rgba(232,228,220,0.45)",
-    letterSpacing: "0.22em",
+    fontSize: 11,
+    color: "rgba(232,228,220,0.66)",
+    letterSpacing: "0.16em",
     textTransform: "uppercase"
   }
 }, k), /*#__PURE__*/React.createElement("div", {
@@ -1456,9 +1460,9 @@ const UploadModal = ({
   }, "\xD7"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#C9A961",
-      letterSpacing: "0.28em",
+      letterSpacing: "0.22em",
       textTransform: "uppercase"
     }
   }, eyebrow), /*#__PURE__*/React.createElement("h3", {
@@ -1486,9 +1490,9 @@ const UploadModal = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 10
     }
@@ -1518,8 +1522,8 @@ const UploadModal = ({
   }, uploading[f.key] ? "Uploading…" : values[f.key]?.name || values[f.key] || f.placeholder || "Click to select file"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.4)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 6,
       letterSpacing: "0.1em"
     }
@@ -1582,8 +1586,8 @@ const UploadModal = ({
   }), f.note && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.45)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 6,
       letterSpacing: "0.08em"
     }
@@ -1643,9 +1647,9 @@ const UploadModal = ({
   }, "\u2713"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#86E5A7",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       marginTop: 12
     }
   }, "MANIFEST 0x", Math.random().toString(16).slice(2, 6), "\u2026", Math.random().toString(16).slice(2, 4)))));
@@ -1674,9 +1678,9 @@ const DocSlot = ({
 }, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9,
+    fontSize: 11,
     color: accent,
-    letterSpacing: "0.22em",
+    letterSpacing: "0.16em",
     textTransform: "uppercase",
     marginBottom: 10
   }
@@ -1729,8 +1733,8 @@ const DocSlot = ({
 }, amount), sub && /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
-    color: "rgba(232,228,220,0.5)",
+    fontSize: 11,
+    color: "rgba(232,228,220,0.66)",
     marginTop: 4,
     letterSpacing: "0.06em"
   }
@@ -1744,7 +1748,7 @@ const DocSlot = ({
     cursor: "pointer",
     flexShrink: 0,
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9,
+    fontSize: 11,
     letterSpacing: "0.16em",
     textTransform: "uppercase"
   }
@@ -1754,7 +1758,7 @@ const DocSlot = ({
   style: {
     marginTop: "auto",
     background: locked ? "rgba(201,169,97,0.15)" : accent,
-    color: locked ? "rgba(232,228,220,0.4)" : "#0A1628",
+    color: locked ? "rgba(232,228,220,0.66)" : "#0A1628",
     border: "none",
     padding: "10px 16px",
     cursor: locked ? "not-allowed" : "pointer",
@@ -1767,7 +1771,7 @@ const DocSlot = ({
 }, action.label) : /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "rgba(232,228,220,0.35)",
     marginTop: "auto",
     letterSpacing: "0.16em",
@@ -1818,7 +1822,7 @@ const SemesterCard = ({
       border: `1px solid ${meta.color}55`,
       color: meta.color,
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       letterSpacing: "0.18em",
       textTransform: "uppercase"
     }
@@ -1942,9 +1946,9 @@ const ScholarStatusBanner = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
+      fontSize: 11,
       color: meta.color,
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Reason from foundation \xB7 ", fmtDateShort(lastEntry.at)), /*#__PURE__*/React.createElement("div", {
@@ -1979,9 +1983,9 @@ const ScholarStatusBanner = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      color: "rgba(232,228,220,0.45)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Cumulative IPK"), /*#__PURE__*/React.createElement("div", {
@@ -1997,8 +2001,8 @@ const ScholarStatusBanner = ({
   }, ipk.value.toFixed(2)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 4,
       letterSpacing: "0.12em"
     }
@@ -2015,9 +2019,9 @@ const ScholarStatusBanner = ({
   }, /*#__PURE__*/React.createElement("summary", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase",
       listStyle: "none"
     }
@@ -2044,7 +2048,7 @@ const ScholarStatusBanner = ({
     }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
+        fontSize: 11,
         color: m?.color,
         letterSpacing: "0.18em",
         textTransform: "uppercase"
@@ -2059,8 +2063,8 @@ const ScholarStatusBanner = ({
     }, h.reason), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
-        color: "rgba(232,228,220,0.5)"
+        fontSize: 11,
+        color: "rgba(232,228,220,0.66)"
       }
     }, fmtDateShort(h.at)));
   }))));
@@ -2086,9 +2090,9 @@ const GraduationPanel = ({
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
+        fontSize: 11,
         color: "#C9A961",
-        letterSpacing: "0.28em",
+        letterSpacing: "0.22em",
         textTransform: "uppercase"
       }
     }, "Graduation Record \xB7 ", fmtDateShort(g.graduatedAt)), /*#__PURE__*/React.createElement("h3", {
@@ -2148,9 +2152,9 @@ const GraduationPanel = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#C9A961",
-      letterSpacing: "0.28em",
+      letterSpacing: "0.22em",
       textTransform: "uppercase"
     }
   }, "\u2605 Ready to Graduate"), /*#__PURE__*/React.createElement("h3", {
@@ -2294,8 +2298,8 @@ const ShowcasePhotoCard = ({
   }) : /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      color: "rgba(232,228,220,0.45)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       letterSpacing: "0.14em",
       textAlign: "center",
       padding: 10
@@ -2303,9 +2307,9 @@ const ShowcasePhotoCard = ({
   }, "NO PHOTO", /*#__PURE__*/React.createElement("br", null), "YET")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#C9A961",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Profile photo"), /*#__PURE__*/React.createElement("div", {
@@ -2422,9 +2426,9 @@ const ScholarDashboard = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase"
     }
   }, tile.l), /*#__PURE__*/React.createElement("div", {
@@ -2461,7 +2465,7 @@ const ScholarDashboard = ({
     style: {
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 11,
-      color: "rgba(232,228,220,0.5)",
+      color: "rgba(232,228,220,0.66)",
       letterSpacing: "0.12em"
     }
   }, "Scholarship begins at semester ", sems[0]?.number || "—", " \xB7 ends semester ", sems[sems.length - 1]?.number || "—")), /*#__PURE__*/React.createElement("div", {
@@ -2474,7 +2478,7 @@ const ScholarDashboard = ({
     style: {
       padding: 40,
       textAlign: "center",
-      color: "rgba(232,228,220,0.5)",
+      color: "rgba(232,228,220,0.66)",
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 22,
       fontStyle: "italic"
@@ -2651,9 +2655,9 @@ const ReportProblemSection = ({
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#E58686",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Need help?"), /*#__PURE__*/React.createElement("div", {
@@ -2701,9 +2705,9 @@ const ReportProblemSection = ({
   }, "\u2713"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#86E5A7",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       marginTop: 12,
       textTransform: "uppercase"
     }
@@ -2723,9 +2727,9 @@ const ReportProblemSection = ({
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.55)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 10
     }
@@ -2745,16 +2749,16 @@ const ReportProblemSection = ({
       color: category === c.id ? "#E58686" : "rgba(232,228,220,0.6)",
       border: `1px solid ${category === c.id ? "rgba(229,134,134,0.5)" : "rgba(232,228,220,0.15)"}`,
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, c.label)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.55)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -2776,9 +2780,9 @@ const ReportProblemSection = ({
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.55)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -2821,9 +2825,9 @@ const ReportProblemSection = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase",
       marginBottom: 12
     }
@@ -2854,14 +2858,14 @@ const ReportProblemSection = ({
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       letterSpacing: "0.14em"
     }
   }, r.id), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
+      fontSize: 11,
       letterSpacing: "0.18em",
       textTransform: "uppercase",
       padding: "2px 8px",
@@ -2893,9 +2897,9 @@ const ReportProblemSection = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
+      fontSize: 11,
       color: "#4FD1C5",
-      letterSpacing: "0.2em",
+      letterSpacing: "0.14em",
       textTransform: "uppercase"
     }
   }, "Foundation reply \xB7 ", fmtDateShort(r.reply.at)), /*#__PURE__*/React.createElement("div", {
@@ -2910,8 +2914,8 @@ const ReportProblemSection = ({
   }, "\"", r.reply.text, "\""))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)"
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)"
     }
   }, fmtDateShort(r.submittedAt)))))));
 };
@@ -2924,16 +2928,16 @@ const PV_field = (label, value) => React.createElement("div", {
 }, React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9,
-    color: "rgba(232,228,220,0.45)",
-    letterSpacing: "0.2em",
+    fontSize: 11,
+    color: "rgba(232,228,220,0.66)",
+    letterSpacing: "0.14em",
     textTransform: "uppercase"
   }
 }, label), React.createElement("div", {
   style: {
     fontFamily: "'Manrope', sans-serif",
     fontSize: 14,
-    color: value ? "#E8E4DC" : "rgba(232,228,220,0.4)",
+    color: value ? "#E8E4DC" : "rgba(232,228,220,0.66)",
     marginTop: 6,
     fontStyle: value ? "normal" : "italic"
   }
@@ -2951,9 +2955,9 @@ const MyProfileSection = ({
 }, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "#C9A961",
-    letterSpacing: "0.22em",
+    letterSpacing: "0.16em",
     textTransform: "uppercase",
     marginBottom: 16
   }
@@ -2964,9 +2968,9 @@ const MyProfileFileRow = ({
 }) => /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9,
-    color: "rgba(232,228,220,0.45)",
-    letterSpacing: "0.2em",
+    fontSize: 11,
+    color: "rgba(232,228,220,0.66)",
+    letterSpacing: "0.14em",
     textTransform: "uppercase",
     marginBottom: 8
   }
@@ -2995,7 +2999,7 @@ const MyProfileFileRow = ({
     color: "#C9A961",
     cursor: "pointer",
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 9,
+    fontSize: 11,
     letterSpacing: "0.16em",
     textTransform: "uppercase"
   }
@@ -3004,7 +3008,7 @@ const MyProfileFileRow = ({
     fontFamily: "'Manrope', sans-serif",
     fontSize: 13,
     fontStyle: "italic",
-    color: "rgba(232,228,220,0.4)"
+    color: "rgba(232,228,220,0.66)"
   }
 }, "Not uploaded"));
 const MyProfileView = ({
@@ -3036,9 +3040,9 @@ const MyProfileView = ({
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#7AA9E6",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "My application data"), /*#__PURE__*/React.createElement("div", {
@@ -3053,7 +3057,7 @@ const MyProfileView = ({
     style: {
       fontFamily: "'Manrope', sans-serif",
       fontSize: 12,
-      color: "rgba(232,228,220,0.55)",
+      color: "rgba(232,228,220,0.66)",
       marginTop: 4
     }
   }, "Spot a mistake? Use \u201CRequest a change\u201D below to ask the foundation to fix it.")), /*#__PURE__*/React.createElement("button", {
@@ -3090,9 +3094,9 @@ const MyProfileView = ({
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      color: "rgba(232,228,220,0.45)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -3125,7 +3129,7 @@ const MyProfileView = ({
       fontFamily: "'Cormorant Garamond', serif",
       fontStyle: "italic",
       fontSize: 13,
-      color: "rgba(232,228,220,0.4)",
+      color: "rgba(232,228,220,0.66)",
       textAlign: "center",
       padding: 12
     }
@@ -3208,9 +3212,9 @@ const MyProfileView = ({
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
+      fontSize: 11,
       color: "#C9A961",
-      letterSpacing: "0.2em",
+      letterSpacing: "0.14em",
       textTransform: "uppercase"
     }
   }, "Level"), /*#__PURE__*/React.createElement("span", {
@@ -3222,8 +3226,8 @@ const MyProfileView = ({
   }, lvl.label), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.55)"
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)"
     }
   }, lvl.totalSemesters, " semesters")), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3253,7 +3257,7 @@ const MyProfileView = ({
   }, p.essay || /*#__PURE__*/React.createElement("em", {
     style: {
       fontStyle: "italic",
-      color: "rgba(232,228,220,0.4)"
+      color: "rgba(232,228,220,0.66)"
     }
   }, "No essay submitted.")))));
 };
@@ -3434,9 +3438,9 @@ const AccountSettings = ({
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#C9A961",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Account & profile changes"), /*#__PURE__*/React.createElement("div", {
@@ -3451,7 +3455,7 @@ const AccountSettings = ({
     style: {
       fontFamily: "'Manrope', sans-serif",
       fontSize: 12,
-      color: "rgba(232,228,220,0.55)",
+      color: "rgba(232,228,220,0.66)",
       marginTop: 4
     }
   }, "For your security, changes after submission must be approved by the foundation.")), /*#__PURE__*/React.createElement("button", {
@@ -3485,9 +3489,9 @@ const AccountSettings = ({
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.55)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -3518,9 +3522,9 @@ const AccountSettings = ({
   }, f.label)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.55)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -3543,9 +3547,9 @@ const AccountSettings = ({
   })), selected.type === "password" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.55)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -3618,9 +3622,9 @@ const AccountSettings = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase",
       marginBottom: 12
     }
@@ -3663,7 +3667,7 @@ const AccountSettings = ({
     }, "Reason: ", r.reason)), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 9,
+        fontSize: 11,
         letterSpacing: "0.18em",
         textTransform: "uppercase",
         padding: "3px 9px",
@@ -4538,8 +4542,8 @@ const PortalHome = ({
   }, "Scholar Portal"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      letterSpacing: "0.28em",
+      fontSize: 11,
+      letterSpacing: "0.22em",
       color: "#C9A961",
       marginTop: 2
     }

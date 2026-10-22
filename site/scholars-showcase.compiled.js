@@ -119,7 +119,7 @@ const ScholarCard = ({
       top: 14,
       left: 14,
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
+      fontSize: 11,
       letterSpacing: "0.18em",
       textTransform: "uppercase",
       padding: "4px 9px",
@@ -149,9 +149,9 @@ const ScholarCard = ({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase"
     }
   }, "Perguruan Tinggi"), /*#__PURE__*/React.createElement("div", {
@@ -342,9 +342,9 @@ const ScholarsShowcase = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.2em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
       textTransform: "uppercase"
     }
   }, t.l), /*#__PURE__*/React.createElement("div", {
@@ -365,7 +365,7 @@ const ScholarsShowcase = ({
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 24,
       fontStyle: "italic",
-      color: "rgba(232,228,220,0.5)"
+      color: "rgba(232,228,220,0.66)"
     }
   }, "Our first scholars are being onboarded. Check back soon.") : /*#__PURE__*/React.createElement("div", {
     style: {
@@ -431,8 +431,8 @@ const ScholarsShowcase = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.4)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       letterSpacing: "0.18em"
     }
   }, "\xA9 MMXXVI \xB7 THE BRIAL ENDOWMENT \xB7 brialendowment.org")));

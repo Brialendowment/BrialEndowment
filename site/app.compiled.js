@@ -236,8 +236,8 @@ const Nav = ({
     className: "b-brand-sub",
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      letterSpacing: "0.28em",
+      fontSize: 11,
+      letterSpacing: "0.22em",
       color: "#C9A961",
       marginTop: 2
     }
@@ -567,8 +567,8 @@ const Hero = ({
   }, "Global Scholarship E-Book", /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      opacity: 0.6
+      fontSize: 11,
+      opacity: 0.8
     }
   }, "3 LANGUAGES \u2192")))), /*#__PURE__*/React.createElement("div", {
     className: "b-metrics4",
@@ -612,10 +612,10 @@ const Hero = ({
   }, s.v), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       letterSpacing: "0.18em",
       textTransform: "uppercase",
-      color: "rgba(232,228,220,0.5)",
+      color: "rgba(232,228,220,0.66)",
       marginTop: 8
     }
   }, s.l))))), /*#__PURE__*/React.createElement("div", {
@@ -625,9 +625,9 @@ const Hero = ({
       left: "50%",
       transform: "translateX(-50%)",
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.4)",
-      letterSpacing: "0.3em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.24em",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -752,7 +752,7 @@ const Transparency = () => {
       top: 16,
       right: 20,
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#4FD1C5",
       letterSpacing: "0.18em",
       display: "flex",
@@ -771,9 +771,9 @@ const Transparency = () => {
   }), "VERIFIED"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Total distributed across all pillars"), /*#__PURE__*/React.createElement("div", {
@@ -798,7 +798,7 @@ const Transparency = () => {
     }
   }, "Across ", metrics.awardeeCount, " scholar", metrics.awardeeCount === 1 ? "" : "s", metrics.pillarTotal > 0 ? ` + ${fmtMoneyShort(metrics.pillarTotal)} to other pillars` : "", " ", /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "rgba(232,228,220,0.4)"
+      color: "rgba(232,228,220,0.66)"
     }
   }, "\xB7 100% direct, 0% overhead"))), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -809,9 +809,9 @@ const Transparency = () => {
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Scholars funded"), /*#__PURE__*/React.createElement("div", {
@@ -841,8 +841,8 @@ const Transparency = () => {
   }))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.4)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 10,
       letterSpacing: "0.06em"
     }
@@ -855,9 +855,9 @@ const Transparency = () => {
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Nations represented"), /*#__PURE__*/React.createElement("div", {
@@ -872,7 +872,7 @@ const Transparency = () => {
   }, metrics.nationsCount, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 28,
-      color: "rgba(232,228,220,0.4)"
+      color: "rgba(232,228,220,0.66)"
     }
   }, " / 195")), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -913,7 +913,7 @@ const Transparency = () => {
     style: {
       color: "#C9A961",
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       letterSpacing: "0.18em",
       textTransform: "uppercase"
     }
@@ -930,8 +930,8 @@ const Transparency = () => {
       gap: 24,
       borderBottom: "1px solid rgba(201,169,97,0.12)",
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       letterSpacing: "0.18em",
       textTransform: "uppercase"
     }
@@ -942,7 +942,7 @@ const Transparency = () => {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 24,
       fontStyle: "italic",
-      color: "rgba(232,228,220,0.45)"
+      color: "rgba(232,228,220,0.66)"
     }
   }, "The first institutions will appear here as our scholars are funded.") : rows.map((r, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
@@ -973,7 +973,7 @@ const Transparency = () => {
       textAlign: "center",
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 11,
-      color: "rgba(201,169,97,0.6)",
+      color: "rgba(201,169,97,0.85)",
       letterSpacing: "0.18em",
       textTransform: "uppercase"
     }
@@ -1323,7 +1323,7 @@ const Philosophy = ({
     },
     className: "b-2col"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Eyebrow, {
-    color: "#8B7A4A"
+    color: "#6B5D32"
   }, "\xA7 I \xB7 Our Mission"), /*#__PURE__*/React.createElement("h2", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
@@ -1338,13 +1338,13 @@ const Philosophy = ({
     style: {
       display: "block",
       fontStyle: "italic",
-      color: "#8B7A4A"
+      color: "#6B5D32"
     }
   }, "endowment.")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 12,
-      color: "#8B7A4A",
+      color: "#6B5D32",
       letterSpacing: "0.24em",
       textTransform: "uppercase",
       marginTop: 18
@@ -1413,11 +1413,11 @@ const Philosophy = ({
         top: 20,
         right: 22,
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 9,
-        letterSpacing: "0.2em",
+        fontSize: 11,
+        letterSpacing: "0.14em",
         textTransform: "uppercase",
         padding: "4px 9px",
-        color: active ? "#0A1628" : "rgba(10,22,40,0.55)",
+        color: active ? "#0A1628" : "rgba(10,22,40,0.72)",
         background: active ? "#C9A961" : "transparent",
         border: active ? "none" : "1px solid rgba(10,22,40,0.25)",
         display: "inline-flex",
@@ -1433,7 +1433,7 @@ const Philosophy = ({
       }
     }), active ? "Active" : "Coming soon"), /*#__PURE__*/React.createElement("div", {
       style: {
-        color: active ? "#C9A961" : "#8B7A4A",
+        color: active ? "#C9A961" : "#6B5D32",
         marginBottom: 26
       }
     }, p.icon), /*#__PURE__*/React.createElement("h3", {
@@ -1449,10 +1449,10 @@ const Philosophy = ({
     }, p.t), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
-        letterSpacing: "0.22em",
+        fontSize: 11,
+        letterSpacing: "0.16em",
         textTransform: "uppercase",
-        color: active ? "#C9A961" : "#8B7A4A",
+        color: active ? "#C9A961" : "#6B5D32",
         marginTop: 7
       }
     }, p.sub), p.partner && p.partner.src && /*#__PURE__*/React.createElement("div", {
@@ -1476,7 +1476,7 @@ const Philosophy = ({
       }
     }, "The Brial Endowment"), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: "rgba(232,228,220,0.4)",
+        color: "rgba(232,228,220,0.66)",
         fontSize: 13
       }
     }, "\xD7"), /*#__PURE__*/React.createElement("img", {
@@ -1557,7 +1557,7 @@ const Philosophy = ({
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 22,
       fontStyle: "italic",
-      color: "rgba(10,22,40,0.55)",
+      color: "rgba(10,22,40,0.72)",
       lineHeight: 1.4,
       maxWidth: 420
     }
@@ -1579,9 +1579,9 @@ const Philosophy = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(10,22,40,0.5)",
-      letterSpacing: "0.22em",
+      fontSize: 11,
+      color: "rgba(10,22,40,0.72)",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "The principle that binds every pillar"), /*#__PURE__*/React.createElement("div", {
@@ -1597,7 +1597,7 @@ const Philosophy = ({
     style: {
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 11,
-      color: "rgba(10,22,40,0.55)",
+      color: "rgba(10,22,40,0.72)",
       marginTop: 14,
       letterSpacing: "0.1em"
     }
@@ -1713,7 +1713,7 @@ const CtaStrip = ({
     gap: 56,
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: 11,
-    color: "rgba(232,228,220,0.5)",
+    color: "rgba(232,228,220,0.66)",
     letterSpacing: "0.18em",
     textTransform: "uppercase"
   }
@@ -1819,9 +1819,9 @@ const Footer = ({
 }, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "#C9A961",
-    letterSpacing: "0.28em",
+    letterSpacing: "0.22em",
     textTransform: "uppercase"
   }
 }, "\xA7 Patronage \xB7 Donate USDT"), /*#__PURE__*/React.createElement("div", {
@@ -1890,9 +1890,9 @@ const Footer = ({
 }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "#C9A961",
-    letterSpacing: "0.28em",
+    letterSpacing: "0.22em",
     textTransform: "uppercase"
   }
 }, "\xA7 IV \xB7 Founder Access"), /*#__PURE__*/React.createElement("div", {
@@ -1907,7 +1907,7 @@ const Footer = ({
   style: {
     fontFamily: "'Manrope', sans-serif",
     fontSize: 13,
-    color: "rgba(232,228,220,0.55)",
+    color: "rgba(232,228,220,0.66)",
     marginTop: 8,
     maxWidth: 360,
     lineHeight: 1.5
@@ -1938,9 +1938,9 @@ const Footer = ({
 }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "#4FD1C5",
-    letterSpacing: "0.28em",
+    letterSpacing: "0.22em",
     textTransform: "uppercase"
   }
 }, "\xA7 V \xB7 Scholar Access"), /*#__PURE__*/React.createElement("div", {
@@ -1955,7 +1955,7 @@ const Footer = ({
   style: {
     fontFamily: "'Manrope', sans-serif",
     fontSize: 13,
-    color: "rgba(232,228,220,0.55)",
+    color: "rgba(232,228,220,0.66)",
     marginTop: 8,
     maxWidth: 360,
     lineHeight: 1.5
@@ -2007,7 +2007,7 @@ const Footer = ({
     fontFamily: "'Manrope', sans-serif",
     fontSize: 13,
     lineHeight: 1.7,
-    color: "rgba(232,228,220,0.5)",
+    color: "rgba(232,228,220,0.66)",
     marginTop: 20,
     maxWidth: 380
   }
@@ -2070,9 +2070,9 @@ const Footer = ({
 }, /*#__PURE__*/React.createElement("div", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     color: "#C9A961",
-    letterSpacing: "0.22em",
+    letterSpacing: "0.16em",
     textTransform: "uppercase",
     marginBottom: 24
   }
@@ -2080,7 +2080,8 @@ const Footer = ({
   style: {
     display: "flex",
     flexDirection: "column",
-    gap: 14
+    alignItems: "flex-start",
+    gap: 2
   }
 }, col.l.map(item => /*#__PURE__*/React.createElement("a", {
   key: item.t,
@@ -2092,9 +2093,11 @@ const Footer = ({
   style: {
     fontFamily: "'Manrope', sans-serif",
     fontSize: 14,
-    color: "rgba(232,228,220,0.7)",
+    color: "rgba(232,228,220,0.72)",
     textDecoration: "none",
-    cursor: "pointer"
+    cursor: "pointer",
+    display: "inline-block",
+    padding: "6px 0"
   }
 }, item.t)))))), /*#__PURE__*/React.createElement(Etch, null), /*#__PURE__*/React.createElement("div", {
   style: {
@@ -2102,8 +2105,8 @@ const Footer = ({
     display: "flex",
     justifyContent: "space-between",
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
-    color: "rgba(232,228,220,0.4)",
+    fontSize: 11,
+    color: "rgba(232,228,220,0.66)",
     letterSpacing: "0.18em",
     textTransform: "uppercase"
   }

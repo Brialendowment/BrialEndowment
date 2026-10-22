@@ -79,7 +79,7 @@ const EBookSection = ({
 }, /*#__PURE__*/React.createElement("span", {
   style: {
     fontFamily: "'JetBrains Mono', monospace",
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: "0.2em",
     textTransform: "uppercase",
     color: book.accent,
@@ -279,8 +279,8 @@ const EBooksPage = ({
   }, "The Brial Endowment"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      letterSpacing: "0.28em",
+      fontSize: 11,
+      letterSpacing: "0.22em",
       color: "#C9A961",
       marginTop: 2
     }
@@ -356,8 +356,8 @@ const EBooksPage = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.45)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       letterSpacing: "0.18em",
       textTransform: "uppercase"
     }

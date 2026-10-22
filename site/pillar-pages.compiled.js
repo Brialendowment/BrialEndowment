@@ -53,7 +53,7 @@
       if (navigator.share) { navigator.share({ url }).then(fin).catch(() => {}); }
       else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(fin).catch(fin);
     };
-    return h("button", { onClick: go, title: url, style: { background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.18em", textTransform: "uppercase", color: done ? "#86E5A7" : "rgba(232,228,220,0.55)" } }, done ? "Link copied \u2713" : "Share \u2197");
+    return h("button", { onClick: go, title: url, style: { background: "none", border: "none", padding: "10px 0", minHeight: 40, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: done ? "#86E5A7" : "rgba(232,228,220,0.72)" } }, done ? "Link copied \u2713" : "Share \u2197");
   };
 
   // Deep links: #/<pillar>/<n> scrolls to programme entry n and rings it gold
@@ -83,9 +83,9 @@
       h("div", { style: { maxWidth: 1160, margin: "0 auto" } },
         h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "end", gap: 20, flexWrap: "wrap" } },
           h("div", null,
-            h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, eyebrow || "§ Programme journal"),
+            h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, eyebrow || "§ Programme journal"),
             h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(30px, 4vw, 48px)", margin: "18px 0 0", color: CREAM } }, title)),
-          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.22em", color: "rgba(232,228,220,0.45)", textTransform: "uppercase" } }, list.length + " programme" + (list.length === 1 ? "" : "s") + " · and growing")),
+          h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.66)", textTransform: "uppercase" } }, list.length + " programme" + (list.length === 1 ? "" : "s") + " · and growing")),
         h("div", { style: { display: "flex", flexDirection: "column", gap: "clamp(26px, 4vw, 40px)", marginTop: 50 } },
           list.map((a, i) => {
             const img = a.photo && (a.photo.url || a.photo.path) ? (a.photo.url || (window.brialSupabase ? window.brialSupabase.publicUrl(a.photo.path) : "")) : null;
@@ -95,16 +95,16 @@
                 h("img", { src: img, alt: a.title || "Programme photograph", loading: "lazy", style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" } })) : null,
               h("div", { style: { padding: "clamp(28px, 4vw, 46px)", display: "flex", flexDirection: "column", order: 1, minWidth: 0 } },
                 h("div", { style: { display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" } },
-                  h("span", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.2em", color: GOLD } }, "No. " + String(i + 1).padStart(2, "0")),
+                  h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", color: GOLD } }, "No. " + String(i + 1).padStart(2, "0")),
                   h("span", { style: { width: 26, height: 1, background: "rgba(201,169,97,0.5)", display: "inline-block" } }),
-                  h("span", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.22em", color: "rgba(232,228,220,0.5)" } }, fmtDate(a.date))),
+                  h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.66)" } }, fmtDate(a.date))),
                 h("h3", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(26px, 3vw, 36px)", lineHeight: 1.12, margin: "16px 0 0", color: CREAM } }, a.title),
                 a.partner ? h("div", { style: { display: "inline-flex", alignItems: "center", gap: 10, marginTop: 16, padding: "8px 14px", alignSelf: "flex-start", maxWidth: "100%", background: "rgba(232,228,220,0.05)", border: "1px solid rgba(201,169,97,0.28)" } },
-                  h("span", { style: { fontFamily: mono, fontSize: 9, letterSpacing: "0.2em", color: "rgba(232,228,220,0.5)", textTransform: "uppercase" } }, "With"),
+                  h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", color: "rgba(232,228,220,0.66)", textTransform: "uppercase" } }, "With"),
                   h("span", { style: { fontFamily: sans, fontSize: 12.5, fontWeight: 500, color: "#F2EEE4" } }, a.partner)) : null,
                 h("p", { style: { fontFamily: sans, fontSize: 14.5, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.75)", margin: "16px 0 0", maxWidth: 560, textWrap: "pretty" } }, a.body),
                 h("div", { style: { display: "flex", alignItems: "center", gap: 24, marginTop: "auto", paddingTop: 24, flexWrap: "wrap" } },
-                  a.link ? h("a", { href: a.link, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 10, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, textDecoration: "none" } }, "Programme updates \u2197") : null,
+                  a.link ? h("a", { href: a.link, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 10, fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, textDecoration: "none" } }, "Programme updates \u2197") : null,
                   shareKey ? h(ShareBtn, { url: "https://brialendowment.org/#/" + shareKey + "/" + (i + 1) }) : null)));
           }))));
   };
@@ -114,20 +114,20 @@
     const articles = (cfg.articles || []).filter(a => a && (a.title || a.body));
     return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both" }, "data-screen-label": cfg.screenLabel },
       h("div", { style: { position: "sticky", top: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px clamp(20px, 4vw, 56px)", background: "rgba(10,22,40,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: "1px solid rgba(201,169,97,0.15)" } },
-        h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" } }, "\u2190 Return to the Endowment"),
+        h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", minHeight: 40, flexShrink: 0 }, "aria-label": "Return to the Endowment" }, "\u2190", h("span", { className: "b-hide-sm" }, " Return to the Endowment")),
         h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
           h(Seal, { size: 26 }),
-          h("span", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.26em", color: "rgba(232,228,220,0.7)" } }, cfg.topTag))),
+          h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)" } }, cfg.topTag))),
 
       h("div", { style: { padding: "clamp(60px, 9vw, 110px) clamp(20px, 4vw, 56px) clamp(50px, 7vw, 80px)", maxWidth: 1280, margin: "0 auto" } },
-        h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, cfg.eyebrow),
+        h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, cfg.eyebrow),
         h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(52px, 8vw, 108px)", lineHeight: 0.98, letterSpacing: "-0.02em", margin: "26px 0 0", maxWidth: 900 } }, cfg.title + "."),
         h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(20px, 2.4vw, 28px)", color: "rgba(232,228,220,0.75)", margin: "26px 0 0", maxWidth: 640, lineHeight: 1.45 } }, cfg.tagline),
         cfg.lockup ? h("div", { style: { display: "inline-flex", alignItems: "center", gap: 18, marginTop: 44, padding: "16px 22px", background: "rgba(232,228,220,0.06)", border: "1px solid rgba(201,169,97,0.3)", flexWrap: "wrap" } },
           h("span", { style: { fontFamily: serif, fontSize: 17, fontStyle: "italic", color: GOLD } }, "The Brial Endowment"),
-          h("span", { style: { color: "rgba(232,228,220,0.4)", fontSize: 16 } }, "\u00d7"),
+          h("span", { style: { color: "rgba(232,228,220,0.66)", fontSize: 16 } }, "\u00d7"),
           cfg.lockup.logo ? h("img", { src: cfg.lockup.logo, alt: cfg.lockup.name, style: { height: 52, width: "auto", display: "block", borderRadius: 2, background: cfg.lockup.logoBg || "transparent", padding: cfg.lockup.logoBg ? 5 : 0 } }) : null,
-          h("span", { style: { fontFamily: sans, fontSize: 12, fontWeight: 500, color: "rgba(232,228,220,0.85)", lineHeight: 1.5 } }, cfg.lockup.name, h("br", null), h("span", { style: { color: "rgba(232,228,220,0.5)", fontWeight: 300 } }, cfg.lockup.sub))) : null),
+          h("span", { style: { fontFamily: sans, fontSize: 12, fontWeight: 500, color: "rgba(232,228,220,0.85)", lineHeight: 1.5 } }, cfg.lockup.name, h("br", null), h("span", { style: { color: "rgba(232,228,220,0.66)", fontWeight: 300 } }, cfg.lockup.sub))) : null),
 
       h("div", { style: { background: CREAM, color: NAVY, padding: "clamp(56px, 8vw, 90px) clamp(20px, 4vw, 56px)" } },
         h("div", { style: { maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "clamp(30px, 5vw, 70px)", alignItems: "center" } },
@@ -135,9 +135,9 @@
             const v = String(st.value);
             const fs = v.length <= 3 ? "clamp(90px, 12vw, 150px)" : v.length <= 5 ? "clamp(72px, 9vw, 120px)" : "clamp(54px, 7vw, 96px)";
             return h("div", { key: "st" + si, style: { minWidth: 0 } },
-              h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(10,22,40,0.55)" } }, st.label),
+              h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(10,22,40,0.72)" } }, st.label),
               h("div", { style: { fontFamily: serif, fontSize: fs, lineHeight: 0.9, marginTop: 10, color: NAVY, overflowWrap: "anywhere" } }, v),
-              h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "#8B7A4A", marginTop: 12 } }, st.unit));
+              h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase", color: "#6B5D32", marginTop: 12 } }, st.unit));
           }),
           h("div", null,
             h("div", { style: { width: 44, height: 1, background: "#8B7A4A", marginBottom: 22 } }),
@@ -148,32 +148,32 @@
         h("div", { style: { maxWidth: 900, margin: "0 auto", textAlign: "center" } },
           h(Seal, { size: 34 }),
           h("blockquote", { style: { fontFamily: serif, fontStyle: "italic", fontWeight: 300, fontSize: "clamp(24px, 3.2vw, 38px)", lineHeight: 1.5, color: CREAM, margin: "34px 0 0" } }, ...cfg.quote),
-          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(232,228,220,0.45)", marginTop: 30 } }, cfg.quoteAttr))),
+          h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)", marginTop: 30 } }, cfg.quoteAttr))),
 
       h("div", { style: { padding: "0 clamp(20px, 4vw, 56px) clamp(70px, 9vw, 100px)" } },
         h("div", { style: { maxWidth: 1280, margin: "0 auto" } },
-          h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, "\u00a7 How the programme works"),
+          h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, "\u00a7 How the programme works"),
           h("p", { style: { fontFamily: sans, fontSize: 15, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.75)", maxWidth: 720, margin: "22px 0 0", textWrap: "pretty" } }, cfg.intro),
           h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginTop: 44 } },
             cfg.steps.map(f => h("div", { key: f.n, style: { border: "1px solid rgba(201,169,97,0.22)", background: "rgba(232,228,220,0.04)", padding: "26px 24px" } },
-              h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.2em" } }, f.n),
+              h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.14em" } }, f.n),
               h("div", { style: { fontFamily: serif, fontSize: 23, marginTop: 12 } }, f.t),
               h("div", { style: { fontFamily: sans, fontSize: 13, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.65)", marginTop: 10 } }, f.d)))))),
 
       h(Stories, { articles: articles, title: cfg.notesTitle, shareKey: cfg.shareKey }),
 
       h("div", { style: { padding: "clamp(70px, 10vw, 120px) clamp(20px, 4vw, 56px)", textAlign: "center" } },
-        h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, cfg.ctaEyebrow),
+        h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, cfg.ctaEyebrow),
         h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(30px, 4.4vw, 52px)", margin: "20px 0 0", lineHeight: 1.1 } },
           cfg.ctaLine1, h("br", null), h("em", { style: { fontStyle: "italic" } }, cfg.ctaLine2)),
         h("div", { style: { display: "flex", justifyContent: "center", gap: 20, marginTop: 44, flexWrap: "wrap" } },
           cfg.showPartner ? h("button", { onClick: () => window.open(cfg.link, "_blank", "noopener,noreferrer"), style: { background: `linear-gradient(120deg, #EAD9A8, ${GOLD} 55%, #B08F4C)`, color: "#131A33", border: "none", padding: "17px 34px", cursor: "pointer", fontFamily: sans, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Learn more about our partner \u2197") : null,
           onDonate ? h("button", { onClick: onDonate, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "17px 34px", cursor: "pointer", fontFamily: sans, fontSize: 12.5, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Make a bequest") : null),
-        cfg.showPartner && cfg.partnerStrip ? h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", color: "rgba(232,228,220,0.4)", marginTop: 26 } }, cfg.partnerStrip) : null),
+        cfg.showPartner && cfg.partnerStrip ? h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", color: "rgba(232,228,220,0.66)", marginTop: 26 } }, cfg.partnerStrip) : null),
 
       h("div", { style: { borderTop: "1px solid rgba(201,169,97,0.2)", padding: "26px clamp(20px, 4vw, 56px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" } },
-        h("span", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.22em", color: "rgba(232,228,220,0.4)" } }, "\u00a9 MMXXVI \u00b7 THE BRIAL ENDOWMENT"),
-        h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.55)" } }, cfg.proverb)));
+        h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.66)" } }, "\u00a9 MMXXVI \u00b7 THE BRIAL ENDOWMENT"),
+        h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.66)" } }, cfg.proverb)));
   };
 
   const WorshipPage = ({ onExit, onDonate }) => {
@@ -448,7 +448,7 @@
     const total = st.income.reduce((a, x) => a + (Number(x.amount) || 0), 0);
     const usd = n => "$" + Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const pad = "clamp(20px, 4vw, 56px)";
-    const eyebrow = t => h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.3em", textTransform: "uppercase" } }, t);
+    const eyebrow = t => h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, t);
     const h2 = (t, extra) => h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(32px, 4.4vw, 54px)", lineHeight: 1.08, margin: "18px 0 0", color: CREAM, ...(extra || {}) } }, t);
     const stats = [
       { v: c.fleet || "730+", l: "Vehicles in service" },
@@ -473,10 +473,10 @@
 
     return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both", overflowX: "hidden" }, "data-screen-label": "Transportation · go2rent" },
       h("div", { style: { position: "sticky", top: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px " + pad, background: "rgba(10,22,40,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: "1px solid rgba(201,169,97,0.18)" } },
-        h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" } }, "← Return to the Endowment"),
+        h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", minHeight: 40, flexShrink: 0 }, "aria-label": "Return to the Endowment" }, "\u2190", h("span", { className: "b-hide-sm" }, " Return to the Endowment")),
         h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
           h(Seal, { size: 26 }),
-          h("span", { className: "b-tr-tag", style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.26em", color: "rgba(232,228,220,0.7)" } }, "PILLAR · TRANSPORTATION"))),
+          h("span", { className: "b-tr-tag", style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)" } }, "PILLAR · TRANSPORTATION"))),
 
       // Hero
       h("div", { style: { padding: "clamp(56px, 8vw, 100px) " + pad + " clamp(50px, 7vw, 80px)", maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(420px, 100%), 1fr))", gap: "clamp(36px, 5vw, 70px)", alignItems: "center" } },
@@ -486,9 +486,9 @@
           h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(20px, 2.3vw, 27px)", color: "rgba(232,228,220,0.75)", margin: "24px 0 0", maxWidth: 560, lineHeight: 1.45 } }, "The pillar that earns. Cars on the road across Türkiye, and a share of what they return comes home to the endowment."),
           h("div", { style: { display: "inline-flex", alignItems: "center", gap: 18, marginTop: 40, padding: "16px 22px", background: "rgba(232,228,220,0.06)", border: "1px solid rgba(201,169,97,0.3)", flexWrap: "wrap", maxWidth: "100%" } },
             h("span", { style: { fontFamily: serif, fontSize: 17, fontStyle: "italic", color: GOLD } }, "The Brial Endowment"),
-            h("span", { style: { color: "rgba(232,228,220,0.4)", fontSize: 16 } }, "×"),
+            h("span", { style: { color: "rgba(232,228,220,0.66)", fontSize: 16 } }, "×"),
             h("img", { src: G2 + "logo-light.svg", alt: "go2rent", style: { height: 30, width: "auto", display: "block" } }),
-            h("span", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.22em", color: "rgba(232,228,220,0.55)", textTransform: "uppercase" } }, "Enterprise partner"))),
+            h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.66)", textTransform: "uppercase" } }, "Enterprise partner"))),
         h("div", { style: { position: "relative", minWidth: 0 } },
           h("img", { src: G2 + "hero.webp", alt: "The go2rent sign on a dark office wall", style: { width: "100%", aspectRatio: "16 / 10", objectFit: "cover", display: "block", border: "1px solid rgba(201,169,97,0.25)" } }),
           h("div", { style: { position: "absolute", left: 0, bottom: 0, height: 3, width: "38%", background: ORANGE } }))),
@@ -496,11 +496,11 @@
       // Facts band
       h("div", { style: { background: CREAM, color: NAVY, padding: "clamp(50px, 7vw, 80px) " + pad } },
         h("div", { style: { maxWidth: 1280, margin: "0 auto" } },
-          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(10,22,40,0.55)" } }, "On the road today · " + (c.location || "Türkiye and Northern Cyprus")),
+          h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(10,22,40,0.72)" } }, "On the road today · " + (c.location || "Türkiye and Northern Cyprus")),
           h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))", gap: "clamp(24px, 4vw, 48px)", marginTop: 28 } },
             stats.map(x => h("div", { key: x.l, style: { borderTop: "1px solid rgba(10,22,40,0.18)", paddingTop: 18 } },
               h("div", { style: { fontFamily: serif, fontSize: "clamp(44px, 5.6vw, 72px)", lineHeight: 0.95, color: NAVY } }, x.v),
-              h("div", { style: { fontFamily: mono, fontSize: 10.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "#8B7A4A", marginTop: 12 } }, x.l)))),
+              h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "#6B5D32", marginTop: 12 } }, x.l)))),
           c.factsNote ? h("div", { style: { fontFamily: sans, fontSize: 12.5, fontWeight: 300, color: "rgba(10,22,40,0.6)", marginTop: 28 } }, c.factsNote) : null)),
 
       // Quote
@@ -508,7 +508,7 @@
         h("div", { style: { maxWidth: 900, margin: "0 auto", textAlign: "center" } },
           h(Seal, { size: 34 }),
           h("blockquote", { style: { fontFamily: serif, fontStyle: "italic", fontWeight: 300, fontSize: "clamp(24px, 3.2vw, 38px)", lineHeight: 1.5, color: CREAM, margin: "34px 0 0" } }, "“The truthful, trustworthy merchant ", h("em", { style: { color: GOLD } }, "is with the Prophets"), ", the truthful, and the martyrs.”"),
-          h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.28em", textTransform: "uppercase", color: "rgba(232,228,220,0.45)", marginTop: 30 } }, "Hadith · Jami' at-Tirmidhi 1209"))),
+          h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)", marginTop: 30 } }, "Hadith · Jami' at-Tirmidhi 1209"))),
 
       // How it works
       h("div", { style: { padding: "0 " + pad + " clamp(70px, 9vw, 100px)" } },
@@ -517,7 +517,7 @@
           h("p", { style: { fontFamily: sans, fontSize: 15, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.75)", maxWidth: 720, margin: "22px 0 0", textWrap: "pretty" } }, c.intro),
           h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 14, marginTop: 44 } },
             steps.map(f => h("div", { key: f.n, style: { border: "1px solid rgba(201,169,97,0.22)", background: "rgba(232,228,220,0.04)", padding: "26px 24px" } },
-              h("div", { style: { fontFamily: mono, fontSize: 10, color: GOLD, letterSpacing: "0.2em" } }, f.n),
+              h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.14em" } }, f.n),
               h("div", { style: { fontFamily: serif, fontSize: 23, marginTop: 12 } }, f.t),
               h("div", { style: { fontFamily: sans, fontSize: 13, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.65)", marginTop: 10 } }, f.d)))))),
 
@@ -532,7 +532,7 @@
               h("img", { src: G2 + x.img, alt: x.n + " from the go2rent fleet", loading: "lazy", style: { width: "100%", aspectRatio: "4 / 3", objectFit: "cover", display: "block" } }),
               h("figcaption", { style: { padding: "16px 18px 18px" } },
                 h("div", { style: { fontFamily: serif, fontSize: 21, color: CREAM } }, x.n),
-                h("div", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(232,228,220,0.5)", marginTop: 6 } }, x.s))))))),
+                h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)", marginTop: 6 } }, x.s))))))),
 
       // Coverage
       h("div", { style: { padding: "clamp(70px, 9vw, 110px) " + pad } },
@@ -542,8 +542,8 @@
           h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(160px, 100%), 1fr))", gap: 10, marginTop: 40 } },
             desks.map(([city, code]) => h("div", { key: city, style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, padding: "16px 18px", border: "1px solid rgba(201,169,97,0.18)", background: "rgba(232,228,220,0.03)" } },
               h("span", { style: { fontFamily: serif, fontSize: 20 } }, city),
-              h("span", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.18em", color: "rgba(232,228,220,0.5)", textAlign: "right" } }, code)))),
-          h("p", { style: { fontFamily: sans, fontSize: 13, fontWeight: 300, color: "rgba(232,228,220,0.55)", margin: "20px 0 0" } }, "Pick up at the airport or in the city, and return the car at another location."))),
+              h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", color: "rgba(232,228,220,0.66)", textAlign: "right" } }, code)))),
+          h("p", { style: { fontFamily: sans, fontSize: 13, fontWeight: 300, color: "rgba(232,228,220,0.66)", margin: "20px 0 0" } }, "Pick up at the airport or in the city, and return the car at another location."))),
 
       // Returns to the endowment
       h("div", { style: { padding: "0 " + pad + " clamp(70px, 9vw, 110px)" } },
@@ -554,13 +554,13 @@
               hideAmt
                 ? (n ? h("div", { style: { fontFamily: serif, fontSize: "clamp(48px, 6vw, 80px)", lineHeight: 1, marginTop: 16, color: CREAM } }, n + " " + (n === 1 ? "contribution" : "contributions")) : null)
                 : h("div", { style: { fontFamily: serif, fontSize: "clamp(48px, 6vw, 80px)", lineHeight: 1, marginTop: 16, color: CREAM } }, usd(total)),
-              (!hideAmt || n) ? h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(232,228,220,0.5)", marginTop: 10 } }, hideAmt ? "Each one verified on the open ledger" : n + " " + (n === 1 ? "contribution" : "contributions") + " \u00b7 verified on the open ledger") : null),
-            h("button", { onClick: goLedger, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "13px 22px", cursor: "pointer", fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase" } }, "Open ledger →")),
+              (!hideAmt || n) ? h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)", marginTop: 10 } }, hideAmt ? "Each one verified on the open ledger" : n + " " + (n === 1 ? "contribution" : "contributions") + " \u00b7 verified on the open ledger") : null),
+            h("button", { onClick: goLedger, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "13px 22px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase" } }, "Open ledger →")),
           st.income.length
             ? h("div", { style: { marginTop: 28, borderTop: "1px solid rgba(201,169,97,0.18)" } },
                 st.income.slice(0, 12).map(x => h("div", { key: x.id, style: { display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", padding: "14px 0", borderBottom: "1px solid rgba(201,169,97,0.12)" } },
                   h("span", { style: { fontFamily: sans, fontSize: 14, color: "rgba(232,228,220,0.85)" } }, x.period || fmtDate(x.date)),
-                  h("span", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.14em", color: "rgba(232,228,220,0.45)" } }, (x.txRef || "") + " · " + fmtDate(x.date)),
+                  h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", color: "rgba(232,228,220,0.66)" } }, (x.txRef || "") + " · " + fmtDate(x.date)),
                   hideAmt ? null : h("span", { style: { fontFamily: serif, fontSize: 20, color: GOLD } }, usd(x.amount)))))
             : h("p", { style: { fontFamily: sans, fontSize: 14, fontWeight: 300, color: "rgba(232,228,220,0.6)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.7 } }, "The first contribution will appear here, and on the open ledger, as soon as it is made."))),
 
@@ -573,12 +573,12 @@
         h("div", { style: { display: "flex", justifyContent: "center", gap: 20, marginTop: 44, flexWrap: "wrap" } },
           showRent ? rentBtn("Rent with go2rent ↗") : null,
           onDonate ? h("button", { onClick: onDonate, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "17px 34px", cursor: "pointer", fontFamily: sans, fontSize: 12.5, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Give to the endowment") : null),
-        showRent ? h("a", { href: "tel:+908503023800", style: { display: "inline-block", fontFamily: mono, fontSize: 10.5, letterSpacing: "0.2em", color: "rgba(232,228,220,0.6)", marginTop: 26, textDecoration: "none" } }, "24/7 SUPPORT · +90 850 302 38 00") : null,
-        h("p", { style: { fontFamily: sans, fontSize: 12, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.45)", maxWidth: 620, margin: "34px auto 0" } }, "go2rent is an independent company. A rental is an agreement between you and go2rent, not with the Brial Endowment. The endowment receives a share of the founder's returns from the company, not a share of each rental.")),
+        showRent ? h("a", { href: "tel:+908503023800", style: { display: "inline-block", fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", color: "rgba(232,228,220,0.6)", marginTop: 26, textDecoration: "none" } }, "24/7 SUPPORT · +90 850 302 38 00") : null,
+        h("p", { style: { fontFamily: sans, fontSize: 12, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.66)", maxWidth: 620, margin: "34px auto 0" } }, "go2rent is an independent company. A rental is an agreement between you and go2rent, not with the Brial Endowment. The endowment receives a share of the founder's returns from the company, not a share of each rental.")),
 
       h("div", { style: { borderTop: "1px solid rgba(201,169,97,0.2)", padding: "26px " + pad, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" } },
-        h("span", { style: { fontFamily: mono, fontSize: 9.5, letterSpacing: "0.22em", color: "rgba(232,228,220,0.4)" } }, "© MMXXVI · THE BRIAL ENDOWMENT"),
-        h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.55)" } }, "Every journey carries something home.")));
+        h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.66)" } }, "© MMXXVI · THE BRIAL ENDOWMENT"),
+        h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.66)" } }, "Every journey carries something home.")));
   };
 
   window.BrialStories = Stories;

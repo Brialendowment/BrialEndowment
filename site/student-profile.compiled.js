@@ -14,9 +14,9 @@ const BRIAL_COUNTRIES = ["Indonesia", "Malaysia", "Singapore", "Thailand", "Viet
 
 const fieldLabelStyle = {
   fontFamily: "'JetBrains Mono', monospace",
-  fontSize: 10,
-  color: "rgba(232,228,220,0.55)",
-  letterSpacing: "0.2em",
+  fontSize: 11,
+  color: "rgba(232,228,220,0.66)",
+  letterSpacing: "0.14em",
   textTransform: "uppercase",
   marginBottom: 8
 };
@@ -165,8 +165,8 @@ const FileField = ({
   }, uploading ? "Uploading…" : file ? file.name : "Click to select file"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.45)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 4,
       letterSpacing: "0.1em"
     }
@@ -186,7 +186,7 @@ const FileField = ({
       color: "#86E5A7",
       cursor: "pointer",
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
@@ -271,7 +271,7 @@ const SectionPersonal = ({
       background: "transparent",
       border: "none",
       borderBottom: "1px solid rgba(232,228,220,0.25)",
-      color: p.country ? "#E8E4DC" : "rgba(232,228,220,0.4)",
+      color: p.country ? "#E8E4DC" : "rgba(232,228,220,0.66)",
       fontSize: 16,
       fontFamily: "'Cormorant Garamond', serif",
       outline: "none"
@@ -394,7 +394,7 @@ const SectionHighSchool = ({
       fontFamily: "'Manrope', sans-serif",
       fontSize: 12,
       lineHeight: 1.65,
-      color: "rgba(232,228,220,0.55)",
+      color: "rgba(232,228,220,0.66)",
       margin: "8px 0 12px"
     }
   }, "Add the subjects you took (IPA, IPS, Agama, Bahasa, or whatever applied to you). For each, enter the ", /*#__PURE__*/React.createElement("strong", {
@@ -414,7 +414,7 @@ const SectionHighSchool = ({
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: 17,
       fontStyle: "italic",
-      color: "rgba(232,228,220,0.45)"
+      color: "rgba(232,228,220,0.66)"
     }
   }, "No subjects added yet. Click below to add your first.") : hs.subjects.map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
@@ -498,7 +498,7 @@ const SectionHighSchool = ({
   }, "+ Add subject"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: hs.subjects.length >= 3 ? "rgba(134,229,167,0.7)" : "rgba(229,134,134,0.65)",
       letterSpacing: "0.1em"
     }
@@ -574,10 +574,10 @@ const SectionUniversity = ({
     }, lvl.label), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
+        fontSize: 11,
         letterSpacing: "0.18em",
         marginTop: 4,
-        color: active ? "#C9A961" : "rgba(232,228,220,0.5)"
+        color: active ? "#C9A961" : "rgba(232,228,220,0.66)"
       }
     }, lvl.sub));
   }))), /*#__PURE__*/React.createElement("div", {
@@ -650,9 +650,9 @@ const SectionUniversity = ({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#4FD1C5",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       textTransform: "uppercase",
       marginBottom: 8
     }
@@ -715,8 +715,8 @@ const SectionEssay = ({
       display: "flex",
       justifyContent: "space-between",
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      color: "rgba(232,228,220,0.5)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 8,
       letterSpacing: "0.1em"
     }
@@ -781,9 +781,9 @@ const ProfileEditor = ({
       padding: "20px 22px",
       borderBottom: "1px solid rgba(201,169,97,0.12)",
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: "#C9A961",
-      letterSpacing: "0.22em",
+      letterSpacing: "0.16em",
       textTransform: "uppercase"
     }
   }, "Application Sections"), sections.map(s => {
@@ -838,8 +838,8 @@ const ProfileEditor = ({
     }, s.label)), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10,
-        color: "rgba(232,228,220,0.5)",
+        fontSize: 11,
+        color: "rgba(232,228,220,0.66)",
         letterSpacing: "0.08em",
         marginLeft: 28
       }
@@ -851,7 +851,7 @@ const ProfileEditor = ({
   }, hideSubmit ? /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       color: complete ? "rgba(134,229,167,0.8)" : "rgba(201,169,97,0.8)",
       letterSpacing: "0.1em",
       lineHeight: 1.6,
@@ -864,7 +864,7 @@ const ProfileEditor = ({
       width: "100%",
       padding: "14px 0",
       background: complete ? "#C9A961" : "rgba(201,169,97,0.2)",
-      color: complete ? "#0A1628" : "rgba(232,228,220,0.5)",
+      color: complete ? "#0A1628" : "rgba(232,228,220,0.66)",
       border: "none",
       cursor: complete ? "pointer" : "not-allowed",
       fontFamily: "'Manrope', sans-serif",
@@ -876,8 +876,8 @@ const ProfileEditor = ({
   }, complete ? "Submit application →" : "Complete all sections"), !complete && !hideSubmit && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 9,
-      color: "rgba(232,228,220,0.45)",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
       marginTop: 10,
       letterSpacing: "0.1em",
       lineHeight: 1.5
@@ -937,7 +937,7 @@ const SectionHeader = ({
     fontFamily: "'Manrope', sans-serif",
     fontSize: 14,
     lineHeight: 1.65,
-    color: "rgba(232,228,220,0.55)",
+    color: "rgba(232,228,220,0.66)",
     margin: "10px 0 0",
     maxWidth: 620
   }
