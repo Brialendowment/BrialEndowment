@@ -1152,16 +1152,16 @@ window.BrialClipboard = { copy: copyToClipboard };
     sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
     // ----- Exchange rates, units of currency per 1 USD (ECB via frankfurter, then open.er-api, then a rough fallback) -----
-    FX_FALLBACK: { IDR: 18000, TRY: 49.5, EUR: 0.86, USD: 1 }, // Oct 2026, used only when both rate services fail
+    FX_FALLBACK: { IDR: 18000, TRY: 49.5, EUR: 0.86, SGD: 1.3, USD: 1 }, // Oct 2026, used only when both rate services fail
     _fx: null,
     fxRates() {
       if (Store._fx && Date.now() - Store._fx.at < 6 * 3600e3) return Promise.resolve(Store._fx);
       const ok = r => r && r.IDR > 1000 && r.TRY > 1 && r.EUR > 0.3 && r.EUR < 3;
       const done = (rates, source) => (Store._fx = { ...Store.FX_FALLBACK, ...rates, USD: 1, at: Date.now(), source });
       const get = (u, pick) => fetch(u, { cache: "no-store" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(pick);
-      return get("https://api.frankfurter.app/latest?from=USD&to=IDR,TRY,EUR", j => j && j.rates)
+      return get("https://api.frankfurter.app/latest?from=USD&to=IDR,TRY,EUR,SGD", j => j && j.rates)
         .then(r => (ok(r) ? done(r, "European Central Bank") : Promise.reject("bad")))
-        .catch(() => get("https://open.er-api.com/v6/latest/USD", j => j && j.rates && { IDR: j.rates.IDR, TRY: j.rates.TRY, EUR: j.rates.EUR })
+        .catch(() => get("https://open.er-api.com/v6/latest/USD", j => j && j.rates && { IDR: j.rates.IDR, TRY: j.rates.TRY, EUR: j.rates.EUR, SGD: j.rates.SGD })
           .then(r => (ok(r) ? done(r, "open.er-api.com") : Promise.reject("bad"))))
         .catch(() => ({ ...Store.FX_FALLBACK, at: Date.now(), source: "estimate" }));
     },

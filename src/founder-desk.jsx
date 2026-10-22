@@ -805,7 +805,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // DISTRIBUTIONS (Food & Clothing): one entry per day of giving.
   // Every field is optional except one of money, kilograms or garments.
   // ============================================================
-  const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"], ["EUR", "\u20AC"]];
+  const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"], ["EUR", "\u20AC"], ["SGD", "S$"]];
   const curSym = c => (CURS.find(x => x[0] === c) || ["", c + " "])[1];
   const fmtCur = (c, v) => c === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : curSym(c) + (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
   function useFx(store) {
@@ -1727,7 +1727,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         </div>
         <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
           {head("wire", "International wire (USD / EUR)")}
-          <p className="fd-sub" style={{ margin: "0 0 12px" }}>A SWIFT transfer from any bank abroad into your BCA Forex Pocket. Show only a city as the beneficiary address, never the home address.</p>
+          <p className="fd-sub" style={{ margin: "0 0 12px" }}>A SWIFT transfer from any bank abroad into a foreign currency pocket. The account number is the pocket's number, and the donor must send that pocket's currency. Show only a city as the beneficiary address, never the home address.</p>
           <div className="fd-grid2">
             <Field label="Beneficiary name" hint="Exactly as BCA has it."><input className="fd-input" value={cfg.wire.holder || ""} onChange={e => set("wire", "holder", e.target.value)} /></Field>
             <Field label="Account number"><input className="fd-input fd-mono" value={cfg.wire.account || ""} onChange={e => set("wire", "account", e.target.value.replace(/[^0-9]/g, ""))} /></Field>
@@ -1735,7 +1735,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             <Field label="Bank"><input className="fd-input" value={cfg.wire.bank || ""} onChange={e => set("wire", "bank", e.target.value)} /></Field>
             <Field label="Bank address"><input className="fd-input" value={cfg.wire.bankAddress || ""} onChange={e => set("wire", "bankAddress", e.target.value)} /></Field>
             <Field label="Beneficiary address" hint="City and country only."><input className="fd-input" value={cfg.wire.city || ""} onChange={e => set("wire", "city", e.target.value)} /></Field>
-            <Field label="Currencies"><input className="fd-input" value={cfg.wire.currencies || ""} onChange={e => set("wire", "currencies", e.target.value)} /></Field>
+            <Field label="Currencies" hint="Only those you have a pocket for: USD, EUR or SGD."><input className="fd-input" value={cfg.wire.currencies || ""} onChange={e => set("wire", "currencies", e.target.value.toUpperCase())} /></Field>
             <Field label="Branch (your reference)" hint="Not shown on the site."><input className="fd-input" value={cfg.wire.branch || ""} onChange={e => set("wire", "branch", e.target.value)} /></Field>
           </div>
           {wireBad && <div className="fd-msg err" style={{ marginTop: 8 }}>{wireBad}</div>}
@@ -1836,7 +1836,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const p = d.payment || {};
     const card = p.method === "card";
     const wire = p.method === "wire";
-    const cur = wire ? (p.currency === "EUR" ? "EUR" : "USD") : p.currency === "USD" ? "USD" : "IDR";
+    const cur = wire ? (["EUR", "SGD"].indexOf(p.currency) >= 0 ? p.currency : "USD") : p.currency === "USD" ? "USD" : "IDR";
     const feeDefault = Number(store.getPaymentConfig().card.feePct ?? 5) || 0;
     const [paid, setPaid] = useState(String(p.paid || ""));
     const [feePct, setFeePct] = useState(String(card ? feeDefault : 0));
@@ -1859,11 +1859,11 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <div>The donor reported <b>{fmtCur(cur, p.paid)}</b>{payWhen(p) && <> on <b>{payWhen(p)}</b></>}.</div>
           {p.sender && <div>{wire ? "Sender's name" : "Sender's account name"}: <b>{p.sender}</b></div>}
           {p.ref && <div>{p.method === "qris" || wire ? "Reference" : "Lynk order"}: <b>{p.ref}</b></div>}
-          <div>{card ? "Find it in your Lynk dashboard" : p.method === "qris" ? "Find it under Transaksi in DANA Bisnis" : wire ? "Find it in myBCA under the " + cur + " Forex Pocket (BCA keeps about USD 5 per incoming wire)" : "Find it in your " + (store.getPaymentConfig().bank.bank || "bank") + " statement"}, then confirm what arrived.</div>
+          <div>{card ? "Find it in your Lynk dashboard" : p.method === "qris" ? "Find it under Transaksi in DANA Bisnis" : wire ? "Find it in your " + (store.getPaymentConfig().wire.bank || "bank") + " " + cur + " pocket (banks along the way may have deducted a small fee)" : "Find it in your " + (store.getPaymentConfig().bank.bank || "bank") + " statement"}, then confirm what arrived.</div>
         </div>
         <div className="fd-form" style={{ marginTop: 14 }}>
           <div className="fd-grid2">
-            <Field label={card ? `Paid by the donor (${cur})` : p.method === "qris" ? "Arrived in DANA Bisnis (Rp)" : wire ? `Arrived in your Forex Pocket (${cur})` : "Arrived in your account (Rp)"}><input className="fd-input" inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value.replace(",", "."))} /></Field>
+            <Field label={card ? `Paid by the donor (${cur})` : p.method === "qris" ? "Arrived in DANA Bisnis (Rp)" : wire ? `Arrived in your ${cur} pocket` : "Arrived in your account (Rp)"}><input className="fd-input" inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value.replace(",", "."))} /></Field>
             {card ? <Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={feePct} onChange={e => setFeePct(e.target.value.replace(",", "."))} /></Field>
               : <Field label="Value in US dollars" hint={cur === "USD" ? "Already in US dollars." : rate ? `1 USD = ${cur === "EUR" ? "\u20AC" + rate.toFixed(4) : fmtCur(cur, rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : "Getting today's rate…"}><input className="fd-input" inputMode="decimal" value={usd} onChange={e => { setUsdTouched(true); setUsd(e.target.value.replace(",", ".")); }} /></Field>}
           </div>
@@ -1914,7 +1914,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <label className="fd-check"><input type="checkbox" checked={f.anonymous} onChange={e => set("anonymous", e.target.checked)} /> Anonymous on the public ledger</label>
           <div className="fd-grid3">
             <Field label="Amount"><input className="fd-input" inputMode="decimal" value={f.paid} onChange={e => set("paid", e.target.value.replace(",", "."))} placeholder="0" /></Field>
-            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => setF(p => ({ ...p, cur: e.target.value, usdTouched: false }))}>{(f.method === "usdt" ? ["USDT"] : f.method === "wire" ? ["USD", "EUR"] : ["IDR", "USD", "EUR", "TRY"]).map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => setF(p => ({ ...p, cur: e.target.value, usdTouched: false }))}>{(f.method === "usdt" ? ["USDT"] : f.method === "wire" ? ["USD", "EUR", "SGD"] : ["IDR", "USD", "EUR", "TRY"]).map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
             <Field label="Value in US dollars" hint={rate && rate !== 1 ? `1 USD = ${fmtCur(f.cur, rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : null}><input className="fd-input" inputMode="decimal" value={f.usd} onChange={e => setF(p => ({ ...p, usd: e.target.value.replace(",", "."), usdTouched: true }))} /></Field>
           </div>
           {card && <div className="fd-grid2"><Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={f.feePct} onChange={e => set("feePct", e.target.value.replace(",", "."))} /></Field><div className="fd-sum" style={{ alignSelf: "end" }}>Lynk keeps <b>{fmtCur(f.cur, fee)}</b>; the receipt shows the full gift.</div></div>}

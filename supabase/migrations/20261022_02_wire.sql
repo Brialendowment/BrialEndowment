@@ -1,8 +1,9 @@
 -- International wire (22 Oct 2026)
--- The donate page now offers an international (SWIFT) transfer in USD or EUR
--- into the endowment's BCA account (Forex Pocket). A gift paid that way is
--- reported with method "wire" and currency USD or EUR, and the founder checks
--- it against the BCA statement. Only the accepted lists change.
+-- The donate page now offers an international (SWIFT) transfer into a foreign
+-- currency pocket (Bank Jago, SWIFT JAGBIDJA). A gift paid that way is reported
+-- with method "wire" and currency USD, EUR or SGD, and the founder checks it
+-- against the bank statement. Only the accepted lists change. The account
+-- details live in PAYMENT-CONFIG, never in code.
 
 create or replace function public.be_submit_donation(p_donation jsonb)
 returns jsonb language plpgsql security definer set search_path = '' as $$
@@ -23,7 +24,7 @@ begin
   if p is not null then
     pay := jsonb_strip_nulls(jsonb_build_object(
       'method',   case when p->>'method' in ('usdt', 'bank', 'card', 'qris', 'wire') then p->>'method' end,
-      'currency', case when p->>'currency' in ('USD', 'USDT', 'IDR', 'TRY', 'EUR') then p->>'currency' end,
+      'currency', case when p->>'currency' in ('USD', 'USDT', 'IDR', 'TRY', 'EUR', 'SGD') then p->>'currency' end,
       'paid',     round(least(greatest(be_private.try_num(p->>'paid'), 0), 1e13), 2),
       'rate',     round(least(greatest(be_private.try_num(p->>'rate'), 0), 1e7), 4),
       'paidAt',   nullif(left(coalesce(p->>'paidAt', ''), 40), ''),
