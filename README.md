@@ -1,7 +1,7 @@
 # The Brial Endowment — website (V3)
 
-Situs statis brialendowment.org. Tidak ada build step: Netlify langsung menerbitkan folder `site/`
-(diatur di `netlify.toml`).
+Situs statis brialendowment.org. Tidak ada build step: Cloudflare Pages langsung menerbitkan folder `site/`
+setiap ada push ke `main` (header keamanan di `site/_headers`, redirect di `site/_redirects`).
 
 ## Isi
 - `site/` — file website. `index.html` adalah versi bundel (semua script + font tertanam);
@@ -24,7 +24,7 @@ Hanya `site/store.js` (dan salinannya di dalam `site/index.html`) yang berubah. 
 
 ## Urutan penerapan (WAJIB)
 1. Jalankan `supabase/migrations/20261011_01_secure_rpcs_additive.sql` (aman; situs V2 tetap jalan).
-2. Deploy V3 (push ke `main` → Netlify). **Jangan deploy V3 sebelum langkah 1** — V3 memanggil fungsi
+2. Deploy V3 (push ke `main` → Cloudflare Pages). **Jangan deploy V3 sebelum langkah 1** — V3 memanggil fungsi
    database yang dibuat di langkah 1.
 3. Setelah V3 live dan dicek, jalankan `supabase/migrations/20261011_02_lockdown.sql`
    (menutup akses langsung anon ke tabel dan listing storage).
