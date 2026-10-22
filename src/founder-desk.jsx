@@ -1701,7 +1701,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const head = (g, title) => <div className="fd-card-head" style={{ marginBottom: 10 }}><h3 className="fd-h2">{title}</h3><Switch on={on(g)} onChange={v => set(g, "enabled", v)}>{on(g) ? "Shown" : "Hidden"}</Switch></div>;
     const cardBad = cfg.card.link && !/^https?:\/\//i.test(cfg.card.link.trim());
     const qrisBad = cfg.qris && cfg.qris.payload && !store.parseQris(cfg.qris.payload).ok;
-    const wireBad = !cfg.wire || cfg.wire.enabled === false ? "" : !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(cfg.wire.swift || "") ? "A SWIFT code has 8 or 11 letters and numbers, e.g. CENAIDJA." : !/^[0-9]{6,20}$/.test(cfg.wire.account || "") ? "Enter the account number, digits only." : !(cfg.wire.holder || "").trim() ? "Enter the beneficiary name." : "";
+    const wireBad = !cfg.wire || cfg.wire.enabled === false ? "" : !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(cfg.wire.swift || "") ? "A SWIFT code has 8 or 11 letters and numbers, e.g. JAGBIDJA." : !/^[0-9]{6,20}$/.test(cfg.wire.account || "") ? "Enter the account number, digits only." : !(cfg.wire.holder || "").trim() ? "Enter the beneficiary name." : "";
     return (
       <Modal wide title="Payment channels" sub="How donors can give on the public donate page." onClose={onClose}>
         <QrisChannel cfg={cfg} set={set} store={store} />
