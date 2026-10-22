@@ -685,6 +685,8 @@ window.BrialClipboard = { copy: copyToClipboard };
         // International wire (SWIFT): off until the founder fills it in under Payment channels.
         // The details live only in the database, never in this file. City only, never a home address.
         wire: { enabled: false, bank: "", swift: "", holder: "", city: "", bankAddress: "", pockets: {}, feeNote: "" },
+        // Order of the choices on the donate page, first = leftmost (founder drags them in Payment channels)
+        order: ["usdt", "qris", "bank", "card"],
         qris: { enabled: true, provider: "DANA Bisnis", payload: "00020101021126570011ID.DANA.WWW011893600915303626423802090362642380303UMI51440014ID.CO.QRIS.WWW0215ID10266217524620303UMI5204839853033605802ID5925The Brial Endowment, Orga6013Pasaman Barat61052656663048428" },
       };
       const d = _donations.find(x => x.id === "PAYMENT-CONFIG");
@@ -696,6 +698,7 @@ window.BrialClipboard = { copy: copyToClipboard };
           card: { ...defaults.card, ...(p.card || {}) },
           qris: { ...defaults.qris, ...(p.qris || {}) },
           wire: { ...defaults.wire, ...(p.wire || {}) },
+          order: Array.isArray(p.order) ? p.order.slice() : defaults.order.slice(),
         };
       }
       return defaults;

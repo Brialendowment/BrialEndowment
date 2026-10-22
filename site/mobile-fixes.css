@@ -273,4 +273,4 @@
   .b-portal-back { position: static !important; align-self: flex-start !important; }
 }
 /* donate page: wire currency choice stays on one row */
-div.b-don-curs { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important; gap: 8px !important; }
+div.b-don-curs { grid-template-columns: none !important; grid-auto-flow: column !important; grid-auto-columns: minmax(0, 1fr) !important; gap: 8px !important; }

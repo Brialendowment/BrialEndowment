@@ -8616,6 +8616,12 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-totals b.in{color:#5FD3A6}
 .fd-chans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 .fd-chans .fd-card+.fd-card{margin-top:0}
+.fd-chan{cursor:grab;display:flex;flex-direction:column;transition:border-color .15s,opacity .15s,transform .15s}
+.fd-chan.dragging{opacity:.45}
+.fd-chan.over{border-color:var(--gold,#C9A961);transform:translateY(-2px)}
+.fd-grip{color:var(--muted);font-size:16px;line-height:1;cursor:grab;user-select:none}
+.fd-pos{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1px solid rgba(201,169,97,.55);color:#E3C98A;font-size:11.5px;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.fd-chan-move{display:flex;gap:8px;justify-content:space-between;margin-top:auto;padding-top:14px}
 @media (max-width:1100px){.fd-tgrid{grid-template-columns:1fr}}
 @media (max-width:900px){.fd-ch-plot{margin-left:36px;height:180px}.fd-ch-x{font-size:10px}.fd-amt{text-align:left}.fd-totals{justify-content:space-between}}
 /* founder home (chooser) */
@@ -10072,18 +10078,90 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     };
     return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Ledger", lede: "Every settled movement: verified gifts and sales in, payments out. Unverified gifts and unpaid bills are left out until they settle." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: exportCSV, disabled: !list.length }, "Download CSV")), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: dir, onChange: setDir, items: [["all", "All", settled.length], ["in", "Money in", F.received.length], ["out", "Money out", F.paidOut.length]] }), /* @__PURE__ */ React.createElement("select", { className: "fd-input", style: { width: "auto" }, value: year, onChange: (e) => setYear(e.target.value), "aria-label": "Year" }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All years"), years.map((y) => /* @__PURE__ */ React.createElement("option", { key: y, value: y }, y)), F.paidOut.some((x) => !x.date) && /* @__PURE__ */ React.createElement("option", { value: "early" }, "Before 2026")), /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search description or reference" })), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Description"), /* @__PURE__ */ React.createElement("div", null, "Category"), /* @__PURE__ */ React.createElement("div", null, "Date · reference"), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, "Amount")), list.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "No movements match." }) : list.map((x) => /* @__PURE__ */ React.createElement(MoveRow, { key: x.dir + x.id, x, G, showDir: true }))), list.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "fd-totals" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Money in"), /* @__PURE__ */ React.createElement("b", { className: "in" }, "+", money(tin))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Money out"), /* @__PURE__ */ React.createElement("b", { className: "out" }, "−", money(tout))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Difference"), /* @__PURE__ */ React.createElement("b", null, tin - tout < 0 ? "−" : "", money(Math.abs(tin - tout))))));
   }
+  const CHANNEL_KEYS = ["usdt", "qris", "bank", "card"];
   function ChannelsView({ store }) {
     const [open, setOpen] = useState(false);
+    const [drag, setDrag] = useState(null);
+    const [over, setOver] = useState(null);
+    const [m, flash] = useFlash();
     const c = store.getPaymentConfig();
     const qi = c.qris && c.qris.payload ? store.parseQris(c.qris.payload) : null;
-    const rows = [
-      ["qris", "QRIS (Indonesia)", c.qris && c.qris.enabled !== false && qi && qi.ok, qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set", qi && qi.ok ? "NMID " + qi.nmid : ""],
-      ["usdt", "USDT (on-chain)", c.usdt.enabled !== false, [c.usdt.network, c.usdt.asset].filter(Boolean).join(" · "), c.usdt.address],
-      ["bank", "Bank transfer", c.bank.enabled !== false, [c.bank.bank, c.bank.currency].filter(Boolean).join(" · "), [c.bank.account, c.bank.holder].filter(Boolean).join(" · ")],
-      ["wire", "International wire", c.wire && c.wire.enabled !== false, c.wire ? [c.wire.bank, c.wire.swift && "SWIFT " + c.wire.swift].filter(Boolean).join(" · ") || "Not set" : "Not set", c.wire ? Object.entries(c.wire.pockets || {}).filter(([, v]) => v).map(([k, v]) => k + " " + v).concat([c.wire.holder, c.wire.city]).filter(Boolean).join(" · ") : ""],
-      ["card", "Card (Mastercard / Visa)", c.card.enabled !== false, "Checkout page", c.card.link]
-    ];
-    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Payment channels", lede: "How donors can give on the public donate page." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => setOpen(true) }, "Edit channels")), /* @__PURE__ */ React.createElement("div", { className: "fd-chans" }, rows.map(([k, name, on, sub, val]) => /* @__PURE__ */ React.createElement("div", { key: k, className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, name), /* @__PURE__ */ React.createElement(Tag, { tone: on ? "ok" : "", dot: true }, on ? "Shown" : "Hidden")), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: 0 } }, sub), /* @__PURE__ */ React.createElement("p", { className: "fd-mono", style: { margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" } }, val || "Not set"), k === "usdt" && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "10px 0 0" } }, c.usdt.autoVerify !== false ? "Checked on chain automatically. Only gifts on the network above are verified on their own; anything sent on another network waits for you." : "Automatic checks are off. Each gift waits for you.")))), open && /* @__PURE__ */ React.createElement(ChannelsDialog, { store, onClose: () => setOpen(false) }));
+    const pockets = c.wire && c.wire.pockets ? Object.entries(c.wire.pockets).filter(([, v]) => v) : [];
+    const wireLive = !!(c.wire && c.wire.enabled !== false && c.wire.swift && pockets.length);
+    const idrLive = c.bank.enabled !== false && !!c.bank.account;
+    const cards = {
+      qris: { name: "QRIS (Indonesia)", on: !!(c.qris && c.qris.enabled !== false && qi && qi.ok), lines: [qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set"], mono: qi && qi.ok ? "NMID " + qi.nmid : "" },
+      usdt: {
+        name: "USDT (on-chain)",
+        on: c.usdt.enabled !== false,
+        lines: [[c.usdt.network, c.usdt.asset].filter(Boolean).join(" · ")],
+        mono: c.usdt.address,
+        note: c.usdt.autoVerify !== false ? "Checked on chain automatically. Only gifts on the network above are verified on their own." : "Automatic checks are off. Each gift waits for you."
+      },
+      bank: {
+        name: "Bank transfer",
+        on: idrLive || wireLive,
+        lines: [
+          idrLive ? "Rupiah · " + [c.bank.bank, c.bank.account].filter(Boolean).join(" ") : "Rupiah · hidden",
+          wireLive ? pockets.map(([k]) => k).join(", ") + " · SWIFT " + c.wire.swift : "USD, EUR, SGD · hidden"
+        ],
+        mono: [c.bank.holder, wireLive && c.wire.city].filter(Boolean).join(" · ")
+      },
+      card: { name: "Card (Mastercard / Visa)", on: c.card.enabled !== false && !!c.card.link, lines: ["Checkout page"], mono: c.card.link }
+    };
+    const saved = (Array.isArray(c.order) ? c.order : []).map((k) => k === "wire" ? "bank" : k).filter((k) => CHANNEL_KEYS.indexOf(k) >= 0);
+    const order = [...new Set(saved.concat(CHANNEL_KEYS))];
+    const move = (from, to) => {
+      if (from == null || to == null || from === to || to < 0 || to >= order.length) return;
+      const o = order.slice();
+      const [k] = o.splice(from, 1);
+      o.splice(to, 0, k);
+      store.savePaymentConfig({ ...store.getPaymentConfig(), order: o });
+      const shown = o.filter((x) => cards[x].on).map((x) => cards[x].name.split(" (")[0]);
+      flash("Order saved. The donate page now shows " + shown.join(", ") + ".");
+    };
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Payment channels", lede: "How donors can give on the public donate page. Drag the cards to change the order: the first card is the first choice, on the left." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => setOpen(true) }, "Edit channels")), /* @__PURE__ */ React.createElement(Flash, { m }), /* @__PURE__ */ React.createElement("div", { className: "fd-chans", style: { marginTop: m ? 12 : 0 } }, order.map((k, i) => {
+      const x = cards[k];
+      return /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          key: k,
+          className: "fd-card fd-chan" + (drag === i ? " dragging" : "") + (over === i && drag !== null && drag !== i ? " over" : ""),
+          draggable: true,
+          onDragStart: (e) => {
+            setDrag(i);
+            e.dataTransfer.effectAllowed = "move";
+            try {
+              e.dataTransfer.setData("text/plain", k);
+            } catch (er) {
+            }
+          },
+          onDragOver: (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            if (over !== i) setOver(i);
+          },
+          onDragLeave: () => {
+            if (over === i) setOver(null);
+          },
+          onDrop: (e) => {
+            e.preventDefault();
+            move(drag, i);
+            setDrag(null);
+            setOver(null);
+          },
+          onDragEnd: () => {
+            setDrag(null);
+            setOver(null);
+          }
+        },
+        /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 6, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { className: "fd-grip", "aria-hidden": "true", title: "Drag to reorder" }, "⠿"), /* @__PURE__ */ React.createElement("span", { className: "fd-pos", title: "Position on the donate page" }, i + 1), /* @__PURE__ */ React.createElement("h2", { className: "fd-h2", style: { margin: 0 } }, x.name)), /* @__PURE__ */ React.createElement(Tag, { tone: x.on ? "ok" : "", dot: true }, x.on ? "Shown" : "Hidden")),
+        x.lines.map((l, n) => /* @__PURE__ */ React.createElement("p", { key: n, className: "fd-sub", style: { margin: n ? "4px 0 0" : 0 } }, l)),
+        /* @__PURE__ */ React.createElement("p", { className: "fd-mono", style: { margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" } }, x.mono || "Not set"),
+        x.note && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "10px 0 0" } }, x.note),
+        /* @__PURE__ */ React.createElement("div", { className: "fd-chan-move" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === 0, onClick: () => move(i, i - 1), "aria-label": "Move " + x.name + " earlier" }, "← Earlier"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === order.length - 1, onClick: () => move(i, i + 1), "aria-label": "Move " + x.name + " later" }, "Later →"))
+      );
+    })), open && /* @__PURE__ */ React.createElement(ChannelsDialog, { store, onClose: () => setOpen(false) }));
   }
   const SITE_URL = "https://brialendowment.org";
   const reportUrl = (y) => SITE_URL + "/impact/" + y;

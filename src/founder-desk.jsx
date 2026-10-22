@@ -243,6 +243,12 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-totals b.in{color:#5FD3A6}
 .fd-chans{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 .fd-chans .fd-card+.fd-card{margin-top:0}
+.fd-chan{cursor:grab;display:flex;flex-direction:column;transition:border-color .15s,opacity .15s,transform .15s}
+.fd-chan.dragging{opacity:.45}
+.fd-chan.over{border-color:var(--gold,#C9A961);transform:translateY(-2px)}
+.fd-grip{color:var(--muted);font-size:16px;line-height:1;cursor:grab;user-select:none}
+.fd-pos{flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1px solid rgba(201,169,97,.55);color:#E3C98A;font-size:11.5px;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.fd-chan-move{display:flex;gap:8px;justify-content:space-between;margin-top:auto;padding-top:14px}
 @media (max-width:1100px){.fd-tgrid{grid-template-columns:1fr}}
 @media (max-width:900px){.fd-ch-plot{margin-left:36px;height:180px}.fd-ch-x{font-size:10px}.fd-amt{text-align:left}.fd-totals{justify-content:space-between}}
 /* founder home (chooser) */
@@ -2388,34 +2394,72 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     );
   }
 
+  // The order of the cards is the order of the choices on the donate page (first = leftmost).
+  // Rupiah transfers and international wires share one "Bank transfer" choice there, so they share a card here.
+  const CHANNEL_KEYS = ["usdt", "qris", "bank", "card"];
   function ChannelsView({ store }) {
     const [open, setOpen] = useState(false);
+    const [drag, setDrag] = useState(null);
+    const [over, setOver] = useState(null);
+    const [m, flash] = useFlash();
     const c = store.getPaymentConfig();
     const qi = c.qris && c.qris.payload ? store.parseQris(c.qris.payload) : null;
-    const rows = [
-      ["qris", "QRIS (Indonesia)", c.qris && c.qris.enabled !== false && qi && qi.ok, qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set", qi && qi.ok ? "NMID " + qi.nmid : ""],
-      ["usdt", "USDT (on-chain)", c.usdt.enabled !== false, [c.usdt.network, c.usdt.asset].filter(Boolean).join(" · "), c.usdt.address],
-      ["bank", "Bank transfer", c.bank.enabled !== false, [c.bank.bank, c.bank.currency].filter(Boolean).join(" · "), [c.bank.account, c.bank.holder].filter(Boolean).join(" · ")],
-      ["wire", "International wire", c.wire && c.wire.enabled !== false, c.wire ? [c.wire.bank, c.wire.swift && "SWIFT " + c.wire.swift].filter(Boolean).join(" · ") || "Not set" : "Not set", c.wire ? Object.entries(c.wire.pockets || {}).filter(([, v]) => v).map(([k, v]) => k + " " + v).concat([c.wire.holder, c.wire.city]).filter(Boolean).join(" · ") : ""],
-      ["card", "Card (Mastercard / Visa)", c.card.enabled !== false, "Checkout page", c.card.link],
-    ];
+    const pockets = c.wire && c.wire.pockets ? Object.entries(c.wire.pockets).filter(([, v]) => v) : [];
+    const wireLive = !!(c.wire && c.wire.enabled !== false && c.wire.swift && pockets.length);
+    const idrLive = c.bank.enabled !== false && !!c.bank.account;
+    const cards = {
+      qris: { name: "QRIS (Indonesia)", on: !!(c.qris && c.qris.enabled !== false && qi && qi.ok), lines: [qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set"], mono: qi && qi.ok ? "NMID " + qi.nmid : "" },
+      usdt: { name: "USDT (on-chain)", on: c.usdt.enabled !== false, lines: [[c.usdt.network, c.usdt.asset].filter(Boolean).join(" · ")], mono: c.usdt.address,
+        note: c.usdt.autoVerify !== false ? "Checked on chain automatically. Only gifts on the network above are verified on their own." : "Automatic checks are off. Each gift waits for you." },
+      bank: { name: "Bank transfer", on: idrLive || wireLive,
+        lines: [idrLive ? "Rupiah · " + [c.bank.bank, c.bank.account].filter(Boolean).join(" ") : "Rupiah · hidden",
+          wireLive ? pockets.map(([k]) => k).join(", ") + " · SWIFT " + c.wire.swift : "USD, EUR, SGD · hidden"],
+        mono: [c.bank.holder, wireLive && c.wire.city].filter(Boolean).join(" · ") },
+      card: { name: "Card (Mastercard / Visa)", on: c.card.enabled !== false && !!c.card.link, lines: ["Checkout page"], mono: c.card.link },
+    };
+    const saved = (Array.isArray(c.order) ? c.order : []).map(k => (k === "wire" ? "bank" : k)).filter(k => CHANNEL_KEYS.indexOf(k) >= 0);
+    const order = [...new Set(saved.concat(CHANNEL_KEYS))];
+    const move = (from, to) => {
+      if (from == null || to == null || from === to || to < 0 || to >= order.length) return;
+      const o = order.slice(); const [k] = o.splice(from, 1); o.splice(to, 0, k);
+      store.savePaymentConfig({ ...store.getPaymentConfig(), order: o });
+      const shown = o.filter(x => cards[x].on).map(x => cards[x].name.split(" (")[0]);
+      flash("Order saved. The donate page now shows " + shown.join(", ") + ".");
+    };
     return (
       <>
-        <Head title="Payment channels" lede="How donors can give on the public donate page."><button className="fd-btn primary" onClick={() => setOpen(true)}>Edit channels</button></Head>
-        <div className="fd-chans">
-          {rows.map(([k, name, on, sub, val]) => (
-            <div key={k} className="fd-card">
-              <div className="fd-card-head" style={{ marginBottom: 6 }}><h2 className="fd-h2">{name}</h2><Tag tone={on ? "ok" : ""} dot>{on ? "Shown" : "Hidden"}</Tag></div>
-              <p className="fd-sub" style={{ margin: 0 }}>{sub}</p>
-              <p className="fd-mono" style={{ margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" }}>{val || "Not set"}</p>
-              {k === "usdt" && <p className="fd-sub" style={{ margin: "10px 0 0" }}>{c.usdt.autoVerify !== false ? "Checked on chain automatically. Only gifts on the network above are verified on their own; anything sent on another network waits for you." : "Automatic checks are off. Each gift waits for you."}</p>}
-            </div>
-          ))}
+        <Head title="Payment channels" lede="How donors can give on the public donate page. Drag the cards to change the order: the first card is the first choice, on the left."><button className="fd-btn primary" onClick={() => setOpen(true)}>Edit channels</button></Head>
+        <Flash m={m} />
+        <div className="fd-chans" style={{ marginTop: m ? 12 : 0 }}>
+          {order.map((k, i) => { const x = cards[k]; return (
+            <div key={k} className={"fd-card fd-chan" + (drag === i ? " dragging" : "") + (over === i && drag !== null && drag !== i ? " over" : "")}
+              draggable onDragStart={e => { setDrag(i); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", k); } catch (er) {} }}
+              onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (over !== i) setOver(i); }}
+              onDragLeave={() => { if (over === i) setOver(null); }}
+              onDrop={e => { e.preventDefault(); move(drag, i); setDrag(null); setOver(null); }}
+              onDragEnd={() => { setDrag(null); setOver(null); }}>
+              <div className="fd-card-head" style={{ marginBottom: 6, alignItems: "flex-start" }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+                  <span className="fd-grip" aria-hidden="true" title="Drag to reorder">⠿</span>
+                  <span className="fd-pos" title="Position on the donate page">{i + 1}</span>
+                  <h2 className="fd-h2" style={{ margin: 0 }}>{x.name}</h2>
+                </div>
+                <Tag tone={x.on ? "ok" : ""} dot>{x.on ? "Shown" : "Hidden"}</Tag>
+              </div>
+              {x.lines.map((l, n) => <p key={n} className="fd-sub" style={{ margin: n ? "4px 0 0" : 0 }}>{l}</p>)}
+              <p className="fd-mono" style={{ margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" }}>{x.mono || "Not set"}</p>
+              {x.note && <p className="fd-sub" style={{ margin: "10px 0 0" }}>{x.note}</p>}
+              <div className="fd-chan-move">
+                <button className="fd-btn quiet sm" disabled={i === 0} onClick={() => move(i, i - 1)} aria-label={"Move " + x.name + " earlier"}>← Earlier</button>
+                <button className="fd-btn quiet sm" disabled={i === order.length - 1} onClick={() => move(i, i + 1)} aria-label={"Move " + x.name + " later"}>Later →</button>
+              </div>
+            </div>); })}
         </div>
         {open && <ChannelsDialog store={store} onClose={() => setOpen(false)} />}
       </>
     );
   }
+
 
   // ============================================================
   // IMPACT REPORT: one report a year. The numbers come from the
