@@ -682,6 +682,8 @@ window.BrialClipboard = { copy: copyToClipboard };
         bank: { enabled: true, bank: "Bank Jago", account: "107540735665", holder: "Brial Asif Hayi Paka", currency: "IDR \u00b7 Rupiah" },
         card: { enabled: true, link: "https://lynk.id/brial/s/e1896978jwq9" },
         // Static QRIS from DANA Bisnis (NMID ID1026621752462, MCC 8398 charitable organisations), registered 21 Oct 2026
+        // International wire (SWIFT) in USD or EUR into the BCA Forex Pocket; city only, never the home address
+        wire: { enabled: true, bank: "PT Bank Central Asia Tbk (BCA)", swift: "CENAIDJA", account: "1630714989", holder: "BRIAL ASIF HAYI PAKA", city: "Padang, Indonesia", bankAddress: "Menara BCA, Grand Indonesia, Jl. M.H. Thamrin No. 1, Jakarta 10310, Indonesia", branch: "KCP Pemuda, Padang", currencies: "USD, EUR", feeNote: "" },
         qris: { enabled: true, provider: "DANA Bisnis", payload: "00020101021126570011ID.DANA.WWW011893600915303626423802090362642380303UMI51440014ID.CO.QRIS.WWW0215ID10266217524620303UMI5204839853033605802ID5925The Brial Endowment, Orga6013Pasaman Barat61052656663048428" },
       };
       const d = _donations.find(x => x.id === "PAYMENT-CONFIG");
@@ -692,6 +694,7 @@ window.BrialClipboard = { copy: copyToClipboard };
           bank: { ...defaults.bank, ...(p.bank || {}) },
           card: { ...defaults.card, ...(p.card || {}) },
           qris: { ...defaults.qris, ...(p.qris || {}) },
+          wire: { ...defaults.wire, ...(p.wire || {}) },
         };
       }
       return defaults;
@@ -1148,16 +1151,16 @@ window.BrialClipboard = { copy: copyToClipboard };
     sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
     // ----- Exchange rates, units of currency per 1 USD (ECB via frankfurter, then open.er-api, then a rough fallback) -----
-    FX_FALLBACK: { IDR: 18000, TRY: 49.5, USD: 1 }, // Oct 2026, used only when both rate services fail
+    FX_FALLBACK: { IDR: 18000, TRY: 49.5, EUR: 0.86, USD: 1 }, // Oct 2026, used only when both rate services fail
     _fx: null,
     fxRates() {
       if (Store._fx && Date.now() - Store._fx.at < 6 * 3600e3) return Promise.resolve(Store._fx);
-      const ok = r => r && r.IDR > 1000 && r.TRY > 1;
+      const ok = r => r && r.IDR > 1000 && r.TRY > 1 && r.EUR > 0.3 && r.EUR < 3;
       const done = (rates, source) => (Store._fx = { ...Store.FX_FALLBACK, ...rates, USD: 1, at: Date.now(), source });
       const get = (u, pick) => fetch(u, { cache: "no-store" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(pick);
-      return get("https://api.frankfurter.app/latest?from=USD&to=IDR,TRY", j => j && j.rates)
+      return get("https://api.frankfurter.app/latest?from=USD&to=IDR,TRY,EUR", j => j && j.rates)
         .then(r => (ok(r) ? done(r, "European Central Bank") : Promise.reject("bad")))
-        .catch(() => get("https://open.er-api.com/v6/latest/USD", j => j && j.rates && { IDR: j.rates.IDR, TRY: j.rates.TRY })
+        .catch(() => get("https://open.er-api.com/v6/latest/USD", j => j && j.rates && { IDR: j.rates.IDR, TRY: j.rates.TRY, EUR: j.rates.EUR })
           .then(r => (ok(r) ? done(r, "open.er-api.com") : Promise.reject("bad"))))
         .catch(() => ({ ...Store.FX_FALLBACK, at: Date.now(), source: "estimate" }));
     },

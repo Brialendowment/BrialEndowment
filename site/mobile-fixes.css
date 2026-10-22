@@ -252,6 +252,7 @@
 @media (max-width: 760px) {
   .b-don-methods { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
   .b-don-methods button { min-height: 100px !important; padding: 14px 12px 12px !important; }
+  .b-don-methods > button:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 84px !important; }
   .b-don-row { grid-template-columns: minmax(0, 1fr) auto !important; gap: 8px 14px !important; padding: 16px 16px !important; }
   .b-don-row-name { grid-column: 1 / -1; }
   .b-don-row-amt { font-size: 24px !important; grid-column: 1; grid-row: 2; }

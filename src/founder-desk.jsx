@@ -805,7 +805,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // DISTRIBUTIONS (Food & Clothing): one entry per day of giving.
   // Every field is optional except one of money, kilograms or garments.
   // ============================================================
-  const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"]];
+  const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"], ["EUR", "\u20AC"]];
   const curSym = c => (CURS.find(x => x[0] === c) || ["", c + " "])[1];
   const fmtCur = (c, v) => c === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : curSym(c) + (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
   function useFx(store) {
@@ -1701,6 +1701,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const head = (g, title) => <div className="fd-card-head" style={{ marginBottom: 10 }}><h3 className="fd-h2">{title}</h3><Switch on={on(g)} onChange={v => set(g, "enabled", v)}>{on(g) ? "Shown" : "Hidden"}</Switch></div>;
     const cardBad = cfg.card.link && !/^https?:\/\//i.test(cfg.card.link.trim());
     const qrisBad = cfg.qris && cfg.qris.payload && !store.parseQris(cfg.qris.payload).ok;
+    const wireBad = !cfg.wire || cfg.wire.enabled === false ? "" : !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(cfg.wire.swift || "") ? "A SWIFT code has 8 or 11 letters and numbers, e.g. CENAIDJA." : !/^[0-9]{6,20}$/.test(cfg.wire.account || "") ? "Enter the account number, digits only." : !(cfg.wire.holder || "").trim() ? "Enter the beneficiary name." : "";
     return (
       <Modal wide title="Payment channels" sub="How donors can give on the public donate page." onClose={onClose}>
         <QrisChannel cfg={cfg} set={set} store={store} />
@@ -1725,12 +1726,27 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <div className="fd-grid2"><Field label="Bank"><input className="fd-input" value={cfg.bank.bank} onChange={e => set("bank", "bank", e.target.value)} /></Field><Field label="Account number"><input className="fd-input" value={cfg.bank.account} onChange={e => set("bank", "account", e.target.value)} /></Field><Field label="Account holder"><input className="fd-input" value={cfg.bank.holder} onChange={e => set("bank", "holder", e.target.value)} /></Field><Field label="Currency label"><input className="fd-input" value={cfg.bank.currency} onChange={e => set("bank", "currency", e.target.value)} /></Field></div>
         </div>
         <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
+          {head("wire", "International wire (USD / EUR)")}
+          <p className="fd-sub" style={{ margin: "0 0 12px" }}>A SWIFT transfer from any bank abroad into your BCA Forex Pocket. Show only a city as the beneficiary address, never the home address.</p>
+          <div className="fd-grid2">
+            <Field label="Beneficiary name" hint="Exactly as BCA has it."><input className="fd-input" value={cfg.wire.holder || ""} onChange={e => set("wire", "holder", e.target.value)} /></Field>
+            <Field label="Account number"><input className="fd-input fd-mono" value={cfg.wire.account || ""} onChange={e => set("wire", "account", e.target.value.replace(/[^0-9]/g, ""))} /></Field>
+            <Field label="SWIFT / BIC"><input className="fd-input fd-mono" value={cfg.wire.swift || ""} onChange={e => set("wire", "swift", e.target.value.toUpperCase().replace(/\s/g, ""))} /></Field>
+            <Field label="Bank"><input className="fd-input" value={cfg.wire.bank || ""} onChange={e => set("wire", "bank", e.target.value)} /></Field>
+            <Field label="Bank address"><input className="fd-input" value={cfg.wire.bankAddress || ""} onChange={e => set("wire", "bankAddress", e.target.value)} /></Field>
+            <Field label="Beneficiary address" hint="City and country only."><input className="fd-input" value={cfg.wire.city || ""} onChange={e => set("wire", "city", e.target.value)} /></Field>
+            <Field label="Currencies"><input className="fd-input" value={cfg.wire.currencies || ""} onChange={e => set("wire", "currencies", e.target.value)} /></Field>
+            <Field label="Branch (your reference)" hint="Not shown on the site."><input className="fd-input" value={cfg.wire.branch || ""} onChange={e => set("wire", "branch", e.target.value)} /></Field>
+          </div>
+          {wireBad && <div className="fd-msg err" style={{ marginTop: 8 }}>{wireBad}</div>}
+        </div>
+        <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
           {head("card", "Card (Mastercard / Visa)")}
           <Field label="Checkout page" hint="The card button on the donate page opens this address in a new tab."><input className="fd-input" value={cfg.card.link} onChange={e => set("card", "link", e.target.value)} placeholder="https://lynk.id/brial/s/…" /></Field>
           {cardBad && <div className="fd-msg err" style={{ marginTop: 8 }}>Use a full address that starts with https://</div>}
           <Field label="Lynk fee (%)" hint="What Lynk keeps from each card payment. Used when you verify a card gift; the receipt shows the full gift." style={{ maxWidth: 220, marginTop: 12 }}><input className="fd-input" inputMode="decimal" value={cfg.card.feePct ?? 5} onChange={e => set("card", "feePct", e.target.value.replace(",", "."))} /></Field>
         </div>
-        <div className="fd-actions" style={{ marginTop: 18 }}><button className="fd-btn primary" disabled={cardBad || qrisBad} onClick={() => { store.savePaymentConfig(cfg); onClose(); }}>Save channels</button><button className="fd-btn ghost" onClick={onClose}>Cancel</button></div>
+        <div className="fd-actions" style={{ marginTop: 18 }}><button className="fd-btn primary" disabled={cardBad || qrisBad || !!wireBad} onClick={() => { store.savePaymentConfig(cfg); onClose(); }}>Save channels</button><button className="fd-btn ghost" onClick={onClose}>Cancel</button></div>
       </Modal>
     );
   }
@@ -1813,19 +1829,20 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   }
 
   // ---------------- gifts paid by bank or card: confirm what arrived ----------------
-  const METHOD_LABEL = { qris: "QRIS", usdt: "USDT", bank: "Bank transfer", card: "Card via Lynk", cash: "Cash", other: "Other" };
+  const METHOD_LABEL = { qris: "QRIS", usdt: "USDT", bank: "Bank transfer", wire: "Bank wire (SWIFT)", card: "Card via Lynk", cash: "Cash", other: "Other" };
   const payWhen = p => { if (!p || !p.paidAt) return ""; const d = new Date(p.paidAt); return isNaN(d) ? String(p.paidAt) : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); };
   function VerifyGiftDialog({ store, d, onClose, onDone }) {
     const fx = useFx(store);
     const p = d.payment || {};
     const card = p.method === "card";
-    const cur = p.currency === "USD" ? "USD" : "IDR";
+    const wire = p.method === "wire";
+    const cur = wire ? (p.currency === "EUR" ? "EUR" : "USD") : p.currency === "USD" ? "USD" : "IDR";
     const feeDefault = Number(store.getPaymentConfig().card.feePct ?? 5) || 0;
     const [paid, setPaid] = useState(String(p.paid || ""));
     const [feePct, setFeePct] = useState(String(card ? feeDefault : 0));
     const [usdTouched, setUsdTouched] = useState(false);
     const [usd, setUsd] = useState(String(d.amount || ""));
-    const rate = cur === "USD" ? 1 : fx && fx.IDR ? fx.IDR : Number(p.rate) || 0;
+    const rate = cur === "USD" ? 1 : fx && fx[cur] ? fx[cur] : Number(p.rate) || 0;
     useEffect(() => { if (!usdTouched && rate && parseFloat(paid) > 0) setUsd(((parseFloat(paid) || 0) / rate).toFixed(2)); }, [rate, paid]);
     const fee = card ? (parseFloat(paid) || 0) * (parseFloat(feePct) || 0) / 100 : 0;
     const net = (parseFloat(paid) || 0) - fee;
@@ -1837,18 +1854,18 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       onDone(r, payment); onClose();
     };
     return (
-      <Modal title={"Verify " + (card ? "card gift" : p.method === "qris" ? "QRIS gift" : "bank transfer")} sub={`${d.anonymous ? "Anonymous" : titleCase(d.name)} · reported ${fdate(d.submittedAt)}`} onClose={onClose}>
+      <Modal title={"Verify " + (card ? "card gift" : p.method === "qris" ? "QRIS gift" : wire ? "international wire" : "bank transfer")} sub={`${d.anonymous ? "Anonymous" : titleCase(d.name)} · reported ${fdate(d.submittedAt)}`} onClose={onClose}>
         <div className="fd-sum">
           <div>The donor reported <b>{fmtCur(cur, p.paid)}</b>{payWhen(p) && <> on <b>{payWhen(p)}</b></>}.</div>
-          {p.sender && <div>Sender's account name: <b>{p.sender}</b></div>}
-          {p.ref && <div>{p.method === "qris" ? "Reference" : "Lynk order"}: <b>{p.ref}</b></div>}
-          <div>{card ? "Find it in your Lynk dashboard" : p.method === "qris" ? "Find it under Transaksi in DANA Bisnis" : "Find it in your " + (store.getPaymentConfig().bank.bank || "bank") + " statement"}, then confirm what arrived.</div>
+          {p.sender && <div>{wire ? "Sender's name" : "Sender's account name"}: <b>{p.sender}</b></div>}
+          {p.ref && <div>{p.method === "qris" || wire ? "Reference" : "Lynk order"}: <b>{p.ref}</b></div>}
+          <div>{card ? "Find it in your Lynk dashboard" : p.method === "qris" ? "Find it under Transaksi in DANA Bisnis" : wire ? "Find it in myBCA under the " + cur + " Forex Pocket (BCA keeps about USD 5 per incoming wire)" : "Find it in your " + (store.getPaymentConfig().bank.bank || "bank") + " statement"}, then confirm what arrived.</div>
         </div>
         <div className="fd-form" style={{ marginTop: 14 }}>
           <div className="fd-grid2">
-            <Field label={card ? `Paid by the donor (${cur})` : p.method === "qris" ? "Arrived in DANA Bisnis (Rp)" : "Arrived in your account (Rp)"}><input className="fd-input" inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value.replace(",", "."))} /></Field>
+            <Field label={card ? `Paid by the donor (${cur})` : p.method === "qris" ? "Arrived in DANA Bisnis (Rp)" : wire ? `Arrived in your Forex Pocket (${cur})` : "Arrived in your account (Rp)"}><input className="fd-input" inputMode="decimal" value={paid} onChange={e => setPaid(e.target.value.replace(",", "."))} /></Field>
             {card ? <Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={feePct} onChange={e => setFeePct(e.target.value.replace(",", "."))} /></Field>
-              : <Field label="Value in US dollars" hint={rate ? `1 USD = ${fmtCur("IDR", rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : "Getting today's rate…"}><input className="fd-input" inputMode="decimal" value={usd} onChange={e => { setUsdTouched(true); setUsd(e.target.value.replace(",", ".")); }} /></Field>}
+              : <Field label="Value in US dollars" hint={cur === "USD" ? "Already in US dollars." : rate ? `1 USD = ${cur === "EUR" ? "\u20AC" + rate.toFixed(4) : fmtCur(cur, rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : "Getting today's rate…"}><input className="fd-input" inputMode="decimal" value={usd} onChange={e => { setUsdTouched(true); setUsd(e.target.value.replace(",", ".")); }} /></Field>}
           </div>
           {card && <div className="fd-grid2">
             <Field label="Value of the gift in US dollars" hint={rate && cur !== "USD" ? `1 USD = ${fmtCur("IDR", rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : "The receipt shows the full gift."}><input className="fd-input" inputMode="decimal" value={usd} onChange={e => { setUsdTouched(true); setUsd(e.target.value.replace(",", ".")); }} /></Field>
@@ -1869,7 +1886,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const set = (k, v) => setF(p => ({ ...p, [k]: v }));
     const rate = f.cur === "USD" || f.cur === "USDT" ? 1 : fx && fx[f.cur] ? fx[f.cur] : null;
     useEffect(() => { if (!f.usdTouched && rate && parseFloat(f.paid) > 0) set("usd", ((parseFloat(f.paid) || 0) / rate).toFixed(2)); }, [rate, f.paid, f.cur]);
-    const setMethod = mth => setF(p => ({ ...p, method: mth, cur: mth === "usdt" ? "USDT" : mth === "bank" || mth === "qris" ? "IDR" : p.cur === "USDT" ? "USD" : p.cur }));
+    const setMethod = mth => setF(p => ({ ...p, method: mth, usdTouched: false, cur: mth === "usdt" ? "USDT" : mth === "bank" || mth === "qris" ? "IDR" : mth === "wire" ? (p.cur === "EUR" ? "EUR" : "USD") : p.cur === "USDT" ? "USD" : p.cur }));
     const card = f.method === "card";
     const fee = card ? (parseFloat(f.paid) || 0) * (parseFloat(f.feePct) || 0) / 100 : 0;
     const [busy, setBusy] = useState(false);
@@ -1889,7 +1906,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     return (
       <Modal wide title="Record a gift" sub="For a gift that arrived without a form from the donor. It is verified straight away and the receipt is emailed if you add an email." onClose={onClose}>
         <div className="fd-form">
-          <Field label="How it was given"><div className="fd-seg">{["qris", "bank", "card", "usdt", "cash", "other"].map(k => <button key={k} type="button" className="fd-chip" aria-pressed={f.method === k} onClick={() => setMethod(k)}>{METHOD_LABEL[k]}</button>)}</div></Field>
+          <Field label="How it was given"><div className="fd-seg">{["qris", "bank", "wire", "card", "usdt", "cash", "other"].map(k => <button key={k} type="button" className="fd-chip" aria-pressed={f.method === k} onClick={() => setMethod(k)}>{METHOD_LABEL[k]}</button>)}</div></Field>
           <div className="fd-grid2">
             <Field label="Donor's name"><input className="fd-input" value={f.name} disabled={f.anonymous} onChange={e => set("name", e.target.value)} placeholder={f.anonymous ? "Anonymous" : "Name or organisation"} /></Field>
             <Field label="Email for the receipt (optional)"><input className="fd-input" type="email" value={f.email} onChange={e => set("email", e.target.value)} placeholder="donor@example.com" /></Field>
@@ -1897,13 +1914,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <label className="fd-check"><input type="checkbox" checked={f.anonymous} onChange={e => set("anonymous", e.target.checked)} /> Anonymous on the public ledger</label>
           <div className="fd-grid3">
             <Field label="Amount"><input className="fd-input" inputMode="decimal" value={f.paid} onChange={e => set("paid", e.target.value.replace(",", "."))} placeholder="0" /></Field>
-            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => setF(p => ({ ...p, cur: e.target.value, usdTouched: false }))}>{(f.method === "usdt" ? ["USDT"] : ["IDR", "USD", "TRY"]).map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => setF(p => ({ ...p, cur: e.target.value, usdTouched: false }))}>{(f.method === "usdt" ? ["USDT"] : f.method === "wire" ? ["USD", "EUR"] : ["IDR", "USD", "EUR", "TRY"]).map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
             <Field label="Value in US dollars" hint={rate && rate !== 1 ? `1 USD = ${fmtCur(f.cur, rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : null}><input className="fd-input" inputMode="decimal" value={f.usd} onChange={e => setF(p => ({ ...p, usd: e.target.value.replace(",", "."), usdTouched: true }))} /></Field>
           </div>
           {card && <div className="fd-grid2"><Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={f.feePct} onChange={e => set("feePct", e.target.value.replace(",", "."))} /></Field><div className="fd-sum" style={{ alignSelf: "end" }}>Lynk keeps <b>{fmtCur(f.cur, fee)}</b>; the receipt shows the full gift.</div></div>}
           <div className="fd-grid3">
             <Field label="Date received"><input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} /></Field>
-            <Field label={f.method === "usdt" ? "Transaction hash" : "Reference (optional)"}><input className="fd-input fd-mono" value={f.ref} onChange={e => set("ref", e.target.value)} placeholder={f.method === "card" ? "Lynk order number" : f.method === "usdt" ? "0x…" : "Bank reference"} spellCheck={false} /></Field>
+            <Field label={f.method === "usdt" ? "Transaction hash" : "Reference (optional)"}><input className="fd-input fd-mono" value={f.ref} onChange={e => set("ref", e.target.value)} placeholder={f.method === "card" ? "Lynk order number" : f.method === "usdt" ? "0x…" : f.method === "wire" ? "SWIFT / bank reference" : "Bank reference"} spellCheck={false} /></Field>
             <Field label="Country (optional)"><input className="fd-input" value={f.country} onChange={e => set("country", e.target.value)} /></Field>
           </div>
           <Field label="Message from the donor (optional)"><input className="fd-input" value={f.message} onChange={e => set("message", e.target.value)} /></Field>
@@ -1972,13 +1989,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
               <div key={d.id} className="fd-tr" style={{ gridTemplateColumns: G }}>
                 <div className="fd-td full"><b>{d.anonymous ? "Anonymous" : d.name}{d.anonymous && d.name && d.name !== "Anonymous patron" ? <span className="fd-sub" style={{ fontWeight: 400 }}> ({d.name})</span> : null}</b><small>{[d.email, d.country].filter(Boolean).join(" · ")}</small>{d.message && <small style={{ fontStyle: "italic" }}>“{d.message}”</small>}{isSale(d) && <Tag tone="sky">Library sale</Tag>}</div>
                 <div className="fd-td" data-l="Amount"><span className="num">{money(d.amount)}</span></div>
-                <div className="fd-td" data-l="Reference">{d.txHash ? <>{eth ? <a className="fd-mono" href={txUrl} target="_blank" rel="noopener noreferrer">{d.txHash.slice(0, 10)}…{d.txHash.slice(-6)}</a> : <span className="fd-mono">{d.txHash}</span>}<button className="fd-btn quiet sm" onClick={() => copy(d.txHash)}>Copy</button></> : <small>—</small>}{d.payment && d.payment.method !== "usdt" && (d.payment.sender || d.payment.ref || d.payment.fee) ? <small className="fd-pay">{[d.payment.sender && "from " + d.payment.sender, d.payment.ref && "order " + d.payment.ref, d.payment.fee ? `Lynk fee ${d.payment.feePct}%: ${fmtCur(d.payment.currency === "USD" ? "USD" : "IDR", d.payment.fee)}` : null].filter(Boolean).join(" · ")}</small> : null}{d.founderEntry && <small className="fd-pay">Recorded by you</small>}</div>
+                <div className="fd-td" data-l="Reference">{d.txHash ? <>{eth ? <a className="fd-mono" href={txUrl} target="_blank" rel="noopener noreferrer">{d.txHash.slice(0, 10)}…{d.txHash.slice(-6)}</a> : <span className="fd-mono">{d.txHash}</span>}<button className="fd-btn quiet sm" onClick={() => copy(d.txHash)}>Copy</button></> : <small>—</small>}{d.payment && d.payment.method !== "usdt" && (d.payment.sender || d.payment.ref || d.payment.fee) ? <small className="fd-pay">{[d.payment.sender && "from " + d.payment.sender, d.payment.ref && (d.payment.method === "card" ? "order " : "ref ") + d.payment.ref, d.payment.fee ? `Lynk fee ${d.payment.feePct}%: ${fmtCur(d.payment.currency === "USD" ? "USD" : "IDR", d.payment.fee)}` : null].filter(Boolean).join(" · ")}</small> : null}{d.founderEntry && <small className="fd-pay">Recorded by you</small>}</div>
                 <div className="fd-td" data-l="Date">{fdate(d.submittedAt)}</div>
                 <div className="fd-td full">
                   <div className="fd-actions" style={{ justifyContent: "flex-end" }}>
                     {d.verified
                       ? <><Tag tone="ok" dot>{d.verifiedBy === "chain" ? "Verified on chain" : "Verified"}</Tag>{!isSale(d) && <button className="fd-btn quiet sm" onClick={() => setOpen(d.id)}>Receipt</button>}</>
-                      : d.payment && (d.payment.method === "bank" || d.payment.method === "card" || d.payment.method === "qris")
+                      : d.payment && (d.payment.method === "bank" || d.payment.method === "card" || d.payment.method === "qris" || d.payment.method === "wire")
                         ? <button className="fd-btn ok sm" onClick={() => setCheckGift(d.id)}>Verify…</button>
                         : <Confirm className="fd-btn ok sm" armedLabel={okEmail(d.email) ? "Confirm · email receipt" : "Confirm verify"} onConfirm={() => verify(d)}>Verify</Confirm>}
                     <Confirm onConfirm={() => store.deleteDonation(d.id)}>Delete</Confirm>
@@ -2379,6 +2396,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       ["qris", "QRIS (Indonesia)", c.qris && c.qris.enabled !== false && qi && qi.ok, qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set", qi && qi.ok ? "NMID " + qi.nmid : ""],
       ["usdt", "USDT (on-chain)", c.usdt.enabled !== false, [c.usdt.network, c.usdt.asset].filter(Boolean).join(" · "), c.usdt.address],
       ["bank", "Bank transfer", c.bank.enabled !== false, [c.bank.bank, c.bank.currency].filter(Boolean).join(" · "), [c.bank.account, c.bank.holder].filter(Boolean).join(" · ")],
+      ["wire", "International wire (USD / EUR)", c.wire && c.wire.enabled !== false, c.wire ? [c.wire.bank, "SWIFT " + c.wire.swift, c.wire.currencies].filter(Boolean).join(" · ") : "Not set", c.wire ? [c.wire.account, c.wire.holder, c.wire.city].filter(Boolean).join(" · ") : ""],
       ["card", "Card (Mastercard / Visa)", c.card.enabled !== false, "Checkout page", c.card.link],
     ];
     return (
