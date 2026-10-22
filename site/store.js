@@ -684,7 +684,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         // Static QRIS from DANA Bisnis (NMID ID1026621752462, MCC 8398 charitable organisations), registered 21 Oct 2026
         // International wire (SWIFT): off until the founder fills it in under Payment channels.
         // The details live only in the database, never in this file. City only, never a home address.
-        wire: { enabled: false, bank: "", swift: "", account: "", holder: "", city: "", bankAddress: "", branch: "", currencies: "USD", feeNote: "" },
+        wire: { enabled: false, bank: "", swift: "", holder: "", city: "", bankAddress: "", pockets: {}, feeNote: "" },
         qris: { enabled: true, provider: "DANA Bisnis", payload: "00020101021126570011ID.DANA.WWW011893600915303626423802090362642380303UMI51440014ID.CO.QRIS.WWW0215ID10266217524620303UMI5204839853033605802ID5925The Brial Endowment, Orga6013Pasaman Barat61052656663048428" },
       };
       const d = _donations.find(x => x.id === "PAYMENT-CONFIG");

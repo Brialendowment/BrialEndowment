@@ -1701,7 +1701,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const head = (g, title) => <div className="fd-card-head" style={{ marginBottom: 10 }}><h3 className="fd-h2">{title}</h3><Switch on={on(g)} onChange={v => set(g, "enabled", v)}>{on(g) ? "Shown" : "Hidden"}</Switch></div>;
     const cardBad = cfg.card.link && !/^https?:\/\//i.test(cfg.card.link.trim());
     const qrisBad = cfg.qris && cfg.qris.payload && !store.parseQris(cfg.qris.payload).ok;
-    const wireBad = !cfg.wire || cfg.wire.enabled === false ? "" : !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(cfg.wire.swift || "") ? "A SWIFT code has 8 or 11 letters and numbers, e.g. JAGBIDJA." : !/^[0-9]{6,20}$/.test(cfg.wire.account || "") ? "Enter the account number, digits only." : !(cfg.wire.holder || "").trim() ? "Enter the beneficiary name." : "";
+    const wireBad = !cfg.wire || cfg.wire.enabled === false ? "" : !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(cfg.wire.swift || "") ? "A SWIFT code has 8 or 11 letters and numbers, e.g. JAGBIDJA." : !Object.values(cfg.wire.pockets || {}).some(v => /^[0-9]{6,20}$/.test(v || "")) && !/^[0-9]{6,20}$/.test(cfg.wire.account || "") ? "Enter at least one pocket number, digits only." : !(cfg.wire.holder || "").trim() ? "Enter the beneficiary name." : "";
     return (
       <Modal wide title="Payment channels" sub="How donors can give on the public donate page." onClose={onClose}>
         <QrisChannel cfg={cfg} set={set} store={store} />
@@ -1726,17 +1726,17 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <div className="fd-grid2"><Field label="Bank"><input className="fd-input" value={cfg.bank.bank} onChange={e => set("bank", "bank", e.target.value)} /></Field><Field label="Account number"><input className="fd-input" value={cfg.bank.account} onChange={e => set("bank", "account", e.target.value)} /></Field><Field label="Account holder"><input className="fd-input" value={cfg.bank.holder} onChange={e => set("bank", "holder", e.target.value)} /></Field><Field label="Currency label"><input className="fd-input" value={cfg.bank.currency} onChange={e => set("bank", "currency", e.target.value)} /></Field></div>
         </div>
         <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
-          {head("wire", "International wire (USD / EUR)")}
-          <p className="fd-sub" style={{ margin: "0 0 12px" }}>A SWIFT transfer from any bank abroad into a foreign currency pocket. The account number is the pocket's number, and the donor must send that pocket's currency. Show only a city as the beneficiary address, never the home address.</p>
+          {head("wire", "International wire (USD, EUR, SGD)")}
+          <p className="fd-sub" style={{ margin: "0 0 12px" }}>A SWIFT transfer from any bank abroad into your foreign currency pockets, one number per currency. Donors see the number for the currency they choose. Show only the regency or city as the beneficiary address, never the home address.</p>
           <div className="fd-grid2">
-            <Field label="Beneficiary name" hint="Exactly as BCA has it."><input className="fd-input" value={cfg.wire.holder || ""} onChange={e => set("wire", "holder", e.target.value)} /></Field>
-            <Field label="Account number"><input className="fd-input fd-mono" value={cfg.wire.account || ""} onChange={e => set("wire", "account", e.target.value.replace(/[^0-9]/g, ""))} /></Field>
+            <Field label="Beneficiary name" hint="Exactly as the bank has it."><input className="fd-input" value={cfg.wire.holder || ""} onChange={e => set("wire", "holder", e.target.value)} /></Field>
             <Field label="SWIFT / BIC"><input className="fd-input fd-mono" value={cfg.wire.swift || ""} onChange={e => set("wire", "swift", e.target.value.toUpperCase().replace(/\s/g, ""))} /></Field>
             <Field label="Bank"><input className="fd-input" value={cfg.wire.bank || ""} onChange={e => set("wire", "bank", e.target.value)} /></Field>
             <Field label="Bank address"><input className="fd-input" value={cfg.wire.bankAddress || ""} onChange={e => set("wire", "bankAddress", e.target.value)} /></Field>
             <Field label="Beneficiary address" hint="City and country only."><input className="fd-input" value={cfg.wire.city || ""} onChange={e => set("wire", "city", e.target.value)} /></Field>
-            <Field label="Currencies" hint="Only those you have a pocket for: USD, EUR or SGD."><input className="fd-input" value={cfg.wire.currencies || ""} onChange={e => set("wire", "currencies", e.target.value.toUpperCase())} /></Field>
-            <Field label="Branch (your reference)" hint="Not shown on the site."><input className="fd-input" value={cfg.wire.branch || ""} onChange={e => set("wire", "branch", e.target.value)} /></Field>
+          </div>
+          <div className="fd-grid3" style={{ marginTop: 4 }}>
+            {["USD", "EUR", "SGD"].map(c => <Field key={c} label={c + " pocket number"} hint={c === "USD" ? "Leave a currency empty to not offer it." : null}><input className="fd-input fd-mono" inputMode="numeric" value={(cfg.wire.pockets || {})[c] || (c === "USD" && !(cfg.wire.pockets || {}).USD && cfg.wire.account ? cfg.wire.account : "")} onChange={e => set("wire", "pockets", { ...(cfg.wire.pockets || {}), [c]: e.target.value.replace(/[^0-9]/g, "") })} /></Field>)}
           </div>
           {wireBad && <div className="fd-msg err" style={{ marginTop: 8 }}>{wireBad}</div>}
         </div>
@@ -2396,7 +2396,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       ["qris", "QRIS (Indonesia)", c.qris && c.qris.enabled !== false && qi && qi.ok, qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set", qi && qi.ok ? "NMID " + qi.nmid : ""],
       ["usdt", "USDT (on-chain)", c.usdt.enabled !== false, [c.usdt.network, c.usdt.asset].filter(Boolean).join(" · "), c.usdt.address],
       ["bank", "Bank transfer", c.bank.enabled !== false, [c.bank.bank, c.bank.currency].filter(Boolean).join(" · "), [c.bank.account, c.bank.holder].filter(Boolean).join(" · ")],
-      ["wire", "International wire (USD / EUR)", c.wire && c.wire.enabled !== false, c.wire ? [c.wire.bank, "SWIFT " + c.wire.swift, c.wire.currencies].filter(Boolean).join(" · ") : "Not set", c.wire ? [c.wire.account, c.wire.holder, c.wire.city].filter(Boolean).join(" · ") : ""],
+      ["wire", "International wire", c.wire && c.wire.enabled !== false, c.wire ? [c.wire.bank, c.wire.swift && "SWIFT " + c.wire.swift].filter(Boolean).join(" · ") || "Not set" : "Not set", c.wire ? Object.entries(c.wire.pockets || {}).filter(([, v]) => v).map(([k, v]) => k + " " + v).concat([c.wire.holder, c.wire.city]).filter(Boolean).join(" · ") : ""],
       ["card", "Card (Mastercard / Visa)", c.card.enabled !== false, "Checkout page", c.card.link],
     ];
     return (

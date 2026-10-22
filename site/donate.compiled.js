@@ -304,13 +304,13 @@ const DONATE_METHODS = [["usdt", "USDT (crypto)"], ["qris", "QRIS (Indonesia)"],
 const availableMethods = (store, pay) => DONATE_METHODS.filter(([k]) =>
   k === "qris" ? !!(pay.qris && pay.qris.enabled !== false && pay.qris.payload && store.parseQris && store.parseQris(pay.qris.payload).ok)
   : k === "card" ? !!(pay.card && pay.card.enabled !== false && pay.card.link)
-  : k === "wire" ? !!(pay.wire && pay.wire.enabled !== false && pay.wire.account && pay.wire.swift)
+  : k === "wire" ? !!(pay.wire && pay.wire.enabled !== false && pay.wire.swift && Object.keys(wirePockets(pay.wire)).length)
   : (!pay[k] || pay[k].enabled !== false));
 const methodMeta = (k, wallet, pay) => ({
   usdt: { where: "Worldwide", title: "USDT", sub: usdtNet(wallet.network).code + (wallet.autoVerify !== false ? " · verified automatically" : " · " + usdtNet(wallet.network).chain) },
   qris: { where: "Indonesia", title: "QRIS", sub: "Any bank or e-wallet app" },
   bank: { where: "Indonesia", title: "Bank transfer", sub: ((pay.bank && pay.bank.bank) || "Bank") + " · Rupiah · no fee" },
-  wire: { where: "Worldwide", title: "Bank wire", sub: wireCurs(pay.wire).join(" · ") + " · SWIFT" },
+  wire: { where: "Worldwide", title: "Bank wire", sub: wireCurs(pay.wire).join(" · ") + " accounts" },
   card: { where: "Visa · Mastercard", title: "Card", sub: "Secure checkout" }
 }[k]);
 const fmtIDR = n => "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
@@ -320,6 +320,8 @@ const DonationForm = ({
   wallet,
   method,
   methodLabel,
+  wireCur,
+  onWireCur,
   onSubmitted
 }) => {
   const h = React.createElement;
@@ -334,7 +336,8 @@ const DonationForm = ({
   useEffectD(() => { if (store.fxRates) store.fxRates().then(setFx).catch(() => {}); }, []);
   // the form follows the method chosen in step 1
   useEffectD(() => { if (method && method !== form.method) { update({ method }); setStep("form"); setError(null); } }, [method]);
-  useEffectD(() => { const c = wireCurs(pay.wire); if (c.indexOf(form.wireCur) < 0) update({ wireCur: c[0] }); }, [pay.wire && pay.wire.currencies]);
+  // the wire currency is shared with the payment details on the left
+  useEffectD(() => { const c = wireCurs(pay.wire); const want = c.indexOf(wireCur) >= 0 ? wireCur : c[0]; if (want !== form.wireCur) update({ wireCur: want }); }, [wireCur, JSON.stringify(wirePockets(pay.wire))]);
   const rate = cur => (cur === "USD" ? 1 : fx && fx[cur] ? fx[cur] : (store.FX_FALLBACK || { IDR: 16500 })[cur] || 0);
   const m = form.method;
   const usd = (() => {
@@ -436,7 +439,7 @@ const DonationForm = ({
       : m === "wire" ? h(React.Fragment, null,
         lab("Amount sent", null, "don-amount"),
         bigAmount(form.wireCur === "EUR" ? "€" : form.wireCur === "SGD" ? "S$" : "$", form.wireAmount, v => update({ wireAmount: v }), "500",
-          h("select", { value: form.wireCur, onChange: e => update({ wireCur: e.target.value }), "aria-label": "Currency", style: { background: "transparent", border: "1px solid " + DS.line, color: "#E8E4DC", fontFamily: mono, fontSize: 16, minHeight: 40, padding: "0 8px", colorScheme: "dark" } },
+          h("select", { value: form.wireCur, onChange: e => { update({ wireCur: e.target.value }); if (onWireCur) onWireCur(e.target.value); }, "aria-label": "Currency", style: { background: "transparent", border: "1px solid " + DS.line, color: "#E8E4DC", fontFamily: mono, fontSize: 16, minHeight: 40, padding: "0 8px", colorScheme: "dark" } },
             wireCurs(store.getPaymentConfig().wire).map(c => h("option", { key: c, value: c }, c)))),
         approx)
       : h(React.Fragment, null,
@@ -581,40 +584,53 @@ const BankPanel = ({ bank, copied, copy }) => hD("div", { style: dPanel },
     "We match it against our " + bank.bank + " statement and email your receipt."] }),
   hD(RecordMethodBtn, { method: "bank" }, "I have transferred · record my gift →"));
 
-const wireCurs = wire => { const c = String((wire && wire.currencies) || "USD").toUpperCase().match(/USD|EUR|SGD/g); return c && c.length ? [...new Set(c)] : ["USD"]; };
+// A wire goes to one foreign currency pocket per currency (Bank Jago: each pocket takes only its own currency).
+// wire.pockets = { USD: "8401…", EUR: "9781…", SGD: "7021…" }; older configs used wire.account + wire.currencies.
+const WIRE_ORDER = ["USD", "EUR", "SGD"];
+const wirePockets = wire => {
+  const p = {};
+  if (wire && wire.pockets) WIRE_ORDER.forEach(c => { const v = String(wire.pockets[c] || "").replace(/\s/g, ""); if (v) p[c] = v; });
+  if (!Object.keys(p).length && wire && wire.account) { const c = (String(wire.currencies || "USD").toUpperCase().match(/USD|EUR|SGD/) || ["USD"])[0]; p[c] = String(wire.account).replace(/\s/g, ""); }
+  return p;
+};
+const wireCurs = wire => { const c = Object.keys(wirePockets(wire)); return c.length ? WIRE_ORDER.filter(x => c.indexOf(x) >= 0) : ["USD"]; };
 const wireCurText = wire => { const c = wireCurs(wire); return c.length > 1 ? c.slice(0, -1).join(", ") + " or " + c[c.length - 1] : c[0]; };
-const WirePanel = ({ wire, copied, copy }) => {
+const WIRE_NAMES = { USD: "US dollars", EUR: "Euros", SGD: "Singapore dollars" };
+const WirePanel = ({ wire, cur, onCur, copied, copy }) => {
+  const pockets = wirePockets(wire), curs = wireCurs(wire);
+  const c = curs.indexOf(cur) >= 0 ? cur : curs[0];
   const rows = [
-    ["Beneficiary name", wire.holder, "wname"],
-    ["Account number", wire.account, "wacct"],
-    ["SWIFT / BIC", wire.swift, "wswift"],
+    ["Beneficiary name", wire.holder, "wname", true],
+    ["Account number (" + c + ")", pockets[c], "wacct", true],
+    ["SWIFT / BIC", wire.swift, "wswift", true],
     ["Bank", wire.bank, "wbank"],
     ["Bank address", wire.bankAddress, "wbaddr"],
     ["Beneficiary address", wire.city, "wcity"]
   ].filter(r => r[1]);
-  const all = rows.map(r => r[0] + ": " + r[1]).concat(["Currency: " + wireCurs(wire).join(", "), "Purpose: Donation"]).join("\n");
+  const all = rows.map(r => r[0].replace(/ \(.*\)$/, "") + ": " + r[1]).concat(["Currency: " + c, "Purpose: Donation"]).join("\n");
   return hD("div", { style: dPanel },
     dEyebrow("Step 1 · Pay · Worldwide"),
     dTitle("Send a bank wire in " + wireCurText(wire) + ".", 14),
-    dBody("From any bank in the world, as an international (SWIFT) transfer" + (wire.bank ? " to our account at " + wire.bank.replace(/^PT\s+/i, "") : "") + ". Please send " + wireCurText(wire) + " only; other currencies cannot be received.", { marginBottom: 20 }),
+    dBody("An international (SWIFT) transfer from any bank in the world. Choose your currency: each one has its own account number.", { marginBottom: 18 }),
+    curs.length > 1 ? hD("div", { role: "radiogroup", "aria-label": "Currency of your wire", className: "b-don-curs", style: { display: "grid", gridTemplateColumns: "repeat(" + curs.length + ", 1fr)", gap: 8, marginBottom: 20 } },
+      curs.map(k => hD("button", { key: k, type: "button", role: "radio", "aria-checked": k === c, onClick: () => onCur(k), style: { minHeight: 52, padding: "6px 8px", background: k === c ? "rgba(201,169,97,0.16)" : "transparent", border: "1px solid " + (k === c ? DS.gold : "rgba(232,228,220,0.2)"), color: k === c ? DS.ink : DS.mute, cursor: "pointer", fontFamily: DS.sans, lineHeight: 1.25 } },
+        hD("span", { style: { display: "block", fontFamily: DS.mono, fontSize: 14, letterSpacing: "0.08em", color: k === c ? DS.goldSoft : DS.ink } }, k),
+        hD("span", { style: { display: "block", fontSize: 11.5, marginTop: 2 } }, WIRE_NAMES[k])))) : null,
     hD("div", { style: { display: "grid", gap: 14 } },
-      rows.map(([label, value, id]) => hD("div", { key: id },
+      rows.map(([label, value, id, boxed]) => hD("div", { key: id },
         dLabel(label),
-        id === "wacct" || id === "wswift" || id === "wname"
+        boxed
           ? hD(DCopyRow, { value, id, copied, onCopy: copy, big: id === "wacct", label: label.toLowerCase() })
           : hD("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 } },
               hD("span", { style: { fontFamily: DS.sans, fontSize: 15, color: DS.ink, fontWeight: 500, lineHeight: 1.45, minWidth: 0 } }, value),
-              hD("button", { type: "button", onClick: () => copy(value, id), "aria-label": "Copy " + label.toLowerCase(), style: { flexShrink: 0, minHeight: 36, padding: "0 12px", background: "transparent", border: "1px solid rgba(201,169,97,0.45)", color: copied === id ? DS.green : DS.goldSoft, cursor: "pointer", fontFamily: DS.mono, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" } }, copied === id ? "Copied ✓" : "Copy")))),
-      hD("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 } },
-        hD(DPair, { label: "Currency" }, wireCurs(wire).join(", ")),
-        hD(DPair, { label: "Purpose" }, "Donation"))),
-    hD("button", { type: "button", onClick: () => copy(all, "wall"), style: { marginTop: 18, width: "100%", minHeight: 46, padding: "0 18px", background: copied === "wall" ? DS.green : DS.gold, color: "#0A1628", border: "none", cursor: "pointer", fontFamily: DS.sans, fontSize: 13, fontWeight: 600, letterSpacing: "0.08em" } }, copied === "wall" ? "All details copied ✓" : "Copy all details"),
-    hD("div", { style: { marginTop: 14, fontFamily: DS.sans, fontSize: 13, lineHeight: 1.6, color: DS.mute } },
-      wire.feeNote || "Your bank may charge to send an international wire, and banks along the way can deduct a small fee. Wires suit gifts of USD 100 or more; for smaller gifts, USDT or QRIS costs less. Gifts above USD 10,000 need a purpose code from your bank: choose donation or gift."),
+              hD("button", { type: "button", onClick: () => copy(value, id), "aria-label": "Copy " + label.toLowerCase(), style: { flexShrink: 0, minHeight: 36, padding: "0 12px", background: "transparent", border: "1px solid rgba(201,169,97,0.45)", color: copied === id ? DS.green : DS.goldSoft, cursor: "pointer", fontFamily: DS.mono, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" } }, copied === id ? "Copied ✓" : "Copy"))))),
+    hD("button", { type: "button", onClick: () => copy(all, "wall"), style: { marginTop: 20, width: "100%", minHeight: 46, padding: "0 18px", background: copied === "wall" ? DS.green : DS.gold, color: "#0A1628", border: "none", cursor: "pointer", fontFamily: DS.sans, fontSize: 13, fontWeight: 600, letterSpacing: "0.08em" } }, copied === "wall" ? "All details copied ✓" : "Copy all details (" + c + ")"),
+    hD("div", { style: { marginTop: 12, fontFamily: DS.sans, fontSize: 13, lineHeight: 1.6, color: DS.mute } },
+      wire.feeNote || "Send " + c + " only to this account. Your bank may charge a sending fee, so wires suit gifts of USD 100 or more."),
     hD(DSteps, { items: [
-      "In your bank, choose an international (SWIFT) transfer in " + wireCurText(wire) + ".",
-      hD(React.Fragment, null, "Enter the details above. If your bank offers it, choose the ", dStrong("OUR"), " charge option so the full amount arrives."),
-      "Record your gift with the amount, currency and date. We match it against our bank statement and email your receipt."] }),
+      "In your bank, choose an international (SWIFT) transfer in " + c + ".",
+      hD(React.Fragment, null, "Enter the details above, purpose ", dStrong("donation"), ". If offered, choose the ", dStrong("OUR"), " charge option so the full amount arrives."),
+      "Record your gift with the amount and date. We match it against our statement and email your receipt."] }),
     hD(RecordMethodBtn, { method: "wire" }, "I have sent it · record my gift →"));
 };
 
@@ -658,6 +674,7 @@ const DonatePage = ({
     card: {}
   };
   const methods = availableMethods(store, pay);
+  const [wireCur, setWireCur] = useStateD(null);
   const [picked, setPicked] = useStateD(() => { try { return new URLSearchParams(location.search).get("method") || null; } catch (e) { return null; } });
   const method = methods.some(([k]) => k === picked) ? picked : methods[0] ? methods[0][0] : "usdt";
   // "record my gift" buttons and other pages can switch the method
@@ -688,7 +705,7 @@ const DonatePage = ({
   const panel = method === "qris" ? hD(QrisCard, { qris: pay.qris })
     : method === "bank" ? hD(BankPanel, { bank: pay.bank, copied, copy })
     : method === "card" ? hD(CardPanel, { card: pay.card })
-    : method === "wire" ? hD(WirePanel, { wire: pay.wire, copied, copy })
+    : method === "wire" ? hD(WirePanel, { wire: pay.wire, cur: wireCur, onCur: setWireCur, copied, copy })
     : hD(UsdtPanel, { wallet, copied, copy });
 
   return hD("div", { style: { minHeight: "100vh", background: "#0A1628", color: DS.ink } },
@@ -721,7 +738,7 @@ const DonatePage = ({
       // ---- step 1 details + step 2 form ----
       hD("div", { style: { display: "grid", gridTemplateColumns: "minmax(320px, 1fr) 1.2fr", gap: 28, alignItems: "start" } },
         hD("div", { id: "donate-pay", style: { minWidth: 0 } }, panel),
-        hD("div", { style: { minWidth: 0 } }, hD(DonationForm, { wallet, method, methodLabel: methodMeta(method, wallet, pay).title }))),
+        hD("div", { style: { minWidth: 0 } }, hD(DonationForm, { wallet, method, methodLabel: methodMeta(method, wallet, pay).title, wireCur, onWireCur: setWireCur }))),
 
       // ---- recent gifts ----
       donations.length > 0 && hD("section", { "aria-labelledby": "don-recent", style: { marginTop: 80 } },
