@@ -682,8 +682,9 @@ window.BrialClipboard = { copy: copyToClipboard };
         bank: { enabled: true, bank: "Bank Jago", account: "107540735665", holder: "Brial Asif Hayi Paka", currency: "IDR \u00b7 Rupiah" },
         card: { enabled: true, link: "https://lynk.id/brial/s/e1896978jwq9" },
         // Static QRIS from DANA Bisnis (NMID ID1026621752462, MCC 8398 charitable organisations), registered 21 Oct 2026
-        // International wire (SWIFT) in USD or EUR into the BCA Forex Pocket; city only, never the home address
-        wire: { enabled: true, bank: "PT Bank Central Asia Tbk (BCA)", swift: "CENAIDJA", account: "1630714989", holder: "BRIAL ASIF HAYI PAKA", city: "Padang, Indonesia", bankAddress: "Menara BCA, Grand Indonesia, Jl. M.H. Thamrin No. 1, Jakarta 10310, Indonesia", branch: "KCP Pemuda, Padang", currencies: "USD, EUR", feeNote: "" },
+        // International wire (SWIFT): off until the founder fills it in under Payment channels.
+        // The details live only in the database, never in this file. City only, never a home address.
+        wire: { enabled: false, bank: "", swift: "", account: "", holder: "", city: "", bankAddress: "", branch: "", currencies: "USD", feeNote: "" },
         qris: { enabled: true, provider: "DANA Bisnis", payload: "00020101021126570011ID.DANA.WWW011893600915303626423802090362642380303UMI51440014ID.CO.QRIS.WWW0215ID10266217524620303UMI5204839853033605802ID5925The Brial Endowment, Orga6013Pasaman Barat61052656663048428" },
       };
       const d = _donations.find(x => x.id === "PAYMENT-CONFIG");
