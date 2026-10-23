@@ -10090,7 +10090,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     };
     return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Ledger", lede: "Every settled movement: verified gifts and sales in, payments out. Unverified gifts and unpaid bills are left out until they settle." }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: exportCSV, disabled: !list.length }, "Download CSV")), /* @__PURE__ */ React.createElement("div", { className: "fd-toolbar" }, /* @__PURE__ */ React.createElement(Seg, { value: dir, onChange: setDir, items: [["all", "All", settled.length], ["in", "Money in", F.received.length], ["out", "Money out", F.paidOut.length]] }), /* @__PURE__ */ React.createElement("select", { className: "fd-input", style: { width: "auto" }, value: year, onChange: (e) => setYear(e.target.value), "aria-label": "Year" }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "All years"), years.map((y) => /* @__PURE__ */ React.createElement("option", { key: y, value: y }, y)), F.paidOut.some((x) => !x.date) && /* @__PURE__ */ React.createElement("option", { value: "early" }, "Before 2026")), /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Search description or reference" })), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Description"), /* @__PURE__ */ React.createElement("div", null, "Category"), /* @__PURE__ */ React.createElement("div", null, "Date · reference"), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, "Amount")), list.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "No movements match." }) : list.map((x) => /* @__PURE__ */ React.createElement(MoveRow, { key: x.dir + x.id, x, G, showDir: true }))), list.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "fd-totals" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Money in"), /* @__PURE__ */ React.createElement("b", { className: "in" }, "+", money(tin))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Money out"), /* @__PURE__ */ React.createElement("b", { className: "out" }, "−", money(tout))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Difference"), /* @__PURE__ */ React.createElement("b", null, tin - tout < 0 ? "−" : "", money(Math.abs(tin - tout))))));
   }
-  const CHANNEL_KEYS = ["usdt", "btc", "qris", "bank", "card"];
+  const CHANNEL_KEYS = ["crypto", "qris", "bank", "card"];
   function ChannelsView({ store }) {
     const [open, setOpen] = useState(false);
     const [drag, setDrag] = useState(null);
@@ -10103,20 +10103,20 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const idrLive = c.bank.enabled !== false && !!c.bank.account;
     const cards = {
       qris: { name: "QRIS (Indonesia)", on: !!(c.qris && c.qris.enabled !== false && qi && qi.ok), lines: [qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set"], mono: qi && qi.ok ? "NMID " + qi.nmid : "" },
-      usdt: {
-        name: "USDT (on-chain)",
-        on: c.usdt.enabled !== false,
-        lines: [[c.usdt.network, c.usdt.asset].filter(Boolean).join(" · ") + (c.usdt.anyEvm ? " · own wallet, every EVM network" : "")],
-        mono: c.usdt.address,
-        note: c.usdt.autoVerify === false ? "Automatic checks are off. Each gift waits for you." : c.usdt.anyEvm ? "Checked on chain automatically on BNB Chain, Ethereum, Polygon and Arbitrum." : "Checked on chain automatically. Only gifts on the network above are verified on their own."
-      },
-      btc: {
-        name: "Bitcoin (BTC)",
-        on: !!(c.btc && c.btc.enabled !== false && BTC_ADDR.test(String(c.btc.address || ""))),
-        lines: ["Bitcoin network · " + (c.btc && c.btc.confirmations || 2) + " confirmations"],
-        mono: c.btc && c.btc.address || "",
-        note: !c.btc || c.btc.autoVerify !== false ? "Checked on chain automatically and valued in dollars on the day it arrives." : "Automatic checks are off. Each gift waits for you."
-      },
+      crypto: (() => {
+        const usdtLive = c.usdt.enabled !== false && !!c.usdt.address;
+        const btcLive = !!(c.btc && c.btc.enabled !== false && BTC_ADDR.test(String(c.btc.address || "")));
+        return {
+          name: "Crypto",
+          on: usdtLive || btcLive,
+          lines: [
+            usdtLive ? "USDT · " + [c.usdt.network, c.usdt.anyEvm ? "own wallet, every EVM network" : ""].filter(Boolean).join(" · ") : "USDT · hidden",
+            btcLive ? "Bitcoin · " + (c.btc && c.btc.confirmations || 2) + " confirmations" : "Bitcoin · hidden"
+          ],
+          mono: [usdtLive && c.usdt.address, btcLive && c.btc.address].filter(Boolean).join("\n"),
+          note: "Checked on chain automatically" + (c.usdt.autoVerify === false || c.btc && c.btc.autoVerify === false ? " where switched on in Edit channels." : "; Bitcoin is valued in dollars on the day it arrives.")
+        };
+      })(),
       bank: {
         name: "Bank transfer",
         on: idrLive || wireLive,
@@ -10128,7 +10128,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       },
       card: { name: "Card (Mastercard / Visa)", on: c.card.enabled !== false && !!c.card.link, lines: ["Checkout page"], mono: c.card.link }
     };
-    const saved = (Array.isArray(c.order) ? c.order : []).map((k) => k === "wire" ? "bank" : k).filter((k) => CHANNEL_KEYS.indexOf(k) >= 0);
+    const saved = (Array.isArray(c.order) ? c.order : []).map((k) => k === "wire" ? "bank" : k === "usdt" || k === "btc" ? "crypto" : k).filter((k) => CHANNEL_KEYS.indexOf(k) >= 0);
     const order = [...new Set(saved.concat(CHANNEL_KEYS))];
     const move = (from, to) => {
       if (from == null || to == null || from === to || to < 0 || to >= order.length) return;
@@ -10176,7 +10176,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         },
         /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginBottom: 6, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { className: "fd-grip", "aria-hidden": "true", title: "Drag to reorder" }, "⠿"), /* @__PURE__ */ React.createElement("span", { className: "fd-pos", title: "Position on the donate page" }, i + 1), /* @__PURE__ */ React.createElement("h2", { className: "fd-h2", style: { margin: 0 } }, x.name)), /* @__PURE__ */ React.createElement(Tag, { tone: x.on ? "ok" : "", dot: true }, x.on ? "Shown" : "Hidden")),
         x.lines.map((l, n) => /* @__PURE__ */ React.createElement("p", { key: n, className: "fd-sub", style: { margin: n ? "4px 0 0" : 0 } }, l)),
-        /* @__PURE__ */ React.createElement("p", { className: "fd-mono", style: { margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" } }, x.mono || "Not set"),
+        /* @__PURE__ */ React.createElement("p", { className: "fd-mono", style: { margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)", whiteSpace: "pre-line" } }, x.mono || "Not set"),
         x.note && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "10px 0 0" } }, x.note),
         /* @__PURE__ */ React.createElement("div", { className: "fd-chan-move" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === 0, onClick: () => move(i, i - 1), "aria-label": "Move " + x.name + " earlier" }, "← Earlier"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === order.length - 1, onClick: () => move(i, i + 1), "aria-label": "Move " + x.name + " later" }, "Later →"))
       );

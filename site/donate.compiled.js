@@ -47,14 +47,33 @@ function makeQR(text, ecLevel = "M") {
   }
 }
 
-// SVG rendering of QR — pure JSX
+// Coin marks drawn in the middle of a wallet QR so the donor sees at a glance which coin the code is for.
+// Drawn in a 100 x 100 box. The Bitcoin mark is the public-domain logo; the Tether mark is used only to name the asset.
+const QR_LOGOS = {
+  BTC: { label: "Bitcoin", draw: () => React.createElement("g", null,
+    React.createElement("rect", { width: 100, height: 100, rx: 22, fill: "#F7931A" }),
+    React.createElement("g", { transform: "rotate(14 50 50)", fill: "#FFFFFF" },
+      React.createElement("rect", { x: 39, y: 15, width: 6, height: 14 }), React.createElement("rect", { x: 51, y: 15, width: 6, height: 14 }),
+      React.createElement("rect", { x: 39, y: 71, width: 6, height: 14 }), React.createElement("rect", { x: 51, y: 71, width: 6, height: 14 }),
+      React.createElement("path", { fillRule: "evenodd", d: "M30 25h28c10 0 17 5 17 13 0 5.5-3 9.5-8 11 6.5 1.5 10.5 6 10.5 12.5 0 8.5-7 13.5-18 13.5H30v-9h6V34h-6zM46 34v12h11c4 0 6.5-2.3 6.5-6s-2.5-6-6.5-6zM46 55v12h12.5c4.5 0 7-2.3 7-6s-2.5-6-7-6z" }))) },
+  USDT: { label: "Tether USDT", draw: () => React.createElement("g", null,
+    React.createElement("circle", { cx: 50, cy: 50, r: 50, fill: "#26A17B" }),
+    React.createElement("g", { fill: "#FFFFFF" },
+      React.createElement("rect", { x: 24, y: 22, width: 52, height: 12 }),
+      React.createElement("rect", { x: 43.5, y: 22, width: 13, height: 58 })),
+    React.createElement("ellipse", { cx: 50, cy: 47, rx: 27, ry: 7.5, fill: "none", stroke: "#FFFFFF", strokeWidth: 5 })) }
+};
+// SVG rendering of QR — pure JSX. With a `logo`, the code uses the highest error correction (H, which
+// tolerates 30% damage) and leaves a clear square in the middle, about 6% of the code, for the coin mark.
 const QRCode = ({
   value,
   size = 240,
   fg = "#0A1628",
-  bg = "#F8F4EB"
+  bg = "#F8F4EB",
+  logo
 }) => {
-  const qr = useMemoD(() => makeQR(value, "M"), [value]);
+  const mark = logo && QR_LOGOS[logo];
+  const qr = useMemoD(() => makeQR(value, mark ? "H" : "M"), [value, !!mark]);
   if (!qr) {
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -75,8 +94,13 @@ const QRCode = ({
   const count = qr.getModuleCount();
   const cell = size / count;
   const cells = [];
+  // the cleared middle: an odd number of modules, roughly a quarter of the width
+  let hole = mark ? Math.round(count * 0.25) : 0;
+  if (hole && hole % 2 === 0) hole += 1;
+  const h0 = (count - hole) / 2, h1 = h0 + hole;
   for (let r = 0; r < count; r++) {
     for (let c = 0; c < count; c++) {
+      if (hole && r >= h0 && r < h1 && c >= h0 && c < h1) continue;
       if (qr.isDark(r, c)) {
         cells.push(/*#__PURE__*/React.createElement("rect", {
           key: r + "-" + c,
@@ -96,8 +120,10 @@ const QRCode = ({
     style: {
       background: bg,
       display: "block"
-    }
-  }, cells);
+    },
+    role: "img",
+    "aria-label": mark ? mark.label + " address QR code" : "QR code"
+  }, cells, hole ? React.createElement("g", { transform: `translate(${(h0 + 0.6) * cell} ${(h0 + 0.6) * cell}) scale(${(hole - 1.2) * cell / 100})` }, mark.draw()) : null);
 };
 
 // ---------- Copy-to-clipboard helper ----------
@@ -299,25 +325,35 @@ const QrisCard = ({ qris }) => {
       "Record your gift with the amount and time. We match it and email your receipt."] }),
     hD(RecordMethodBtn, { method: "qris" }, "I have paid · record my gift →"));
 };
-const DONATE_METHODS = [["usdt", "USDT (crypto)"], ["btc", "Bitcoin (BTC)"], ["qris", "QRIS (Indonesia)"], ["bank", "Bank transfer (IDR)"], ["wire", "International wire (USD/EUR)"], ["card", "Card via Lynk"]];
+const DONATE_METHODS = [["crypto", "Crypto (USDT, BTC)"], ["usdt", "USDT (crypto)"], ["btc", "Bitcoin (BTC)"], ["qris", "QRIS (Indonesia)"], ["bank", "Bank transfer (IDR)"], ["wire", "International wire (USD/EUR)"], ["card", "Card via Lynk"]];
 // The ways to give that are switched on and complete in Payment channels, in display order
 // Rupiah transfers and international wires are one "Bank transfer" choice on the page, with a currency picker.
 const idrOn = pay => !!(pay.bank && pay.bank.enabled !== false && pay.bank.account);
 const wireOn = pay => !!(pay.wire && pay.wire.enabled !== false && pay.wire.swift && Object.keys(wirePockets(pay.wire)).length);
 const bankCurs = pay => (idrOn(pay) ? ["IDR"] : []).concat(wireOn(pay) ? wireCurs(pay.wire) : []);
-const CHANNEL_ORDER = ["usdt", "btc", "qris", "bank", "card"];
+// USDT and Bitcoin are one "Crypto" choice on the page, with an asset picker.
+const CHANNEL_ORDER = ["crypto", "qris", "bank", "card"];
+const usdtOn = pay => !(pay.usdt && pay.usdt.enabled === false) && !!(pay.usdt && pay.usdt.address);
 const BTC_ADDR = /^(bc1[02-9ac-hj-np-z]{8,87}|[13][1-9A-HJ-NP-Za-km-z]{25,34})$/i;
-const channelOrder = pay => { const o = Array.isArray(pay.order) ? pay.order.map(k => (k === "wire" ? "bank" : k)).filter(k => CHANNEL_ORDER.indexOf(k) >= 0) : []; return [...new Set(o.concat(CHANNEL_ORDER))]; };
+const channelOrder = pay => { const o = Array.isArray(pay.order) ? pay.order.map(k => (k === "wire" ? "bank" : k === "usdt" || k === "btc" ? "crypto" : k)).filter(k => CHANNEL_ORDER.indexOf(k) >= 0) : []; return [...new Set(o.concat(CHANNEL_ORDER))]; };
 const availableMethods = (store, pay) => {
   const ok = k => k === "qris" ? !!(pay.qris && pay.qris.enabled !== false && pay.qris.payload && store.parseQris && store.parseQris(pay.qris.payload).ok)
     : k === "card" ? !!(pay.card && pay.card.enabled !== false && pay.card.link)
     : k === "bank" ? bankCurs(pay).length > 0
-    : k === "btc" ? !!(pay.btc && pay.btc.enabled !== false && BTC_ADDR.test(String(pay.btc.address || "")))
+    : k === "crypto" ? cryptoAssets(pay).length > 0
     : (!pay[k] || pay[k].enabled !== false);
   return channelOrder(pay).filter(ok).map(k => DONATE_METHODS.find(([x]) => x === k));
 };
+const btcOn = pay => !!(pay.btc && pay.btc.enabled !== false && BTC_ADDR.test(String(pay.btc.address || "")));
+const cryptoAssets = pay => (usdtOn(pay) ? ["USDT"] : []).concat(btcOn(pay) ? ["BTC"] : []);
+// each asset has its own colour, so the donor always sees which one they are sending
+const ASSET = {
+  USDT: { name: "Tether", color: "#26A17B", sub: "Stablecoin" },
+  BTC: { name: "Bitcoin", color: "#F7931A", sub: "Bitcoin network" }
+};
 const CUR_NAMES = { IDR: "Rupiah", USD: "US dollars", EUR: "Euros", SGD: "Singapore dollars" };
 const methodMeta = (k, wallet, pay) => ({
+  crypto: { where: "Worldwide", title: "Crypto", sub: cryptoAssets(pay).join(" · ") + ((wallet.autoVerify !== false) ? " · verified automatically" : "") },
   usdt: { where: "Worldwide", title: "USDT", sub: usdtNet(wallet.network).code + (wallet.autoVerify !== false ? " · verified automatically" : " · " + usdtNet(wallet.network).chain) },
   btc: { where: "Worldwide", title: "Bitcoin", sub: "BTC" + (!pay.btc || pay.btc.autoVerify !== false ? " · verified automatically" : " · Bitcoin network") },
   qris: { where: "Indonesia", title: "QRIS", sub: "Any bank or e-wallet app" },
@@ -335,6 +371,8 @@ const DonationForm = ({
   wireCur,
   onWireCur,
   curOptions,
+  assets,
+  onAsset,
   onSubmitted
 }) => {
   const h = React.createElement;
@@ -364,15 +402,21 @@ const DonationForm = ({
     const v = parseFloat(form.cardAmount) || 0;
     return form.cardCur === "USD" ? v : v / rate("IDR");
   })();
+  // Warns the moment a donor pastes a hash from the other coin, with a one-tap switch
+  const coinMismatch = other => h("div", { role: "alert", style: { marginTop: 10, padding: "12px 14px", background: "rgba(229,134,134,0.1)", border: "1px solid rgba(229,134,134,0.55)", fontFamily: "'Manrope', sans-serif", fontSize: 13.5, lineHeight: 1.55, color: "#F2C4C4" } },
+    other === "BTC" ? "This looks like a Bitcoin transaction ID, not a USDT hash (a USDT hash starts with 0x)." : "This looks like a USDT hash (it starts with 0x), not a Bitcoin transaction ID.",
+    onAsset && assets && assets.indexOf(other) >= 0 ? h("button", { type: "button", onClick: () => onAsset(other), style: { display: "block", marginTop: 8, minHeight: 40, padding: "0 14px", background: "transparent", border: "1px solid rgba(242,196,196,0.6)", color: "#F2C4C4", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase" } }, other === "BTC" ? "I sent Bitcoin · switch to BTC" : "I sent USDT · switch to USDT") : null);
   const submit = e => {
     e?.preventDefault();
     setError(null);
     if (m === "usdt") {
       if (!(parseFloat(form.amount) > 0)) return setError("Please enter the amount you sent.");
       if (!form.txHash.trim()) return setError("Please paste your transaction hash so we can verify it on chain.");
+      if (/^[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("This looks like a Bitcoin transaction ID (no 0x at the start). If you sent Bitcoin, choose BTC above; a USDT hash starts with 0x.");
     } else if (m === "btc") {
       if (!(parseFloat(form.btc) > 0)) return setError("Please enter the amount of BTC you sent.");
-      if (!/^(0x)?[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("Please paste the transaction ID: 64 letters and numbers, from your wallet or the exchange withdrawal page.");
+      if (/^0x[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("This looks like a USDT (BNB Chain or Ethereum) hash, because it starts with 0x. If you sent USDT, choose USDT above; a Bitcoin transaction ID has no 0x.");
+      if (!/^[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("Please paste the transaction ID: 64 letters and numbers, from your wallet or the exchange withdrawal page.");
     } else if (m === "bank" || m === "qris") {
       if (!(parseFloat(form.idr) >= 1000)) return setError(m === "qris" ? "Please enter the amount you paid, in Rupiah." : "Please enter the amount you transferred, in Rupiah.");
     } else if (m === "wire") {
@@ -451,11 +495,11 @@ const DonationForm = ({
     h("div", { style: { marginTop: 22 } },
       m === "usdt" ? h(React.Fragment, null,
         lab("Amount in USDT", null, "don-amount"),
-        bigAmount("$", form.amount, v => update({ amount: v }), "1,000", h("span", { style: { fontFamily: mono, fontSize: 12, color: DS.mute, letterSpacing: "0.12em" } }, "USDT")),
+        bigAmount("$", form.amount, v => update({ amount: v }), "1,000", (assets && assets.length > 1 && onAsset ? h("select", { value: m === "btc" ? "BTC" : "USDT", onChange: e => onAsset(e.target.value), "aria-label": "Coin", style: { background: "transparent", border: "1px solid " + DS.line, color: "#E8E4DC", fontFamily: mono, fontSize: 16, minHeight: 40, padding: "0 8px", colorScheme: "dark" } }, assets.map(c => h("option", { key: c, value: c }, c))) : h("span", { style: { fontFamily: mono, fontSize: 12, color: DS.mute, letterSpacing: "0.12em" } }, "USDT"))),
         h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [100, 500, 1000, 5000, 10000].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ amount: String(amt) }), style: { minHeight: 40, padding: "0 14px", background: form.amount === String(amt) ? "rgba(201,169,97,0.18)" : "transparent", border: "1px solid rgba(201,169,97,0.4)", color: "#E3C98A", cursor: "pointer", fontFamily: mono, fontSize: 12, letterSpacing: "0.06em" } }, "$", amt.toLocaleString()))))
       : m === "btc" ? h(React.Fragment, null,
         lab("Amount in BTC", null, "don-amount"),
-        bigAmount("\u20bf", form.btc, v => update({ btc: v }), "0.001", h("span", { style: { fontFamily: mono, fontSize: 12, color: DS.mute, letterSpacing: "0.12em" } }, "BTC")),
+        bigAmount("\u20bf", form.btc, v => update({ btc: v }), "0.001", (assets && assets.length > 1 && onAsset ? h("select", { value: m === "btc" ? "BTC" : "USDT", onChange: e => onAsset(e.target.value), "aria-label": "Coin", style: { background: "transparent", border: "1px solid " + DS.line, color: "#E8E4DC", fontFamily: mono, fontSize: 16, minHeight: 40, padding: "0 8px", colorScheme: "dark" } }, assets.map(c => h("option", { key: c, value: c }, c))) : h("span", { style: { fontFamily: mono, fontSize: 12, color: DS.mute, letterSpacing: "0.12em" } }, "BTC"))),
         h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [0.0005, 0.001, 0.005, 0.01, 0.05].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ btc: String(amt) }), style: { minHeight: 40, padding: "0 12px", background: form.btc === String(amt) ? "rgba(201,169,97,0.18)" : "transparent", border: "1px solid rgba(201,169,97,0.4)", color: "#E3C98A", cursor: "pointer", fontFamily: mono, fontSize: 12, letterSpacing: "0.02em" } }, "\u20bf " + amt))),
         usd > 0 ? hint("About " + fmtUSD(usd) + " at today's price (1 BTC = " + fmtUSD(btcRate()).replace(/\.00$/, "") + (btcUsd && btcUsd.source !== "estimate" ? ", " + btcUsd.source : ", estimate") + "). The receipt uses the price when your transfer is confirmed.") : null)
       : m === "bank" || m === "qris" ? h(React.Fragment, null,
@@ -482,10 +526,12 @@ const DonationForm = ({
     m === "btc" ? h("div", { style: { marginTop: 22 } },
       lab("Transaction ID ", h("span", { style: { color: "#4FD1C5", marginLeft: 4 } }, "\xB7 required"), "don-tx"),
       boxInput({ id: "don-tx", value: form.txHash, onChange: e => update({ txHash: e.target.value }), placeholder: "57b41a7d7e24…", spellCheck: false }),
+      /^0x[0-9a-fA-F]{64}$/.test(form.txHash.trim()) ? coinMismatch("USDT") : null,
       hint("Copy it from your wallet or the exchange withdrawal page (also called TXID or hash). We use it to confirm your transfer on the Bitcoin network."))
     : m === "usdt" ? h("div", { style: { marginTop: 22 } },
       lab("Transaction hash ", h("span", { style: { color: "#4FD1C5", marginLeft: 4 } }, "\xB7 required"), "don-tx"),
       boxInput({ id: "don-tx", value: form.txHash, onChange: e => update({ txHash: e.target.value }), placeholder: "0x8a4f7d3c…", spellCheck: false }),
+      /^[0-9a-fA-F]{64}$/.test(form.txHash.trim()) ? coinMismatch("BTC") : null,
       hint("Copy it from your wallet or the exchange withdrawal page. We use it to confirm your transfer on chain."))
     : h("div", { className: "b-don-2col", style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginTop: 22 } },
       h("div", null, lab("When you paid", null, "don-when"), boxInput({ id: "don-when", type: "datetime-local", value: form.paidAt, onChange: e => update({ paidAt: e.target.value }), mono: false })),
@@ -575,12 +621,31 @@ const MethodPicker = ({ methods, value, onChange, wallet, pay }) => hD("div", {
     hD("span", { style: { display: "block", fontFamily: DS.sans, fontSize: 13, lineHeight: 1.45, marginTop: 6, color: on ? DS.body : DS.mute } }, m.sub));
 }));
 
-const UsdtPanel = ({ wallet, copied, copy }) => {
-  const net = usdtNet(wallet.network), auto = wallet.autoVerify !== false;
+const AssetBadge = ({ asset, network }) => hD("div", { style: { display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 12px 6px 8px", borderRadius: 999, background: ASSET[asset].color + "22", border: "1px solid " + ASSET[asset].color + "88", fontFamily: DS.sans, fontSize: 13, color: DS.ink, margin: "2px 0 14px" } },
+  hD("span", { "aria-hidden": "true", style: { width: 22, height: 22, borderRadius: "50%", background: ASSET[asset].color, color: "#fff", fontWeight: 700, fontSize: 12, display: "inline-flex", alignItems: "center", justifyContent: "center" } }, asset === "BTC" ? "\u20bf" : "\u20ae"),
+  hD("strong", { style: { fontWeight: 700 } }, asset), hD("span", { style: { color: DS.mute } }, "\u00b7 " + network));
+const AssetPicker = ({ assets, asset, onAsset }) => assets.length > 1 ? hD("div", { role: "radiogroup", "aria-label": "Which coin will you send?", className: "b-don-curs", style: { display: "grid", gridTemplateColumns: "repeat(" + assets.length + ", minmax(0, 1fr))", gap: 10, marginBottom: 20 } },
+  assets.map(k => { const on = k === asset, a = ASSET[k]; return hD("button", { key: k, type: "button", role: "radio", "aria-checked": on, onClick: () => onAsset(k), style: { minHeight: 64, padding: "8px 10px", display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: on ? a.color + "26" : "transparent", border: (on ? "2px solid " : "1px solid ") + (on ? a.color : "rgba(232,228,220,0.22)"), color: DS.ink, cursor: "pointer", fontFamily: DS.sans, minWidth: 0 } },
+    hD("span", { "aria-hidden": "true", style: { flexShrink: 0, width: 30, height: 30, borderRadius: "50%", background: a.color, color: "#fff", fontWeight: 700, fontSize: 15, display: "inline-flex", alignItems: "center", justifyContent: "center", opacity: on ? 1 : 0.75 } }, k === "BTC" ? "\u20bf" : "\u20ae"),
+    hD("span", { style: { minWidth: 0 } },
+      hD("span", { style: { display: "block", fontFamily: DS.mono, fontSize: 15, letterSpacing: "0.06em", fontWeight: 600 } }, k),
+      hD("span", { style: { display: "block", fontSize: 12, color: on ? DS.body : DS.mute, marginTop: 1 } }, a.name))); })) : null;
+// One tab for crypto: the address, QR, network and warnings all switch with the coin
+const CryptoTab = ({ pay, wallet, assets, asset, onAsset, copied, copy }) => {
+  const a = assets.indexOf(asset) >= 0 ? asset : assets[0];
   return hD("div", { style: dPanel },
-    dEyebrow("Step 1 · Pay · Worldwide"),
+    dEyebrow("Step 1 \u00b7 Pay \u00b7 Crypto"),
+    assets.length > 1 ? dBody("Choose the coin you will send. Each has its own address: send USDT only to the USDT address, and Bitcoin only to the Bitcoin address.", { marginTop: 10, marginBottom: 16 }) : null,
+    hD(AssetPicker, { assets, asset: a, onAsset }),
+    a === "BTC" ? hD(BtcPanel, { btc: pay.btc, copied, copy, bare: true }) : hD(UsdtPanel, { wallet, copied, copy, bare: true }));
+};
+const UsdtPanel = ({ wallet, copied, copy, bare }) => {
+  const net = usdtNet(wallet.network), auto = wallet.autoVerify !== false;
+  return hD(bare ? React.Fragment : "div", bare ? null : { style: dPanel },
+    bare ? null : dEyebrow("Step 1 · Pay · Worldwide"),
+    bare ? hD(AssetBadge, { asset: "USDT", network: wallet.anyEvm ? net.chain + " and other EVM networks" : net.chain + " (" + net.code + ")" }) : null,
     dTitle("Send USDT to this address."),
-    hD("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, padding: 20, background: "#F8F4EB" } }, hD(QRCode, { value: wallet.address, size: 220 })),
+    hD("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, padding: 20, background: "#F8F4EB", outline: "4px solid " + ASSET.USDT.color, outlineOffset: -4 } }, hD(QRCode, { value: wallet.address, size: 220, logo: "USDT" })),
     dLabel(wallet.anyEvm ? "USDT address" : "USDT deposit address"),
     hD(DCopyRow, { value: wallet.address, id: "addr", copied, onCopy: copy, label: "the USDT address" }),
     hD("div", { style: { marginTop: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 } },
@@ -604,12 +669,13 @@ const UsdtPanel = ({ wallet, copied, copy }) => {
     hD(RecordMethodBtn, { method: "usdt" }, "I have sent it · record my gift →"));
 };
 
-const BtcPanel = ({ btc, copied, copy }) => {
+const BtcPanel = ({ btc, copied, copy, bare }) => {
   const auto = btc.autoVerify !== false, conf = Number(btc.confirmations) || 2;
-  return hD("div", { style: dPanel },
-    dEyebrow("Step 1 \u00b7 Pay \u00b7 Worldwide"),
+  return hD(bare ? React.Fragment : "div", bare ? null : { style: dPanel },
+    bare ? null : dEyebrow("Step 1 \u00b7 Pay \u00b7 Worldwide"),
+    bare ? hD(AssetBadge, { asset: "BTC", network: "Bitcoin network" }) : null,
     dTitle("Send Bitcoin to this address."),
-    hD("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, padding: 20, background: "#F8F4EB" } }, hD(QRCode, { value: btc.address, size: 220 })),
+    hD("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, padding: 20, background: "#F8F4EB", outline: "4px solid " + ASSET.BTC.color, outlineOffset: -4 } }, hD(QRCode, { value: btc.address, size: 220, logo: "BTC" })),
     dLabel("Bitcoin address"),
     hD(DCopyRow, { value: btc.address, id: "btcaddr", copied, onCopy: copy, label: "the Bitcoin address" }),
     hD("div", { style: { marginTop: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 } },
@@ -753,14 +819,18 @@ const DonatePage = ({
   const qs = (() => { try { return new URLSearchParams(location.search); } catch (e) { return new Map(); } })();
   // ?method=bank&currency=EUR (or the older ?method=wire) opens the bank tab on that currency
   const [bankCur, setBankCur] = useStateD(() => { const c = String(qs.get("currency") || "").toUpperCase(); return c || (qs.get("method") === "wire" ? "USD" : null); });
-  const [picked, setPicked] = useStateD(() => { const m = qs.get("method"); return m === "wire" ? "bank" : m || null; });
+  // ?method=crypto&asset=btc, or the older ?method=usdt / ?method=btc, opens the crypto tab on that coin
+  const [cryptoAsset, setCryptoAsset] = useStateD(() => { const m = qs.get("method"), a = String(qs.get("asset") || "").toUpperCase(); return a === "BTC" || a === "USDT" ? a : m === "btc" ? "BTC" : m === "usdt" ? "USDT" : null; });
+  const [picked, setPicked] = useStateD(() => { const m = qs.get("method"); return m === "wire" ? "bank" : m === "usdt" || m === "btc" ? "crypto" : m || null; });
   const method = methods.some(([k]) => k === picked) ? picked : methods[0] ? methods[0][0] : "usdt";
   const bCurs = bankCurs(pay);
   const bCur = bCurs.indexOf(bankCur) >= 0 ? bankCur : bCurs[0] || "IDR";
-  const formMethod = method === "bank" ? (bCur === "IDR" ? "bank" : "wire") : method;
+  const cAssets = cryptoAssets(pay);
+  const cAsset = cAssets.indexOf(cryptoAsset) >= 0 ? cryptoAsset : cAssets[0] || "USDT";
+  const formMethod = method === "bank" ? (bCur === "IDR" ? "bank" : "wire") : method === "crypto" ? (cAsset === "BTC" ? "btc" : "usdt") : method;
   // "record my gift" buttons and other pages can switch the method
   useEffectD(() => {
-    const f = e => { const m = e && e.detail; if (m && DONATE_METHODS.some(([k]) => k === m)) setPicked(m === "wire" ? "bank" : m); };
+    const f = e => { const m = e && e.detail; if (m && DONATE_METHODS.some(([k]) => k === m)) { if (m === "usdt" || m === "btc") setCryptoAsset(m.toUpperCase()); setPicked(m === "wire" ? "bank" : m === "usdt" || m === "btc" ? "crypto" : m); } };
     window.addEventListener("brial:donate-method", f);
     return () => window.removeEventListener("brial:donate-method", f);
   }, []);
@@ -787,6 +857,7 @@ const DonatePage = ({
     : method === "bank" ? hD(BankTab, { pay, curs: bCurs, cur: bCur, onCur: setBankCur, copied, copy })
     : method === "card" ? hD(CardPanel, { card: pay.card })
     : method === "btc" ? hD(BtcPanel, { btc: pay.btc, copied, copy })
+    : method === "crypto" ? hD(CryptoTab, { pay, wallet, assets: cAssets, asset: cAsset, onAsset: setCryptoAsset, copied, copy })
     : hD(UsdtPanel, { wallet, copied, copy });
 
   return hD("div", { style: { minHeight: "100vh", background: "#0A1628", color: DS.ink } },
@@ -800,7 +871,7 @@ const DonatePage = ({
         hD("h1", { style: { fontFamily: DS.serif, fontSize: "clamp(44px, 6vw, 84px)", fontWeight: 400, lineHeight: 1.02, letterSpacing: "-0.02em", color: DS.ink, margin: "20px 0 24px" } },
           "Underwrite a future ", hD("em", { style: { fontStyle: "italic", color: DS.gold } }, "directly"), "."),
         hD("p", { style: { fontFamily: DS.sans, fontSize: "clamp(16px, 1.6vw, 18px)", lineHeight: 1.7, fontWeight: 300, color: "rgba(232,228,220,0.8)", margin: 0, maxWidth: 760 } },
-          "The Brial Endowment accepts " + (() => { const parts = methods.map(([k]) => k === "usdt" ? "USDT on " + net.chain + " (" + net.code + ")" : k === "btc" ? "Bitcoin" : k === "qris" ? "QRIS from any Indonesian bank or e-wallet" : k === "bank" ? "bank transfers in " + (bCurs.length > 1 ? bCurs.slice(0, -1).join(", ") + " and " + bCurs[bCurs.length - 1] : bCurs[0]) : k === "card" ? "Visa and Mastercard" : "").filter(Boolean); return parts.length > 1 ? parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1] : parts[0] || "gifts"; })() + ". Every gift is recorded on our open ledger and disbursed, in full, to the work: a scholar's tuition or one of the endowment's pillars. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just the work, paid."),
+          "The Brial Endowment accepts " + (() => { const parts = methods.map(([k]) => k === "usdt" ? "USDT on " + net.chain + " (" + net.code + ")" : k === "crypto" ? (cAssets.length > 1 ? "USDT and Bitcoin" : cAssets[0] === "BTC" ? "Bitcoin" : "USDT") + " from anywhere" : k === "btc" ? "Bitcoin" : k === "qris" ? "QRIS from any Indonesian bank or e-wallet" : k === "bank" ? "bank transfers in " + (bCurs.length > 1 ? bCurs.slice(0, -1).join(", ") + " and " + bCurs[bCurs.length - 1] : bCurs[0]) : k === "card" ? "Visa and Mastercard" : "").filter(Boolean); return parts.length > 1 ? parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1] : parts[0] || "gifts"; })() + ". Every gift is recorded on our open ledger and disbursed, in full, to the work: a scholar's tuition or one of the endowment's pillars. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just the work, paid."),
         hD("div", { className: "b-don-stats", style: { marginTop: 36, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, background: "rgba(201,169,97,0.14)" } },
           [{ l: "Patron contributions", v: fmtAmount(totalRaised) }, { l: "Gifts on record", v: donorCount }, { l: "Disbursed to the work", v: "100%" }].map((t, i) =>
             hD("div", { key: i, style: { padding: "22px 26px", background: "rgba(20,36,66,0.6)", minWidth: 0 } },
@@ -819,7 +890,7 @@ const DonatePage = ({
       // ---- step 1 details + step 2 form ----
       hD("div", { style: { display: "grid", gridTemplateColumns: "minmax(320px, 1fr) 1.2fr", gap: 28, alignItems: "start" } },
         hD("div", { id: "donate-pay", style: { minWidth: 0 } }, panel),
-        hD("div", { style: { minWidth: 0 } }, hD(DonationForm, { wallet, method: formMethod, methodLabel: methodMeta(method, wallet, pay).title + (method === "bank" && bCurs.length > 1 ? " · " + bCur : ""), wireCur: bCur, onWireCur: setBankCur, curOptions: bCurs }))),
+        hD("div", { style: { minWidth: 0 } }, hD(DonationForm, { wallet, method: formMethod, methodLabel: method === "crypto" ? (cAsset === "BTC" ? "Bitcoin (BTC)" : "USDT") : methodMeta(method, wallet, pay).title + (method === "bank" && bCurs.length > 1 ? " · " + bCur : ""), wireCur: bCur, onWireCur: setBankCur, curOptions: bCurs, assets: cAssets, onAsset: setCryptoAsset }))),
 
       // ---- recent gifts ----
       donations.length > 0 && hD("section", { "aria-labelledby": "don-recent", style: { marginTop: 80 } },

@@ -2433,7 +2433,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
 
   // The order of the cards is the order of the choices on the donate page (first = leftmost).
   // Rupiah transfers and international wires share one "Bank transfer" choice there, so they share a card here.
-  const CHANNEL_KEYS = ["usdt", "btc", "qris", "bank", "card"];
+  // USDT and Bitcoin share one "Crypto" choice on the donate page, so they share a card here.
+  const CHANNEL_KEYS = ["crypto", "qris", "bank", "card"];
   function ChannelsView({ store }) {
     const [open, setOpen] = useState(false);
     const [drag, setDrag] = useState(null);
@@ -2446,17 +2447,22 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const idrLive = c.bank.enabled !== false && !!c.bank.account;
     const cards = {
       qris: { name: "QRIS (Indonesia)", on: !!(c.qris && c.qris.enabled !== false && qi && qi.ok), lines: [qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set"], mono: qi && qi.ok ? "NMID " + qi.nmid : "" },
-      usdt: { name: "USDT (on-chain)", on: c.usdt.enabled !== false, lines: [[c.usdt.network, c.usdt.asset].filter(Boolean).join(" · ") + (c.usdt.anyEvm ? " · own wallet, every EVM network" : "")], mono: c.usdt.address,
-        note: c.usdt.autoVerify === false ? "Automatic checks are off. Each gift waits for you." : c.usdt.anyEvm ? "Checked on chain automatically on BNB Chain, Ethereum, Polygon and Arbitrum." : "Checked on chain automatically. Only gifts on the network above are verified on their own." },
-      btc: { name: "Bitcoin (BTC)", on: !!(c.btc && c.btc.enabled !== false && BTC_ADDR.test(String(c.btc.address || ""))), lines: ["Bitcoin network · " + ((c.btc && c.btc.confirmations) || 2) + " confirmations"], mono: (c.btc && c.btc.address) || "",
-        note: !c.btc || c.btc.autoVerify !== false ? "Checked on chain automatically and valued in dollars on the day it arrives." : "Automatic checks are off. Each gift waits for you." },
+      crypto: (() => {
+        const usdtLive = c.usdt.enabled !== false && !!c.usdt.address;
+        const btcLive = !!(c.btc && c.btc.enabled !== false && BTC_ADDR.test(String(c.btc.address || "")));
+        return { name: "Crypto", on: usdtLive || btcLive,
+          lines: [usdtLive ? "USDT · " + [c.usdt.network, c.usdt.anyEvm ? "own wallet, every EVM network" : ""].filter(Boolean).join(" · ") : "USDT · hidden",
+            btcLive ? "Bitcoin · " + ((c.btc && c.btc.confirmations) || 2) + " confirmations" : "Bitcoin · hidden"],
+          mono: [usdtLive && c.usdt.address, btcLive && c.btc.address].filter(Boolean).join("\n"),
+          note: "Checked on chain automatically" + (c.usdt.autoVerify === false || (c.btc && c.btc.autoVerify === false) ? " where switched on in Edit channels." : "; Bitcoin is valued in dollars on the day it arrives.") };
+      })(),
       bank: { name: "Bank transfer", on: idrLive || wireLive,
         lines: [idrLive ? "Rupiah · " + [c.bank.bank, c.bank.account].filter(Boolean).join(" ") : "Rupiah · hidden",
           wireLive ? pockets.map(([k]) => k).join(", ") + " · SWIFT " + c.wire.swift : "USD, EUR, SGD · hidden"],
         mono: [c.bank.holder, wireLive && c.wire.city].filter(Boolean).join(" · ") },
       card: { name: "Card (Mastercard / Visa)", on: c.card.enabled !== false && !!c.card.link, lines: ["Checkout page"], mono: c.card.link },
     };
-    const saved = (Array.isArray(c.order) ? c.order : []).map(k => (k === "wire" ? "bank" : k)).filter(k => CHANNEL_KEYS.indexOf(k) >= 0);
+    const saved = (Array.isArray(c.order) ? c.order : []).map(k => (k === "wire" ? "bank" : k === "usdt" || k === "btc" ? "crypto" : k)).filter(k => CHANNEL_KEYS.indexOf(k) >= 0);
     const order = [...new Set(saved.concat(CHANNEL_KEYS))];
     const move = (from, to) => {
       if (from == null || to == null || from === to || to < 0 || to >= order.length) return;
@@ -2486,7 +2492,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                 <Tag tone={x.on ? "ok" : ""} dot>{x.on ? "Shown" : "Hidden"}</Tag>
               </div>
               {x.lines.map((l, n) => <p key={n} className="fd-sub" style={{ margin: n ? "4px 0 0" : 0 }}>{l}</p>)}
-              <p className="fd-mono" style={{ margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)" }}>{x.mono || "Not set"}</p>
+              <p className="fd-mono" style={{ margin: "10px 0 0", fontSize: 12.5, overflowWrap: "anywhere", color: "var(--muted)", whiteSpace: "pre-line" }}>{x.mono || "Not set"}</p>
               {x.note && <p className="fd-sub" style={{ margin: "10px 0 0" }}>{x.note}</p>}
               <div className="fd-chan-move">
                 <button className="fd-btn quiet sm" disabled={i === 0} onClick={() => move(i, i - 1)} aria-label={"Move " + x.name + " earlier"}>← Earlier</button>
