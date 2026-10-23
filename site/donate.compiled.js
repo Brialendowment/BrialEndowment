@@ -193,7 +193,7 @@ const DonateNav = ({
     marginTop: 3
   },
   className: "b-hide-sm"
-}, "PATRONAGE \xB7 USDT (" + usdtNetNow().code + ") \xB7 QRIS"))), /*#__PURE__*/React.createElement("button", {
+}, "PATRONAGE \xB7 USDT \xB7 BTC \xB7 QRIS \xB7 BANK"))), /*#__PURE__*/React.createElement("button", {
   onClick: onApply,
   style: {
     background: "transparent",
@@ -299,24 +299,27 @@ const QrisCard = ({ qris }) => {
       "Record your gift with the amount and time. We match it and email your receipt."] }),
     hD(RecordMethodBtn, { method: "qris" }, "I have paid · record my gift →"));
 };
-const DONATE_METHODS = [["usdt", "USDT (crypto)"], ["qris", "QRIS (Indonesia)"], ["bank", "Bank transfer (IDR)"], ["wire", "International wire (USD/EUR)"], ["card", "Card via Lynk"]];
+const DONATE_METHODS = [["usdt", "USDT (crypto)"], ["btc", "Bitcoin (BTC)"], ["qris", "QRIS (Indonesia)"], ["bank", "Bank transfer (IDR)"], ["wire", "International wire (USD/EUR)"], ["card", "Card via Lynk"]];
 // The ways to give that are switched on and complete in Payment channels, in display order
 // Rupiah transfers and international wires are one "Bank transfer" choice on the page, with a currency picker.
 const idrOn = pay => !!(pay.bank && pay.bank.enabled !== false && pay.bank.account);
 const wireOn = pay => !!(pay.wire && pay.wire.enabled !== false && pay.wire.swift && Object.keys(wirePockets(pay.wire)).length);
 const bankCurs = pay => (idrOn(pay) ? ["IDR"] : []).concat(wireOn(pay) ? wireCurs(pay.wire) : []);
-const CHANNEL_ORDER = ["usdt", "qris", "bank", "card"];
+const CHANNEL_ORDER = ["usdt", "btc", "qris", "bank", "card"];
+const BTC_ADDR = /^(bc1[02-9ac-hj-np-z]{8,87}|[13][1-9A-HJ-NP-Za-km-z]{25,34})$/i;
 const channelOrder = pay => { const o = Array.isArray(pay.order) ? pay.order.map(k => (k === "wire" ? "bank" : k)).filter(k => CHANNEL_ORDER.indexOf(k) >= 0) : []; return [...new Set(o.concat(CHANNEL_ORDER))]; };
 const availableMethods = (store, pay) => {
   const ok = k => k === "qris" ? !!(pay.qris && pay.qris.enabled !== false && pay.qris.payload && store.parseQris && store.parseQris(pay.qris.payload).ok)
     : k === "card" ? !!(pay.card && pay.card.enabled !== false && pay.card.link)
     : k === "bank" ? bankCurs(pay).length > 0
+    : k === "btc" ? !!(pay.btc && pay.btc.enabled !== false && BTC_ADDR.test(String(pay.btc.address || "")))
     : (!pay[k] || pay[k].enabled !== false);
   return channelOrder(pay).filter(ok).map(k => DONATE_METHODS.find(([x]) => x === k));
 };
 const CUR_NAMES = { IDR: "Rupiah", USD: "US dollars", EUR: "Euros", SGD: "Singapore dollars" };
 const methodMeta = (k, wallet, pay) => ({
   usdt: { where: "Worldwide", title: "USDT", sub: usdtNet(wallet.network).code + (wallet.autoVerify !== false ? " · verified automatically" : " · " + usdtNet(wallet.network).chain) },
+  btc: { where: "Worldwide", title: "Bitcoin", sub: "BTC" + (!pay.btc || pay.btc.autoVerify !== false ? " · verified automatically" : " · Bitcoin network") },
   qris: { where: "Indonesia", title: "QRIS", sub: "Any bank or e-wallet app" },
   bank: { where: idrOn(pay) && wireOn(pay) ? "Indonesia · worldwide" : idrOn(pay) ? "Indonesia" : "Worldwide", title: "Bank transfer", sub: bankCurs(pay).join(" · ") },
   wire: { where: "Worldwide", title: "Bank transfer", sub: wireCurs(pay.wire).join(" · ") },
@@ -324,7 +327,7 @@ const methodMeta = (k, wallet, pay) => ({
 }[k]);
 const fmtIDR = n => "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
 const fmtUSD = n => "$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const blankDonation = method => ({ method: method || "usdt", name: "", email: "", country: "", amount: "", idr: "", cardAmount: "", cardCur: "IDR", wireAmount: "", wireCur: "USD", paidAt: "", sender: "", ref: "", message: "", txHash: "", anonymous: false, agreement: false });
+const blankDonation = method => ({ method: method || "usdt", name: "", email: "", country: "", amount: "", idr: "", cardAmount: "", cardCur: "IDR", wireAmount: "", wireCur: "USD", btc: "", paidAt: "", sender: "", ref: "", message: "", txHash: "", anonymous: false, agreement: false });
 const DonationForm = ({
   wallet,
   method,
@@ -344,6 +347,9 @@ const DonationForm = ({
   const [sent, setSent] = useStateD(null);
   const update = patch => setForm(f => ({ ...f, ...patch }));
   useEffectD(() => { if (store.fxRates) store.fxRates().then(setFx).catch(() => {}); }, []);
+  const [btcUsd, setBtcUsd] = useStateD(null);
+  useEffectD(() => { if (method === "btc" && !btcUsd && store.btcPrice) store.btcPrice().then(setBtcUsd).catch(() => {}); }, [method]);
+  const btcRate = () => (btcUsd && btcUsd.usd) || ((store.FX_FALLBACK || {}).BTC_USD) || 80000;
   // the form follows the method chosen in step 1
   useEffectD(() => { if (method && method !== form.method) { update({ method }); setStep("form"); setError(null); } }, [method]);
   // the wire currency is shared with the payment details on the left
@@ -352,6 +358,7 @@ const DonationForm = ({
   const m = form.method;
   const usd = (() => {
     if (m === "usdt") return parseFloat(form.amount) || 0;
+    if (m === "btc") return (parseFloat(form.btc) || 0) * btcRate();
     if (m === "bank" || m === "qris") return (parseFloat(form.idr) || 0) / rate("IDR");
     if (m === "wire") { const w = parseFloat(form.wireAmount) || 0; return form.wireCur === "USD" ? w : w / (rate(form.wireCur) || (form.wireCur === "EUR" ? 0.86 : 1.3)); }
     const v = parseFloat(form.cardAmount) || 0;
@@ -363,6 +370,9 @@ const DonationForm = ({
     if (m === "usdt") {
       if (!(parseFloat(form.amount) > 0)) return setError("Please enter the amount you sent.");
       if (!form.txHash.trim()) return setError("Please paste your transaction hash so we can verify it on chain.");
+    } else if (m === "btc") {
+      if (!(parseFloat(form.btc) > 0)) return setError("Please enter the amount of BTC you sent.");
+      if (!/^(0x)?[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("Please paste the transaction ID: 64 letters and numbers, from your wallet or the exchange withdrawal page.");
     } else if (m === "bank" || m === "qris") {
       if (!(parseFloat(form.idr) >= 1000)) return setError(m === "qris" ? "Please enter the amount you paid, in Rupiah." : "Please enter the amount you transferred, in Rupiah.");
     } else if (m === "wire") {
@@ -373,6 +383,7 @@ const DonationForm = ({
     const whenTxt = when && !isNaN(when) ? when.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + when.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
     let txHash = form.txHash.trim(), payment;
     if (m === "usdt") payment = { method: "usdt", currency: "USDT", paid: parseFloat(form.amount) };
+    else if (m === "btc") { txHash = txHash.replace(/^0x/i, "").toLowerCase(); payment = { method: "btc", currency: "BTC", paid: parseFloat(form.btc), rate: Math.round(btcRate()) }; }
     else if (m === "bank" || m === "qris") {
       txHash = [m === "qris" ? "QRIS" : "Bank transfer", fmtIDR(form.idr), whenTxt].filter(Boolean).join(" · ");
       payment = { method: m, currency: "IDR", paid: parseFloat(form.idr), rate: rate("IDR"), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
@@ -406,20 +417,21 @@ const DonationForm = ({
     : null;
 
   if (step === "done" && sent) {
-    const auto = sent.method === "usdt" && wallet.autoVerify !== false;
+    const auto = (sent.method === "usdt" && wallet.autoVerify !== false) || (sent.method === "btc" && pay.btc && pay.btc.autoVerify !== false);
     const where = sent.method === "qris" ? "our QRIS records" : sent.method === "bank" ? "our Bank Jago statement" : sent.method === "wire" ? "our bank statement" : sent.method === "card" ? "our Lynk dashboard" : "the blockchain";
     return h("div", { role: "status", style: { padding: "clamp(26px, 4vw, 44px)", background: "linear-gradient(180deg, rgba(134,229,167,0.08), rgba(134,229,167,0.02))", border: "1px solid rgba(134,229,167,0.4)", position: "relative" } },
       h("div", { style: { fontFamily: serif, fontSize: 64, color: "#86E5A7", lineHeight: 1 } }, "✓"),
       h("div", { style: { fontFamily: mono, fontSize: 11, color: "#86E5A7", letterSpacing: "0.22em", textTransform: "uppercase", marginTop: 16 } }, "Gift recorded"),
       h("h3", { style: { fontFamily: serif, fontSize: 38, fontWeight: 400, color: "#E8E4DC", margin: "12px 0 14px", lineHeight: 1.1, letterSpacing: "-0.01em" } }, "Thank you, truly."),
       h("p", { style: { fontFamily: sans, fontSize: 14, lineHeight: 1.7, color: "rgba(232,228,220,0.75)", margin: 0 } },
-        auto ? "We are reading your transaction on chain now. " : "We will match your gift against " + where + ", usually within one or two days. ",
-        sent.email ? h(React.Fragment, null, "Your receipt for ", h("strong", { style: { color: "#86E5A7" } }, sent.method === "bank" || sent.method === "qris" ? fmtIDR(sent.payment.paid) : sent.method === "wire" ? sent.payment.currency + " " + Number(sent.payment.paid).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtUSD(sent.amount)), " will arrive at ", h("strong", { style: { color: "#E8E4DC" } }, sent.email), auto ? " once the deposit clears " + wallet.confirmations + " confirmations, usually within a few minutes." : " as soon as it is matched.")
+        auto ? (sent.method === "btc" ? "We are reading your transaction on the Bitcoin network now. " : "We are reading your transaction on chain now. ") : "We will match your gift against " + where + ", usually within one or two days. ",
+        sent.email ? h(React.Fragment, null, "Your receipt for ", h("strong", { style: { color: "#86E5A7" } }, sent.method === "bank" || sent.method === "qris" ? fmtIDR(sent.payment.paid) : sent.method === "btc" ? Number(sent.payment.paid) + " BTC" : sent.method === "wire" ? sent.payment.currency + " " + Number(sent.payment.paid).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtUSD(sent.amount)), " will arrive at ", h("strong", { style: { color: "#E8E4DC" } }, sent.email), auto ? (sent.method === "btc" ? " once it has " + ((pay.btc && pay.btc.confirmations) || 2) + " confirmations, usually within half an hour, at its dollar value on that day." : " once the deposit clears " + wallet.confirmations + " confirmations, usually within a few minutes.") : " as soon as it is matched.")
           : "Your gift will appear on our open ledger as soon as it is matched."),
       h("button", { onClick: () => { setStep("form"); setSent(null); setForm(blankDonation(m)); }, style: { marginTop: 28, minHeight: 46, padding: "0 22px", background: "transparent", border: "1px solid rgba(232,228,220,0.2)", color: "rgba(232,228,220,0.8)", cursor: "pointer", fontFamily: sans, fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Record another donation"));
   }
 
   const intro = m === "qris" ? "Scan the QRIS code with your bank or e-wallet app and pay any amount, then fill this form with the amount and the time so we can match it." : m === "usdt" ? "Send your USDT first, then fill in this form with the transaction hash. We check it on chain and email your receipt."
+    : m === "btc" ? "Send your BTC first, then fill in this form with the amount and the transaction ID. We check it on the Bitcoin network and email your receipt."
     : m === "wire" ? "Send the wire first, then fill in this form with the amount, the currency and the date. We match it against our bank statement; no reference number needed."
     : m === "bank" ? "Transfer to our Bank Jago account first, then fill this form. The amount and the time of the transfer are enough for us to find it; no hash needed."
     : "Pay on the secure card checkout first, then fill in this form with the amount and, if you have it, the order number from your receipt.";
@@ -441,6 +453,11 @@ const DonationForm = ({
         lab("Amount in USDT", null, "don-amount"),
         bigAmount("$", form.amount, v => update({ amount: v }), "1,000", h("span", { style: { fontFamily: mono, fontSize: 12, color: DS.mute, letterSpacing: "0.12em" } }, "USDT")),
         h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [100, 500, 1000, 5000, 10000].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ amount: String(amt) }), style: { minHeight: 40, padding: "0 14px", background: form.amount === String(amt) ? "rgba(201,169,97,0.18)" : "transparent", border: "1px solid rgba(201,169,97,0.4)", color: "#E3C98A", cursor: "pointer", fontFamily: mono, fontSize: 12, letterSpacing: "0.06em" } }, "$", amt.toLocaleString()))))
+      : m === "btc" ? h(React.Fragment, null,
+        lab("Amount in BTC", null, "don-amount"),
+        bigAmount("\u20bf", form.btc, v => update({ btc: v }), "0.001", h("span", { style: { fontFamily: mono, fontSize: 12, color: DS.mute, letterSpacing: "0.12em" } }, "BTC")),
+        h("div", { style: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" } }, [0.0005, 0.001, 0.005, 0.01, 0.05].map(amt => h("button", { type: "button", key: amt, onClick: () => update({ btc: String(amt) }), style: { minHeight: 40, padding: "0 12px", background: form.btc === String(amt) ? "rgba(201,169,97,0.18)" : "transparent", border: "1px solid rgba(201,169,97,0.4)", color: "#E3C98A", cursor: "pointer", fontFamily: mono, fontSize: 12, letterSpacing: "0.02em" } }, "\u20bf " + amt))),
+        usd > 0 ? hint("About " + fmtUSD(usd) + " at today's price (1 BTC = " + fmtUSD(btcRate()).replace(/\.00$/, "") + (btcUsd && btcUsd.source !== "estimate" ? ", " + btcUsd.source : ", estimate") + "). The receipt uses the price when your transfer is confirmed.") : null)
       : m === "bank" || m === "qris" ? h(React.Fragment, null,
         lab(m === "qris" ? "Amount paid, in Rupiah" : "Amount transferred, in Rupiah", null, "don-amount"),
         bigAmount("Rp", form.idr, v => update({ idr: v }), "500000", m === "bank" && curOptions && curOptions.length > 1 && onWireCur
@@ -462,7 +479,11 @@ const DonationForm = ({
         approx)),
 
     // reference
-    m === "usdt" ? h("div", { style: { marginTop: 22 } },
+    m === "btc" ? h("div", { style: { marginTop: 22 } },
+      lab("Transaction ID ", h("span", { style: { color: "#4FD1C5", marginLeft: 4 } }, "\xB7 required"), "don-tx"),
+      boxInput({ id: "don-tx", value: form.txHash, onChange: e => update({ txHash: e.target.value }), placeholder: "57b41a7d7e24…", spellCheck: false }),
+      hint("Copy it from your wallet or the exchange withdrawal page (also called TXID or hash). We use it to confirm your transfer on the Bitcoin network."))
+    : m === "usdt" ? h("div", { style: { marginTop: 22 } },
       lab("Transaction hash ", h("span", { style: { color: "#4FD1C5", marginLeft: 4 } }, "\xB7 required"), "don-tx"),
       boxInput({ id: "don-tx", value: form.txHash, onChange: e => update({ txHash: e.target.value }), placeholder: "0x8a4f7d3c…", spellCheck: false }),
       hint("Copy it from your wallet or the exchange withdrawal page. We use it to confirm your transfer on chain."))
@@ -473,7 +494,7 @@ const DonationForm = ({
         : m === "bank" || m === "wire"
         ? h("div", null, lab(m === "wire" ? "Sender's name at the bank" : "Sender's account name", null, "don-sender"), boxInput({ id: "don-sender", value: form.sender, onChange: e => update({ sender: e.target.value }), placeholder: "as shown by your bank", mono: false }))
         : h("div", null, lab("Order number", null, "don-order"), boxInput({ id: "don-order", value: form.ref, onChange: e => update({ ref: e.target.value }), placeholder: "from your receipt", spellCheck: false }))),
-    m !== "usdt" ? hint(m === "wire" ? "Optional, but it helps us find your wire quickly. Your name stays private and never appears on the site." : m === "qris" ? "The time of payment is usually enough for us to find it. Anything you add stays private." : m === "bank" ? "Optional, but they help us find your transfer quickly. Your account name stays private and never appears on the site." : "Optional, but it helps us find your payment quickly. It stays private.") : null,
+    m !== "usdt" && m !== "btc" ? hint(m === "wire" ? "Optional, but it helps us find your wire quickly. Your name stays private and never appears on the site." : m === "qris" ? "The time of payment is usually enough for us to find it. Anything you add stays private." : m === "bank" ? "Optional, but they help us find your transfer quickly. Your account name stays private and never appears on the site." : "Optional, but it helps us find your payment quickly. It stays private.") : null,
 
     // message
     h("div", { style: { marginTop: 22 } },
@@ -485,7 +506,7 @@ const DonationForm = ({
     h("label", { style: { display: "flex", gap: 12, alignItems: "start", marginTop: 12, cursor: "pointer" } },
       h("input", { type: "checkbox", checked: form.agreement, onChange: e => update({ agreement: e.target.checked }), style: { accentColor: "#C9A961", colorScheme: "dark", width: 20, height: 20, flexShrink: 0, margin: "1px 0 0" } }),
       h("span", { style: { fontFamily: sans, fontSize: 14, color: DS.body, lineHeight: 1.55 } },
-        m === "usdt" ? "I confirm I have already sent the USDT, I understand that gifts are non-refundable and that blockchain transfers are public and permanent, and I agree to the " : "I confirm I have already made this payment, I understand that gifts are non-refundable, and I agree to the ",
+        m === "usdt" || m === "btc" ? "I confirm I have already sent the " + (m === "btc" ? "BTC" : "USDT") + ", I understand that gifts are non-refundable and that blockchain transfers are public and permanent, and I agree to the " : "I confirm I have already made this payment, I understand that gifts are non-refundable, and I agree to the ",
         h("a", { href: "/terms", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Terms"), " and the ",
         h("a", { href: "/privacy", target: "_blank", rel: "noopener", onClick: e => e.stopPropagation(), style: { color: "#E3C98A", textDecoration: "underline" } }, "Privacy Policy"),
         ". The endowment uses every gift for its pillars at its discretion, honouring my wishes where it can.")),
@@ -560,7 +581,7 @@ const UsdtPanel = ({ wallet, copied, copy }) => {
     dEyebrow("Step 1 · Pay · Worldwide"),
     dTitle("Send USDT to this address."),
     hD("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, padding: 20, background: "#F8F4EB" } }, hD(QRCode, { value: wallet.address, size: 220 })),
-    dLabel("USDT deposit address"),
+    dLabel(wallet.anyEvm ? "USDT address" : "USDT deposit address"),
     hD(DCopyRow, { value: wallet.address, id: "addr", copied, onCopy: copy, label: "the USDT address" }),
     hD("div", { style: { marginTop: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 } },
       hD(DPair, { label: "Network" }, net.code + " · " + net.chain),
@@ -568,18 +589,46 @@ const UsdtPanel = ({ wallet, copied, copy }) => {
     auto ? hD("div", { style: { marginTop: 18, display: "flex", gap: 10, alignItems: "center", padding: "10px 14px", background: "rgba(79,209,197,0.07)", border: "1px solid rgba(79,209,197,0.3)", fontFamily: DS.sans, fontSize: 13.5, color: DS.body, lineHeight: 1.5 } },
       hD("span", { "aria-hidden": "true", style: { color: DS.teal, fontSize: 16 } }, "✓"),
       hD("span", null, "Verified automatically on chain. Your receipt usually arrives within minutes.")) : null,
+    wallet.anyEvm ? dBody(hD(React.Fragment, null, "The same address also receives USDT on ", dStrong("Ethereum"), ", ", dStrong("Polygon"), " and ", dStrong("Arbitrum"), ". " + net.chain + " has the lowest fees."), { marginTop: 14, fontSize: 13.5, color: DS.mute }) : null,
     hD(DSteps, { items: [
-      hD(React.Fragment, null, "In your wallet or exchange, choose ", dStrong("USDT"), " on the ", dStrong(net.chain + " (" + net.code + ")"), " network."),
+      hD(React.Fragment, null, "In your wallet or exchange, choose ", dStrong("USDT"), " on the ", dStrong(net.chain + " (" + net.code + ")"), " network" + (wallet.anyEvm ? " (recommended)." : ".")),
       "Paste the address above, or scan the QR code.",
       hD(React.Fragment, null, "Send any amount, then copy the ", dStrong("transaction hash"), "."),
       auto ? "Record your gift with the hash. We confirm it on chain and email your receipt." : "Record your gift with the hash. We check it on chain and email your receipt."] }),
     hD("div", { role: "note", style: { marginTop: 20, padding: "12px 14px", background: "rgba(229,134,134,0.07)", border: "1px solid rgba(229,134,134,0.32)" } },
       hD("div", { style: { fontFamily: DS.mono, fontSize: 11, color: DS.red, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 6 } }, "⚠ Important"),
       hD("div", { style: { fontFamily: DS.sans, fontSize: 13.5, lineHeight: 1.6, color: DS.body } },
-        "Send ", dStrong("only USDT on " + net.chain + " (" + net.code + ")"), ". Other tokens, or USDT on any other network, sent to this address may be lost. No deposit fee.")),
+        wallet.anyEvm
+          ? hD(React.Fragment, null, "Send ", dStrong("only USDT"), ", on " + net.chain + ", Ethereum, Polygon or Arbitrum. Tron (TRC-20) and other networks are not supported and may be lost.")
+          : hD(React.Fragment, null, "Send ", dStrong("only USDT on " + net.chain + " (" + net.code + ")"), ". Other tokens, or USDT on any other network, sent to this address may be lost. No deposit fee."))),
     hD(RecordMethodBtn, { method: "usdt" }, "I have sent it · record my gift →"));
 };
 
+const BtcPanel = ({ btc, copied, copy }) => {
+  const auto = btc.autoVerify !== false, conf = Number(btc.confirmations) || 2;
+  return hD("div", { style: dPanel },
+    dEyebrow("Step 1 \u00b7 Pay \u00b7 Worldwide"),
+    dTitle("Send Bitcoin to this address."),
+    hD("div", { style: { display: "flex", justifyContent: "center", marginBottom: 20, padding: 20, background: "#F8F4EB" } }, hD(QRCode, { value: btc.address, size: 220 })),
+    dLabel("Bitcoin address"),
+    hD(DCopyRow, { value: btc.address, id: "btcaddr", copied, onCopy: copy, label: "the Bitcoin address" }),
+    hD("div", { style: { marginTop: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 } },
+      hD(DPair, { label: "Network" }, "Bitcoin"),
+      hD(DPair, { label: "Asset" }, "BTC")),
+    auto ? hD("div", { style: { marginTop: 18, display: "flex", gap: 10, alignItems: "center", padding: "10px 14px", background: "rgba(79,209,197,0.07)", border: "1px solid rgba(79,209,197,0.3)", fontFamily: DS.sans, fontSize: 13.5, color: DS.body, lineHeight: 1.5 } },
+      hD("span", { "aria-hidden": "true", style: { color: DS.teal, fontSize: 16 } }, "\u2713"),
+      hD("span", null, "Verified automatically on chain after " + conf + " confirmations, usually within half an hour.")) : null,
+    hD(DSteps, { items: [
+      hD(React.Fragment, null, "In your wallet or exchange, choose ", dStrong("Bitcoin (BTC)"), " on the ", dStrong("Bitcoin"), " network."),
+      "Paste the address above, or scan the QR code.",
+      hD(React.Fragment, null, "Send any amount, then copy the ", dStrong("transaction ID"), "."),
+      "Record your gift with the transaction ID. We confirm it on chain, value it in dollars on the day it arrives, and email your receipt."] }),
+    hD("div", { role: "note", style: { marginTop: 20, padding: "12px 14px", background: "rgba(229,134,134,0.07)", border: "1px solid rgba(229,134,134,0.32)" } },
+      hD("div", { style: { fontFamily: DS.mono, fontSize: 11, color: DS.red, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 6 } }, "\u26A0 Important"),
+      hD("div", { style: { fontFamily: DS.sans, fontSize: 13.5, lineHeight: 1.6, color: DS.body } },
+        "Send ", dStrong("only BTC on the Bitcoin network"), ". BTC on BNB Chain, Lightning or any other network, and other coins, sent to this address may be lost.")),
+    hD(RecordMethodBtn, { method: "btc" }, "I have sent it \u00b7 record my gift \u2192"));
+};
 const BankPanel = ({ bank, copied, copy, bare }) => hD(bare ? React.Fragment : "div", bare ? null : { style: dPanel },
   bare ? null : dEyebrow("Step 1 · Pay · Indonesia"),
   bare ? null : dTitle("Transfer from any Indonesian bank.", 14),
@@ -737,6 +786,7 @@ const DonatePage = ({
   const panel = method === "qris" ? hD(QrisCard, { qris: pay.qris })
     : method === "bank" ? hD(BankTab, { pay, curs: bCurs, cur: bCur, onCur: setBankCur, copied, copy })
     : method === "card" ? hD(CardPanel, { card: pay.card })
+    : method === "btc" ? hD(BtcPanel, { btc: pay.btc, copied, copy })
     : hD(UsdtPanel, { wallet, copied, copy });
 
   return hD("div", { style: { minHeight: "100vh", background: "#0A1628", color: DS.ink } },
@@ -750,7 +800,7 @@ const DonatePage = ({
         hD("h1", { style: { fontFamily: DS.serif, fontSize: "clamp(44px, 6vw, 84px)", fontWeight: 400, lineHeight: 1.02, letterSpacing: "-0.02em", color: DS.ink, margin: "20px 0 24px" } },
           "Underwrite a future ", hD("em", { style: { fontStyle: "italic", color: DS.gold } }, "directly"), "."),
         hD("p", { style: { fontFamily: DS.sans, fontSize: "clamp(16px, 1.6vw, 18px)", lineHeight: 1.7, fontWeight: 300, color: "rgba(232,228,220,0.8)", margin: 0, maxWidth: 760 } },
-          "The Brial Endowment accepts " + (() => { const parts = methods.map(([k]) => k === "usdt" ? "USDT on " + net.chain + " (" + net.code + ")" : k === "qris" ? "QRIS from any Indonesian bank or e-wallet" : k === "bank" ? "bank transfers in " + (bCurs.length > 1 ? bCurs.slice(0, -1).join(", ") + " and " + bCurs[bCurs.length - 1] : bCurs[0]) : k === "card" ? "Visa and Mastercard" : "").filter(Boolean); return parts.length > 1 ? parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1] : parts[0] || "gifts"; })() + ". Every gift is recorded on our open ledger and disbursed, in full, to the work: a scholar's tuition or one of the endowment's pillars. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just the work, paid."),
+          "The Brial Endowment accepts " + (() => { const parts = methods.map(([k]) => k === "usdt" ? "USDT on " + net.chain + " (" + net.code + ")" : k === "btc" ? "Bitcoin" : k === "qris" ? "QRIS from any Indonesian bank or e-wallet" : k === "bank" ? "bank transfers in " + (bCurs.length > 1 ? bCurs.slice(0, -1).join(", ") + " and " + bCurs[bCurs.length - 1] : bCurs[0]) : k === "card" ? "Visa and Mastercard" : "").filter(Boolean); return parts.length > 1 ? parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1] : parts[0] || "gifts"; })() + ". Every gift is recorded on our open ledger and disbursed, in full, to the work: a scholar's tuition or one of the endowment's pillars. There is no administrative overhead, no fund manager skim, no donor wining-and-dining. Just the work, paid."),
         hD("div", { className: "b-don-stats", style: { marginTop: 36, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, background: "rgba(201,169,97,0.14)" } },
           [{ l: "Patron contributions", v: fmtAmount(totalRaised) }, { l: "Gifts on record", v: donorCount }, { l: "Disbursed to the work", v: "100%" }].map((t, i) =>
             hD("div", { key: i, style: { padding: "22px 26px", background: "rgba(20,36,66,0.6)", minWidth: 0 } },

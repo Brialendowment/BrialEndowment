@@ -811,9 +811,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // DISTRIBUTIONS (Food & Clothing): one entry per day of giving.
   // Every field is optional except one of money, kilograms or garments.
   // ============================================================
-  const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"], ["EUR", "\u20AC"], ["SGD", "S$"]];
+  const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"], ["EUR", "\u20AC"], ["SGD", "S$"], ["BTC", "\u20BF"]];
   const curSym = c => (CURS.find(x => x[0] === c) || ["", c + " "])[1];
-  const fmtCur = (c, v) => c === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : curSym(c) + (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const fmtCur = (c, v) => c === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : curSym(c) + (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: c === "BTC" ? 8 : 2 });
   function useFx(store) {
     const [fx, setFx] = useState(null);
     useEffect(() => { let on = true; if (store.fxRates) store.fxRates().then(r => { if (on) setFx(r); }); return () => { on = false; }; }, []);
@@ -1700,13 +1700,26 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       </div>
     );
   }
+  const BTC_ADDR = /^(bc1[02-9ac-hj-np-z]{8,87}|[13][1-9A-HJ-NP-Za-km-z]{25,34})$/i;
   function ChannelsDialog({ store, onClose }) {
     const [cfg, setCfg] = useState(() => store.getPaymentConfig());
+    const orig = useRef(store.getPaymentConfig());
     const set = (g, k, v) => setCfg(p => ({ ...p, [g]: { ...p[g], [k]: v } }));
     const on = g => cfg[g].enabled !== false;
     const head = (g, title) => <div className="fd-card-head" style={{ marginBottom: 10 }}><h3 className="fd-h2">{title}</h3><Switch on={on(g)} onChange={v => set(g, "enabled", v)}>{on(g) ? "Shown" : "Hidden"}</Switch></div>;
     const cardBad = cfg.card.link && !/^https?:\/\//i.test(cfg.card.link.trim());
     const qrisBad = cfg.qris && cfg.qris.payload && !store.parseQris(cfg.qris.payload).ok;
+    const btcBad = cfg.btc && cfg.btc.enabled !== false && !BTC_ADDR.test(String(cfg.btc.address || "").trim()) ? "Enter a Bitcoin address (starts with bc1, 1 or 3)." : "";
+    // A changed USDT address keeps the old one checkable for late reports (on its own network)
+    const saveAll = () => {
+      const next = { ...cfg, usdt: { ...cfg.usdt } };
+      const was = orig.current.usdt || {};
+      if (was.address && next.usdt.address && was.address.toLowerCase() !== next.usdt.address.trim().toLowerCase()) {
+        const prev = (Array.isArray(was.previous) ? was.previous : []).filter(p => p && p.address && p.address.toLowerCase() !== next.usdt.address.trim().toLowerCase());
+        next.usdt.previous = [{ address: was.address, network: was.network, until: new Date().toISOString().slice(0, 10) }, ...prev.filter(p => p.address.toLowerCase() !== was.address.toLowerCase())].slice(0, 3);
+      }
+      store.savePaymentConfig(next); onClose();
+    };
     const wireBad = !cfg.wire || cfg.wire.enabled === false ? "" : !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(cfg.wire.swift || "") ? "A SWIFT code has 8 or 11 letters and numbers, e.g. JAGBIDJA." : !Object.values(cfg.wire.pockets || {}).some(v => /^[0-9]{6,20}$/.test(v || "")) && !/^[0-9]{6,20}$/.test(cfg.wire.account || "") ? "Enter at least one pocket number, digits only." : !(cfg.wire.holder || "").trim() ? "Enter the beneficiary name." : "";
     return (
       <Modal wide title="Payment channels" sub="How donors can give on the public donate page." onClose={onClose}>
@@ -1723,8 +1736,30 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                   ? "Each reported hash is read from the chain. When the USDT reached this wallet with enough confirmations and the amount matches, the gift is verified and the receipt is emailed. Anything else waits for you."
                   : "Off. Every USDT gift waits for you to check it and press Verify."}</small>
               </div>
+              <div className="fd-autov">
+                <Switch on={!!cfg.usdt.anyEvm} onChange={v => set("usdt", "anyEvm", v)}>This is the endowment's own wallet</Switch>
+                <small>{cfg.usdt.anyEvm
+                  ? "A self-custody wallet (Trust Wallet) receives at the same address on BNB Chain, Ethereum, Polygon and Arbitrum, so a gift on any of them is verified. Keep a little BNB in the wallet to pay network fees when you move USDT out."
+                  : "An exchange deposit address. Only gifts on the network above are verified on their own."}</small>
+              </div>
+              {Array.isArray(cfg.usdt.previous) && cfg.usdt.previous.length > 0 && <p className="fd-sub" style={{ margin: "10px 0 0" }}>Still checked for late reports: {cfg.usdt.previous.map(p => <span key={p.address} className="fd-mono" style={{ display: "block", overflowWrap: "anywhere" }}>{p.address} ({p.network || "?"})</span>)}</p>}
             </div>
             <QR value={cfg.usdt.address} />
+          </div>
+        </div>
+        <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
+          {head("btc", "Bitcoin (BTC)")}
+          <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div className="fd-form" style={{ flex: "1 1 300px" }}>
+              <Field label="BTC address" hint="From your own wallet (Trust Wallet: Receive, Bitcoin). Never a seed phrase."><input className="fd-input fd-mono" value={(cfg.btc && cfg.btc.address) || ""} onChange={e => set("btc", "address", e.target.value.trim())} spellCheck={false} /></Field>
+              <Field label="Confirmations" hint="Blocks to wait before a gift counts. 2 is about 20 minutes." style={{ maxWidth: 220 }}><input className="fd-input" type="number" min="1" value={(cfg.btc && cfg.btc.confirmations) || 2} onChange={e => set("btc", "confirmations", e.target.value)} /></Field>
+              <div className="fd-autov">
+                <Switch on={!cfg.btc || cfg.btc.autoVerify !== false} onChange={v => set("btc", "autoVerify", v)}>Verify BTC gifts automatically</Switch>
+                <small>Each reported transaction ID is read from the Bitcoin network. When it paid this address with enough confirmations, the gift is verified at its dollar value on that day and the receipt is emailed.</small>
+              </div>
+              {btcBad && <div className="fd-msg err" style={{ marginTop: 8 }}>{btcBad}</div>}
+            </div>
+            {cfg.btc && cfg.btc.address ? <QR value={cfg.btc.address} /> : null}
           </div>
         </div>
         <div className="fd-card" style={{ background: "rgba(10,22,40,.4)" }}>
@@ -1752,7 +1787,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           {cardBad && <div className="fd-msg err" style={{ marginTop: 8 }}>Use a full address that starts with https://</div>}
           <Field label="Lynk fee (%)" hint="What Lynk keeps from each card payment. Used when you verify a card gift; the receipt shows the full gift." style={{ maxWidth: 220, marginTop: 12 }}><input className="fd-input" inputMode="decimal" value={cfg.card.feePct ?? 5} onChange={e => set("card", "feePct", e.target.value.replace(",", "."))} /></Field>
         </div>
-        <div className="fd-actions" style={{ marginTop: 18 }}><button className="fd-btn primary" disabled={cardBad || qrisBad || !!wireBad} onClick={() => { store.savePaymentConfig(cfg); onClose(); }}>Save channels</button><button className="fd-btn ghost" onClick={onClose}>Cancel</button></div>
+        <div className="fd-actions" style={{ marginTop: 18 }}><button className="fd-btn primary" disabled={cardBad || qrisBad || !!wireBad || !!btcBad} onClick={saveAll}>Save channels</button><button className="fd-btn ghost" onClick={onClose}>Cancel</button></div>
       </Modal>
     );
   }
@@ -1817,8 +1852,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     useEffect(() => { if (!busy) return; const t = setInterval(load, 20000); return () => clearInterval(t); }, [busy, load]);
     return [st, load];
   }
-  function chainLine(c, cfg) {
-    if (cfg && cfg.autoVerify === false) return { text: "Automatic checks are off. Check the hash on the explorer, then verify.", tone: "", again: false };
+  function chainLine(c, cfg, btc) {
+    if (cfg && (btc ? cfg.btc && cfg.btc.autoVerify === false : cfg.autoVerify === false)) return { text: "Automatic checks are off. Check the hash on the explorer, then verify.", tone: "", again: false };
     if (!c) return { text: "Not checked on chain yet.", tone: "", again: true };
     const on = c.network ? " on " + c.network : "";
     switch (c.status) {
@@ -1830,12 +1865,12 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       case "not_found": return { text: "Needs you: the transaction was not found on chain after two days. Ask the donor for the right hash.", tone: "bad", again: true };
       case "manual": return { text: c.reason || "Check this one by hand.", tone: "", again: false };
       case "error": return { text: "Needs you: the networks could not be reached. " + (c.reason || ""), tone: "bad", again: true };
-      default: return { text: "Needs you: " + (c.reason || "the transfer did not match.") + (c.received && !/Received/.test(c.reason || "") ? ` Received ${Number(c.received).toFixed(2)} USDT${on}.` : c.network ? ` (${c.network})` : ""), tone: "bad", again: true };
+      default: return { text: "Needs you: " + (c.reason || "the transfer did not match.") + (c.received && !/Received/.test(c.reason || "") ? ` Received ${c.token === "BTC" ? Number(c.received).toFixed(8) + " BTC" : Number(c.received).toFixed(2) + " USDT"}${on}.` : c.network ? ` (${c.network})` : ""), tone: "bad", again: true };
     }
   }
 
   // ---------------- gifts paid by bank or card: confirm what arrived ----------------
-  const METHOD_LABEL = { qris: "QRIS", usdt: "USDT", bank: "Bank transfer", wire: "Bank wire (SWIFT)", card: "Card via Lynk", cash: "Cash", other: "Other" };
+  const METHOD_LABEL = { qris: "QRIS", usdt: "USDT", btc: "Bitcoin", bank: "Bank transfer", wire: "Bank wire (SWIFT)", card: "Card via Lynk", cash: "Cash", other: "Other" };
   const payWhen = p => { if (!p || !p.paidAt) return ""; const d = new Date(p.paidAt); return isNaN(d) ? String(p.paidAt) : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); };
   function VerifyGiftDialog({ store, d, onClose, onDone }) {
     const fx = useFx(store);
@@ -1892,7 +1927,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const set = (k, v) => setF(p => ({ ...p, [k]: v }));
     const rate = f.cur === "USD" || f.cur === "USDT" ? 1 : fx && fx[f.cur] ? fx[f.cur] : null;
     useEffect(() => { if (!f.usdTouched && rate && parseFloat(f.paid) > 0) set("usd", ((parseFloat(f.paid) || 0) / rate).toFixed(2)); }, [rate, f.paid, f.cur]);
-    const setMethod = mth => setF(p => ({ ...p, method: mth, usdTouched: false, cur: mth === "usdt" ? "USDT" : mth === "bank" || mth === "qris" ? "IDR" : mth === "wire" ? (p.cur === "EUR" ? "EUR" : "USD") : p.cur === "USDT" ? "USD" : p.cur }));
+    const setMethod = mth => setF(p => ({ ...p, method: mth, usdTouched: false, cur: mth === "usdt" ? "USDT" : mth === "btc" ? "BTC" : mth === "bank" || mth === "qris" ? "IDR" : mth === "wire" ? (p.cur === "EUR" ? "EUR" : "USD") : p.cur === "USDT" ? "USD" : p.cur }));
     const card = f.method === "card";
     const fee = card ? (parseFloat(f.paid) || 0) * (parseFloat(f.feePct) || 0) / 100 : 0;
     const [busy, setBusy] = useState(false);
@@ -1903,7 +1938,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       const payment = { method: f.method, currency: f.cur, paid: parseFloat(f.paid), received: parseFloat(f.paid), rateUsed: rate || null, paidAt: f.date || "", ref: f.ref.trim(), recordedBy: "founder" };
       if (card) { payment.feePct = parseFloat(f.feePct) || 0; payment.fee = Math.round(fee * 100) / 100; payment.net = Math.round(((parseFloat(f.paid) || 0) - fee) * 100) / 100; }
       const label = METHOD_LABEL[f.method] || "Gift";
-      const txHash = f.method === "usdt" && f.ref.trim() ? f.ref.trim() : [label, fmtCur(f.cur === "USDT" ? "USD" : f.cur, f.paid), f.ref.trim()].filter(Boolean).join(" · ");
+      const txHash = (f.method === "usdt" || f.method === "btc") && f.ref.trim() ? f.ref.trim() : [label, fmtCur(f.cur === "USDT" ? "USD" : f.cur, f.paid), f.ref.trim()].filter(Boolean).join(" · ");
       try {
         await store.recordGiftByFounder({ name: f.anonymous ? "" : f.name, anonymous: f.anonymous, email: f.email, country: f.country, amount, txHash, message: f.message, date: f.date ? f.date + "T12:00:00" : null, payment });
         onSaved(okEmail(f.email) ? `Recorded and verified. The receipt is on its way to ${f.email.trim()}.` : "Recorded and verified."); onClose();
@@ -1912,7 +1947,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     return (
       <Modal wide title="Record a gift" sub="For a gift that arrived without a form from the donor. It is verified straight away and the receipt is emailed if you add an email." onClose={onClose}>
         <div className="fd-form">
-          <Field label="How it was given"><div className="fd-seg">{["qris", "bank", "wire", "card", "usdt", "cash", "other"].map(k => <button key={k} type="button" className="fd-chip" aria-pressed={f.method === k} onClick={() => setMethod(k)}>{METHOD_LABEL[k]}</button>)}</div></Field>
+          <Field label="How it was given"><div className="fd-seg">{["qris", "bank", "wire", "card", "usdt", "btc", "cash", "other"].map(k => <button key={k} type="button" className="fd-chip" aria-pressed={f.method === k} onClick={() => setMethod(k)}>{METHOD_LABEL[k]}</button>)}</div></Field>
           <div className="fd-grid2">
             <Field label="Donor's name"><input className="fd-input" value={f.name} disabled={f.anonymous} onChange={e => set("name", e.target.value)} placeholder={f.anonymous ? "Anonymous" : "Name or organisation"} /></Field>
             <Field label="Email for the receipt (optional)"><input className="fd-input" type="email" value={f.email} onChange={e => set("email", e.target.value)} placeholder="donor@example.com" /></Field>
@@ -1920,13 +1955,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <label className="fd-check"><input type="checkbox" checked={f.anonymous} onChange={e => set("anonymous", e.target.checked)} /> Anonymous on the public ledger</label>
           <div className="fd-grid3">
             <Field label="Amount"><input className="fd-input" inputMode="decimal" value={f.paid} onChange={e => set("paid", e.target.value.replace(",", "."))} placeholder="0" /></Field>
-            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => setF(p => ({ ...p, cur: e.target.value, usdTouched: false }))}>{(f.method === "usdt" ? ["USDT"] : f.method === "wire" ? ["USD", "EUR", "SGD"] : ["IDR", "USD", "EUR", "TRY"]).map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+            <Field label="Currency"><select className="fd-input" value={f.cur} onChange={e => setF(p => ({ ...p, cur: e.target.value, usdTouched: false }))}>{(f.method === "usdt" ? ["USDT"] : f.method === "btc" ? ["BTC"] : f.method === "wire" ? ["USD", "EUR", "SGD"] : ["IDR", "USD", "EUR", "TRY"]).map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
             <Field label="Value in US dollars" hint={rate && rate !== 1 ? `1 USD = ${fmtCur(f.cur, rate)}${fx && fx.source === "estimate" ? " (estimate, please check)" : " today"}` : null}><input className="fd-input" inputMode="decimal" value={f.usd} onChange={e => setF(p => ({ ...p, usd: e.target.value.replace(",", "."), usdTouched: true }))} /></Field>
           </div>
           {card && <div className="fd-grid2"><Field label="Lynk fee (%)"><input className="fd-input" inputMode="decimal" value={f.feePct} onChange={e => set("feePct", e.target.value.replace(",", "."))} /></Field><div className="fd-sum" style={{ alignSelf: "end" }}>Lynk keeps <b>{fmtCur(f.cur, fee)}</b>; the receipt shows the full gift.</div></div>}
           <div className="fd-grid3">
             <Field label="Date received"><input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} /></Field>
-            <Field label={f.method === "usdt" ? "Transaction hash" : "Reference (optional)"}><input className="fd-input fd-mono" value={f.ref} onChange={e => set("ref", e.target.value)} placeholder={f.method === "card" ? "Lynk order number" : f.method === "usdt" ? "0x…" : f.method === "wire" ? "SWIFT / bank reference" : "Bank reference"} spellCheck={false} /></Field>
+            <Field label={f.method === "usdt" ? "Transaction hash" : f.method === "btc" ? "Transaction ID" : "Reference (optional)"}><input className="fd-input fd-mono" value={f.ref} onChange={e => set("ref", e.target.value)} placeholder={f.method === "card" ? "Lynk order number" : f.method === "usdt" ? "0x…" : f.method === "wire" ? "SWIFT / bank reference" : "Bank reference"} spellCheck={false} /></Field>
             <Field label="Country (optional)"><input className="fd-input" value={f.country} onChange={e => set("country", e.target.value)} /></Field>
           </div>
           <Field label="Message from the donor (optional)"><input className="fd-input" value={f.message} onChange={e => set("message", e.target.value)} /></Field>
@@ -1987,10 +2022,12 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         <div className="fd-table">
           <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Donor</div><div>Amount</div><div>Reference</div><div>Date</div><div /></div>
           {shown.length === 0 ? <Empty title={filter === "pending" ? "Nothing to verify." : "No donations match."} /> : shown.map(d => {
-            const eth = /^0x[0-9a-f]{10,}$/i.test(d.txHash || "");
-            const onChain = /^0x[0-9a-f]{64}$/i.test((d.txHash || "").trim());
+            const isBtc = !!(d.payment && d.payment.method === "btc");
+            const btcId = isBtc && /^(0x)?[0-9a-f]{64}$/i.test((d.txHash || "").trim()) ? (d.txHash || "").trim().replace(/^0x/i, "").toLowerCase() : "";
+            const eth = /^0x[0-9a-f]{10,}$/i.test(d.txHash || "") || !!btcId;
+            const onChain = /^0x[0-9a-f]{64}$/i.test((d.txHash || "").trim()) || !!btcId;
             const ch = chain.checks && chain.checks[d.id];
-            const txUrl = (d.chain && d.chain.explorer) || (ch && ch.explorer) || `https://etherscan.io/tx/${d.txHash}`;
+            const txUrl = (d.chain && d.chain.explorer) || (ch && ch.explorer) || (btcId ? `https://mempool.space/tx/${btcId}` : `https://etherscan.io/tx/${d.txHash}`);
             return (
               <div key={d.id} className="fd-tr" style={{ gridTemplateColumns: G }}>
                 <div className="fd-td full"><b>{d.anonymous ? "Anonymous" : d.name}{d.anonymous && d.name && d.name !== "Anonymous patron" ? <span className="fd-sub" style={{ fontWeight: 400 }}> ({d.name})</span> : null}</b><small>{[d.email, d.country].filter(Boolean).join(" · ")}</small>{d.message && <small style={{ fontStyle: "italic" }}>“{d.message}”</small>}{isSale(d) && <Tag tone="sky">Library sale</Tag>}</div>
@@ -2008,8 +2045,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                   </div>
                   {d.verified && !isSale(d) && (() => { const l = receiptLine(d, rc[d.id]); return <small className={"fd-rc " + l.tone}>{l.text}</small>; })()}
                 </div>
-                {d.verified && d.verifiedBy === "chain" && d.chain && <div className="fd-chain"><small className="fd-rc ok">Received {Number(d.chain.received || d.amount).toFixed(2)} USDT on {d.chain.network}{Number(d.claimedAmount) && Math.abs(Number(d.claimedAmount) - Number(d.amount)) >= 0.01 ? ` (reported ${money(d.claimedAmount)})` : ""}</small></div>}
-                {!d.verified && onChain && chain.loaded && (() => { const l = chainLine(ch, chain.config); return (
+                {d.verified && d.verifiedBy === "chain" && d.chain && <div className="fd-chain"><small className="fd-rc ok">Received {d.chain.token === "BTC" ? Number(d.chain.received).toFixed(8) + " BTC (" + money(d.chain.valueUsd || d.amount) + ")" : Number(d.chain.received || d.amount).toFixed(2) + " USDT"} on {d.chain.network}{Number(d.claimedAmount) && Math.abs(Number(d.claimedAmount) - Number(d.amount)) >= 0.01 ? ` (reported ${money(d.claimedAmount)})` : ""}</small></div>}
+                {!d.verified && onChain && chain.loaded && (() => { const l = chainLine(ch, chain.config, isBtc); return (
                   <div className="fd-chain"><small className={"fd-rc " + l.tone}>{l.text}</small>{l.again && <button className="fd-btn quiet sm" disabled={!!rechecking[d.id]} onClick={() => recheck(d)}>{rechecking[d.id] ? "Checking…" : "Check again"}</button>}</div>); })()}
               </div>
             );
@@ -2396,7 +2433,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
 
   // The order of the cards is the order of the choices on the donate page (first = leftmost).
   // Rupiah transfers and international wires share one "Bank transfer" choice there, so they share a card here.
-  const CHANNEL_KEYS = ["usdt", "qris", "bank", "card"];
+  const CHANNEL_KEYS = ["usdt", "btc", "qris", "bank", "card"];
   function ChannelsView({ store }) {
     const [open, setOpen] = useState(false);
     const [drag, setDrag] = useState(null);
@@ -2409,8 +2446,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const idrLive = c.bank.enabled !== false && !!c.bank.account;
     const cards = {
       qris: { name: "QRIS (Indonesia)", on: !!(c.qris && c.qris.enabled !== false && qi && qi.ok), lines: [qi && qi.ok ? [qi.merchant, c.qris.provider].filter(Boolean).join(" · ") : "Not set"], mono: qi && qi.ok ? "NMID " + qi.nmid : "" },
-      usdt: { name: "USDT (on-chain)", on: c.usdt.enabled !== false, lines: [[c.usdt.network, c.usdt.asset].filter(Boolean).join(" · ")], mono: c.usdt.address,
-        note: c.usdt.autoVerify !== false ? "Checked on chain automatically. Only gifts on the network above are verified on their own." : "Automatic checks are off. Each gift waits for you." },
+      usdt: { name: "USDT (on-chain)", on: c.usdt.enabled !== false, lines: [[c.usdt.network, c.usdt.asset].filter(Boolean).join(" · ") + (c.usdt.anyEvm ? " · own wallet, every EVM network" : "")], mono: c.usdt.address,
+        note: c.usdt.autoVerify === false ? "Automatic checks are off. Each gift waits for you." : c.usdt.anyEvm ? "Checked on chain automatically on BNB Chain, Ethereum, Polygon and Arbitrum." : "Checked on chain automatically. Only gifts on the network above are verified on their own." },
+      btc: { name: "Bitcoin (BTC)", on: !!(c.btc && c.btc.enabled !== false && BTC_ADDR.test(String(c.btc.address || ""))), lines: ["Bitcoin network · " + ((c.btc && c.btc.confirmations) || 2) + " confirmations"], mono: (c.btc && c.btc.address) || "",
+        note: !c.btc || c.btc.autoVerify !== false ? "Checked on chain automatically and valued in dollars on the day it arrives." : "Automatic checks are off. Each gift waits for you." },
       bank: { name: "Bank transfer", on: idrLive || wireLive,
         lines: [idrLive ? "Rupiah · " + [c.bank.bank, c.bank.account].filter(Boolean).join(" ") : "Rupiah · hidden",
           wireLive ? pockets.map(([k]) => k).join(", ") + " · SWIFT " + c.wire.swift : "USD, EUR, SGD · hidden"],

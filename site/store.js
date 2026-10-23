@@ -147,7 +147,7 @@ window.BrialClipboard = { copy: copyToClipboard };
   } catch (e) { /* ignore */ }
 
   const WALLET = {
-    address: "0x89d3115cb07293D3d208B56AEEEA78A80079321e", // exchange deposit address, BEP-20 only (new since 30 Sep 2026)
+    address: "0x0E6C7a5b6Ca3250D6c81859e1c65D21257E7Ca69", // the endowment's own Trust Wallet (since 23 Oct 2026): every EVM network
     network: "BEP-20",
     asset: "USDT (Tether)",
     confirmations: 15,
@@ -672,13 +672,16 @@ window.BrialClipboard = { copy: copyToClipboard };
     listReports() { return _reports; },
     walletInfo() {
       const u = Store.getPaymentConfig().usdt;
-      return { address: u.address, network: u.network, asset: u.asset, confirmations: Number(u.confirmations) || 12, autoVerify: u.autoVerify !== false };
+      return { address: u.address, network: u.network, asset: u.asset, confirmations: Number(u.confirmations) || 12, autoVerify: u.autoVerify !== false, anyEvm: !!u.anyEvm };
     },
 
     // ----- Payment channels (founder-managed: USDT wallet, bank transfer, card link) -----
     getPaymentConfig() {
       const defaults = {
-        usdt: { enabled: true, address: WALLET.address, network: WALLET.network, asset: "USDT (Tether)", confirmations: WALLET.confirmations },
+        usdt: { enabled: true, address: WALLET.address, network: WALLET.network, asset: "USDT (Tether)", confirmations: WALLET.confirmations, anyEvm: true,
+          previous: [{ address: "0x89d3115cb07293D3d208B56AEEEA78A80079321e", network: "BEP-20", until: "2026-10-23" }] },
+        // Bitcoin to the endowment's own Trust Wallet (native SegWit), checked on chain
+        btc: { enabled: true, address: "bc1qxpawueknjwhp7q4a6cyks0yptg8029h3h8meth", confirmations: 2, autoVerify: true },
         bank: { enabled: true, bank: "Bank Jago", account: "107540735665", holder: "Brial Asif Hayi Paka", currency: "IDR \u00b7 Rupiah" },
         card: { enabled: true, link: "https://lynk.id/brial/s/e1896978jwq9" },
         // Static QRIS from DANA Bisnis (NMID ID1026621752462, MCC 8398 charitable organisations), registered 21 Oct 2026
@@ -686,7 +689,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         // The details live only in the database, never in this file. City only, never a home address.
         wire: { enabled: false, bank: "", swift: "", holder: "", city: "", bankAddress: "", pockets: {}, feeNote: "" },
         // Order of the choices on the donate page, first = leftmost (founder drags them in Payment channels)
-        order: ["usdt", "qris", "bank", "card"],
+        order: ["usdt", "btc", "qris", "bank", "card"],
         qris: { enabled: true, provider: "DANA Bisnis", payload: "00020101021126570011ID.DANA.WWW011893600915303626423802090362642380303UMI51440014ID.CO.QRIS.WWW0215ID10266217524620303UMI5204839853033605802ID5925The Brial Endowment, Orga6013Pasaman Barat61052656663048428" },
       };
       const d = _donations.find(x => x.id === "PAYMENT-CONFIG");
@@ -698,6 +701,7 @@ window.BrialClipboard = { copy: copyToClipboard };
           card: { ...defaults.card, ...(p.card || {}) },
           qris: { ...defaults.qris, ...(p.qris || {}) },
           wire: { ...defaults.wire, ...(p.wire || {}) },
+          btc: { ...defaults.btc, ...(p.btc || {}) },
           order: Array.isArray(p.order) ? p.order.slice() : defaults.order.slice(),
         };
       }
@@ -1155,8 +1159,17 @@ window.BrialClipboard = { copy: copyToClipboard };
     sendReceipt(donationId, to, note) { return Store._mailRpc("be_mail_send_receipt", { p_donation_id: donationId, p_to: to || null, p_note: note || null }); },
     sendTestEmail() { return Store._mailRpc("be_mail_send_test"); },
     // ----- Exchange rates, units of currency per 1 USD (ECB via frankfurter, then open.er-api, then a rough fallback) -----
-    FX_FALLBACK: { IDR: 18000, TRY: 49.5, EUR: 0.86, SGD: 1.3, USD: 1 }, // Oct 2026, used only when both rate services fail
+    FX_FALLBACK: { IDR: 18000, TRY: 49.5, EUR: 0.86, SGD: 1.3, USD: 1, BTC_USD: 80000 }, // Oct 2026, used only when both rate services fail
     _fx: null,
+    // USD price of 1 BTC for the donate form's estimate (the ledger uses the price when the gift is mined)
+    btcPrice() {
+      if (Store._btc && Date.now() - Store._btc.at < 600e3) return Promise.resolve(Store._btc);
+      const done = (usd, source) => (Store._btc = { usd, source, at: Date.now() });
+      const get = (u, pick) => fetch(u, { cache: "no-store" }).then(r => (r.ok ? r.json() : Promise.reject(r.status))).then(pick).then(v => (Number(v) > 1000 ? Number(v) : Promise.reject("bad")));
+      return get("https://mempool.space/api/v1/prices", j => j && j.USD).then(v => done(v, "mempool.space"))
+        .catch(() => get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd", j => j && j.bitcoin && j.bitcoin.usd).then(v => done(v, "CoinGecko")))
+        .catch(() => ({ usd: Store.FX_FALLBACK.BTC_USD, source: "estimate", at: Date.now() }));
+    },
     fxRates() {
       if (Store._fx && Date.now() - Store._fx.at < 6 * 3600e3) return Promise.resolve(Store._fx);
       const ok = r => r && r.IDR > 1000 && r.TRY > 1 && r.EUR > 0.3 && r.EUR < 3;
