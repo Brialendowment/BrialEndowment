@@ -88,6 +88,26 @@ export function layout(b: Block) {
   return { html, text };
 }
 
+// An announcement to donors or awardees: the founder's words, with a footer that says why the
+// person receives it and, for donors, how to stop these emails (one click, no sign-in).
+export function announcementEmail(m: { subject: string; body: string; sign?: boolean; audience: string; unsubscribe?: string }) {
+  const paras = String(m.body || "").replace(/\r\n/g, "\n").trim().split(/\n{2,}/)
+    .map(p => `<p style="margin:0 0 14px">${nl2br(p)}</p>`).join("");
+  const why = m.audience === "donor"
+    ? `You receive this because you gave to The Brial Endowment.${m.unsubscribe ? ` <a href="${esc(m.unsubscribe)}" style="color:${GILT};text-decoration:underline">Unsubscribe</a> from these updates at any time. Receipts for future gifts still reach you.` : ""}`
+    : "You receive this as a Brial Scholar of The Brial Endowment.";
+  const b = layout({
+    pre: String(m.body || "").replace(/\s+/g, " ").slice(0, 120),
+    title: m.subject,
+    intro: `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.7">${paras}</div>` + (m.sign ? FOUNDER_SIGNATURE : ""),
+    foot: `${why}<br>The Brial Endowment &middot; <a href="${SITE}" style="color:${GILT};text-decoration:none">brialendowment.org</a> &middot; <a href="mailto:${HELLO}" style="color:${GILT};text-decoration:none">${HELLO}</a>`,
+  });
+  const tail = m.audience === "donor"
+    ? "\nYou receive this because you gave to The Brial Endowment." + (m.unsubscribe ? "\nUnsubscribe: " + m.unsubscribe : "")
+    : "\nYou receive this as a Brial Scholar of The Brial Endowment.";
+  return { subject: m.subject, html: b.html, text: b.text + "\n" + tail };
+}
+
 export function stripHtml(s: string) {
   return String(s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|h1|tr|table)>/gi, "\n\n").replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ").replace(/&middot;/g, "·").replace(/&rarr;/g, "→").replace(/&#10022;/g, "✦")

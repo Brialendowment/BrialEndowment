@@ -13,6 +13,9 @@
 //   current records for older ones.
 // POST { action: "mail_pdf", id, index }       Authorization: founder session
 //   A PDF attached to that email, rebuilt from the same records.
+// POST { action: "preview_announcement", message }   Authorization: founder session
+// POST { action: "unsubscribe" | "resubscribe", a, e, t }   no session: the signed link from an email
+// POST ?u=1&a=&e=&t=   one-click unsubscribe (RFC 8058) sent by Gmail, Yahoo and other mailboxes
 //
 // Secrets: RESEND_API_KEY (a sending-only key limited to brialendowment.org).
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -78,7 +81,7 @@ function receiptData(d: any, rc: any): ReceiptData {
 }
 
 // ---------------------------------------------------------------- compose
-type Mail = { to: string; from: string; replyTo?: string; subject: string; html: string; text: string; attachments?: { filename: string; content: string }[] };
+type Mail = { to: string; from: string; replyTo?: string; subject: string; html: string; text: string; attachments?: { filename: string; content: string }[]; headers?: Record<string, string> };
 type Built = Mail | { skip: string };
 
 // view = true rebuilds an email that was already sent, for reading: the checks that
@@ -89,6 +92,7 @@ async function build(row: any, settings: any, view = false): Promise<Built> {
 
   if (kind === "test") return { to: founderTo, from: FROM.desk, replyTo: R.HELLO, ...R.testEmail(founderTo) };
   if (kind === "message") return await composeMessage(p, view ? row.sent_at || row.created_at : undefined);
+  if (kind === "announcement") return await composeAnnouncement(p);
 
   if (kind === "receipt" || kind === "donation_reported") {
     const d = donationDoc(await one("donations", row.ref));
@@ -164,6 +168,49 @@ async function composeMessage(p: any, issuedAt?: string): Promise<Built> {
   }
   return out;
 }
+// ---------------------------------------------------------------- announcements and unsubscribing
+// The unsubscribe link carries the address and a signature made with the worker's secret, so it
+// works without signing in and cannot be forged for someone else's address.
+const b64url = (s: string) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const unb64url = (s: string) => { try { return decodeURIComponent(escape(atob(String(s).replace(/-/g, "+").replace(/_/g, "/")))); } catch { return ""; } };
+let secretCache = "", secretCacheAt = 0;
+async function secret() {
+  if (!secretCache || Date.now() - secretCacheAt > 300000) { secretCache = (await ctx()).secret; secretCacheAt = Date.now(); }
+  return secretCache;
+}
+async function sign(audience: string, email: string) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(await secret()), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`unsub:${audience}:${email.toLowerCase()}`)));
+  return b64(mac).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "").slice(0, 32);
+}
+async function unsubLinks(audience: string, email: string) {
+  const q = `a=${audience}&e=${b64url(email.toLowerCase())}&t=${await sign(audience, email)}`;
+  return { page: `${R.SITE}/unsubscribe?${q}`, oneClick: `${URL_}/functions/v1/be-mail?u=1&${q}` };
+}
+async function checkLink(a: unknown, e: unknown, t: unknown) {
+  const audience = String(a || ""), email = unb64url(String(e || "")).trim().toLowerCase();
+  if (!["donor", "awardee"].includes(audience) || !isEmail(email) || !t) return null;
+  const want = await sign(audience, email);
+  if (want.length !== String(t).length) return null;
+  let diff = 0; for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ String(t).charCodeAt(i);
+  return diff === 0 ? { audience, email } : null;
+}
+async function composeAnnouncement(p: any): Promise<Built> {
+  const to = String(p.to || "").trim();
+  if (!isEmail(to)) return { skip: "no email address" };
+  const audience = p.audience === "awardee" ? "awardee" : "donor";
+  if (audience === "donor") {
+    // someone may unsubscribe while the email is still waiting in the queue
+    const { data } = await admin.rpc("be_mail_is_unsubscribed", { p_audience: audience, p_email: to });
+    if (data === true) return { skip: "unsubscribed" };
+  }
+  const links = audience === "donor" ? await unsubLinks(audience, to) : null;
+  const m = R.announcementEmail({ subject: String(p.subject || "").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign === true, audience, unsubscribe: links?.page });
+  const out: Mail = { to, from: SENDERS[p.from] || SENDERS.hello, replyTo: R.HELLO, ...m };
+  if (links) out.headers = { "List-Unsubscribe": `<${links.oneClick}>, <mailto:${R.HELLO}?subject=Unsubscribe>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
+  return out;
+}
+
 function ackNo(date: unknown, to: string) {
   const d = new Date(String(date || "")); const ymd = isNaN(d.getTime()) ? new Date().toISOString().slice(0, 10) : d.toISOString().slice(0, 10);
   let h = 0; for (const c of to.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0;
@@ -177,7 +224,7 @@ async function send(m: Mail, key: string): Promise<{ ok: true; id: string } | { 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json", "Idempotency-Key": key },
-      body: JSON.stringify({ from: m.from, to: [m.to], reply_to: m.replyTo, subject: m.subject, html: m.html, text: m.text, attachments: m.attachments }),
+      body: JSON.stringify({ from: m.from, to: [m.to], reply_to: m.replyTo, subject: m.subject, html: m.html, text: m.text, attachments: m.attachments, headers: m.headers }),
       signal: AbortSignal.timeout(20000),
     });
     const body = await res.json().catch(() => ({}));
@@ -244,6 +291,15 @@ let lastSecret = "", secretAt = 0;
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  // One-click unsubscribe from the mailbox itself: a form POST to the address in List-Unsubscribe
+  const q = new URL(req.url).searchParams;
+  if (q.get("u") === "1") {
+    try {
+      const who = await checkLink(q.get("a"), q.get("e"), q.get("t"));
+      if (who) await admin.rpc("be_mail_unsub_set", { p_audience: who.audience, p_email: who.email, p_on: true, p_source: "one-click" });
+      return json({ ok: !!who }, who ? 200 : 400);
+    } catch (e) { console.error("be-mail one-click", e); return json({ ok: false }, 500); }
+  }
   let body: any;
   try { body = await req.json(); } catch { return json({ error: "bad_request" }, 400); }
 
@@ -255,7 +311,24 @@ Deno.serve(async (req) => {
       return json(await drain());
     }
 
+    // The unsubscribe page on the website: no session, the signed link is the proof
+    if (body?.action === "unsubscribe" || body?.action === "resubscribe") {
+      const who = await checkLink(body.a, body.e, body.t);
+      if (!who) return json({ error: "invalid_link" }, 400);
+      const { error } = await admin.rpc("be_mail_unsub_set", { p_audience: who.audience, p_email: who.email, p_on: body.action === "unsubscribe", p_source: "link" });
+      if (error) throw new Error("unsub: " + error.message);
+      const [user, host] = who.email.split("@");
+      return json({ ok: true, unsubscribed: body.action === "unsubscribe", email: user.slice(0, 2) + "•••@" + host });
+    }
+
     if (!(await isFounder(req))) return json({ error: "forbidden" }, 403);
+
+    if (body?.action === "preview_announcement") {
+      const p = body.message || {};
+      const audience = p.audience === "awardee" ? "awardee" : "donor";
+      const m = R.announcementEmail({ subject: String(p.subject || "(no subject)").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign === true, audience, unsubscribe: audience === "donor" ? R.SITE + "/unsubscribe" : undefined });
+      return json({ subject: m.subject, html: m.html, from: SENDERS[p.from] || SENDERS.hello });
+    }
 
     if (body?.action === "receipt_pdf") {
       const id = String(body.donationId || "");

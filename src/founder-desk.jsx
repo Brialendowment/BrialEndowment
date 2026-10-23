@@ -192,6 +192,41 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-scrim{position:fixed;inset:0;z-index:300;background:rgba(5,11,22,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;animation:fdFade .18s ease-out}
 .fd-modal{width:100%;max-width:560px;max-height:calc(100vh - 36px);overflow:auto;background:#10213D;border:1px solid rgba(201,169,97,.3);border-radius:16px;padding:24px 24px 22px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9);animation:fdRise .25s cubic-bezier(.22,1,.36,1) both}
 .fd-modal.wide{max-width:760px}
+.fd-modal.xl{max-width:1080px}
+.fd-aud{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}
+.fd-aud-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.fd-aud-h h4{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gilt2);font-weight:600}
+.fd-aud-box{border:1px solid var(--line2);border-radius:12px;background:rgba(10,22,40,.35);overflow:hidden}
+.fd-aud-all{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;min-height:46px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.fd-aud-all label{display:flex;align-items:center;gap:10px;cursor:pointer}
+.fd-aud-rows{max-height:min(46vh,380px);overflow:auto;overscroll-behavior:contain}
+.fd-aud-row{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-top:1px solid var(--line)}
+.fd-aud-row:first-child{border-top:0}
+.fd-aud-row:hover{background:rgba(239,233,220,.025)}
+.fd-aud-row label{display:flex;gap:12px;align-items:flex-start;flex:1;min-width:0;cursor:pointer}
+.fd-aud input[type=checkbox]{width:18px;height:18px;margin:2px 0 0;accent-color:#C9A961;flex-shrink:0;cursor:pointer}
+.fd-aud-main{display:flex;flex-direction:column;gap:1px;min-width:0}
+.fd-aud-main b{font-size:14px;font-weight:600;color:var(--text);overflow-wrap:anywhere}
+.fd-aud-main small{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.fd-aud-doubt{color:var(--amber)!important;font-size:12.5px}
+.fd-aud-tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center;flex-shrink:0;max-width:48%}
+.fd-aud-row.off label{cursor:not-allowed}
+.fd-aud-row.off .fd-aud-main{opacity:.55}
+.fd-aud-add{padding:12px 14px;border-top:1px solid var(--line);background:rgba(10,22,40,.3)}
+.fd-aud-addrow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.fd-aud-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.fd-aud-tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.fd-aud-tile{display:flex;gap:14px;align-items:center;text-align:left;width:100%;padding:16px;border:1px solid var(--line2);border-radius:12px;background:rgba(10,22,40,.4);color:var(--text);cursor:pointer;font:inherit;transition:border-color .15s,background .15s}
+.fd-aud-tile:hover:not(:disabled){border-color:rgba(201,169,97,.55);background:var(--giltsoft)}
+.fd-aud-tile:focus-visible{outline:2px solid var(--gilt2);outline-offset:2px}
+.fd-aud-tile:disabled{opacity:.55;cursor:not-allowed}
+.fd-aud-tile b{display:block;font-size:15px;font-weight:600}
+.fd-aud-tile small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.fd-aud-tile>span:nth-child(2){flex:1;min-width:0}
+.fd-aud-ico{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--giltsoft);color:var(--gilt2);flex-shrink:0}
+.fd-aud-go{color:var(--gilt);font-size:18px}
+@media (max-width:900px){.fd-aud{grid-template-columns:1fr}.fd-aud-rows{max-height:none}}
+@media (max-width:640px){.fd-aud-tiles{grid-template-columns:1fr}.fd-aud-row{flex-wrap:wrap}.fd-aud-row label{flex:1 1 100%}.fd-aud-tags{max-width:none;justify-content:flex-start;padding-left:30px}.fd-aud-addrow{grid-template-columns:1fr}.fd-aud-foot .fd-actions{width:100%}.fd-aud-foot .fd-btn{flex:1}}
 .fd-modal-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
 .fd-x{background:none;border:1px solid var(--line2);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:17px;line-height:1;flex-shrink:0}
 .fd-sec-setup{}@media (max-width:640px){.fd-sec-setup{grid-template-columns:1fr!important}}
@@ -449,7 +484,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   ICON.email = ICON.contact; ICON.security = ICON.shield; ICON.impact = ICON.report;
 
   // ---------------- small UI ----------------
-  function Modal({ title, sub, onClose, wide, children }) {
+  function Modal({ title, sub, onClose, wide, xl, children }) {
     useEffect(() => {
       const k = e => { if (e.key === "Escape") onClose(); };
       document.addEventListener("keydown", k);
@@ -459,7 +494,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     }, []);
     return (
       <div className="fd-scrim" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-        <div className={"fd-modal" + (wide ? " wide" : "")} role="dialog" aria-modal="true" aria-label={title}>
+        <div className={"fd-modal" + (xl ? " xl" : wide ? " wide" : "")} role="dialog" aria-modal="true" aria-label={title}>
           <div className="fd-modal-head">
             <div><h2 className="fd-h3">{title}</h2>{sub && <p className="fd-sub">{sub}</p>}</div>
             <button className="fd-x" onClick={onClose} aria-label="Close">×</button>
@@ -2613,6 +2648,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const [base, setBase] = useState(JSON.stringify(saved));
     const [busy, setBusy] = useState("");
     const [mailOpen, setMailOpen] = useState(false);
+    const [askShare, setAskShare] = useState(false);
     const [m, flash] = useFlash();
     useEffect(() => { setF(saved); setBase(JSON.stringify(saved)); }, [sel, saved && saved.updatedAt]);
     const dirty = f && JSON.stringify(f) !== base;
@@ -2657,14 +2693,18 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       const rec = { ...next, updatedAt: new Date().toISOString() };
       if (rec.status === "published") rec.public = publicPart(rec.snapshot, rec);
       setBusy("save");
-      try { await store.saveImpactReports([...list, rec]); setF(rec); setBase(JSON.stringify(rec)); flash(msg); }
+      let ok = false;
+      try { await store.saveImpactReports([...list, rec]); setF(rec); setBase(JSON.stringify(rec)); flash(msg); ok = true; }
       catch (e) { flash("Could not save. Check your connection and try again.", "err"); }
       setBusy("");
+      return ok;
     };
     const save = () => commit(f, published ? "Saved. The public report is updated." : "Draft saved.");
     const publish = () => {
       const s = computeImpact(store, f);
-      commit({ ...f, status: "published", snapshot: s, publishedAt: f.publishedAt || new Date().toISOString() }, "Published. The report is live on the website.");
+      const first = !f.publishedAt;
+      commit({ ...f, status: "published", snapshot: s, publishedAt: f.publishedAt || new Date().toISOString() }, "Published. The report is live on the website.")
+        .then(ok => { if (ok && (first || !f.emailedAt)) setAskShare(true); });
     };
     const unpublish = () => commit({ ...f, status: "draft", public: null, snapshot: null }, "Back to draft. The public page no longer shows this report.");
     const preview = print => {
@@ -2672,15 +2712,6 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       window.open("/impact/" + f.year + "?preview=1" + (print ? "&print=1" : ""), "_blank", "noopener");
     };
     const P = snap.people, G = snap.gifts, M = snap.money;
-    const donorList = (() => {
-      const seen = new Map();
-      (store.listDonations() || []).forEach(d => {
-        if ((store.isInternalDonation && store.isInternalDonation(d)) || !d.verified || isSaleD(d) || isEntD(d)) return;
-        const e = String(d.email || "").trim(); if (!okEmail(e)) return;
-        const k = e.toLowerCase(); if (!seen.has(k)) seen.set(k, { email: e, name: d.anonymous ? "" : d.name || "" });
-      });
-      return [...seen.values()];
-    })();
 
     return (
       <>
@@ -2799,7 +2830,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                 <a className="fd-btn ghost sm" href={"/impact/" + f.year} target="_blank" rel="noopener noreferrer">Open public page {ICON.ext}</a>
                 <a className="fd-btn ghost sm" href={"/impact/" + f.year + "?print=1"} target="_blank" rel="noopener noreferrer">{ICON.pdf} Download PDF</a>
                 <button className="fd-btn ghost sm" onClick={() => copy(reportUrl(f.year))}>Copy link</button>
-                <button className="fd-btn primary sm" disabled={!donorList.length} onClick={() => setMailOpen(true)}>Email donors</button>
+                <button className="fd-btn primary sm" onClick={() => setMailOpen(true)}>Share with donors</button>
               </div>
             </div>
           </div>
@@ -2823,51 +2854,17 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             )}
           </div>
         </div>
-        {mailOpen && <ImpactMail store={store} rep={f} donors={donorList} onClose={() => setMailOpen(false)} onSent={n => commit({ ...f, emailedAt: new Date().toISOString(), emailedCount: (f.emailedCount || 0) + n }, `Sent to ${n} ${plural(n, "donor", "donors")}.`)} />}
-      </>
-    );
-  }
-
-  function ImpactMail({ store, rep, donors, onClose, onSent }) {
-    const [pick, setPick] = useState(() => donors.map(d => d.email));
-    const [subject, setSubject] = useState(`${rep.title}: what your gift became`);
-    const [body, setBody] = useState(`Dear friend,\n\nYour gift helped make this year possible, and we would like you to see what it became. Our ${rep.title} report is now published:\n\n${reportUrl(rep.year)}\n\nThank you for trusting us with something meant to outlast us all.\n\nWith gratitude,`);
-    const [busy, setBusy] = useState(false);
-    const [err, setErr] = useState("");
-    const toggle = e => setPick(p => (p.includes(e) ? p.filter(x => x !== e) : [...p, e]));
-    const send = async () => {
-      setBusy(true); setErr("");
-      let sent = 0;
-      try {
-        for (let i = 0; i < pick.length; i += 20) {
-          const r = await store.sendMessage({ from: "hello", to: pick.slice(i, i + 20), subject: subject.trim(), body: body.trim(), sign: true });
-          sent += r && r.queued ? r.queued : Math.min(20, pick.length - i);
-        }
-        onSent(sent); onClose();
-      } catch (e) {
-        const c = String(e && (e.message || e));
-        setErr((sent ? `Sent to ${sent}. ` : "") + (c.indexOf("rate_limited") >= 0 ? "The hourly email limit was reached. Send the rest in an hour." : "Could not send right now. Try again in a moment."));
-        if (sent) onSent(sent);
-      }
-      setBusy(false);
-    };
-    return (
-      <Modal wide title="Email the report to donors" sub="Each donor receives their own email from hello@brialendowment.org. No one sees the other addresses." onClose={onClose}>
-        <div className="fd-form">
-          <Field label={`Recipients (${pick.length} of ${donors.length})`}>
-            <div style={{ display: "grid", gap: 6, maxHeight: 180, overflow: "auto" }}>
-              {donors.map(d => <label key={d.email} className="fd-switch" style={{ gap: 8 }}><input type="checkbox" checked={pick.includes(d.email)} onChange={() => toggle(d.email)} style={{ accentColor: "#C9A961" }} />{d.email}{d.name ? " · " + d.name : ""}</label>)}
+        {askShare && (
+          <Modal title="Your report is live" sub={reportUrl(f.year)} onClose={() => setAskShare(false)}>
+            <p className="fd-sub" style={{ fontSize: 14, lineHeight: 1.6 }}>Would you like to share it with your donors by email? You choose who receives it and see the email before anything is sent. Nothing goes out unless you confirm.</p>
+            <div className="fd-actions" style={{ marginTop: 16 }}>
+              <button className="fd-btn primary" onClick={() => { setAskShare(false); setMailOpen(true); }}>Choose donors and preview</button>
+              <button className="fd-btn ghost" onClick={() => setAskShare(false)}>Not now</button>
             </div>
-          </Field>
-          <Field label="Subject"><input className="fd-input" value={subject} onChange={e => setSubject(e.target.value)} /></Field>
-          <Field label="Message" hint="Your signature is added at the end."><textarea className="fd-input" style={{ minHeight: 200 }} value={body} onChange={e => setBody(e.target.value)} /></Field>
-        </div>
-        {err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
-        <div className="fd-actions" style={{ marginTop: 18 }}>
-          <Confirm className="fd-btn primary" armedLabel={`Confirm · send to ${pick.length} ${plural(pick.length, "donor", "donors")}`} disabled={!pick.length || !subject.trim() || !body.trim() || busy} onConfirm={send}>{busy ? "Sending…" : "Send"}</Confirm>
-          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
-        </div>
-      </Modal>
+          </Modal>
+        )}
+        {mailOpen && <AnnounceDialog store={store} audience="donor" preset={{ ...impactTemplate(f), from: "hello", title: "Share the report with donors" }} onClose={() => setMailOpen(false)} onSent={n => commit({ ...f, emailedAt: new Date().toISOString(), emailedCount: (f.emailedCount || 0) + n }, `Sent to ${n} ${plural(n, "donor", "donors")}.`)} />}
+      </>
     );
   }
 
@@ -4327,7 +4324,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     );
   }
 
-  const MAIL_LABEL = { test: "Test email" };
+  const MAIL_LABEL = { test: "Test email", message: "Email", announcement: "Announcement" };
   MAIL_GROUPS.forEach(g => g.items.forEach(([k, l]) => { MAIL_LABEL[k] = l; }));
   const MAIL_TONE = { sent: "ok", pending: "warn", sending: "warn", skipped: "", failed: "bad" };
   const MAIL_WORD = { sent: "Sent", pending: "Waiting", sending: "Sending", skipped: "Not sent", failed: "Failed" };
@@ -4405,7 +4402,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         ) : (
           <>
             <Field label="From">
-              <select className="fd-input" value={f.from} onChange={e => set("from", e.target.value)}>{SENDERS.map(s => <option key={s[0]} value={s[0]}>{s[1]} — {s[2]}</option>)}</select>
+              <select className="fd-input" value={f.from} onChange={e => set("from", e.target.value)}>{SENDERS.map(s => <option key={s[0]} value={s[0]}>{s[1]} · {s[2]}</option>)}</select>
             </Field>
             <p className="fd-sub" style={{ margin: "4px 0 0" }}>{S[3]}.</p>
             <Field label="To" hint={badTo.length ? "" : "One or more addresses, separated by commas. Each person gets their own email."} style={{ marginTop: 12 }}>
@@ -4449,6 +4446,236 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     );
   }
 
+  // ============================================================
+  // ANNOUNCEMENTS: one message to many donors or awardees, each in their own email
+  // ============================================================
+  const TYPO_DOMAINS = { "gmial.com": "gmail.com", "gamil.com": "gmail.com", "gmai.com": "gmail.com", "gmail.co": "gmail.com", "gmail.con": "gmail.com", "gnail.com": "gmail.com", "yahoo.con": "yahoo.com", "yaho.com": "yahoo.com", "hotmial.com": "hotmail.com", "hotmail.con": "hotmail.com", "outlok.com": "outlook.com" };
+  // A warning, never a block: an address that is valid in form but very likely mistyped
+  const emailDoubt = e => {
+    const [user, host] = String(e || "").toLowerCase().split("@");
+    if (!host) return "";
+    if (TYPO_DOMAINS[host]) return "Did you mean @" + TYPO_DOMAINS[host] + "?";
+    if ((host === "gmail.com" || host === "googlemail.com") && user.split("+")[0].replace(/\./g, "").length < 6) return "Gmail addresses have at least 6 characters before the @, so this one is probably mistyped.";
+    return "";
+  };
+  // Keep a name as the person wrote it, unless it is all lower or all upper case
+  const nameCase = s => { const t = String(s || "").trim(); return t && (t === t.toLowerCase() || t === t.toUpperCase()) ? titleCase(t) : t; };
+  const AUD = {
+    donor: { one: "donor", many: "donors", title: "Announcement to donors", sub: "Everyone who gave through the website, plus anyone you add. Each person gets their own email, with a link to unsubscribe." },
+    awardee: { one: "awardee", many: "awardees", title: "Announcement to awardees", sub: "Your Brial Scholars, plus anyone you add, such as a guardian. Each person gets their own email." },
+  };
+  // Everyone the records know for an audience, merged with the addresses added by hand
+  function audienceList(store, audience, extra) {
+    const unsub = new Set((extra.unsubscribed || []).filter(x => x.audience === audience).map(x => String(x.email).toLowerCase()));
+    const map = new Map();
+    const row = email => { const k = String(email).trim().toLowerCase(); if (!map.has(k)) map.set(k, { key: k, email: String(email).trim(), name: "", manual: false, gifts: 0, verified: 0, lastAt: "" }); return map.get(k); };
+    if (audience === "donor") {
+      (store.listDonations() || []).forEach(d => {
+        if ((store.isInternalDonation && store.isInternalDonation(d)) || isSaleD(d) || isEntD(d)) return;
+        const e = String(d.email || "").trim(); if (!okEmail(e)) return;
+        const r = row(e), at = String(d.submittedAt || d.created_at || "");
+        r.gifts += 1; if (d.verified) r.verified += 1;
+        if (at >= r.lastAt) { r.lastAt = at; if (!d.anonymous && d.name) r.name = nameCase(d.name); }
+        else if (!r.name && !d.anonymous && d.name) r.name = nameCase(d.name);
+      });
+    } else {
+      (store.listApplicants() || []).filter(a => a.status === "accepted" && okEmail(a.email)).forEach(a => {
+        const r = row(a.email); r.name = nameCase(a.name || ""); r.scholarId = a.scholarId || ""; r.sch = a.scholarStatus || "active";
+      });
+    }
+    (extra.contacts || []).filter(c => c.audience === audience && okEmail(c.email)).forEach(c => { const r = row(c.email); r.manual = true; if (!r.name && c.name) r.name = c.name; });
+    return [...map.values()].map(r => ({ ...r, unsub: unsub.has(r.key), doubt: emailDoubt(r.email) }))
+      .sort((a, b) => (a.unsub - b.unsub) || String(a.name || a.email).localeCompare(String(b.name || b.email)));
+  }
+  // Ticked to begin with: people you would normally write to, never a doubtful or unsubscribed address
+  const defaultPick = (audience, r) => !r.unsub && !r.doubt && (audience === "donor" ? r.verified > 0 || r.manual : r.manual || r.sch === "active");
+  const APP_BODY = {
+    awardee: "Halo, Brial Scholar,\n\nKabar baik: The Brial Endowment sekarang bisa dipasang sebagai aplikasi di HP, tablet, maupun laptop kamu. Dengan aplikasi ini, Scholar Portal, informasi semester, dan pengumuman dari kami bisa kamu buka dengan satu ketukan dari layar utama, tanpa perlu mengetik alamat situs setiap kali.\n\nKami sangat menyarankan kamu memasangnya. Caranya mudah dan tidak perlu lewat Play Store atau App Store:\n\nAndroid (Chrome): buka brialendowment.org, ketuk menu ⋮ di kanan atas, lalu pilih \"Install app\" atau \"Tambahkan ke layar utama\".\n\niPhone atau iPad (Safari): buka brialendowment.org, ketuk tombol Share, gulir ke bawah, lalu pilih \"Add to Home Screen\".\n\nLaptop (Chrome atau Edge): buka brialendowment.org, lalu klik ikon install di ujung kanan address bar.\n\nKamu juga bisa menggulir ke bagian paling bawah situs dan mengetuk \"Install the app\". Langkah-langkahnya akan ditunjukkan sesuai perangkat yang kamu pakai.\n\nSetelah terpasang, ikon bintang emas The Brial Endowment akan muncul di layar utamamu. Untuk masuk ke portal, buka aplikasinya, gulir ke bagian Scholar Portal, lalu masuk seperti biasa. Aplikasi ini memperbarui dirinya sendiri setiap kali ada perubahan, jadi kamu selalu melihat informasi terbaru, dan hampir tidak memakan ruang penyimpanan.\n\nKalau ada kendala saat memasangnya, cukup balas email ini.\n\nSalam hangat,\nThe Brial Endowment",
+    donor: "Dear friend,\n\nThe Brial Endowment can now be installed as an app on your phone, tablet or computer. It keeps the open ledger, our programmes and every update one tap away, without typing the address each time.\n\nIt takes a few seconds and needs no app store:\n\nAndroid (Chrome): open brialendowment.org, tap the ⋮ menu, then choose \"Install app\" or \"Add to Home screen\".\n\niPhone or iPad (Safari): open brialendowment.org, tap Share, then choose \"Add to Home Screen\".\n\nComputer (Chrome or Edge): open brialendowment.org and click the install icon at the right end of the address bar.\n\nYou can also tap \"Install the app\" at the bottom of the website, and it shows the steps for your device.\n\nThank you for being part of something meant to outlast us all.\n\nWith gratitude,\nThe Brial Endowment",
+  };
+  const impactTemplate = rep => ({ subject: `${rep.title}: what your gift became`, body: `Dear friend,\n\nYour gift helped make this year possible, and we would like you to see what it became. Our ${rep.title} report is now published:\n\n${reportUrl(rep.year)}\n\nThank you for trusting us with something meant to outlast us all.\n\nWith gratitude,`, sign: true });
+  const ICON_DONOR = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>;
+  const ICON_AWARDEE = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c2.5 2 9.5 2 12 0v-5" /><path d="M22 9v6" /></svg>;
+
+  function AnnounceDialog({ store, audience, preset, onClose, onSent }) {
+    const A = AUD[audience];
+    const [extra, setExtra] = useState(null);
+    const [note, setNote] = useState("");
+    const [q, setQ] = useState("");
+    const [filter, setFilter] = useState("all");
+    const [pick, setPick] = useState(null);
+    const [f, setF] = useState(() => ({ from: (preset && preset.from) || "hello", subject: (preset && preset.subject) || "", body: (preset && preset.body) || "", sign: !!(preset && preset.sign) }));
+    const [add, setAdd] = useState({ open: false, email: "", name: "", err: "", busy: false });
+    const [prev, setPrev] = useState(null);
+    const [busy, setBusy] = useState("");
+    const [err, setErr] = useState("");
+    const allRef = useRef(null);
+    const load = useCallback(async () => {
+      try { setExtra(await store.mailContacts()); setNote(""); }
+      catch (e) { setExtra(x => x || { contacts: [], unsubscribed: [] }); setNote("The addresses you added by hand could not be loaded. Everyone in your records is still here."); }
+    }, [store]);
+    useEffect(() => { load(); }, [load]);
+    const list = useMemo(() => (extra ? audienceList(store, audience, extra) : []), [extra, store, audience]);
+    useEffect(() => { if (extra && pick === null) setPick(new Set(list.filter(r => defaultPick(audience, r)).map(r => r.key))); }, [extra, list]);
+    const sel = pick || new Set();
+    const set = (k, v) => { setF(p => ({ ...p, [k]: v })); setPrev(null); };
+    const count = fn => list.filter(fn).length;
+    const FILTERS = audience === "donor"
+      ? [["all", "All", list.length], ["verified", "Verified gifts", count(r => r.verified > 0)], ["waiting", "Awaiting verification", count(r => r.gifts > 0 && !r.verified)], ["manual", "Added by you", count(r => r.manual)], ["unsub", "Unsubscribed", count(r => r.unsub)]]
+      : [["all", "All", list.length], ["active", "Active", count(r => r.sch === "active")], ["other", "Paused or graduated", count(r => r.sch && r.sch !== "active")], ["manual", "Added by you", count(r => r.manual)]];
+    const passes = r => filter === "all" || (filter === "verified" && r.verified > 0) || (filter === "waiting" && r.gifts > 0 && !r.verified) || (filter === "manual" && r.manual) || (filter === "unsub" && r.unsub) || (filter === "active" && r.sch === "active") || (filter === "other" && r.sch && r.sch !== "active");
+    const needle = q.trim().toLowerCase();
+    const shown = list.filter(r => passes(r) && (!needle || (r.name + " " + r.email + " " + (r.scholarId || "")).toLowerCase().includes(needle)));
+    const selectable = shown.filter(r => !r.unsub);
+    const onCount = selectable.filter(r => sel.has(r.key)).length;
+    const allOn = selectable.length > 0 && onCount === selectable.length;
+    useEffect(() => { if (allRef.current) allRef.current.indeterminate = onCount > 0 && !allOn; }, [onCount, allOn]);
+    const toggle = k => { setPick(p => { const n = new Set(p || []); n.has(k) ? n.delete(k) : n.add(k); return n; }); setPrev(null); };
+    const toggleAll = () => { setPick(p => { const n = new Set(p || []); selectable.forEach(r => (allOn ? n.delete(r.key) : n.add(r.key))); return n; }); setPrev(null); };
+    const chosen = list.filter(r => !r.unsub && sel.has(r.key));
+    const doubtful = chosen.filter(r => r.doubt).length;
+    const ready = chosen.length > 0 && f.subject.trim() && f.body.trim();
+    const msg = () => ({ audience, to: chosen.map(r => r.email), from: f.from, subject: f.subject.trim(), body: f.body.trim(), sign: f.sign });
+
+    const addContact = async () => {
+      const e = add.email.trim();
+      if (!okEmail(e)) { setAdd(a => ({ ...a, err: "This doesn't look like an email address." })); return; }
+      const k = e.toLowerCase(), have = list.find(r => r.key === k);
+      if (have && have.unsub) { setAdd(a => ({ ...a, err: "This person unsubscribed from these emails. Only they can subscribe again, from the link in any earlier email." })); return; }
+      setAdd(a => ({ ...a, busy: true, err: "" }));
+      try {
+        await store.addMailContact(audience, e, add.name.trim());
+        await load();
+        if (!emailDoubt(e)) setPick(p => new Set([...(p || []), k]));
+        setFilter("all"); setQ("");
+        setAdd({ open: true, email: "", name: "", err: have ? "Already on the list, so it has been ticked." : "", busy: false });
+      } catch (x) { setAdd(a => ({ ...a, busy: false, err: String(x && x.message).indexOf("invalid_email") >= 0 ? "This doesn't look like an email address." : "Could not add it. Try again in a moment." })); }
+    };
+    const removeContact = async r => {
+      try { await store.removeMailContact(audience, r.email); await load(); setPick(p => { const n = new Set(p || []); n.delete(r.key); return n; }); }
+      catch (x) { setErr("Could not remove it. Try again in a moment."); }
+    };
+    const preview = async () => { setBusy("prev"); setErr(""); try { setPrev(await store.previewAnnouncement(msg())); } catch (e) { setErr("Could not load the preview."); } setBusy(""); };
+    const send = async () => {
+      setBusy("send"); setErr("");
+      try { const r = await store.sendAnnouncement(msg()); onSent(r && typeof r.queued === "number" ? r.queued : chosen.length, (r && r.skipped) || 0); onClose(); }
+      catch (e) { const c = String(e && (e.message || e)); setErr(c.indexOf("rate_limited") >= 0 ? "That is more than 1,000 announcement emails in one day. Send the rest tomorrow." : c.indexOf("invalid_email") >= 0 ? "One of the addresses doesn't look right. Check the list and try again." : "Could not send right now. Try again in a moment."); }
+      setBusy("");
+    };
+    const S = SENDERS.find(s => s[0] === f.from) || SENDERS[1];
+    const meta = r => audience === "donor"
+      ? (r.gifts ? `${r.gifts} ${plural(r.gifts, "gift", "gifts")}${r.verified < r.gifts ? ` · ${r.gifts - r.verified} awaiting verification` : ""} · last ${fdate(r.lastAt)}` : "No gift on record yet")
+      : (r.scholarId ? r.scholarId : "Not a scholar record");
+    const latest = (store.getImpactReports ? store.getImpactReports() : []).filter(r => r.status === "published").sort((a, b) => Number(b.year) - Number(a.year))[0];
+    const templates = (ANN_TEMPLATES[audience] || []).concat(audience === "donor" && latest ? [["impact", "Impact Report " + latest.year, impactTemplate(latest)]] : []);
+    const later = chosen.length > 90 ? chosen.length - 90 : 0;
+
+    if (!extra || !pick) return <Modal xl title={A.title} sub={A.sub} onClose={onClose}><p className="fd-sub">Loading the list…</p></Modal>;
+    return (
+      <Modal xl title={preset && preset.title || A.title} sub={A.sub} onClose={onClose}>
+        {prev ? (
+          <>
+            <div className="fd-sub" style={{ margin: "0 0 10px" }}><b style={{ color: "var(--text)" }}>From</b> {S[1]} &lt;{S[2]}&gt; · <b style={{ color: "var(--text)" }}>To</b> {chosen.length} {plural(chosen.length, A.one, A.many)}, each in their own email{audience === "donor" ? " · every email carries its own unsubscribe link" : ""}</div>
+            <iframe className="fd-mprev" title="Email preview" sandbox="" srcDoc={prev.html} />
+            {later > 0 && <div className="fd-msg info" style={{ marginTop: 12 }}>The free plan sends up to 90 emails a day. The first 90 go out now and the other {later} follow automatically over the next day.</div>}
+            {err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
+            <div className="fd-actions" style={{ marginTop: 14 }}>
+              <Confirm className="fd-btn primary" armedLabel={`Confirm · send to ${chosen.length} ${plural(chosen.length, A.one, A.many)}`} disabled={!ready || !!busy} onConfirm={send}>{busy === "send" ? "Sending…" : "Send"}</Confirm>
+              <button className="fd-btn ghost" onClick={() => setPrev(null)}>Back to editing</button>
+            </div>
+          </>
+        ) : (
+          <>
+            {note && <div className="fd-msg info" style={{ marginBottom: 14 }}>{note}</div>}
+            <div className="fd-aud">
+              <section aria-label="Recipients">
+                <div className="fd-aud-h"><h4>1 · Who receives it</h4><Tag tone={chosen.length ? "ok" : ""}>{chosen.length} of {list.filter(r => !r.unsub).length} selected</Tag></div>
+                <Search value={q} onChange={setQ} placeholder={audience === "donor" ? "Search a name or email" : "Search a name, email or scholar ID"} />
+                <div style={{ margin: "10px 0" }}><Seg items={FILTERS.filter(x => x[0] === "all" || x[2] > 0)} value={filter} onChange={setFilter} /></div>
+                <div className="fd-aud-box">
+                  <div className="fd-aud-all">
+                    <label><input ref={allRef} type="checkbox" checked={allOn} disabled={!selectable.length} onChange={toggleAll} />{allOn ? "Untick all shown" : "Tick all shown"}{selectable.length !== list.length ? ` (${selectable.length})` : ""}</label>
+                    {sel.size > 0 && <button className="fd-btn quiet sm" onClick={() => { setPick(new Set()); setPrev(null); }}>Clear</button>}
+                  </div>
+                  <div className="fd-aud-rows">
+                    {shown.length === 0 ? <p className="fd-sub" style={{ padding: "14px" }}>{list.length ? "No one matches." : `No ${A.many} with an email yet. Add one below.`}</p> : shown.map(r => (
+                      <div className={"fd-aud-row" + (r.unsub ? " off" : "")} key={r.key}>
+                        <label>
+                          <input type="checkbox" checked={!r.unsub && sel.has(r.key)} disabled={r.unsub} onChange={() => toggle(r.key)} aria-label={(r.name || r.email) + (r.unsub ? ", unsubscribed" : "")} />
+                          <span className="fd-aud-main">
+                            <b>{r.name || r.email}</b>
+                            {r.name && <small>{r.email}</small>}
+                            <small>{meta(r)}</small>
+                            {r.doubt && <small className="fd-aud-doubt">{r.doubt}</small>}
+                          </span>
+                        </label>
+                        <span className="fd-aud-tags">
+                          {r.unsub && <Tag tone="bad">Unsubscribed</Tag>}
+                          {r.doubt && !r.unsub && <Tag tone="warn">Check address</Tag>}
+                          {audience === "awardee" && r.sch && SCH[r.sch] && <Tag tone={SCH[r.sch][0]}>{SCH[r.sch][1]}</Tag>}
+                          {r.manual && <Tag>Added by you</Tag>}
+                          {r.manual && <Confirm className="fd-btn quiet sm" armedLabel="Remove?" onConfirm={() => removeContact(r)}>Remove</Confirm>}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="fd-aud-add">
+                    {!add.open ? <button className="fd-btn quiet sm" onClick={() => setAdd(a => ({ ...a, open: true }))}>+ Add an email</button> : (
+                      <>
+                        <div className="fd-aud-addrow">
+                          <input className="fd-input" type="email" value={add.email} onChange={e => setAdd(a => ({ ...a, email: e.target.value, err: "" }))} onKeyDown={e => { if (e.key === "Enter") addContact(); }} placeholder="name@example.com" aria-label="Email to add" spellCheck={false} autoFocus />
+                          <input className="fd-input" value={add.name} onChange={e => setAdd(a => ({ ...a, name: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") addContact(); }} placeholder="Name (optional)" aria-label="Name" />
+                          <button className="fd-btn primary sm" disabled={add.busy || !add.email.trim()} onClick={addContact}>{add.busy ? "Adding…" : "Add"}</button>
+                        </div>
+                        {add.email && emailDoubt(add.email) && !add.err && <small className="fd-aud-doubt" style={{ display: "block", marginTop: 6 }}>{emailDoubt(add.email)}</small>}
+                        {add.err && <small className={add.err.indexOf("Already") === 0 ? "fd-sub" : "fd-bad"} style={{ display: "block", marginTop: 6 }}>{add.err}</small>}
+                        <small className="fd-sub" style={{ display: "block", marginTop: 6 }}>{audience === "donor" ? "For someone who gave outside the website. Saved for next time." : "For example a guardian. Saved for next time."}</small>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </section>
+              <section aria-label="Message">
+                <div className="fd-aud-h"><h4>2 · The message</h4></div>
+                <Field label="From">
+                  <select className="fd-input" value={f.from} onChange={e => set("from", e.target.value)}>{SENDERS.map(s => <option key={s[0]} value={s[0]}>{s[1]} · {s[2]}</option>)}</select>
+                </Field>
+                <Field label="Subject" style={{ marginTop: 12 }}><input className="fd-input" value={f.subject} maxLength={200} onChange={e => set("subject", e.target.value)} placeholder={audience === "donor" ? "News from The Brial Endowment" : "Kabar untuk Brial Scholars"} /></Field>
+                {templates.length > 0 && (
+                  <div className="fd-actions" style={{ margin: "12px 0 6px" }}>
+                    <span className="fd-sub" style={{ margin: 0 }}>Start from</span>
+                    {templates.map(([id, label, t]) => <button key={id} className="fd-btn quiet sm" onClick={() => { setF(p => ({ ...p, subject: t.subject, body: t.body, sign: !!t.sign })); setPrev(null); }}>{label}</button>)}
+                    <button className="fd-btn quiet sm" onClick={() => { setF(p => ({ ...p, subject: "", body: "" })); setPrev(null); }}>Blank</button>
+                  </div>
+                )}
+                <Field label="Message" hint="Leave an empty line between paragraphs." style={{ marginTop: templates.length ? 0 : 12 }}>
+                  <textarea className="fd-input" rows={12} maxLength={10000} value={f.body} onChange={e => set("body", e.target.value)} placeholder={audience === "donor" ? "Dear friend, …" : "Halo, Brial Scholar, …"} />
+                </Field>
+                <div className="fd-krow" style={{ borderTop: 0 }}><div><b>Sign with my name</b><small>Adds "Brial Asif Hayi Paka · Founder, The Brial Endowment" under the message.</small></div><Switch on={f.sign} onChange={v => set("sign", v)}>{f.sign ? "On" : "Off"}</Switch></div>
+              </section>
+            </div>
+            {err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
+            <div className="fd-aud-foot">
+              <small className="fd-sub" style={{ margin: 0, maxWidth: 520 }}>
+                {chosen.length ? `${chosen.length} ${plural(chosen.length, A.one, A.many)} will each get their own email. No one sees the other addresses.` : `Tick at least one ${A.one}.`}
+                {doubtful ? ` ${doubtful} ticked ${plural(doubtful, "address looks", "addresses look")} mistyped.` : ""}
+                {later ? ` About ${later} will go out tomorrow because of the daily limit.` : ""}
+              </small>
+              <div className="fd-actions">
+                <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+                <button className="fd-btn primary" disabled={!ready || !!busy} onClick={preview}>{busy === "prev" ? "Preparing…" : "Preview"}</button>
+              </div>
+            </div>
+          </>
+        )}
+      </Modal>
+    );
+  }
+  const ANN_TEMPLATES = {
+    awardee: [["app", "Install the app", { subject: "The Brial Endowment kini hadir sebagai aplikasi", body: APP_BODY.awardee, sign: false }]],
+    donor: [["app", "Install the app", { subject: "The Brial Endowment is now an app", body: APP_BODY.donor, sign: false }]],
+  };
+
   const offKinds = k => Object.keys(k || {}).filter(x => k[x] === false).sort().join(",");
   const remKey = r => JSON.stringify([(r && r.billDates || []).slice().sort(), (r && r.resultDates || []).slice().sort(), Number(r && r.billGraceDays) || 5]);
   const mailDirty = (a, b) => !!(a && b) && (a.founderTo.trim() !== b.founderTo || offKinds(a.kinds) !== offKinds(b.kinds) || remKey(a.reminders) !== remKey(b.reminders));
@@ -4461,6 +4688,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const [busy, setBusy] = useState("");
     const [prev, setPrev] = useState(null);
     const [compose, setCompose] = useState(false);
+    const [announce, setAnnounce] = useState(null); // "donor" | "awardee"
+    const [aud, setAud] = useState(null);
     const [reading, setReading] = useState(null);
     const [m, flash] = useFlash();
     const keep = st => { const norm = { founderTo: st.founderTo || "hello@brialendowment.org", paused: !!st.paused, kinds: st.kinds || {}, reminders: { ...DEFAULT_REM, ...(st.reminders || {}) } }; svRef.current = norm; setSv(norm); return norm; };
@@ -4473,6 +4702,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       } catch (e) { setErr("Could not load the email settings. Check your connection and refresh."); }
     }, [store]);
     useEffect(() => { load(); const t = setInterval(() => { store.mailLog(40).then(l => setLog(l || [])).catch(() => {}); }, 20000); return () => clearInterval(t); }, [load]);
+    const loadAud = useCallback(() => { store.mailContacts().then(x => setAud(x)).catch(() => setAud({ contacts: [], unsubscribed: [] })); }, [store]);
+    useEffect(() => { loadAud(); }, [loadAud]);
     if (err && !s) return <><Head title="Email" /><div className="fd-msg err">{err}</div></>;
     if (!s || !sv) return <><Head title="Email" /><p className="fd-sub">Loading…</p></>;
     const dirty = mailDirty(s, sv);
@@ -4510,6 +4741,23 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
               <div className="fd-mstat">
                 <div><h2 className="fd-h2" style={{ marginTop: 0 }}>Write an email</h2><p className="fd-sub" style={{ margin: 0 }}>A thank-you, an update or a reply, sent from brial@, hello@ or receipts@brialendowment.org.</p></div>
                 <button className="fd-btn primary" disabled={paused} title={paused ? "Resume sending first" : ""} onClick={() => setCompose(true)}>{ICON.send}Write an email</button>
+              </div>
+            </div>
+            <div className="fd-card">
+              <h2 className="fd-h2" style={{ marginTop: 0 }}>Announcements</h2>
+              <p className="fd-sub" style={{ margin: 0 }}>News for many people at once. You choose exactly who receives it, and each person gets their own email.</p>
+              <div className="fd-aud-tiles">
+                {["donor", "awardee"].map(k => {
+                  const L = aud ? audienceList(store, k, aud) : null;
+                  const can = L ? L.filter(r => !r.unsub).length : null;
+                  return (
+                    <button key={k} type="button" className="fd-aud-tile" disabled={paused} title={paused ? "Resume sending first" : ""} onClick={() => setAnnounce(k)}>
+                      <span className="fd-aud-ico">{k === "donor" ? ICON_DONOR : ICON_AWARDEE}</span>
+                      <span><b>{k === "donor" ? "Donors" : "Awardees"}</b><small>{L === null ? "Loading…" : `${can} ${plural(can, AUD[k].one, AUD[k].many)}${L.length > can ? ` · ${L.length - can} unsubscribed` : ""}`}</small></span>
+                      <span className="fd-aud-go" aria-hidden="true">→</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="fd-card">
@@ -4561,7 +4809,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             {log.length === 0 ? <p className="fd-sub">Nothing sent yet.</p> : (
               <div className="fd-mlog">{log.map(x => (
                 <button type="button" className="fd-mlog-i" key={x.id} onClick={() => setReading(x)} title="Open this email">
-                  <b>{x.kind === "message" ? (x.subject || MAIL_LABEL.message) : (MAIL_LABEL[x.kind] || x.kind)}</b><Tag tone={MAIL_TONE[x.status]}>{MAIL_WORD[x.status] || x.status}</Tag>
+                  <b>{x.kind === "message" || x.kind === "announcement" ? (x.subject || MAIL_LABEL[x.kind]) : (MAIL_LABEL[x.kind] || x.kind)}</b><Tag tone={MAIL_TONE[x.status]}>{MAIL_WORD[x.status] || x.status}</Tag>
                   <small>{[x.to, fdatetime(x.sentAt || x.createdAt)].filter(Boolean).join(" · ")}{x.files > 0 ? " · PDF" : ""}</small><span />
                   {x.error && x.status !== "sent" && <small style={{ gridColumn: "1 / -1", color: x.status === "failed" ? "var(--rose)" : "var(--faint)" }}>{x.error}</small>}
                 </button>
@@ -4579,6 +4827,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           </div>
         )}
         {reading && <MailRead item={reading} store={store} onClose={() => setReading(null)} />}
+        {announce && <AnnounceDialog store={store} audience={announce} onClose={() => { setAnnounce(null); loadAud(); }} onSent={(n, skipped) => { flash(`${n} ${plural(n, "email is", "emails are")} on the way.${skipped ? ` ${skipped} unsubscribed ${plural(skipped, "person was", "people were")} left out.` : ""}`); setTimeout(load, 5000); setTimeout(load, 15000); }} />}
         {compose && <Composer store={store} onClose={() => setCompose(false)} onSent={n => { flash(`${n} ${plural(n, "email is", "emails are")} on the way.`); setTimeout(load, 5000); setTimeout(load, 15000); }} />}
         {prev && (
           <Modal wide title={prev.subject} sub={"From " + prev.from + " · sample data"} onClose={() => setPrev(null)}>

@@ -1187,6 +1187,12 @@ window.BrialClipboard = { copy: copyToClipboard };
     mailPreview() { return Store._mailFn({ action: "preview", kind: "receipt" }); },
     sendMessage(msg) { return Store._mailRpc("be_mail_send_message", { p_msg: msg }); },
     previewMessage(msg) { return Store._mailFn({ action: "preview_message", message: msg }); },
+    // Announcements to donors or awardees: addresses added by hand, unsubscribes, sending
+    mailContacts() { return Store._mailRpc("be_mail_contacts"); },
+    addMailContact(audience, email, name) { return Store._mailRpc("be_mail_contact_add", { p_audience: audience, p_email: email, p_name: name || null }); },
+    removeMailContact(audience, email) { return Store._mailRpc("be_mail_contact_remove", { p_audience: audience, p_email: email }); },
+    sendAnnouncement(msg) { return Store._mailRpc("be_mail_send_announcement", { p_msg: msg }); },
+    previewAnnouncement(msg) { return Store._mailFn({ action: "preview_announcement", message: msg }); },
     // A sent email as it went out (or rebuilt for emails older than 19 Oct 2026).
     mailView(id) { return Store._mailFn({ action: "mail_view", id }); },
     // A PDF that was attached to a sent email, rebuilt on request (PDFs are never stored).

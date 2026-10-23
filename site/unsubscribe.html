@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email preferences | The Brial Endowment</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A1628">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A1628;--card:#0F1F38;--stone:#E8E4DC;--body:rgba(232,228,220,.8);--mute:rgba(232,228,220,.66);--gold:#C9A961;--gold2:#E3C98A;--line:rgba(201,169,97,.35);--green:#86E5A7;--red:#E58686}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 70% 10%,#142442 0%,#0A1628 55%,#060E1C 100%) fixed;background-color:#0A1628;color:var(--stone)}
+body{font-family:'Manrope',system-ui,sans-serif;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh}
+a{color:var(--gold2)}
+.bar{display:flex;align-items:center;gap:10px;padding:18px clamp(16px,5vw,40px);border-bottom:1px solid rgba(201,169,97,.16)}
+.bar a{display:flex;align-items:center;gap:10px;color:var(--stone);text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:20px}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 16px 60px}
+.card{width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);padding:clamp(26px,6vw,40px)}
+.eye{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(32px,6vw,40px);line-height:1.12;margin:12px 0 12px}
+p{margin:0 0 12px;color:var(--body)}
+.who{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--stone);background:rgba(10,22,40,.6);border:1px solid rgba(201,169,97,.24);padding:4px 10px;margin:2px 0 10px}
+.btn{display:block;width:100%;min-height:48px;margin-top:18px;padding:0 18px;border:none;cursor:pointer;background:var(--gold);color:#0A1628;font-family:'Manrope',sans-serif;font-size:15px;font-weight:600;letter-spacing:.03em}
+.btn.ghost{background:transparent;color:var(--gold2);border:1px solid rgba(201,169,97,.55)}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
+.ok{color:var(--green)}.bad{color:var(--red)}
+.small{font-size:13.5px;color:var(--mute);margin-top:18px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="bar"><a href="/"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#C9A961" stroke-width="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z"/><circle cx="18" cy="18" r="4" fill="#C9A961" stroke="none"/></g></svg>The Brial Endowment</a></header>
+<main>
+  <div class="card" role="region" aria-live="polite">
+    <div class="eye">Email preferences</div>
+
+    <section id="ask" hidden>
+      <h1>Stop our updates?</h1>
+      <p>We will stop sending announcements and yearly updates to</p>
+      <span class="who" id="who-ask"></span>
+      <p>Receipts for any future gift still reach you, so you always have a record of what you gave.</p>
+      <button class="btn" id="go" type="button">Unsubscribe</button>
+    </section>
+
+    <section id="done" hidden>
+      <h1>You are unsubscribed.</h1>
+      <p><span class="ok">&#10003;</span> We will not send our announcements to <span class="who" id="who-done"></span> again.</p>
+      <p>Thank you for the good you have already done through the endowment.</p>
+      <button class="btn ghost" id="undo" type="button">I changed my mind, keep me subscribed</button>
+    </section>
+
+    <section id="back" hidden>
+      <h1>Welcome back.</h1>
+      <p><span class="ok">&#10003;</span> You will keep receiving our updates at <span class="who" id="who-back"></span>.</p>
+      <p><a href="/">Return to brialendowment.org</a></p>
+    </section>
+
+    <section id="broken" hidden>
+      <h1>This link does not work.</h1>
+      <p>It may be incomplete, for example if it was split across two lines in your email. Open the link again from the email, or simply reply to that email with the word <b>unsubscribe</b> and we will do it for you.</p>
+      <p class="small">You can also write to <a href="mailto:hello@brialendowment.org?subject=Unsubscribe">hello@brialendowment.org</a>.</p>
+    </section>
+
+    <p class="bad" id="err" hidden></p>
+  </div>
+</main>
+<script>
+(function () {
+  var FN = "https://sdlrjqdbxxzddgivnjws.supabase.co/functions/v1/be-mail";
+  var q = new URLSearchParams(location.search);
+  var a = q.get("a"), e = q.get("e"), t = q.get("t");
+  var $ = function (id) { return document.getElementById(id); };
+  var show = function (id) { ["ask", "done", "back", "broken"].forEach(function (s) { $(s).hidden = s !== id; }); $("err").hidden = true; };
+  var email = "";
+  try { email = decodeURIComponent(escape(atob(String(e || "").replace(/-/g, "+").replace(/_/g, "/")))); } catch (x) { email = ""; }
+  var masked = (function () { var p = email.split("@"); return p.length === 2 ? p[0].slice(0, 2) + "•••@" + p[1] : ""; })();
+  if (!(a === "donor" || a === "awardee") || !t || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show("broken"); return; }
+  ["who-ask", "who-done", "who-back"].forEach(function (id) { $(id).textContent = masked; });
+  show("ask");
+  var call = function (action, btn, next) {
+    btn.disabled = true; var label = btn.textContent; btn.textContent = "One moment…";
+    fetch(FN, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: action, a: a, e: e, t: t }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        btn.disabled = false; btn.textContent = label;
+        if (res.ok && res.j && res.j.ok) { show(next); return; }
+        if (res.j && res.j.error === "invalid_link") { show("broken"); return; }
+        $("err").textContent = "Something went wrong. Please try again in a moment."; $("err").hidden = false;
+      })
+      .catch(function () { btn.disabled = false; btn.textContent = label; $("err").textContent = "Could not reach us. Check your connection and try again."; $("err").hidden = false; });
+  };
+  $("go").addEventListener("click", function () { call("unsubscribe", this, "done"); });
+  $("undo").addEventListener("click", function () { call("resubscribe", this, "back"); });
+})();
+</script>
+</body>
+</html>
