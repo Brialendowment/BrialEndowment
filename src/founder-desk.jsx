@@ -4460,6 +4460,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   };
   // Keep a name as the person wrote it, unless it is all lower or all upper case
   const nameCase = s => { const t = String(s || "").trim(); return t && (t === t.toLowerCase() || t === t.toUpperCase()) ? titleCase(t) : t; };
+  // The name used for {nama}: the first real word of the name ("M Iqramul Hakim" greets Iqramul)
+  const greetName = s => { const w = nameCase(s).split(/\s+/).map(x => x.replace(/\./g, "")).filter(Boolean); const pick = w.find(x => x.length > 1) || w[0] || ""; return pick ? pick.charAt(0).toUpperCase() + pick.slice(1) : ""; };
   const AUD = {
     donor: { one: "donor", many: "donors", title: "Announcement to donors", sub: "Everyone who gave through the website, plus anyone you add. Each person gets their own email, with a link to unsubscribe." },
     awardee: { one: "awardee", many: "awardees", title: "Announcement to awardees", sub: "Your Brial Scholars, plus anyone you add, such as a guardian. Each person gets their own email." },
@@ -4490,10 +4492,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // Ticked to begin with: people you would normally write to, never a doubtful or unsubscribed address
   const defaultPick = (audience, r) => !r.unsub && !r.doubt && (audience === "donor" ? r.verified > 0 || r.manual : r.manual || r.sch === "active");
   const APP_BODY = {
-    awardee: "Halo, Brial Scholar,\n\nKabar baik: The Brial Endowment sekarang bisa dipasang sebagai aplikasi di HP, tablet, maupun laptop kamu. Dengan aplikasi ini, Scholar Portal, informasi semester, dan pengumuman dari kami bisa kamu buka dengan satu ketukan dari layar utama, tanpa perlu mengetik alamat situs setiap kali.\n\nKami sangat menyarankan kamu memasangnya. Caranya mudah dan tidak perlu lewat Play Store atau App Store:\n\nAndroid (Chrome): buka brialendowment.org, ketuk menu ⋮ di kanan atas, lalu pilih \"Install app\" atau \"Tambahkan ke layar utama\".\n\niPhone atau iPad (Safari): buka brialendowment.org, ketuk tombol Share, gulir ke bawah, lalu pilih \"Add to Home Screen\".\n\nLaptop (Chrome atau Edge): buka brialendowment.org, lalu klik ikon install di ujung kanan address bar.\n\nKamu juga bisa menggulir ke bagian paling bawah situs dan mengetuk \"Install the app\". Langkah-langkahnya akan ditunjukkan sesuai perangkat yang kamu pakai.\n\nSetelah terpasang, ikon bintang emas The Brial Endowment akan muncul di layar utamamu. Untuk masuk ke portal, buka aplikasinya, gulir ke bagian Scholar Portal, lalu masuk seperti biasa. Aplikasi ini memperbarui dirinya sendiri setiap kali ada perubahan, jadi kamu selalu melihat informasi terbaru, dan hampir tidak memakan ruang penyimpanan.\n\nKalau ada kendala saat memasangnya, cukup balas email ini.\n\nSalam hangat,\nThe Brial Endowment",
-    donor: "Dear friend,\n\nThe Brial Endowment can now be installed as an app on your phone, tablet or computer. It keeps the open ledger, our programmes and every update one tap away, without typing the address each time.\n\nIt takes a few seconds and needs no app store:\n\nAndroid (Chrome): open brialendowment.org, tap the ⋮ menu, then choose \"Install app\" or \"Add to Home screen\".\n\niPhone or iPad (Safari): open brialendowment.org, tap Share, then choose \"Add to Home Screen\".\n\nComputer (Chrome or Edge): open brialendowment.org and click the install icon at the right end of the address bar.\n\nYou can also tap \"Install the app\" at the bottom of the website, and it shows the steps for your device.\n\nThank you for being part of something meant to outlast us all.\n\nWith gratitude,\nThe Brial Endowment",
+    awardee: "Halo {nama},\n\nKabar baik: The Brial Endowment sekarang bisa dipasang sebagai aplikasi di HP, tablet, maupun laptop kamu. Dengan aplikasi ini, Scholar Portal, informasi semester, dan pengumuman dari kami bisa kamu buka dengan satu ketukan dari layar utama, tanpa perlu mengetik alamat situs setiap kali.\n\nKami sangat menyarankan kamu memasangnya. Caranya mudah dan tidak perlu lewat Play Store atau App Store:\n\nAndroid (Chrome): buka brialendowment.org, ketuk menu ⋮ di kanan atas, lalu pilih \"Install app\" atau \"Tambahkan ke layar utama\".\n\niPhone atau iPad (Safari): buka brialendowment.org, ketuk tombol Share, gulir ke bawah, lalu pilih \"Add to Home Screen\".\n\nLaptop (Chrome atau Edge): buka brialendowment.org, lalu klik ikon install di ujung kanan address bar.\n\nKamu juga bisa menggulir ke bagian paling bawah situs dan mengetuk \"Install the app\". Langkah-langkahnya akan ditunjukkan sesuai perangkat yang kamu pakai.\n\nSetelah terpasang, ikon bintang emas The Brial Endowment akan muncul di layar utamamu. Untuk masuk ke portal, buka aplikasinya, gulir ke bagian Scholar Portal, lalu masuk seperti biasa. Aplikasi ini memperbarui dirinya sendiri setiap kali ada perubahan, jadi kamu selalu melihat informasi terbaru, dan hampir tidak memakan ruang penyimpanan.\n\nKalau ada kendala saat memasangnya, cukup balas email ini.\n\nSalam hangat,",
+    donor: "Dear {nama},\n\nThe Brial Endowment can now be installed as an app on your phone, tablet or computer. It keeps the open ledger, our programmes and every update one tap away, without typing the address each time.\n\nIt takes a few seconds and needs no app store:\n\nAndroid (Chrome): open brialendowment.org, tap the ⋮ menu, then choose \"Install app\" or \"Add to Home screen\".\n\niPhone or iPad (Safari): open brialendowment.org, tap Share, then choose \"Add to Home Screen\".\n\nComputer (Chrome or Edge): open brialendowment.org and click the install icon at the right end of the address bar.\n\nYou can also tap \"Install the app\" at the bottom of the website, and it shows the steps for your device.\n\nThank you for being part of something meant to outlast us all.\n\nWith gratitude,",
   };
-  const impactTemplate = rep => ({ subject: `${rep.title}: what your gift became`, body: `Dear friend,\n\nYour gift helped make this year possible, and we would like you to see what it became. Our ${rep.title} report is now published:\n\n${reportUrl(rep.year)}\n\nThank you for trusting us with something meant to outlast us all.\n\nWith gratitude,`, sign: true });
+  const impactTemplate = rep => ({ subject: `${rep.title}: what your gift became`, body: `Dear {nama},\n\nYour gift helped make this year possible, and we would like you to see what it became. Our ${rep.title} report is now published:\n\n${reportUrl(rep.year)}\n\nThank you for trusting us with something meant to outlast us all.\n\nWith gratitude,`, sign: true });
   const ICON_DONOR = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>;
   const ICON_AWARDEE = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c2.5 2 9.5 2 12 0v-5" /><path d="M22 9v6" /></svg>;
 
@@ -4504,7 +4506,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const [q, setQ] = useState("");
     const [filter, setFilter] = useState("all");
     const [pick, setPick] = useState(null);
-    const [f, setF] = useState(() => ({ from: (preset && preset.from) || "hello", subject: (preset && preset.subject) || "", body: (preset && preset.body) || "", sign: !!(preset && preset.sign) }));
+    const [f, setF] = useState(() => ({ from: (preset && preset.from) || "hello", subject: (preset && preset.subject) || "", body: (preset && preset.body) || "", sign: preset && typeof preset.sign === "boolean" ? preset.sign : true }));
     const [add, setAdd] = useState({ open: false, email: "", name: "", err: "", busy: false });
     const [prev, setPrev] = useState(null);
     const [busy, setBusy] = useState("");
@@ -4535,7 +4537,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const chosen = list.filter(r => !r.unsub && sel.has(r.key));
     const doubtful = chosen.filter(r => r.doubt).length;
     const ready = chosen.length > 0 && f.subject.trim() && f.body.trim();
-    const msg = () => ({ audience, to: chosen.map(r => r.email), from: f.from, subject: f.subject.trim(), body: f.body.trim(), sign: f.sign });
+    const names = () => { const o = {}; chosen.forEach(r => { const g = greetName(r.name); if (g) o[r.key] = g; }); return o; };
+    const msg = () => ({ audience, to: chosen.map(r => r.email), names: names(), from: f.from, subject: f.subject.trim(), body: f.body.trim(), sign: f.sign });
 
     const addContact = async () => {
       const e = add.email.trim();
@@ -4555,7 +4558,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       try { await store.removeMailContact(audience, r.email); await load(); setPick(p => { const n = new Set(p || []); n.delete(r.key); return n; }); }
       catch (x) { setErr("Could not remove it. Try again in a moment."); }
     };
-    const preview = async () => { setBusy("prev"); setErr(""); try { setPrev(await store.previewAnnouncement(msg())); } catch (e) { setErr("Could not load the preview."); } setBusy(""); };
+    const sample = chosen.find(r => greetName(r.name)) || chosen[0];
+    const preview = async () => { setBusy("prev"); setErr(""); try { setPrev(await store.previewAnnouncement({ ...msg(), previewName: sample ? greetName(sample.name) : "" })); } catch (e) { setErr("Could not load the preview."); } setBusy(""); };
+    const usesName = /\{\s*(nama|name)\s*\}/i.test(f.subject + " " + f.body);
     const send = async () => {
       setBusy("send"); setErr("");
       try { const r = await store.sendAnnouncement(msg()); onSent(r && typeof r.queued === "number" ? r.queued : chosen.length, (r && r.skipped) || 0); onClose(); }
@@ -4575,7 +4580,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       <Modal xl title={preset && preset.title || A.title} sub={A.sub} onClose={onClose}>
         {prev ? (
           <>
-            <div className="fd-sub" style={{ margin: "0 0 10px" }}><b style={{ color: "var(--text)" }}>From</b> {S[1]} &lt;{S[2]}&gt; · <b style={{ color: "var(--text)" }}>To</b> {chosen.length} {plural(chosen.length, A.one, A.many)}, each in their own email{audience === "donor" ? " · every email carries its own unsubscribe link" : ""}</div>
+            <div className="fd-sub" style={{ margin: "0 0 10px" }}><b style={{ color: "var(--text)" }}>From</b> {S[1]} &lt;{S[2]}&gt; · <b style={{ color: "var(--text)" }}>To</b> {chosen.length} {plural(chosen.length, A.one, A.many)}, each in their own email{usesName && sample ? ` · this preview is how ${sample.name || sample.email} will see it` : ""}{audience === "donor" ? " · with a link to stop these letters" : ""}</div>
             <iframe className="fd-mprev" title="Email preview" sandbox="" srcDoc={prev.html} />
             {later > 0 && <div className="fd-msg info" style={{ marginTop: 12 }}>The free plan sends up to 90 emails a day. The first 90 go out now and the other {later} follow automatically over the next day.</div>}
             {err && <div className="fd-msg err" style={{ marginTop: 12 }}>{err}</div>}
@@ -4648,8 +4653,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                     <button className="fd-btn quiet sm" onClick={() => { setF(p => ({ ...p, subject: "", body: "" })); setPrev(null); }}>Blank</button>
                   </div>
                 )}
-                <Field label="Message" hint="Leave an empty line between paragraphs." style={{ marginTop: templates.length ? 0 : 12 }}>
-                  <textarea className="fd-input" rows={12} maxLength={10000} value={f.body} onChange={e => set("body", e.target.value)} placeholder={audience === "donor" ? "Dear friend, …" : "Halo, Brial Scholar, …"} />
+                <Field label="Message" hint="Write {nama} where the person's first name should go, for example Dear {nama}. Leave an empty line between paragraphs." style={{ marginTop: templates.length ? 0 : 12 }}>
+                  <textarea className="fd-input" rows={12} maxLength={10000} value={f.body} onChange={e => set("body", e.target.value)} placeholder={audience === "donor" ? "Dear {nama}, …" : "Halo {nama}, …"} />
                 </Field>
                 <div className="fd-krow" style={{ borderTop: 0 }}><div><b>Sign with my name</b><small>Adds "Brial Asif Hayi Paka · Founder, The Brial Endowment" under the message.</small></div><Switch on={f.sign} onChange={v => set("sign", v)}>{f.sign ? "On" : "Off"}</Switch></div>
               </section>
@@ -4672,8 +4677,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     );
   }
   const ANN_TEMPLATES = {
-    awardee: [["app", "Install the app", { subject: "The Brial Endowment kini hadir sebagai aplikasi", body: APP_BODY.awardee, sign: false }]],
-    donor: [["app", "Install the app", { subject: "The Brial Endowment is now an app", body: APP_BODY.donor, sign: false }]],
+    awardee: [["app", "Install the app", { subject: "The Brial Endowment kini hadir sebagai aplikasi", body: APP_BODY.awardee, sign: true }]],
+    donor: [["app", "Install the app", { subject: "The Brial Endowment is now an app", body: APP_BODY.donor, sign: true }]],
   };
 
   const offKinds = k => Object.keys(k || {}).filter(x => k[x] === false).sort().join(",");

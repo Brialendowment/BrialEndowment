@@ -90,22 +90,29 @@ export function layout(b: Block) {
 
 // An announcement to donors or awardees: the founder's words, with a footer that says why the
 // person receives it and, for donors, how to stop these emails (one click, no sign-in).
-export function announcementEmail(m: { subject: string; body: string; sign?: boolean; audience: string; unsubscribe?: string }) {
-  const paras = String(m.body || "").replace(/\r\n/g, "\n").trim().split(/\n{2,}/)
+// {nama} or {name} in the subject or the message becomes the person's first name.
+export function fillName(s: string, name: string | undefined, audience: string) {
+  const who = String(name || "").trim() || (audience === "donor" ? "friend" : "Brial Scholar");
+  return String(s || "").replace(/\{\s*(nama|name)\s*\}/gi, who);
+}
+export function announcementEmail(m: { subject: string; body: string; sign?: boolean; audience: string; unsubscribe?: string; name?: string }) {
+  const subject = fillName(m.subject, m.name, m.audience), body = fillName(m.body, m.name, m.audience);
+  const paras = body.replace(/\r\n/g, "\n").trim().split(/\n{2,}/)
     .map(p => `<p style="margin:0 0 14px">${nl2br(p)}</p>`).join("");
+  // Written as a person would: Gmail files personal-looking mail in the Primary tab
   const why = m.audience === "donor"
-    ? `You receive this because you gave to The Brial Endowment.${m.unsubscribe ? ` <a href="${esc(m.unsubscribe)}" style="color:${GILT};text-decoration:underline">Unsubscribe</a> from these updates at any time. Receipts for future gifts still reach you.` : ""}`
-    : "You receive this as a Brial Scholar of The Brial Endowment.";
+    ? `You are hearing from us because you gave to The Brial Endowment.${m.unsubscribe ? ` If you would rather not receive these letters, <a href="${esc(m.unsubscribe)}" style="color:${GILT};text-decoration:underline">tell us here</a> and we will stop. Receipts for any future gift still reach you.` : ""}`
+    : "You are hearing from us as a Brial Scholar of The Brial Endowment.";
   const b = layout({
-    pre: String(m.body || "").replace(/\s+/g, " ").slice(0, 120),
-    title: m.subject,
+    pre: body.replace(/\s+/g, " ").slice(0, 120),
+    title: subject,
     intro: `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.7">${paras}</div>` + (m.sign ? FOUNDER_SIGNATURE : ""),
     foot: `${why}<br>The Brial Endowment &middot; <a href="${SITE}" style="color:${GILT};text-decoration:none">brialendowment.org</a> &middot; <a href="mailto:${HELLO}" style="color:${GILT};text-decoration:none">${HELLO}</a>`,
   });
   const tail = m.audience === "donor"
-    ? "\nYou receive this because you gave to The Brial Endowment." + (m.unsubscribe ? "\nUnsubscribe: " + m.unsubscribe : "")
-    : "\nYou receive this as a Brial Scholar of The Brial Endowment.";
-  return { subject: m.subject, html: b.html, text: b.text + "\n" + tail };
+    ? "\nYou are hearing from us because you gave to The Brial Endowment." + (m.unsubscribe ? "\nTo stop these letters: " + m.unsubscribe : "")
+    : "\nYou are hearing from us as a Brial Scholar of The Brial Endowment.";
+  return { subject, html: b.html, text: b.text + "\n" + tail };
 }
 
 export function stripHtml(s: string) {

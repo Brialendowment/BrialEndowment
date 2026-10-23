@@ -15,7 +15,7 @@
 //   A PDF attached to that email, rebuilt from the same records.
 // POST { action: "preview_announcement", message }   Authorization: founder session
 // POST { action: "unsubscribe" | "resubscribe", a, e, t }   no session: the signed link from an email
-// POST ?u=1&a=&e=&t=   one-click unsubscribe (RFC 8058) sent by Gmail, Yahoo and other mailboxes
+// POST ?u=1&a=&e=&t=   one-click unsubscribe (RFC 8058), kept working for emails already sent with that header
 //
 // Secrets: RESEND_API_KEY (a sending-only key limited to brialendowment.org).
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -205,10 +205,10 @@ async function composeAnnouncement(p: any): Promise<Built> {
     if (data === true) return { skip: "unsubscribed" };
   }
   const links = audience === "donor" ? await unsubLinks(audience, to) : null;
-  const m = R.announcementEmail({ subject: String(p.subject || "").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign === true, audience, unsubscribe: links?.page });
-  const out: Mail = { to, from: SENDERS[p.from] || SENDERS.hello, replyTo: R.HELLO, ...m };
-  if (links) out.headers = { "List-Unsubscribe": `<${links.oneClick}>, <mailto:${R.HELLO}?subject=Unsubscribe>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
-  return out;
+  const m = R.announcementEmail({ subject: String(p.subject || "").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign === true, audience, unsubscribe: links?.page, name: p.name ? String(p.name).slice(0, 60) : "" });
+  // No List-Unsubscribe header: Gmail files mail carrying it as bulk (Promotions or Updates). It is only
+  // required from senders of 5,000+ emails a day; the signed link in the footer still lets anyone stop.
+  return { to, from: SENDERS[p.from] || SENDERS.hello, replyTo: R.HELLO, ...m };
 }
 
 function ackNo(date: unknown, to: string) {
@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
     if (body?.action === "preview_announcement") {
       const p = body.message || {};
       const audience = p.audience === "awardee" ? "awardee" : "donor";
-      const m = R.announcementEmail({ subject: String(p.subject || "(no subject)").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign === true, audience, unsubscribe: audience === "donor" ? R.SITE + "/unsubscribe" : undefined });
+      const m = R.announcementEmail({ subject: String(p.subject || "(no subject)").slice(0, 200), body: String(p.body || "").slice(0, 10000), sign: p.sign === true, audience, unsubscribe: audience === "donor" ? R.SITE + "/unsubscribe" : undefined, name: p.previewName ? String(p.previewName).slice(0, 60) : "" });
       return json({ subject: m.subject, html: m.html, from: SENDERS[p.from] || SENDERS.hello });
     }
 
