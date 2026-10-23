@@ -1,12 +1,26 @@
 {
+  "id": "/",
   "name": "The Brial Endowment",
   "short_name": "Brial",
-  "description": "A perpetual philanthropic endowment — the principal remains, the returns are given forever.",
+  "description": "A perpetual philanthropic endowment. The principal remains and the returns are given, forever, with every gift recorded on an open ledger.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0A1628",
   "theme_color": "#0A1628",
+  "categories": ["education", "social", "finance"],
   "icons": [
-    { "src": "/favicon.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Give", "short_name": "Give", "description": "Give with crypto, QRIS, bank transfer or card", "url": "/donate", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Brial Scholars", "short_name": "Scholars", "url": "/scholars", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Open ledger", "short_name": "Ledger", "url": "/proof", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }

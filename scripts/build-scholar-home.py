@@ -158,13 +158,16 @@ def build_seo_pages():
 
 
 def outer_head(page, tpl, title):
-    """Copy the description, canonical, preview (Open Graph) and JSON-LD tags from the
-    bundled template into the outer page head, where link previews and crawlers read them."""
+    """Copy the description, canonical, preview (Open Graph), JSON-LD, app icon and manifest tags
+    from the bundled template into the outer page head, where link previews, crawlers and the
+    browser's install check read them before the bundle unpacks."""
     import html as _h
     a = tpl.index('<meta name="google-site-verification"')
     b = tpl.index("</script>", tpl.index("application/ld+json")) + len("</script>")
     keep = [ln for ln in tpl[a:b].split("\n")
-            if ln.strip().startswith(("<meta ", '<link rel="canonical"', '<script type="application/ld+json"'))
+            if ln.strip().startswith(("<meta ", '<link rel="canonical"', '<script type="application/ld+json"',
+                                      '<link rel="icon"', '<link rel="shortcut icon"', '<link rel="apple-touch-icon"',
+                                      '<link rel="manifest"', '<script id="b-pwa-early"'))
             and "google-site-verification" not in ln]
     block = "<!--seo-->\n" + "\n".join(keep) + "\n<!--/seo-->"
     page = re.sub(r"<!--seo-->.*?<!--/seo-->\n?", "", page, count=1, flags=re.S)

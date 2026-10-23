@@ -1,7 +1,7 @@
 // Brial Endowment service worker — offline resilience.
 // Navigations: network-first (fresh deploys win), cached shell when offline.
 // Static assets (fonts, CDN scripts, Supabase images): stale-while-revalidate.
-const VER = "brial-v2";
+const VER = "brial-v3";
 const SHELL = "/";
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VER).then(c => c.add(SHELL)).catch(() => {}));

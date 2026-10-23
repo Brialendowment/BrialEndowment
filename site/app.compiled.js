@@ -2031,6 +2031,10 @@ const Footer = ({
   }, {
     t: "Terms",
     href: "/terms"
+  }, {
+    t: "Install the app",
+    href: "#install",
+    install: true
   }]
 }, {
   h: "Ledger",
@@ -2086,6 +2090,7 @@ const Footer = ({
 }, col.l.map(item => /*#__PURE__*/React.createElement("a", {
   key: item.t,
   href: item.href || "#",
+  "data-install-app": item.install ? "" : undefined,
   onClick: item.onClick ? e => {
     e.preventDefault();
     item.onClick && item.onClick();

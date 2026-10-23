@@ -914,7 +914,7 @@ const DonatePage = ({
     hD("footer", { style: { background: "#060E1C", padding: "56px clamp(20px, 4vw, 56px) 30px", borderTop: "1px solid rgba(201,169,97,0.15)", marginTop: 80 } },
       hD("div", { style: { maxWidth: 1280, margin: "0 auto", textAlign: "center" } },
         hD("div", { style: { display: "flex", gap: 22, justifyContent: "center", flexWrap: "wrap", marginBottom: 18 } },
-          [["/", "Home"], ["/proof", "Open ledger"], ["/terms", "Terms"], ["/privacy", "Privacy"]].map(([href, t]) => hD("a", { key: href, href, style: { fontFamily: DS.sans, fontSize: 13, color: DS.mute, textDecoration: "none", padding: "10px 4px", display: "inline-block" } }, t))),
+          [["/", "Home"], ["/proof", "Open ledger"], ["/terms", "Terms"], ["/privacy", "Privacy"], ["#install", "Install the app"]].map(([href, t]) => hD("a", { key: href, href, "data-install-app": href === "#install" ? "" : undefined, style: { fontFamily: DS.sans, fontSize: 13, color: DS.mute, textDecoration: "none", padding: "10px 4px", display: "inline-block" } }, t))),
         hD("div", { style: { fontFamily: DS.mono, fontSize: 11, color: "rgba(232,228,220,0.58)", letterSpacing: "0.16em", textTransform: "uppercase", lineHeight: 1.8 } }, "\xA9 MMXXVI \xB7 The Brial Endowment", hD("br", null), "brialendowment.org"))));
 };
 window.DonatePage = DonatePage;
