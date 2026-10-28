@@ -7,6 +7,10 @@
 //   The latest price for each item, and how many units of each currency make one US dollar.
 //   Indonesian prices from Yahoo Finance are delayed up to about 15 minutes.
 //
+// POST { action: "events", items: [{ key, symbol, since: "YYYY-MM-DD" }] }
+//   Dividends (per share, by ex-date) and splits since a date, from Yahoo Finance, so the console
+//   can offer to record what each holding earned.
+//
 // Founder session, or the worker secret (header x-be-hook) for the database's own checks.
 // Nothing is stored here; the Founder Console keeps the holdings. Answers are cached for a minute.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -93,6 +97,26 @@ async function fxRates(curs: string[]) {
   return out;
 }
 
+
+// ---------------------------------------------------------------- dividends and splits
+type Events = { dividends: { date: string; amount: number }[]; splits: { date: string; ratio: number }[]; currency?: string };
+async function yahooEvents(symbol: string, since: string): Promise<Events> {
+  const start = /^\d{4}-\d{2}-\d{2}$/.test(since) ? Math.floor(Date.parse(since + "T00:00:00Z") / 1000) - 10 * 86400 : Math.floor(Date.now() / 1000) - 400 * 86400;
+  const p1 = Math.max(start, Math.floor(Date.now() / 1000) - 5 * 366 * 86400), p2 = Math.floor(Date.now() / 1000) + 86400;
+  return cached("ye:" + symbol + ":" + p1, 6 * 3600e3, async () => {
+    const j = await getJson(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?period1=${p1}&period2=${p2}&interval=1d&events=div%2Csplits`);
+    const r = j?.chart?.result?.[0];
+    if (!r) throw new Error("no data for " + symbol);
+    const off = Number(r.meta?.gmtoffset) || 0;
+    const day = (ts: number) => new Date((ts + off) * 1000).toISOString().slice(0, 10);
+    const dividends = Object.values(r.events?.dividends || {}).map((d: any) => ({ date: day(Number(d.date)), amount: Number(d.amount) }))
+      .filter(d => d.amount > 0).sort((a, b) => a.date.localeCompare(b.date));
+    const splits = Object.values(r.events?.splits || {}).map((d: any) => ({ date: day(Number(d.date)), ratio: Number(d.numerator) / Number(d.denominator) }))
+      .filter(d => isFinite(d.ratio) && d.ratio > 0 && d.ratio !== 1).sort((a, b) => a.date.localeCompare(b.date));
+    return { dividends, splits, currency: r.meta?.currency };
+  });
+}
+
 // ---------------------------------------------------------------- search
 type Hit = { cls: string; symbol: string; name: string; exchange?: string; currency?: string; source: "yahoo" | "coingecko"; priceSymbol: string; logo?: string };
 const CUR_BY_EXCH: Record<string, string> = { JKT: "IDR", NMS: "USD", NYQ: "USD", NGM: "USD", NCM: "USD", PCX: "USD", ASE: "USD", BTS: "USD", NAS: "USD", PNK: "USD", LSE: "GBP", GER: "EUR", FRA: "EUR", PAR: "EUR", AMS: "EUR", SES: "SGD", HKG: "HKD", TYO: "JPY", KLS: "MYR", IST: "TRY", TOR: "CAD", ASX: "AUD" };
@@ -141,6 +165,14 @@ Deno.serve(async (req) => {
       }));
       const fx = await fxRates(Array.isArray(body.fx) ? body.fx.slice(0, 20) : []);
       return json({ quotes, fx, at: new Date().toISOString() });
+    }
+    if (body?.action === "events") {
+      const items = (Array.isArray(body.items) ? body.items : []).slice(0, 60).filter((x: any) => x && x.key && x.symbol);
+      const events: Record<string, Events | { error: string }> = {};
+      await Promise.all(items.map(async (x: any) => {
+        try { events[x.key] = await yahooEvents(String(x.symbol), String(x.since || "")); } catch (e) { events[x.key] = { error: String((e as Error).message || e).slice(0, 120) }; }
+      }));
+      return json({ events, at: new Date().toISOString() });
     }
     return json({ error: "unknown_action" }, 400);
   } catch (e) {

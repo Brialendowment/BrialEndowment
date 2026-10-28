@@ -193,6 +193,22 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-modal{width:100%;max-width:560px;max-height:calc(100vh - 36px);overflow:auto;background:#10213D;border:1px solid rgba(201,169,97,.3);border-radius:16px;padding:24px 24px 22px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9);animation:fdRise .25s cubic-bezier(.22,1,.36,1) both}
 .fd-modal.wide{max-width:760px}
 /* treasury assets */
+.fd-alogo.cash{background:rgba(201,169,97,.12);border-color:rgba(201,169,97,.35)}
+.fd-alogo.cash b{color:var(--gilt2);background:none}
+.fd-hold.cash{background:rgba(239,233,220,.018)}
+.fd-sug{border-color:rgba(201,169,97,.4);background:linear-gradient(180deg,rgba(201,169,97,.07),rgba(201,169,97,.02))}
+.fd-sug .fd-krow{align-items:center}
+.fd-ktotal{border-top:1px solid var(--line2)!important;margin-top:4px}
+.fd-ktotal>b{font-size:17px}
+.fd-recon{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(10,22,40,.45);border:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.fd-recon b{color:var(--text)}
+.fd-rec{cursor:pointer;border-radius:8px}
+.fd-costs-tools{align-items:center}.fd-costs-tools .fd-search{width:240px;max-width:100%}
+.fd-rec:hover{background:rgba(239,233,220,.03)}
+.fd-mbars{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:150px;margin-top:10px}
+.fd-mbars>div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:6px}
+.fd-mbars i{display:block;width:100%;max-width:26px;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--gilt2),var(--gilt))}
+.fd-mbars span{font-size:10.5px;color:var(--faint)}
 .fd-alogo{display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;overflow:hidden;background:#fff;border:1px solid var(--line2)}
 .fd-alogo img{width:100%;height:100%;object-fit:contain;padding:12%;box-sizing:border-box}
 .fd-alogo b{display:flex;width:100%;height:100%;align-items:center;justify-content:center;color:var(--gilt2);font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.02em}
@@ -518,6 +534,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   };
   ICON.transport = I(<><path d="M3 15v-3l2.5-4.5A2 2 0 0 1 7.3 6.5h9.4a2 2 0 0 1 1.8 1L21 12v3z" /><path d="M5 12h14" /><circle cx="7.5" cy="16.5" r="2" /><circle cx="16.5" cy="16.5" r="2" /></>);
   ICON.assets = I(<><path d="M4 19V5M4 19h16" /><path d="M7.5 15l3.5-4 3 2.5L19 8" /><path d="M15.5 8H19v3.5" /></>);
+  ICON.costs = I(<><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z" /><path d="M9 8.5h6M9 12h6M9 15.5h3" /></>);
   // Foundation office consoles reuse the matching section icon in their sidebar header.
   ICON.email = ICON.contact; ICON.security = ICON.shield; ICON.impact = ICON.report;
 
@@ -2356,58 +2373,265 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   );
 
   // ============================================================
-  // ASSETS: the endowment's portfolio (founder only, never shown on the public site)
-  // Average-cost accounting, as Indonesian brokers report it. Principal is the cost of what was
-  // given or bought; returns are price growth, realised gains and dividends.
+  // ENDOWMENT FUND: ASSETS AND OPERATING COSTS (founder only; the public site never shows any of it)
+  //
+  // One set of books behind two pages, kept the way endowments report:
+  //  - Permanent principal: every contribution at its value on the day it came in. That covers gifts in
+  //    kind at the giver's cost, cash deposited, and outside money used to buy. It is never spent.
+  //  - Returns: dividends, interest, staking and other rewards, gains realised on sales (against the
+  //    average cost), unrealised gains (market value against cost), less fees and taxes, plus the
+  //    currency effect of holding assets that are not in dollars.
+  //  - Cash accounts: sale proceeds, dividends and interest land in them by themselves; purchases and
+  //    operating costs can be paid from them. Their balances are worked out, never typed in.
+  //  - Operating costs: paid either from the endowment's cash, within the operating budget (up to 10%
+  //    of realised returns), or by the founder personally, which never touches the fund.
+  //  Net asset value = principal + returns - operating costs paid by the endowment - payouts.
+  // Nothing is ever deleted: holdings are archived, transactions and costs are voided.
   // ============================================================
   const ACLASS = {
     idx: { label: "Indonesian stock", short: "IDX", color: "#C9A961" },
     us: { label: "US stock", short: "US", color: "#8DB8E8" },
     intl: { label: "Other stock", short: "Intl", color: "#A99BE0" },
     etf: { label: "ETF or fund", short: "ETF", color: "#8FD4A8" },
+    bond: { label: "Bond or sukuk", short: "Bond", color: "#7FC6C9" },
     crypto: { label: "Crypto", short: "Crypto", color: "#E7B76A" },
     cash: { label: "Cash or deposit", short: "Cash", color: "#C8CFDB" },
     other: { label: "Other", short: "Other", color: "#E58686" },
   };
   const ASSET_CURS = ["IDR", "USD", "EUR", "SGD", "GBP", "JPY", "HKD", "MYR", "TRY", "AUD", "CAD"];
   const TX = {
-    gift: { label: "Gift in kind", tone: "gold", qty: true, price: true, hint: "An asset given to the endowment. Enter what it cost the giver, as the broker shows it." },
-    buy: { label: "Purchase", tone: "sky", qty: true, price: true, hint: "Bought by the endowment." },
-    sell: { label: "Sale", tone: "warn", qty: true, price: true, hint: "Sold. The gain or loss against the average cost is realised. Record where the proceeds went, for example in a cash or deposit holding, so the principal stays whole." },
-    dividend: { label: "Dividend or interest", tone: "ok", qty: false, price: false, hint: "Cash paid out by the asset, after tax." },
-    fee: { label: "Fee or tax", tone: "bad", qty: false, price: false, hint: "A charge from the broker, custodian or tax office." },
-    split: { label: "Split or bonus shares", tone: "", qty: false, price: false, hint: "Shares multiplied, for example 2 for a 2-for-1 split. Cost stays the same." },
+    gift: { label: "Gift in kind", tone: "gold", hint: "An asset given to the endowment. Enter what it cost the giver, as the broker shows it. It adds to the permanent principal." },
+    buy: { label: "Purchase", tone: "sky", hint: "Bought by the endowment, with money from one of its cash accounts or with new money from outside." },
+    sell: { label: "Sale", tone: "warn", hint: "Sold. The gain or loss against the average cost is worked out for you, and the money goes into a cash account." },
+    dividend: { label: "Dividend", tone: "ok", hint: "Cash paid to shareholders. Enter the amount before tax and the tax taken; the rest goes into a cash account." },
+    interest: { label: "Interest or coupon", tone: "ok", hint: "Interest from a bond, sukuk, deposit or savings product." },
+    reward: { label: "Staking or reward", tone: "ok", hint: "Units received at no cost: staking rewards, airdrops, reinvested dividends or bonus units. Their value on the day counts as income." },
+    fee: { label: "Fee or tax", tone: "bad", hint: "A charge from the broker, custodian, exchange or tax office." },
+    split: { label: "Split", tone: "", hint: "Units multiplied, for example 2 for a 2-for-1 split. The cost stays the same." },
   };
+  const CTX = {
+    deposit: { label: "Deposit", tone: "gold", hint: "New money put into the endowment. It adds to the permanent principal." },
+    interest: { label: "Interest", tone: "ok", hint: "Interest the bank paid on this balance, before tax." },
+    transfer: { label: "Transfer or exchange", tone: "sky", hint: "Money moved to another cash account, including a currency exchange." },
+    payout: { label: "Paid out to programmes", tone: "", hint: "Returns given to the endowment's charitable programmes." },
+    fee: { label: "Bank fee", tone: "bad", hint: "A charge from the bank." },
+  };
+  const REWARD_KIND = [["staking", "Staking reward"], ["reinvested", "Reinvested dividend"], ["bonus", "Bonus units"], ["airdrop", "Airdrop"], ["other", "Other reward"]];
+  const txDef = (h, type) => ((h && h.cls === "cash") ? CTX : TX)[type] || { label: type, tone: "" };
   const isLotted = h => h && h.cls === "idx";
   const LOT = 100;
-  const assetLogo = (cls, symbol, priceSymbol) => cls === "crypto" || cls === "cash" || cls === "other" || !symbol ? "" : "https://financialmodelingprep.com/image-stock/" + encodeURIComponent(priceSymbol || symbol) + ".png";
+  const todayISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const assetLogo = (cls, symbol, priceSymbol) => cls === "crypto" || cls === "cash" || cls === "other" || cls === "bond" || !symbol ? "" : "https://financialmodelingprep.com/image-stock/" + encodeURIComponent(priceSymbol || symbol) + ".png";
   const nfmt = (v, d = 2) => (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: d });
-  const qfmt = (h, q) => isLotted(h) ? `${nfmt(q / LOT, 2)} ${plural(q / LOT, "lot", "lots")} · ${nfmt(q, 0)} shares` : `${nfmt(q, h.cls === "crypto" ? 8 : 4)} ${h.cls === "crypto" ? h.symbol : "units"}`;
+  const aCurSym = c => ({ USD: "$", IDR: "Rp ", EUR: "€", SGD: "S$", GBP: "£", JPY: "¥", HKD: "HK$", MYR: "RM ", TRY: "₺", AUD: "A$", CAD: "C$" })[c] || "";
+  const fmtNative = (cur, v) => cur === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : (aCurSym(cur) || cur + " ") + (Number(v) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const priceFmt = (cur, v) => cur === "IDR" ? "Rp " + (Number(v) || 0).toLocaleString("id-ID", Math.abs(Math.round(v * 100) - Math.round(v) * 100) > 0 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumFractionDigits: 0 }) : (aCurSym(cur) || cur + " ") + (Number(v) || 0).toLocaleString("en-US", v < 1 ? { maximumFractionDigits: 6 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const aCurSym = c => ({ USD: "$", IDR: "Rp ", EUR: "€", SGD: "S$", GBP: "£", JPY: "¥", HKD: "HK$", MYR: "RM ", TRY: "₺", AUD: "A$", CAD: "C$", BTC: "₿" })[c] || "";
-  const pct = v => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + Math.abs(Number(v) || 0).toFixed(2) + "%";
-  const sgn = (fmt, v) => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt(Math.abs(v));
-
-  // Running position from the transaction history (average cost method)
-  function position(h) {
-    const tx = (h.txns || []).map((t, i) => ({ t, i })).sort((a, b) => String(a.t.date).localeCompare(String(b.t.date)) || a.i - b.i).map(x => x.t);
-    let qty = 0, cost = 0, realized = 0, income = 0, fees = 0, given = 0, bought = 0, proceeds = 0;
-    for (const t of tx) {
-      const q = Number(t.qty) || 0, amt = Number(t.amount) || 0, fee = Number(t.fee) || 0;
-      if (t.type === "gift" || t.type === "buy") { qty += q; cost += amt + fee; fees += fee; if (t.type === "gift") given += amt + fee; else bought += amt + fee; }
-      else if (t.type === "sell" && qty > 0) { const sq = Math.min(q, qty), avg = cost / qty, out = avg * sq; realized += amt - fee - out; proceeds += amt - fee; cost -= out; qty -= sq; fees += fee; if (qty < 1e-12) { qty = 0; cost = 0; } }
-      else if (t.type === "dividend") income += amt;
-      else if (t.type === "fee") { fees += amt; realized -= amt; }
-      else if (t.type === "split") { const r = Number(t.ratio) || 1; if (r > 0) qty *= r; }
-    }
-    return { qty, cost, avg: qty > 0 ? cost / qty : 0, realized, income, fees, given, bought, proceeds, count: tx.length };
-  }
+  const qfmt = (h, q) => h.cls === "cash" ? fmtNative(h.currency, q) : isLotted(h) ? `${nfmt(q / LOT, 2)} ${plural(q / LOT, "lot", "lots")} · ${nfmt(q, 0)} shares` : `${nfmt(q, h.cls === "crypto" ? 8 : 4)} ${h.cls === "crypto" ? h.symbol : "units"}`;
+  const pct = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Number(v) || 0).toFixed(2) + "%";
+  const sgn = (fmt, v) => (v > 0.004 ? "+" : v < -0.004 ? "−" : "") + fmt(Math.abs(v));
   const newId = p => p + "-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
+  const usdOf = (cur, v, rate, fx) => { if (!cur || cur === "USD" || cur === "USDT") return v; const r = Number(rate) > 0 ? Number(rate) : Number(fx && fx[cur]); return r > 0 ? v / r : 0; };
+  const Store_FX = store => { const f = store.FX_FALLBACK || {}, o = {}; ["IDR", "EUR", "SGD", "TRY"].forEach(k => { if (Number(f[k]) > 0) o[k] = Number(f[k]); }); return o; };
+  const stripH = h => { const { id, updatedAt, ...rest } = h; return rest; };
+  function downloadCsv(name, header, rows) {
+    const esc = v => { let s = v == null ? "" : String(v); if (typeof v === "string" && /^[=+\-@]/.test(s) && isNaN(Number(s))) s = "'" + s; return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const csv = "﻿" + [header].concat(rows).map(r => r.map(esc).join(",")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  }
+
+  // Operating cost categories, each with its function as nonprofits report it
+  const EXP_CATS = [
+    ["hosting", "Hosting, domain and infrastructure", "mg"],
+    ["software", "Software and AI tools", "mg"],
+    ["staff", "Salaries and management", "mg"],
+    ["banking", "Banking and payment fees", "mg"],
+    ["legal", "Legal, audit and compliance", "mg"],
+    ["comms", "Communications and outreach", "fr"],
+    ["programme", "Programme administration", "pr"],
+    ["travel", "Travel", "mg"],
+    ["office", "Office and supplies", "mg"],
+    ["other", "Other", "mg"],
+  ];
+  const EXP_FN = { mg: "Management and general", fr: "Fundraising", pr: "Programme support" };
+  const catLabel = k => (EXP_CATS.find(c => c[0] === k) || [k, k || "Other"])[1];
+  const catFn = k => (EXP_CATS.find(c => c[0] === k) || [0, 0, "mg"])[2];
+  const CAT_COLOR = { hosting: "#8DB8E8", software: "#A99BE0", staff: "#C9A961", banking: "#7FC6C9", legal: "#E58686", comms: "#E7B76A", programme: "#8FD4A8", travel: "#D9A3C7", office: "#C8CFDB", other: "#9AA4B5" };
+
+  // ---------- reading the records ----------
+  function parseRows(rows) {
+    const holdings = [], expenses = [], templates = [];
+    let policy = { opsShare: 10, targets: {} }, nav = { points: [], last: {}, fx: {} }, navRow = null;
+    for (const r of rows || []) {
+      const d = r.data || {};
+      if (r.id.indexOf("A-") === 0) holdings.push({ ...d, txns: d.txns || [], id: r.id, name: d.name || r.name || r.id, updatedAt: r.updated_at });
+      else if (r.id.indexOf("E-") === 0) expenses.push({ ...d, id: r.id, updatedAt: r.updated_at });
+      else if (r.id.indexOf("R-") === 0) templates.push({ ...d, id: r.id });
+      else if (r.id === "PORTFOLIO-POLICY") policy = { ...policy, ...d };
+      else if (r.id === "PORTFOLIO-NAV") { nav = { ...nav, ...d }; navRow = r; }
+    }
+    return { holdings, expenses, templates, policy, nav, navRow };
+  }
+  // Live transactions in the order they happened (same day: the order they were recorded)
+  const ordered = txns => (txns || []).map((t, i) => ({ t, i })).filter(o => !o.t.void)
+    .sort((a, b) => String(a.t.date).localeCompare(String(b.t.date)) || a.i - b.i).map(o => o.t);
+
+  // One investment's position from its history (average cost method). `before` limits it to
+  // transactions dated before that day, for example the holding on a dividend's ex-date.
+  function position(h, fx, before) {
+    const p = { qty: 0, cost: 0, avg: 0, realized: 0, realizedUsd: 0, dividends: 0, interest: 0, rewards: 0, tax: 0, fees: 0,
+      divUsd: 0, intUsd: 0, rewUsd: 0, taxUsd: 0, feesUsd: 0, given: 0, newMoney: 0, fromCash: 0, principalUsd: 0, flows: [] };
+    for (const t of ordered(h.txns)) {
+      if (before && !(String(t.date) < before)) continue;
+      const q = +t.qty || 0, amt = +t.amount || 0, fee = +t.fee || 0, tax = +t.tax || 0;
+      const U = v => usdOf(h.currency, v, t.fx, fx);
+      const flow = v => p.flows.push({ acct: t.cash && t.cash !== "new" ? t.cash : null, v, t });
+      if (t.type === "gift") { p.qty += q; p.cost += amt + fee; p.given += amt + fee; p.principalUsd += U(amt + fee); }
+      else if (t.type === "buy") {
+        p.qty += q; p.cost += amt + fee;
+        if (t.cash && t.cash !== "new") { p.fromCash += amt + fee; flow(-(amt + fee)); } else { p.newMoney += amt + fee; p.principalUsd += U(amt + fee); }
+      } else if (t.type === "sell") {
+        if (p.qty <= 0) continue;
+        const sq = Math.min(q, p.qty), out = p.cost / p.qty * sq, g = amt - fee - out;
+        p.realized += g; p.realizedUsd += U(g); p.cost -= out; p.qty -= sq;
+        if (p.qty < 1e-12) { p.qty = 0; p.cost = 0; }
+        flow(amt - fee);
+      } else if (t.type === "dividend" || t.type === "interest") {
+        if (t.type === "dividend") { p.dividends += amt; p.divUsd += U(amt); } else { p.interest += amt; p.intUsd += U(amt); }
+        p.tax += tax; p.taxUsd += U(tax); flow(amt - tax);
+      } else if (t.type === "reward") { p.qty += q; p.cost += amt; p.rewards += amt; p.rewUsd += U(amt); }
+      else if (t.type === "fee") { p.fees += amt; p.feesUsd += U(amt); if (t.cash && t.cash !== "new") flow(-amt); else p.principalUsd += U(amt); }
+      else if (t.type === "split") { const r = +t.ratio || 1; if (r > 0) p.qty *= r; }
+    }
+    p.avg = p.qty > 0 ? p.cost / p.qty : 0;
+    p.earned = p.realized + p.dividends + p.interest + p.rewards - p.tax - p.fees;
+    return p;
+  }
+
+  // The whole fund: every holding valued, cash balances worked out, returns split by source.
+  function book(S, prices, fx) {
+    const U = (cur, v, rate) => usdOf(cur, v, rate, fx);
+    const cash = {};
+    const C = id => cash[id] || (cash[id] = { bal: 0, lines: [] });
+    const T = { nav: 0, principal: 0, div: 0, int: 0, rew: 0, gains: 0, tax: 0, fees: 0, unreal: 0, opsEndow: 0, opsFounder: 0, payouts: 0, cashUsd: 0, list: [], missing: 0, first: null, given: 0, deposits: 0, newMoney: 0 };
+    const seen = d => { if (d && (!T.first || d < T.first)) T.first = d; };
+    for (const h of S.holdings.filter(x => x.cls !== "cash")) {
+      const p = position(h, fx);
+      T.principal += p.principalUsd; T.div += p.divUsd; T.int += p.intUsd; T.rew += p.rewUsd; T.gains += p.realizedUsd; T.tax += p.taxUsd; T.fees += p.feesUsd;
+      ordered(h.txns).forEach(t => { seen(t.date); if (t.type === "gift") T.given += U(h.currency, (+t.amount || 0) + (+t.fee || 0), t.fx); if (t.type === "buy" && (!t.cash || t.cash === "new")) T.newMoney += U(h.currency, (+t.amount || 0) + (+t.fee || 0), t.fx); });
+      p.flows.forEach(f => { const c = C(f.acct || "CASH?" + h.currency); c.cur = c.cur || h.currency; c.bal += f.v; c.lines.push({ date: f.t.date, v: f.v, label: txDef(h, f.t.type).label + " · " + (h.symbol || h.name), ref: h.id }); });
+      const q = prices[h.id];
+      const price = q && q.price ? q.price : (Number(h.manualPrice) > 0 ? Number(h.manualPrice) : null);
+      const mvNative = price != null ? p.qty * price : p.cost;
+      if (price == null && p.qty > 0) T.missing++;
+      const x = { h, p, price, mvNative, unrealNative: price != null ? mvNative - p.cost : 0 };
+      x.mvUsd = U(h.currency, mvNative); x.unrealUsd = U(h.currency, x.unrealNative);
+      T.list.push(x); T.nav += x.mvUsd; T.unreal += x.unrealUsd;
+    }
+    const cashH = S.holdings.filter(x => x.cls === "cash");
+    for (const h of cashH) {
+      const c = C(h.id); c.cur = h.currency;
+      for (const t of ordered(h.txns)) {
+        const amt = +t.amount || 0, tax = +t.tax || 0, cur = h.currency;
+        seen(t.date);
+        const line = (v, label) => c.lines.push({ date: t.date, v, label, own: t.id });
+        if (t.type === "deposit") { c.bal += amt; T.principal += U(cur, amt, t.fx); T.deposits += U(cur, amt, t.fx); line(amt, "Deposit" + (t.from ? " · " + t.from : "")); }
+        else if (t.type === "interest") { c.bal += amt - tax; T.int += U(cur, amt, t.fx); T.tax += U(cur, tax, t.fx); line(amt - tax, "Interest" + (tax ? " after tax" : "")); }
+        else if (t.type === "fee") { c.bal -= amt; T.fees += U(cur, amt, t.fx); line(-amt, "Bank fee"); }
+        else if (t.type === "payout") { c.bal -= amt; T.payouts += U(cur, amt, t.fx); line(-amt, "Paid out" + (t.programme ? " · " + t.programme : "")); }
+        else if (t.type === "transfer") {
+          c.bal -= amt; const to = S.holdings.find(x => x.id === t.to);
+          line(-amt, "Transfer to " + (to ? to.name : "another account"));
+          const d = C(t.to); d.bal += +t.amountIn || 0; d.lines.push({ date: t.date, v: +t.amountIn || 0, label: "Transfer from " + h.name, ref: h.id });
+        }
+      }
+    }
+    for (const e of S.expenses) {
+      if (e.void) continue;
+      const amt = +e.amount || 0, usd = U(e.currency, amt, e.fx);
+      if (e.paidFrom && e.paidFrom !== "founder") { T.opsEndow += usd; const c = C(e.paidFrom); c.bal -= amt; c.lines.push({ date: e.date, v: -amt, label: "Operating cost · " + (e.payee || catLabel(e.category)), exp: e.id }); }
+      else T.opsFounder += usd;
+    }
+    const cashRows = cashH.map(h => ({ h, c: C(h.id) }));
+    Object.keys(cash).filter(k => k.indexOf("CASH?") === 0).forEach(k => cashRows.push({ h: { id: k, cls: "cash", currency: k.slice(5), symbol: k.slice(5), name: "Cash, account not set", virtual: true, txns: [] }, c: cash[k] }));
+    for (const { h, c } of cashRows) {
+      c.lines.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+      const x = { h, p: { qty: c.bal, cost: c.bal, avg: 1, earned: 0 }, price: 1, mvNative: c.bal, unrealNative: 0, unrealUsd: 0, mvUsd: U(h.currency, c.bal), cash: c };
+      T.list.push(x); T.nav += x.mvUsd; T.cashUsd += x.mvUsd;
+    }
+    T.realised = T.div + T.int + T.rew + T.gains - T.tax - T.fees;
+    T.totalReturn = T.nav + T.opsEndow + T.payouts - T.principal;
+    T.fxEffect = T.totalReturn - T.realised - T.unreal;
+    if (Math.abs(T.fxEffect) < 0.005) T.fxEffect = 0;
+    T.share = Math.min(10, Math.max(0, Number(S.policy.opsShare) || 0));
+    T.allowance = Math.max(0, T.realised) * T.share / 100;
+    T.available = T.allowance - T.opsEndow;
+    T.gap = T.nav - T.principal;
+    T.cashAccts = cashRows.filter(r => !r.h.virtual && !r.h.archived).map(r => ({ id: r.h.id, name: r.h.name, currency: r.h.currency, custodian: r.h.custodian || "", bal: r.c.bal }));
+    return T;
+  }
+
+  // ---------- recurring costs: each payment is written on its date, once ----------
+  function dueDates(tpl, until) {
+    const out = [];
+    const s = new Date(String(tpl.start) + "T00:00:00Z");
+    if (isNaN(s)) return out;
+    const day = s.getUTCDate();
+    for (let i = 0; i < 400; i++) {
+      const yearly = tpl.every === "year";
+      const y = s.getUTCFullYear() + (yearly ? i : Math.floor((s.getUTCMonth() + i) / 12));
+      const m = yearly ? s.getUTCMonth() : (s.getUTCMonth() + i) % 12;
+      const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      const d = new Date(Date.UTC(y, m, Math.min(day, last))).toISOString().slice(0, 10);
+      if (d > until || (tpl.end && d > tpl.end)) break;
+      out.push(d);
+    }
+    return out;
+  }
+  const nextDue = tpl => { const t = todayISO(), far = new Date(Date.now() + 400 * 864e5).toISOString().slice(0, 10); return dueDates(tpl, far).find(d => d > t) || null; };
+  const recurId = (tpl, d) => "E-" + tpl.id.slice(2) + "-" + d.replace(/-/g, "");
+  async function postRecurring(store, rows) {
+    const S = parseRows(rows);
+    const have = new Set(S.expenses.map(e => e.id));
+    const day = todayISO(), todo = [];
+    for (const t of S.templates) {
+      if (t.paused) continue;
+      for (const d of dueDates(t, day)) if (d >= (t.from || t.start) && !have.has(recurId(t, d))) todo.push({ t, d });
+    }
+    if (!todo.length) return 0;
+    let rates = {};
+    try { rates = (store.fxRates && await store.fxRates()) || {}; } catch (e) {}
+    let n = 0;
+    for (const { t, d } of todo.slice(0, 48)) {
+      const data = { kind: "expense", date: d, payee: t.payee, category: t.category, fn: t.fn || catFn(t.category), programme: t.programme || "", desc: t.desc || "",
+        amount: Number(t.amount) || 0, currency: t.currency, fx: t.currency === "USD" ? null : (Number(rates[t.currency]) || null), paidFrom: t.paidFrom || "founder", tpl: t.id, auto: true, createdAt: new Date().toISOString() };
+      try { await store.saveAsset({ id: recurId(t, d), name: ((t.payee || "Cost") + " · " + d).slice(0, 160), data }); n++; } catch (e) { break; }
+    }
+    return n;
+  }
+  function usePortfolio(store) {
+    const [rows, setRows] = useState(null);
+    const [err, setErr] = useState("");
+    const load = useCallback(async () => {
+      try { const r = await store.listAssets(); setRows(r); setErr(""); return r; }
+      catch (e) { setErr("Could not load the records. Check your connection and refresh."); setRows(x => x || []); return null; }
+    }, [store]);
+    useEffect(() => {
+      let on = true;
+      (async () => { const r = await load(); if (r && on) { const n = await postRecurring(store, r); if (n && on) load(); } })();
+      return () => { on = false; };
+    }, [load]);
+    const S = useMemo(() => parseRows(rows || []), [rows]);
+    return { rows, err, load, ...S };
+  }
 
   function AssetLogo({ h, size = 38 }) {
     const [bad, setBad] = useState(false);
     const src = h.logo || assetLogo(h.cls, h.symbol, h.priceSymbol);
     useEffect(() => { setBad(false); }, [src]);
+    if (h.cls === "cash") return <span className="fd-alogo cash" style={{ width: size, height: size, borderRadius: Math.round(size * 0.28) }}><b style={{ fontSize: size * 0.3 }}>{aCurSym(h.currency).trim() || h.currency}</b></span>;
     const letters = String(h.symbol || h.name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 4).toUpperCase() || "?";
     let hue = 0; for (const c of letters) hue = (hue * 31 + c.charCodeAt(0)) % 360;
     return (
@@ -2418,117 +2642,301 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     );
   }
 
-  function AssetsView({ store }) {
-    const [rows, setRows] = useState(null);
-    const [err, setErr] = useState("");
-    const [live, setLive] = useState(null); // { quotes, fx, at }
+  // ---------- one transaction ----------
+  function TxForm({ h, held, heldAt, cashAccts, initial, types, onSubmit, onCancel, submitLabel = "Save" }) {
+    const lotted = isLotted(h), isCash = h.cls === "cash";
+    const DEF = isCash ? CTX : TX;
+    const allowed = types || Object.keys(DEF);
+    const same = (cashAccts || []).filter(a => a.currency === h.currency && a.id !== h.id);
+    const others = (cashAccts || []).filter(a => a.id !== h.id);
+    const [t, setT] = useState(() => ({ type: allowed[0], date: todayISO(), qtyIn: "", priceMode: "avg", priceIn: "", totalIn: "", fee: "", amount: "", amountTouched: false, tax: "", taxTouched: false, taxPct: "", perShare: "", ratio: "", note: "", cash: "", to: "", amountIn: "", from: "", programme: "", kind: "staking", ...(initial || {}) }));
+    const set = (k, v) => setT(p => ({ ...p, [k]: v }));
+    const D = DEF[t.type] || {};
+    const num = s => { const v = parseFloat(String(s).replace(/,/g, "").replace(/\s/g, "")); return isFinite(v) ? v : NaN; };
+    const unit = lotted ? "share" : h.cls === "crypto" ? "coin" : "unit";
+    const hasQty = !isCash && ["gift", "buy", "sell", "reward"].includes(t.type);
+    const shares = (num(t.qtyIn) || 0) * (lotted ? LOT : 1);
+    const total = hasQty ? (t.priceMode === "avg" ? shares * (num(t.priceIn) || 0) : num(t.totalIn) || 0) : 0;
+    const fee = num(t.fee) > 0 ? num(t.fee) : 0;
+    const heldOn = heldAt && t.date ? heldAt(t.date) : held;
+    const round = v => h.currency === "IDR" ? Math.round(v) : Math.round(v * 100) / 100;
+    const grossAuto = t.type === "dividend" && num(t.perShare) > 0 ? round(num(t.perShare) * heldOn) : NaN;
+    const amountShown = t.amountTouched || !(grossAuto > 0) ? t.amount : String(grossAuto);
+    const amountVal = num(amountShown);
+    const taxAuto = num(t.taxPct) > 0 && amountVal > 0 ? round(amountVal * num(t.taxPct) / 100) : NaN;
+    const taxShown = t.taxTouched || !(taxAuto >= 0) ? t.tax : String(taxAuto);
+    const taxVal = num(taxShown) > 0 ? num(taxShown) : 0;
+    const target = others.find(a => a.id === t.to);
+    const amountInShown = t.amountIn !== "" ? t.amountIn : target && target.currency === h.currency ? amountShown : "";
+    const cashMode = { buy: "from", fee: "from", sell: "into", dividend: "into", interest: "into" }[t.type];
+    const defaultCash = () => {
+      if (cashMode === "from") { const need = t.type === "buy" ? total + fee : amountVal || 0; const a = same.find(x => x.bal >= need - 1e-9 && need > 0); return a ? a.id : "new"; }
+      const m = same.find(a => a.custodian === (h.custodian || "")) || same[0];
+      return m ? m.id : "auto";
+    };
+    const cashSel = isCash || !cashMode ? "" : (t.cash || defaultCash());
+    const chosen = same.find(a => a.id === cashSel);
+    const problems = [];
+    if (!t.date) problems.push("Choose a date.");
+    else if (t.date > todayISO()) problems.push("The date cannot be in the future.");
+    if (hasQty && !(shares > 0)) problems.push(lotted ? "Enter the number of lots." : "Enter the quantity.");
+    if (t.type === "sell" && shares > held + 1e-9) problems.push(`You hold ${qfmt(h, held)}. You cannot sell more than that.`);
+    if (hasQty && t.type !== "reward" && !(total > 0)) problems.push(t.priceMode === "avg" ? "Enter the price." : "Enter the total.");
+    if (t.type === "reward" && !(total >= 0)) problems.push("Enter the value on the day, or 0.");
+    if (["dividend", "interest", "fee", "deposit", "payout", "transfer"].includes(t.type) && !(amountVal > 0)) problems.push("Enter the amount.");
+    if ((t.type === "dividend" || t.type === "interest") && taxVal >= amountVal && amountVal > 0) problems.push("The tax must be less than the amount.");
+    if (t.type === "split" && !(num(t.ratio) > 0)) problems.push("Enter the ratio, for example 2.");
+    if (t.type === "transfer" && !t.to) problems.push("Choose the account that receives it.");
+    if (t.type === "transfer" && t.to && !(num(amountInShown) > 0)) problems.push("Enter the amount that arrives.");
+    if (isCash && ["fee", "payout", "transfer"].includes(t.type) && amountVal > held + 1e-9) problems.push(`The balance is ${fmtNative(h.currency, held)}.`);
+    if (cashMode === "from" && chosen) { const need = t.type === "buy" ? total + fee : amountVal; if (need > chosen.bal + 1e-9) problems.push(`${chosen.name} holds ${fmtNative(h.currency, chosen.bal)}. Choose another way to pay.`); }
+    const touched = t.qtyIn || t.priceIn || t.totalIn || t.amount || t.perShare || t.ratio;
+    const submit = () => {
+      if (problems.length) return;
+      const out = { id: newId("T"), type: t.type, date: t.date };
+      if (t.note.trim()) out.note = t.note.trim().slice(0, 300);
+      if (hasQty) { out.qty = shares; out.amount = Math.round(total * 1e6) / 1e6; if (t.type !== "reward") out.fee = fee; }
+      if (t.type === "reward") out.kind = t.kind;
+      if (["dividend", "interest", "fee", "deposit", "payout", "transfer"].includes(t.type)) out.amount = amountVal;
+      if (t.type === "dividend" || t.type === "interest") out.tax = taxVal;
+      if (t.type === "dividend" && num(t.perShare) > 0) out.perShare = num(t.perShare);
+      if (t.evKey) out.evKey = t.evKey;
+      if (t.type === "split") out.ratio = num(t.ratio);
+      if (t.type === "transfer") { out.to = t.to; out.amountIn = num(amountInShown); }
+      if (t.type === "deposit" && t.from.trim()) out.from = t.from.trim().slice(0, 120);
+      if (t.type === "payout" && t.programme.trim()) out.programme = t.programme.trim().slice(0, 120);
+      if (cashSel) out.cash = cashSel;
+      onSubmit(out);
+    };
+    const money = (label, key, ph, hint) => <Field label={label} hint={hint}><input className="fd-input" inputMode="decimal" value={key === "amount" ? amountShown : key === "tax" ? taxShown : t[key]} placeholder={ph || "0"}
+      onChange={e => setT(p => ({ ...p, [key]: e.target.value, ...(key === "amount" ? { amountTouched: true } : key === "tax" ? { taxTouched: true } : {}) }))} /></Field>;
+    return (
+      <div className="fd-form">
+        <div className="fd-grid2">
+          <Field label="Type">{allowed.length > 1 ? <select className="fd-input" value={t.type} onChange={e => setT(p => ({ ...p, type: e.target.value, cash: "" }))}>{allowed.map(k => <option key={k} value={k}>{DEF[k].label}</option>)}</select> : <input className="fd-input" value={D.label} readOnly />}</Field>
+          <Field label={t.type === "dividend" ? "Ex-date" : "Date"} hint={t.type === "dividend" && heldAt ? `Held before this date: ${qfmt(h, heldOn)}` : ""}><input className="fd-input" type="date" value={t.date} max={todayISO()} onChange={e => set("date", e.target.value)} /></Field>
+        </div>
+        <p className="fd-sub" style={{ margin: "-4px 0 4px" }}>{D.hint}</p>
+        {hasQty && (
+          <div className="fd-grid2">
+            <Field label={lotted ? "Lots" : t.type === "reward" ? "Units received" : "Quantity"} hint={lotted ? `1 lot = ${LOT} shares${shares > 0 ? ` · ${nfmt(shares, 0)} shares` : ""}` : h.cls === "crypto" ? "Up to 8 decimals" : ""}>
+              <input className="fd-input" inputMode="decimal" value={t.qtyIn} onChange={e => set("qtyIn", e.target.value)} placeholder={lotted ? "10" : "1"} />
+            </Field>
+            <Field label={(t.type === "reward" ? (t.priceMode === "avg" ? `Value per ${unit} on the day` : "Total value on the day") : t.priceMode === "avg" ? `Price per ${unit}` : t.type === "sell" ? "Total received" : "Total")+ ` (${h.currency})`}
+              hint={<button type="button" className="fd-linkbtn" onClick={() => set("priceMode", t.priceMode === "avg" ? "total" : "avg")}>{t.priceMode === "avg" ? "Enter the total instead" : "Enter the price instead"}</button>}>
+              {t.priceMode === "avg" ? <input className="fd-input" inputMode="decimal" value={t.priceIn} onChange={e => set("priceIn", e.target.value)} placeholder={lotted ? "3500" : "100"} />
+                : <input className="fd-input" inputMode="decimal" value={t.totalIn} onChange={e => set("totalIn", e.target.value)} placeholder={lotted ? "3500000" : "1000"} />}
+            </Field>
+          </div>
+        )}
+        {t.type === "reward" && <Field label="Kind of reward"><select className="fd-input" value={t.kind} onChange={e => set("kind", e.target.value)}>{REWARD_KIND.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>}
+        {hasQty && t.type !== "reward" && (
+          <div className="fd-grid2">
+            {money(`Fees (${h.currency}, optional)`, "fee")}
+            <div className="fd-txsum">{total > 0 && shares > 0 ? <><span>{t.type === "sell" ? "You receive" : t.type === "gift" ? "Value added to the principal" : "Total cost"}</span><b>{fmtNative(h.currency, total + (t.type === "sell" ? -fee : fee))}</b><small>{priceFmt(h.currency, total / shares)} per {unit}</small></> : null}</div>
+          </div>
+        )}
+        {t.type === "dividend" && <Field label={`Dividend per share (${h.currency}, optional)`} hint="Fills in the amount from what you held. Change the amount if your broker shows a different figure."><input className="fd-input" inputMode="decimal" value={t.perShare} onChange={e => set("perShare", e.target.value)} placeholder="0" /></Field>}
+        {(t.type === "dividend" || t.type === "interest") && (
+          <div className="fd-grid2">
+            {money(`Amount before tax (${h.currency})`, "amount")}
+            <Field label={`Tax taken (${h.currency})`} hint={<span>{[["0", "None"], ["10", "10%"], ["15", "15%"], ["20", "20%"]].map(([v, l]) => <button key={v} type="button" className="fd-linkbtn" style={{ marginRight: 10 }} onClick={() => setT(p => ({ ...p, taxPct: v, taxTouched: false, tax: "" }))}>{l}</button>)}</span>}>
+              <input className="fd-input" inputMode="decimal" value={taxShown} placeholder="0" onChange={e => setT(p => ({ ...p, tax: e.target.value, taxTouched: true }))} />
+            </Field>
+          </div>
+        )}
+        {(t.type === "dividend" || t.type === "interest") && amountVal > 0 && <div className="fd-txsum" style={{ paddingBottom: 0 }}><span>Received after tax</span><b>{fmtNative(h.currency, amountVal - taxVal)}</b></div>}
+        {["fee", "deposit", "payout", "transfer"].includes(t.type) && money(`${t.type === "transfer" ? "Amount sent" : "Amount"} (${h.currency})`, "amount")}
+        {t.type === "deposit" && <Field label="From (optional)"><input className="fd-input" value={t.from} maxLength={120} onChange={e => set("from", e.target.value)} placeholder="Founder, a donor, verified donations of October…" /></Field>}
+        {t.type === "payout" && <Field label="Programme"><input className="fd-input" value={t.programme} maxLength={120} onChange={e => set("programme", e.target.value)} placeholder="Scholarships, clean water…" /></Field>}
+        {t.type === "transfer" && (
+          <div className="fd-grid2">
+            <Field label="To account">{others.length ? <select className="fd-input" value={t.to} onChange={e => set("to", e.target.value)}><option value="">Choose…</option>{others.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select> : <input className="fd-input" readOnly value="Add another cash account first" />}</Field>
+            {target && <Field label={`Amount that arrives (${target.currency})`} hint={target.currency !== h.currency ? "After the exchange and any charge" : ""}><input className="fd-input" inputMode="decimal" value={amountInShown} onChange={e => set("amountIn", e.target.value)} /></Field>}
+          </div>
+        )}
+        {t.type === "split" && <Field label="Ratio" hint="New units for each old one: 2 for a 2-for-1 split, 0.1 for a 1-for-10 reverse split."><input className="fd-input" inputMode="decimal" value={t.ratio} onChange={e => set("ratio", e.target.value)} placeholder="2" /></Field>}
+        {cashMode && (
+          <Field label={cashMode === "from" ? "Paid with" : "Money goes into"} hint={cashSel === "new" ? (t.type === "fee" ? "Paid from outside the fund, so it counts as a contribution." : "Money from outside the fund, so it adds to the permanent principal.") : cashSel === "auto" ? "A cash account is created for you." : ""}>
+            <select className="fd-input" value={cashSel} onChange={e => set("cash", e.target.value)}>
+              {same.map(a => <option key={a.id} value={a.id}>{a.name} · {fmtNative(a.currency, a.bal)}</option>)}
+              {cashMode === "from" && <option value="new">{t.type === "fee" ? "Paid from outside the fund" : "New money from outside"}</option>}
+              {cashMode === "into" && !same.some(a => a.custodian === (h.custodian || "")) && <option value="auto">New cash account{h.custodian ? " at " + h.custodian.replace(/\s*\(.*\)$/, "") : ""} ({h.currency})</option>}
+            </select>
+          </Field>
+        )}
+        <Field label="Note (optional)"><input className="fd-input" value={t.note} maxLength={300} onChange={e => set("note", e.target.value)} placeholder="Broker reference, reason or anything worth keeping" /></Field>
+        {problems.length > 0 && touched && <small className="fd-bad">{problems[0]}</small>}
+        <div className="fd-actions" style={{ marginTop: 6 }}>
+          <button className="fd-btn primary" disabled={problems.length > 0} onClick={submit}>{submitLabel}</button>
+          {onCancel && <button className="fd-btn ghost" onClick={onCancel}>Cancel</button>}
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- the Assets page ----------
+  function AssetsView({ store, go }) {
+    const P = usePortfolio(store);
+    const { rows, err, load, holdings, policy, nav, navRow } = P;
+    const [live, setLive] = useState(null);
+    const [events, setEvents] = useState({});
     const [busy, setBusy] = useState("");
     const [view, setView] = useState("USD");
     const [adding, setAdding] = useState(false);
     const [openId, setOpenId] = useState(null);
+    const [recording, setRecording] = useState(null);
     const [policyOpen, setPolicyOpen] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
     const [m, flash] = useFlash();
-    const load = useCallback(async () => {
-      try { setRows(await store.listAssets()); setErr(""); }
-      catch (e) { setErr("Could not load the assets. Check your connection and refresh."); setRows(r => r || []); }
-    }, [store]);
-    useEffect(() => { load(); }, [load]);
-    const holdings = (rows || []).filter(r => r.id.indexOf("A-") === 0).map(r => ({ ...r.data, id: r.id, name: (r.data && r.data.name) || r.name || r.id, updatedAt: r.updated_at }));
-    const policyRow = (rows || []).find(r => r.id === "PORTFOLIO-POLICY");
-    const navRow = (rows || []).find(r => r.id === "PORTFOLIO-NAV");
-    const policy = { opsShare: 10, targets: {}, ...((policyRow && policyRow.data) || {}) };
-    const nav = { points: [], last: {}, fx: {}, ...((navRow && navRow.data) || {}) };
-    const active = holdings.filter(h => !h.archived);
-    const save = async (id, name, data) => { await store.saveAsset({ id, name, data }); await load(); };
+    const Pref = useRef(P); Pref.current = P;
 
-    // prices: live when refreshed, otherwise the last saved prices
-    const rowsRef = useRef(rows); rowsRef.current = rows;
-    const refresh = useCallback(async (quiet) => {
-      const rows = rowsRef.current;
-      const navRow = (rows || []).find(r => r.id === "PORTFOLIO-NAV");
-      const nav = { points: [], last: {}, fx: {}, ...((navRow && navRow.data) || {}) };
-      const list = (rows || []).filter(r => r.id.indexOf("A-") === 0 && !(r.data && r.data.archived)).map(r => ({ ...r.data, id: r.id }));
-      const items = list.filter(h => h.source && h.priceSymbol).map(h => ({ key: h.id, source: h.source, symbol: h.priceSymbol }));
-      const curs = [...new Set(["IDR", ...list.map(h => h.currency).filter(Boolean)])];
-      if (!items.length && !quiet) return;
+    const pricesOf = (navLast, lv) => { const o = { ...(navLast || {}) }; if (lv && lv.quotes) Object.entries(lv.quotes).forEach(([k, q]) => { if (q && q.price) o[k] = { price: q.price, prev: q.prevClose, at: q.at, source: q.source }; }); return o; };
+    const lastPrices = pricesOf(nav.last, live);
+    const fx = { USD: 1, USDT: 1, ...Store_FX(store), ...nav.fx, ...((live && live.fx) || {}) };
+    const T = book(P, lastPrices, fx);
+
+    const refresh = useCallback(async quiet => {
+      const S = Pref.current;
+      const list = S.holdings.filter(h => h.cls !== "cash" && !h.archived && h.source && h.priceSymbol);
+      const curs = [...new Set(["IDR"].concat(S.holdings.map(h => h.currency), S.expenses.map(e => e.currency)).filter(Boolean))];
       setBusy("prices");
       try {
-        const r = await store.assetQuotes(items, curs);
+        const r = await store.assetQuotes(list.map(h => ({ key: h.id, source: h.source, symbol: h.priceSymbol })), curs);
         setLive(r);
-        // keep the latest prices with the portfolio, and one value point a day (at most every 6 hours)
-        const lastAt = navRow && navRow.updated_at ? new Date(navRow.updated_at).getTime() : 0;
-        if (Date.now() - lastAt > 6 * 3600e3 || !(navRow && navRow.data && navRow.data.points && navRow.data.points.length)) {
-          const lastP = {}; Object.entries(r.quotes || {}).forEach(([k, q]) => { if (q && q.price) lastP[k] = { price: q.price, prev: q.prevClose, at: q.at, source: q.source }; });
-          const fx = { ...nav.fx, ...(r.fx || {}) };
-          const tot = totals(list, { ...nav.last, ...lastP }, fx);
-          const day = new Date().toISOString().slice(0, 10);
-          const points = (nav.points || []).filter(p => p.d !== day).concat([{ d: day, mv: Math.round(tot.mv * 100) / 100, cost: Math.round(tot.cost * 100) / 100 }]).slice(-1500);
-          await store.saveAsset({ id: "PORTFOLIO-NAV", name: "__nav__", data: { points, last: { ...nav.last, ...lastP }, fx, at: r.at } });
+        const lastAt = S.navRow && S.navRow.updated_at ? new Date(S.navRow.updated_at).getTime() : 0;
+        if (Date.now() - lastAt > 6 * 3600e3 || !(S.nav.points || []).length) {
+          const prices = pricesOf(S.nav.last, r), fx2 = { USD: 1, USDT: 1, ...Store_FX(store), ...S.nav.fx, ...(r.fx || {}) };
+          const B = book(S, prices, fx2), day = todayISO();
+          const points = (S.nav.points || []).filter(p => p.d !== day).concat([{ d: day, mv: Math.round(B.nav * 100) / 100, p: Math.round(B.principal * 100) / 100 }]).slice(-1500);
+          await store.saveAsset({ id: "PORTFOLIO-NAV", name: "__nav__", data: { points, last: prices, fx: { ...S.nav.fx, ...(r.fx || {}) }, at: r.at } });
           load();
         }
         if (!quiet) flash("Prices updated.");
       } catch (e) { if (!quiet) flash("Could not reach the price services. Showing the last saved prices.", "err"); }
       setBusy("");
     }, [store]);
-    const autoRef = useRef(false);
-    useEffect(() => { if (rows && !autoRef.current) { autoRef.current = true; refresh(true); } }, [rows]);
+    const started = useRef(false);
+    useEffect(() => {
+      if (!rows || started.current) return;
+      started.current = true;
+      refresh(true);
+      const items = holdings.filter(h => !h.archived && h.source === "yahoo" && ["idx", "us", "intl", "etf"].includes(h.cls) && ordered(h.txns).length)
+        .map(h => ({ key: h.id, symbol: h.priceSymbol, since: ordered(h.txns)[0].date }));
+      if (items.length && store.assetEvents) store.assetEvents(items).then(r => setEvents((r && r.events) || {})).catch(() => {});
+    }, [rows]);
 
-    const lastPrices = { ...nav.last };
-    if (live && live.quotes) Object.entries(live.quotes).forEach(([k, q]) => { if (q && q.price) lastPrices[k] = { price: q.price, prev: q.prevClose, at: q.at, source: q.source }; });
-    const fx = { USD: 1, USDT: 1, ...Store_FX(store), ...nav.fx, ...((live && live.fx) || {}) };
-    const T = totals(active, lastPrices, fx);
+    const save = async (h, data) => { await store.saveAsset({ id: h.id, name: (data.symbol && data.cls !== "cash" ? data.symbol + " · " : "") + (data.name || h.name), data }); await load(); };
+    const ensureCash = async (cur, custodian) => {
+      const found = Pref.current.holdings.find(x => x.cls === "cash" && !x.archived && x.currency === cur && (x.custodian || "") === (custodian || ""));
+      if (found) return found.id;
+      const id = "A-CASH-" + cur + "-" + Date.now().toString(36).toUpperCase();
+      const name = (custodian ? "Cash at " + custodian.replace(/\s*\(.*\)$/, "") : "Cash") + " (" + cur + ")";
+      await store.saveAsset({ id, name, data: { kind: "holding", cls: "cash", symbol: cur, name, currency: cur, custodian: custodian || "", holder: "Founder, in trust for The Brial Endowment", txns: [], createdAt: new Date().toISOString() } });
+      return id;
+    };
+    const stamp = (cur, tx) => ({ ...tx, fx: cur === "USD" || cur === "USDT" ? null : (Number(fx[cur]) || null), recordedAt: new Date().toISOString() });
+    const commitTx = async (h, tx) => {
+      let t = stamp(h.currency, tx);
+      if (t.cash === "auto") t.cash = await ensureCash(h.currency, h.custodian);
+      const fresh = Pref.current.holdings.find(x => x.id === h.id) || h;
+      await save(fresh, { ...stripH(fresh), txns: [...(fresh.txns || []), t] });
+    };
+    const heldAtFn = h => d => position(h, fx, d).qty;
+
+    // dividends and splits the market data shows, not yet recorded
+    const sugg = [];
+    for (const h of holdings) {
+      const ev = events[h.id];
+      if (!ev || ev.error || h.archived) continue;
+      const first = (ordered(h.txns)[0] || {}).date;
+      if (!first) continue;
+      const done = new Set((h.txns || []).map(t => t.evKey).filter(Boolean).concat(h.dismissed || []));
+      (ev.dividends || []).forEach(d => { const key = "div:" + d.date; if (d.date > first && d.date <= todayISO() && !done.has(key)) { const held = position(h, fx, d.date).qty; if (held > 0) sugg.push({ h, key, kind: "div", date: d.date, per: d.amount, held }); } });
+      (ev.splits || []).forEach(d => { const key = "split:" + d.date; if (d.date > first && d.date <= todayISO() && !done.has(key)) sugg.push({ h, key, kind: "split", date: d.date, ratio: d.ratio, held: position(h, fx, d.date).qty }); });
+    }
+    sugg.sort((a, b) => b.date.localeCompare(a.date));
+    const taxGuess = h => h.cls === "idx" ? "10" : h.currency === "USD" ? "15" : "";
+    const dismiss = async s => { const fresh = Pref.current.holdings.find(x => x.id === s.h.id); await save(fresh, { ...stripH(fresh), dismissed: [...(fresh.dismissed || []), s.key] }); flash("Hidden. It will not be suggested again."); };
+
     const toView = usd => view === "IDR" ? usd * (fx.IDR || 0) : usd;
     const vf = usd => view === "IDR" ? "Rp " + Math.round(toView(usd)).toLocaleString("id-ID") : "$" + (Number(usd) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const priceAt = (live && live.at) || nav.at;
-    const realizedRet = T.realized + T.income;
-    const allowance = Math.max(0, realizedRet) * (Number(policy.opsShare) || 0) / 100;
+    const exportCsv = () => {
+      const out = [];
+      for (const h of holdings) for (const t of (h.txns || [])) {
+        const usd = usdOf(h.currency, +t.amount || 0, t.fx, fx);
+        const acct = t.cash === "new" ? "New money from outside" : (holdings.find(x => x.id === t.cash) || {}).name || "";
+        out.push([t.date, h.symbol || "", h.name, (ACLASS[h.cls] || {}).label || h.cls, txDef(h, t.type).label, t.qty != null ? t.qty : "", t.amount != null ? t.amount : "", t.fee || "", t.tax || "", h.currency, t.fx || (h.currency === "USD" ? 1 : ""), Math.round(usd * 100) / 100, acct, t.note || "", t.void ? "Voided" : ""]);
+      }
+      out.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+      downloadCsv("brial-endowment-transactions-" + todayISO() + ".csv", ["Date", "Ticker", "Holding", "Class", "Type", "Quantity", "Amount", "Fee", "Tax", "Currency", "Units per USD", "USD", "Cash account", "Note", "Status"], out);
+    };
 
     if (err && !rows) return <><Head title="Assets" /><div className="fd-msg err">{err}</div></>;
     if (!rows) return <><Head title="Assets" /><p className="fd-sub">Loading…</p></>;
-    const byClass = {};
-    T.list.forEach(x => { byClass[x.h.cls] = (byClass[x.h.cls] || 0) + x.mvUsd; });
-    const classes = Object.keys(ACLASS).filter(k => byClass[k] > 0 || Number(policy.targets[k]) > 0);
-    const byCur = {};
-    T.list.forEach(x => { byCur[x.h.currency] = (byCur[x.h.currency] || 0) + x.mvUsd; });
-    const G = "minmax(0,1.9fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr) minmax(0,.55fr)";
+    const shown = T.list.filter(x => !x.h.archived && !(x.h.cls === "cash" && x.h.virtual && Math.abs(x.mvNative) < 1e-9));
     const archived = holdings.filter(h => h.archived);
-    const open = holdings.find(h => h.id === openId);
+    const byClass = {}, byCur = {};
+    shown.forEach(x => { byClass[x.h.cls] = (byClass[x.h.cls] || 0) + x.mvUsd; byCur[x.h.currency] = (byCur[x.h.currency] || 0) + x.mvUsd; });
+    const classes = Object.keys(ACLASS).filter(k => byClass[k] > 0 || Number(policy.targets[k]) > 0);
+    const G = "minmax(0,1.9fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr) minmax(0,.55fr)";
+    const open = holdings.find(h => h.id === openId) || (openId && T.list.find(x => x.h.id === openId) || {}).h;
+    const openX = open && T.list.find(x => x.h.id === open.id);
+    const invCount = shown.filter(x => x.h.cls !== "cash").length;
+    const since = T.first ? fdate(T.first) : "";
     return (
       <>
-        <Head title="Assets" lede="What the endowment owns. Only you can see this page; the public site never shows the holdings.">
+        <Head title="Assets" lede="What the endowment owns and what it has earned. Only you can see this page; the public site never shows the holdings.">
           <Seg items={[["USD", "USD"], ["IDR", "IDR"]]} value={view} onChange={setView} />
-          <button className="fd-btn ghost sm" disabled={!!busy || !active.length} onClick={() => refresh(false)}>{busy === "prices" ? "Updating…" : "Refresh prices"}</button>
+          <button className="fd-btn ghost sm" disabled={!!busy || !holdings.length} onClick={() => refresh(false)}>{busy === "prices" ? "Updating…" : "Refresh prices"}</button>
+          <button className="fd-btn ghost sm" disabled={!holdings.length} onClick={exportCsv}>Export CSV</button>
           <button className="fd-btn primary" onClick={() => setAdding(true)}>Add asset</button>
         </Head>
         {m && <div style={{ marginBottom: 12 }}><Flash m={m} /></div>}
         <Stats items={[
-          { label: "Market value", value: vf(T.mv), sub: T.missing ? `${T.missing} ${plural(T.missing, "asset", "assets")} at cost, no price yet` : `${active.length} ${plural(active.length, "holding", "holdings")}`, tone: "ok" },
-          { label: "Principal (cost basis)", value: vf(T.cost), sub: `Gifts in kind ${vf(T.given)} · purchases ${vf(T.bought)}` },
-          { label: "Unrealised return", value: sgn(vf, T.unreal), sub: T.cost > 0 ? pct(T.unreal / T.cost * 100) + " on cost" : "No holdings yet", tone: T.unreal >= 0 ? "ok" : "bad" },
-          { label: "Realised return", value: sgn(vf, realizedRet), sub: `Dividends ${vf(T.income)} · gains ${sgn(vf, T.realized)}`, tone: realizedRet > 0 ? "ok" : "" },
+          { label: "Net asset value", value: vf(T.nav), sub: `${invCount} ${plural(invCount, "investment", "investments")} · cash ${vf(T.cashUsd)}${T.missing ? ` · ${T.missing} at cost` : ""}`, tone: "ok" },
+          { label: "Permanent principal", value: vf(T.principal), sub: T.principal > 0 ? (T.gap >= 0 ? `Intact · value is ${vf(T.gap)} above it` : `Below the principal by ${vf(-T.gap)}`) : "Nothing contributed yet", tone: T.gap < 0 ? "bad" : "" },
+          { label: "Total return", value: sgn(vf, T.totalReturn), sub: T.principal > 0 ? `${pct(T.totalReturn / T.principal * 100)} on the principal${since ? " since " + since : ""}` : "", tone: T.totalReturn >= 0 ? "ok" : "bad" },
+          { label: "Operating budget", value: vf(Math.max(0, T.available)), sub: T.available < 0 ? `Over the budget by ${vf(-T.available)}` : `${T.share}% of realised returns, after costs`, tone: T.available < 0 ? "bad" : "" },
         ]} />
         <p className="fd-sub" style={{ margin: "8px 0 18px" }}>
           {priceAt ? `Prices from Yahoo Finance and CoinGecko, ${fdatetime(priceAt)}. Indonesian prices may be delayed up to 15 minutes.` : "No prices yet. Values show at cost until prices load."}
           {fx.IDR ? ` 1 USD = Rp ${Math.round(fx.IDR).toLocaleString("id-ID")}.` : ""}
         </p>
 
-        {active.length === 0 ? (
-          <Empty title="No assets recorded yet">Add the first holding: a stock, an ETF, a coin, a deposit or anything else the endowment owns.</Empty>
+        {sugg.length > 0 && (
+          <div className="fd-card fd-sug" style={{ marginBottom: 16 }}>
+            <div className="fd-card-head" style={{ marginBottom: 6 }}><div><h2 className="fd-h2" style={{ marginTop: 0 }}>Found in the market data</h2><p className="fd-sub">Paid while the endowment held the shares. Check the amount against your broker, then record it.</p></div><Tag tone="gold">{sugg.length} to review</Tag></div>
+            {sugg.slice(0, 8).map(s => (
+              <div className="fd-krow" key={s.h.id + s.key}>
+                <div className="fd-hold-a"><AssetLogo h={s.h} size={30} /><span><b>{s.kind === "div" ? `${s.h.symbol} dividend, ${priceFmt(s.h.currency, s.per)} per share` : `${s.h.symbol} split, ${nfmt(s.ratio, 4)} for 1`}</b>
+                  <small>{s.kind === "div" ? `Ex-date ${fdate(s.date)} · held ${qfmt(s.h, s.held)} · about ${fmtNative(s.h.currency, s.held * s.per)} before tax` : `On ${fdate(s.date)} · held ${qfmt(s.h, s.held)}`}</small></span></div>
+                <div className="fd-actions" style={{ flexWrap: "nowrap" }}>
+                  <button className="fd-btn primary sm" onClick={() => setRecording({ h: s.h, initial: s.kind === "div" ? { type: "dividend", date: s.date, perShare: String(s.per), taxPct: taxGuess(s.h), evKey: s.key } : { type: "split", date: s.date, ratio: String(s.ratio), evKey: s.key }, types: [s.kind === "div" ? "dividend" : "split"] })}>Record</button>
+                  <button className="fd-btn quiet sm" onClick={() => dismiss(s)}>{s.kind === "div" ? "Not received" : "Ignore"}</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {shown.length === 0 ? (
+          <Empty title="No assets recorded yet">Add the first holding: a stock, an ETF, a coin, a deposit or a cash account.</Empty>
         ) : (
           <div className="fd-table">
-            <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Asset</div><div>Quantity</div><div>Average cost</div><div>Last price</div><div>Market value</div><div>Unrealised</div><div style={{ textAlign: "right" }}>Weight</div></div>
-            {T.list.sort((a, b) => b.mvUsd - a.mvUsd).map(x => {
-              const h = x.h, q = lastPrices[h.id], day = q && q.prev ? (q.price / q.prev - 1) * 100 : null;
+            <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Asset</div><div>Quantity</div><div>Average cost</div><div>Last price</div><div>Market value</div><div>Gain</div><div style={{ textAlign: "right" }}>Weight</div></div>
+            {shown.slice().sort((a, b) => (a.h.cls === "cash") - (b.h.cls === "cash") || b.mvUsd - a.mvUsd).map(x => {
+              const h = x.h, q = lastPrices[h.id], day = q && q.prev ? (q.price / q.prev - 1) * 100 : null, isC = h.cls === "cash";
               return (
-                <div className="fd-tr fd-hold" key={h.id} style={{ gridTemplateColumns: G }} role="button" tabIndex={0} onClick={() => setOpenId(h.id)} onKeyDown={e => { if (e.key === "Enter") setOpenId(h.id); }}>
-                  <div className="fd-td full fd-hold-a"><AssetLogo h={h} /><span><b>{h.symbol || h.name}</b>{h.symbol && <small>{h.name}</small>}<small><Tag>{ACLASS[h.cls] ? ACLASS[h.cls].short : h.cls}</Tag> {h.currency}</small></span></div>
-                  <div className="fd-td" data-l="Quantity">{isLotted(h) ? <><b>{nfmt(x.p.qty / LOT, 2)} {plural(x.p.qty / LOT, "lot", "lots")}</b><small>{nfmt(x.p.qty, 0)} shares</small></> : <b>{nfmt(x.p.qty, h.cls === "crypto" ? 8 : 4)}</b>}</div>
-                  <div className="fd-td" data-l="Average cost"><b>{priceFmt(h.currency, x.p.avg)}</b><small>{fmtNative(h.currency, x.p.cost)}</small></div>
-                  <div className="fd-td" data-l="Last price">{x.price != null ? <><b>{priceFmt(h.currency, x.price)}</b>{day != null && <small className={day >= 0 ? "fd-up" : "fd-down"}>{pct(day)} today</small>}</> : <small>No price</small>}</div>
-                  <div className="fd-td" data-l="Market value"><b>{fmtNative(h.currency, x.mvNative)}</b>{h.currency !== view && <small>{vf(x.mvUsd)}</small>}</div>
-                  <div className="fd-td" data-l="Unrealised">{x.price != null ? <><b className={x.unrealNative >= 0 ? "fd-up" : "fd-down"}>{sgn(v => fmtNative(h.currency, v), x.unrealNative)}</b><small className={x.unrealNative >= 0 ? "fd-up" : "fd-down"}>{x.p.cost > 0 ? pct(x.unrealNative / x.p.cost * 100) : ""}</small></> : <small>·</small>}</div>
-                  <div className="fd-td fd-amt" data-l="Weight"><b>{T.mv > 0 ? (x.mvUsd / T.mv * 100).toFixed(1) + "%" : "·"}</b></div>
+                <div className={"fd-tr fd-hold" + (isC ? " cash" : "")} key={h.id} style={{ gridTemplateColumns: G }} role="button" tabIndex={0} onClick={() => setOpenId(h.id)} onKeyDown={e => { if (e.key === "Enter") setOpenId(h.id); }}>
+                  <div className="fd-td full fd-hold-a"><AssetLogo h={h} /><span><b>{isC ? h.name : h.symbol || h.name}</b>{!isC && h.symbol && <small>{h.name}</small>}<small><Tag>{ACLASS[h.cls] ? ACLASS[h.cls].short : h.cls}</Tag> {h.currency}{isC && h.custodian ? " · " + h.custodian : ""}</small></span></div>
+                  <div className="fd-td" data-l="Quantity">{isC ? <b>Balance</b> : isLotted(h) ? <><b>{nfmt(x.p.qty / LOT, 2)} {plural(x.p.qty / LOT, "lot", "lots")}</b><small>{nfmt(x.p.qty, 0)} shares</small></> : <b>{nfmt(x.p.qty, h.cls === "crypto" ? 8 : 4)}</b>}</div>
+                  <div className="fd-td" data-l="Average cost">{isC ? <small>·</small> : <><b>{priceFmt(h.currency, x.p.avg)}</b><small>{fmtNative(h.currency, x.p.cost)}</small></>}</div>
+                  <div className="fd-td" data-l="Last price">{isC ? <small>·</small> : x.price != null ? <><b>{priceFmt(h.currency, x.price)}</b>{day != null && <small className={day >= 0 ? "fd-up" : "fd-down"}>{pct(day)} today</small>}</> : <small>No price</small>}</div>
+                  <div className="fd-td" data-l="Market value"><b className={isC && x.mvNative < -0.005 ? "fd-down" : ""}>{fmtNative(h.currency, x.mvNative)}</b>{h.currency !== view && <small>{vf(x.mvUsd)}</small>}</div>
+                  <div className="fd-td" data-l="Gain">{isC ? <small>·</small> : x.price != null || x.p.earned ? <><b className={x.unrealNative >= 0 ? "fd-up" : "fd-down"}>{sgn(v => fmtNative(h.currency, v), x.unrealNative)}</b><small>{x.p.cost > 0 && x.price != null ? pct(x.unrealNative / x.p.cost * 100) + " unrealised" : ""}{x.p.earned ? ` · ${sgn(v => fmtNative(h.currency, v), x.p.earned)} earned` : ""}</small></> : <small>·</small>}</div>
+                  <div className="fd-td fd-amt" data-l="Weight"><b>{T.nav > 0 ? (x.mvUsd / T.nav * 100).toFixed(1) + "%" : "·"}</b></div>
                 </div>
               );
             })}
@@ -2540,142 +2948,95 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             {showArchived && <div className="fd-table" style={{ marginTop: 8 }}>{archived.map(h => (
               <div className="fd-tr fd-hold dim" key={h.id} style={{ gridTemplateColumns: "minmax(0,1fr) auto" }} role="button" tabIndex={0} onClick={() => setOpenId(h.id)}>
                 <div className="fd-td fd-hold-a"><AssetLogo h={h} size={30} /><span><b>{h.symbol || h.name}</b><small>{h.name} · archived {h.archivedAt ? fdate(h.archivedAt) : ""}</small></span></div>
-                <div className="fd-td"><small>Realised {sgn(v => fmtNative(h.currency, v), position(h).realized + position(h).income)}</small></div>
+                <div className="fd-td">{h.cls !== "cash" && <small>Earned {sgn(v => fmtNative(h.currency, v), position(h, fx).earned)}</small>}</div>
               </div>))}</div>}
           </div>
         )}
 
-        {active.length > 0 && (
+        {holdings.length > 0 && (
           <div className="fd-tgrid fd-assets-grid" style={{ marginTop: 18 }}>
             <div className="fd-card">
-              <div className="fd-card-head"><div><h2 className="fd-h2" style={{ marginTop: 0 }}>Allocation</h2><p className="fd-sub">By asset class{Object.keys(policy.targets || {}).some(k => Number(policy.targets[k]) > 0) ? ", against your targets" : ""}.</p></div><button className="fd-btn quiet sm" onClick={() => setPolicyOpen(true)}>Policy and targets</button></div>
+              <h2 className="fd-h2" style={{ marginTop: 0 }}>Where the return came from</h2>
+              <p className="fd-sub">Since {since || "the first record"}, in {view}. Worked out from every transaction.</p>
+              {[["Dividends", T.div], ["Interest and coupons", T.int], ["Staking and other rewards", T.rew], ["Gains realised on sales", T.gains], ["Unrealised gains", T.unreal, "Market value against cost, for what is still held"], ["Fees and taxes", -(T.fees + T.tax)], ["Currency effect", T.fxEffect, "Exchange-rate moves on assets not held in dollars"]]
+                .filter(([, v], i) => Math.abs(v) > 0.004 || i === 0 || i === 3 || i === 4).map(([l, v, s]) => (
+                  <div className="fd-krow" key={l}><div><b>{l}</b>{s && <small>{s}</small>}</div><b className={v > 0.004 ? "fd-up" : v < -0.004 ? "fd-down" : ""}>{sgn(vf, v)}</b></div>
+                ))}
+              <div className="fd-krow fd-ktotal"><div><b>Total return</b><small>{T.principal > 0 ? pct(T.totalReturn / T.principal * 100) + " on the principal" : ""}</small></div><b className={T.totalReturn >= 0 ? "fd-up" : "fd-down"}>{sgn(vf, T.totalReturn)}</b></div>
+              <div className="fd-recon">
+                <span>Principal {vf(T.principal)}</span><span>+ return {sgn(vf, T.totalReturn)}</span>{T.opsEndow > 0.004 && <span>− operating costs {vf(T.opsEndow)}</span>}{T.payouts > 0.004 && <span>− paid out {vf(T.payouts)}</span>}<span>= net asset value <b>{vf(T.nav)}</b></span>
+              </div>
+              <div className="fd-sub" style={{ marginTop: 16 }}>Principal: gifts in kind {vf(T.given)}{T.deposits > 0.004 ? ` · deposits ${vf(T.deposits)}` : ""}{T.newMoney > 0.004 ? ` · new money ${vf(T.newMoney)}` : ""}.</div>
+            </div>
+            <div className="fd-card">
+              <div className="fd-card-head"><div><h2 className="fd-h2" style={{ marginTop: 0 }}>Spending policy</h2></div><button className="fd-btn quiet sm" onClick={() => setPolicyOpen(true)}>Policy and targets</button></div>
+              <p className="fd-sub" style={{ lineHeight: 1.6, marginTop: -6 }}>Internal. The principal is never spent. Up to {T.share}% of realised returns (dividends, interest, rewards and realised gains, after fees and taxes) may pay for operations. Unrealised growth is never spent.</p>
+              <div className="fd-krow" style={{ borderTop: 0 }}><div><b>Realised returns</b><small>Since {since || "the start"}</small></div><b>{sgn(vf, T.realised)}</b></div>
+              <div className="fd-krow"><div><b>Operating budget earned</b><small>{T.share}% of positive realised returns</small></div><b>{vf(T.allowance)}</b></div>
+              <div className="fd-krow"><div><b>Paid from the endowment</b><small>Operating costs paid from its cash</small></div><b>{vf(T.opsEndow)}</b></div>
+              <div className="fd-krow"><div><b>Available now</b><small>{T.available < 0 ? "Over the budget: pay new costs personally until returns catch up" : "Can pay the next operating costs"}</small></div><b className={T.available < 0 ? "fd-down" : "fd-up"}>{sgn(vf, T.available)}</b></div>
+              <div className="fd-krow"><div><b>Covered by you personally</b><small>Never taken from the fund or from donations</small></div><b>{vf(T.opsFounder)}</b></div>
+              {go && <button className="fd-btn ghost sm" style={{ marginTop: 12 }} onClick={() => go("costs")}>Open operating costs</button>}
+              <p className="fd-sub" style={{ marginTop: 12 }}>The public site says only that 100% of every donation goes to the endowment's charitable work and its permanent principal.</p>
+            </div>
+            <div className="fd-card">
+              <h2 className="fd-h2" style={{ marginTop: 0 }}>Allocation</h2>
+              <p className="fd-sub">By asset class{Object.keys(policy.targets || {}).some(k => Number(policy.targets[k]) > 0) ? ", against your targets" : ""}.</p>
               {classes.map(k => {
-                const w = T.mv > 0 ? (byClass[k] || 0) / T.mv * 100 : 0, tg = Number(policy.targets[k]) || 0;
+                const w = T.nav > 0 ? (byClass[k] || 0) / T.nav * 100 : 0, tg = Number(policy.targets[k]) || 0;
                 return (
                   <div className="fd-alloc" key={k}>
                     <div className="fd-alloc-h"><span><i style={{ background: ACLASS[k].color }} />{ACLASS[k].label}</span><b>{w.toFixed(1)}%{tg > 0 && <small> · target {tg}%{Math.abs(w - tg) >= 5 ? (w > tg ? " · above" : " · below") : ""}</small>}</b></div>
-                    <div className="fd-alloc-bar"><i style={{ width: Math.min(100, w) + "%", background: ACLASS[k].color }} />{tg > 0 && <em style={{ left: Math.min(100, tg) + "%" }} title={"Target " + tg + "%"} />}</div>
+                    <div className="fd-alloc-bar"><i style={{ width: Math.min(100, Math.max(0, w)) + "%", background: ACLASS[k].color }} />{tg > 0 && <em style={{ left: Math.min(100, tg) + "%" }} title={"Target " + tg + "%"} />}</div>
                   </div>
                 );
               })}
-              <div className="fd-sub" style={{ marginTop: 14 }}>By currency: {Object.entries(byCur).sort((a, b) => b[1] - a[1]).map(([c, v]) => `${c} ${T.mv > 0 ? (v / T.mv * 100).toFixed(1) : 0}%`).join(" · ")}</div>
-              {(nav.points || []).length >= 2 && <NavChart points={nav.points} fmt={vf} />}
+              <div className="fd-sub" style={{ marginTop: 14 }}>By currency: {Object.entries(byCur).filter(([, v]) => Math.abs(v) > 0.004).sort((a, b) => b[1] - a[1]).map(([c, v]) => `${c} ${T.nav > 0 ? (v / T.nav * 100).toFixed(1) : 0}%`).join(" · ")}</div>
             </div>
             <div className="fd-card">
-              <h2 className="fd-h2" style={{ marginTop: 0 }}>Spending policy</h2>
-              <p className="fd-sub" style={{ lineHeight: 1.6 }}>Internal. The principal, every donation and every gifted asset at cost, is never spent. Up to {policy.opsShare}% of realised returns (dividends, interest and realised gains) may fund operations such as hosting, domains, software and management. Unrealised growth is not spent.</p>
-              <div className="fd-krow" style={{ borderTop: 0 }}><div><b>Realised returns to date</b><small>Dividends {vf(T.income)} and gains {sgn(vf, T.realized)}</small></div><b>{sgn(vf, realizedRet)}</b></div>
-              <div className="fd-krow"><div><b>Available for operations</b><small>{policy.opsShare}% of positive realised returns</small></div><b className="fd-up">{vf(allowance)}</b></div>
-              <div className="fd-krow"><div><b>Unrealised growth</b><small>Counts only once sold or paid out</small></div><b>{sgn(vf, T.unreal)}</b></div>
-              <p className="fd-sub" style={{ marginTop: 12 }}>This policy stays inside the Founder Portal. The public site says only that 100% of every donation goes to the endowment's charitable work and its permanent principal.</p>
+              <h2 className="fd-h2" style={{ marginTop: 0 }}>Value over time</h2>
+              {(nav.points || []).length >= 2 ? <NavChart points={nav.points} fmt={vf} /> : <p className="fd-sub">A point is saved each day you open this page. The chart appears from the second day.</p>}
             </div>
           </div>
         )}
 
-        {adding && <AddAssetDialog store={store} onClose={() => setAdding(false)} onSaved={async (id, name, data) => { await save(id, name, data); setAdding(false); flash("Asset added."); setTimeout(() => refresh(true), 200); }} />}
-        {open && <AssetDialog h={open} price={lastPrices[open.id]} fx={fx} onClose={() => setOpenId(null)} onSave={async data => { await save(open.id, data.name || open.name, data); flash("Saved."); }} />}
-        {policyOpen && <PolicyDialog policy={policy} onClose={() => setPolicyOpen(false)} onSave={async p => { await save("PORTFOLIO-POLICY", "__policy__", p); setPolicyOpen(false); flash("Policy saved."); }} />}
+        {adding && <AddAssetDialog store={store} cashAccts={T.cashAccts} onClose={() => setAdding(false)} onSaved={async (id, name, data) => {
+          if (data.txns && data.txns[0]) data.txns = [stamp(data.currency, data.txns[0])];
+          await store.saveAsset({ id, name, data }); await load(); setAdding(false); flash(data.cls === "cash" ? "Cash account added." : "Asset added."); setTimeout(() => refresh(true), 200);
+        }} />}
+        {open && openX && <AssetDialog h={open} x={openX} price={lastPrices[open.id]} fx={fx} cashAccts={T.cashAccts} heldAt={heldAtFn(open)} holdings={holdings}
+          onClose={() => setOpenId(null)} onTx={tx => commitTx(open, tx).then(() => flash("Saved."))}
+          onSave={async data => { await save(open, data); flash("Saved."); }} />}
+        {recording && (
+          <Modal wide title={(recording.types[0] === "split" ? "Record split · " : "Record dividend · ") + (recording.h.symbol || recording.h.name)} sub={recording.h.name} onClose={() => setRecording(null)}>
+            <TxForm h={recording.h} held={position(recording.h, fx).qty} heldAt={heldAtFn(recording.h)} cashAccts={T.cashAccts} initial={recording.initial} types={recording.types}
+              submitLabel="Record" onCancel={() => setRecording(null)} onSubmit={async tx => { await commitTx(recording.h, tx); setRecording(null); flash("Recorded."); }} />
+          </Modal>
+        )}
+        {policyOpen && <PolicyDialog policy={policy} onClose={() => setPolicyOpen(false)} onSave={async p => { await store.saveAsset({ id: "PORTFOLIO-POLICY", name: "__policy__", data: p }); await load(); setPolicyOpen(false); flash("Policy saved."); }} />}
       </>
     );
   }
-  const Store_FX = store => { const f = store.FX_FALLBACK || {}, o = {}; ["IDR", "EUR", "SGD", "TRY"].forEach(k => { if (Number(f[k]) > 0) o[k] = Number(f[k]); }); return o; };
-  const fmtNative = (cur, v) => cur === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : (aCurSym(cur) || cur + " ") + (Number(v) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  // Every holding valued in US dollars (fx = units of a currency per one dollar)
-  function totals(list, prices, fx) {
-    const usd = (cur, v) => { if (!cur || cur === "USD" || cur === "USDT") return v; const r = Number(fx[cur]); return r > 0 ? v / r : 0; };
-    const out = { list: [], mv: 0, cost: 0, unreal: 0, realized: 0, income: 0, given: 0, bought: 0, missing: 0 };
-    for (const h of list) {
-      const p = position(h), q = prices[h.id], price = h.cls === "cash" ? 1 : q && q.price ? q.price : (h.manualPrice ? Number(h.manualPrice) : null);
-      const mvNative = price != null ? p.qty * price : p.cost;
-      if (price == null && p.qty > 0) out.missing++;
-      const x = { h, p, price, mvNative, unrealNative: price != null ? mvNative - p.cost : 0, mvUsd: usd(h.currency, mvNative) };
-      out.list.push(x);
-      out.mv += x.mvUsd; out.cost += usd(h.currency, p.cost); out.unreal += usd(h.currency, x.unrealNative);
-      out.realized += usd(h.currency, p.realized); out.income += usd(h.currency, p.income);
-      out.given += usd(h.currency, p.given); out.bought += usd(h.currency, p.bought);
-    }
-    return out;
-  }
   function NavChart({ points, fmt }) {
-    const pts = points.slice(-365), W = 600, H = 120;
-    const vals = pts.map(p => p.mv), lo = Math.min(...vals, ...pts.map(p => p.cost)), hi = Math.max(...vals, ...pts.map(p => p.cost));
+    const pts = points.slice(-365), W = 600, H = 130;
+    const base = p => p.p != null ? p.p : p.cost;
+    const vals = pts.map(p => p.mv).concat(pts.map(base).filter(v => v != null));
+    const lo = Math.min(...vals), hi = Math.max(...vals);
     const x = i => (pts.length < 2 ? 0 : i / (pts.length - 1) * W), y = v => H - 8 - (hi === lo ? 0.5 : (v - lo) / (hi - lo)) * (H - 16);
-    const line = k => pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p[k]).toFixed(1)).join(" ");
+    const line = f => pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(f(p)).toFixed(1)).join(" ");
     return (
-      <div style={{ marginTop: 16 }}>
-        <div className="fd-sub" style={{ marginBottom: 6 }}>Value over time · <span style={{ color: "var(--sage)" }}>market value</span> · <span style={{ color: "var(--faint)" }}>cost</span></div>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={`Portfolio value from ${fdate(pts[0].d)} to ${fdate(pts[pts.length - 1].d)}: ${fmt(pts[pts.length - 1].mv)}`} preserveAspectRatio="none">
-          <path d={line("cost")} fill="none" stroke="rgba(239,233,220,.3)" strokeWidth="1.5" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
-          <path d={line("mv")} fill="none" stroke="#8FD4A8" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+      <div>
+        <div className="fd-sub" style={{ marginBottom: 6 }}><span style={{ color: "var(--sage)" }}>Net asset value</span> · <span style={{ color: "var(--faint)" }}>principal</span></div>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={`Net asset value from ${fdate(pts[0].d)} to ${fdate(pts[pts.length - 1].d)}: ${fmt(pts[pts.length - 1].mv)}`} preserveAspectRatio="none">
+          <path d={line(base)} fill="none" stroke="rgba(239,233,220,.3)" strokeWidth="1.5" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+          <path d={line(p => p.mv)} fill="none" stroke="#8FD4A8" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         </svg>
         <div className="fd-sub" style={{ display: "flex", justifyContent: "space-between", margin: 0 }}><span>{fdate(pts[0].d)}</span><span>{fdate(pts[pts.length - 1].d)}</span></div>
       </div>
     );
   }
 
-  // One transaction: what it is, when, how much
-  function TxForm({ h, held, initial, onSubmit, onCancel, submitLabel = "Save" }) {
-    const lotted = isLotted(h);
-    const [t, setT] = useState(() => ({ type: "gift", date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10), qtyIn: "", priceMode: "avg", priceIn: "", totalIn: "", fee: "", amount: "", ratio: "", note: "", ...(initial || {}) }));
-    const set = (k, v) => setT(p => ({ ...p, [k]: v }));
-    const D = TX[t.type];
-    const num = s => { const v = parseFloat(String(s).replace(/,/g, "").replace(/\s/g, "")); return isFinite(v) ? v : NaN; };
-    const shares = (num(t.qtyIn) || 0) * (lotted ? LOT : 1);
-    const total = D.price ? (t.priceMode === "avg" ? shares * (num(t.priceIn) || 0) : num(t.totalIn) || 0) : 0;
-    const problems = [];
-    if (!t.date) problems.push("Choose a date.");
-    if (D.qty && !(shares > 0)) problems.push(lotted ? "Enter the number of lots." : "Enter the quantity.");
-    if (t.type === "sell" && shares > held + 1e-9) problems.push(`You hold ${qfmt(h, held)}. You cannot sell more than that.`);
-    if (D.price && !(total > 0)) problems.push(t.priceMode === "avg" ? "Enter the price." : "Enter the total.");
-    if ((t.type === "dividend" || t.type === "fee") && !(num(t.amount) > 0)) problems.push("Enter the amount.");
-    if (t.type === "split" && !(num(t.ratio) > 0)) problems.push("Enter the ratio, for example 2.");
-    if (t.fee && !(num(t.fee) >= 0)) problems.push("The fee must be a number.");
-    const submit = () => {
-      if (problems.length) return;
-      const out = { id: newId("T"), type: t.type, date: t.date, note: t.note.trim().slice(0, 300) || undefined };
-      if (D.qty) { out.qty = shares; out.amount = Math.round(total * 1e6) / 1e6; out.fee = num(t.fee) > 0 ? num(t.fee) : 0; }
-      if (t.type === "dividend" || t.type === "fee") out.amount = num(t.amount);
-      if (t.type === "split") out.ratio = num(t.ratio);
-      onSubmit(out);
-    };
-    return (
-      <div className="fd-form">
-        <div className="fd-grid2">
-          <Field label="Type"><select className="fd-input" value={t.type} onChange={e => set("type", e.target.value)}>{Object.entries(TX).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></Field>
-          <Field label="Date"><input className="fd-input" type="date" value={t.date} max={new Date().toISOString().slice(0, 10)} onChange={e => set("date", e.target.value)} /></Field>
-        </div>
-        <p className="fd-sub" style={{ margin: "-4px 0 4px" }}>{D.hint}</p>
-        {D.qty && (
-          <div className="fd-grid2">
-            <Field label={lotted ? "Lots" : "Quantity"} hint={lotted ? `1 lot = ${LOT} shares${shares > 0 ? ` · ${nfmt(shares, 0)} shares` : ""}` : h.cls === "crypto" ? "Up to 8 decimals" : ""}>
-              <input className="fd-input" inputMode="decimal" value={t.qtyIn} onChange={e => set("qtyIn", e.target.value)} placeholder={lotted ? "10" : "1"} />
-            </Field>
-            <Field label={t.priceMode === "avg" ? `Price per ${lotted ? "share" : h.cls === "crypto" ? "coin" : "unit"} (${h.currency})` : `Total (${h.currency})`}
-              hint={<button type="button" className="fd-linkbtn" onClick={() => set("priceMode", t.priceMode === "avg" ? "total" : "avg")}>{t.priceMode === "avg" ? "Enter the total instead" : "Enter the price instead"}</button>}>
-              {t.priceMode === "avg" ? <input className="fd-input" inputMode="decimal" value={t.priceIn} onChange={e => set("priceIn", e.target.value)} placeholder={lotted ? "3500" : "100"} />
-                : <input className="fd-input" inputMode="decimal" value={t.totalIn} onChange={e => set("totalIn", e.target.value)} placeholder={lotted ? "3500000" : "1000"} />}
-            </Field>
-          </div>
-        )}
-        {D.qty && (
-          <div className="fd-grid2">
-            <Field label={`Fees (${h.currency}, optional)`}><input className="fd-input" inputMode="decimal" value={t.fee} onChange={e => set("fee", e.target.value)} placeholder="0" /></Field>
-            <div className="fd-txsum">{total > 0 && shares > 0 ? <><span>{t.type === "sell" ? "Proceeds" : "Cost"}</span><b>{fmtNative(h.currency, total + (t.type === "sell" ? -(num(t.fee) || 0) : (num(t.fee) || 0)))}</b><small>{priceFmt(h.currency, total / shares)} per {lotted ? "share" : "unit"}</small></> : null}</div>
-          </div>
-        )}
-        {(t.type === "dividend" || t.type === "fee") && <Field label={`Amount (${h.currency})`}><input className="fd-input" inputMode="decimal" value={t.amount} onChange={e => set("amount", e.target.value)} placeholder="0" /></Field>}
-        {t.type === "split" && <Field label="Ratio" hint="New shares for each old share: 2 for a 2-for-1 split, 0.1 for a 1-for-10 reverse split."><input className="fd-input" inputMode="decimal" value={t.ratio} onChange={e => set("ratio", e.target.value)} placeholder="2" /></Field>}
-        <Field label="Note (optional)"><input className="fd-input" value={t.note} maxLength={300} onChange={e => set("note", e.target.value)} placeholder="Broker reference, reason or anything worth keeping" /></Field>
-        {problems.length > 0 && (t.qtyIn || t.priceIn || t.totalIn || t.amount || t.ratio) && <small className="fd-bad">{problems[0]}</small>}
-        <div className="fd-actions" style={{ marginTop: 6 }}>
-          <button className="fd-btn primary" disabled={problems.length > 0} onClick={submit}>{submitLabel}</button>
-          {onCancel && <button className="fd-btn ghost" onClick={onCancel}>Cancel</button>}
-        </div>
-      </div>
-    );
-  }
-
-  function AddAssetDialog({ store, onClose, onSaved }) {
+  function AddAssetDialog({ store, cashAccts, onClose, onSaved }) {
     const [step, setStep] = useState("find");
     const [q, setQ] = useState("");
     const [hits, setHits] = useState(null);
@@ -2690,8 +3051,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       const t = setTimeout(async () => {
         try {
           const r = await store.assetSearch(term);
-          const T = term.toUpperCase(), L = term.toLowerCase();
-          const rank = x => (x.symbol === T ? 0 : String(x.name).toLowerCase() === L ? 1 : String(x.name).toLowerCase().indexOf(L) === 0 ? 2 : 3);
+          const U = term.toUpperCase(), L = term.toLowerCase();
+          const rank = x => (x.symbol === U ? 0 : String(x.name).toLowerCase() === L ? 1 : String(x.name).toLowerCase().indexOf(L) === 0 ? 2 : 3);
           if (on) setHits(r.map((x, i) => ({ x, i })).sort((a, b) => rank(a.x) - rank(b.x) || a.i - b.i).map(o => o.x));
         } catch (e) { if (on) setHits([]); }
         if (on) setSearching(false);
@@ -2699,19 +3060,22 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       return () => { on = false; clearTimeout(t); };
     }, [q]);
     const pick = x => { setH(p => ({ ...p, cls: x.cls, symbol: x.symbol, name: x.name, currency: x.currency || (x.cls === "idx" ? "IDR" : "USD"), source: x.source, priceSymbol: x.priceSymbol, logo: x.logo || "", exchange: x.exchange || "" })); setStep("details"); };
-    const manual = () => { setH(p => ({ ...p, symbol: q.trim().toUpperCase().slice(0, 12), name: "", source: "", priceSymbol: "" })); setStep("details"); };
-    const set = (k, v) => setH(p => ({ ...p, [k]: v }));
-    const ready = h.name.trim() && h.currency && h.cls;
+    const manual = () => { setH(p => ({ ...p, cls: p.cls === "cash" ? "idx" : p.cls, symbol: q.trim().toUpperCase().slice(0, 12), name: "", source: "", priceSymbol: "" })); setStep("details"); };
+    const cashAcct = () => { setH(p => ({ ...p, cls: "cash", symbol: "IDR", currency: "IDR", name: "", source: "", priceSymbol: "", logo: "" })); setStep("details"); };
+    const set = (k, v) => setH(p => ({ ...p, [k]: v, ...(k === "currency" && p.cls === "cash" ? { symbol: v } : {}) }));
+    const isC = h.cls === "cash";
+    const autoName = isC ? (h.custodian.trim() ? "Cash at " + h.custodian.trim() : "Cash") + " (" + h.currency + ")" : "";
+    const ready = (isC || h.name.trim()) && h.currency && h.cls;
     const finish = async tx => {
       setBusy(true); setErr("");
-      const data = { ...h, symbol: h.symbol.trim().toUpperCase(), name: h.name.trim(), custodian: h.custodian.trim(), holder: h.holder.trim(), note: h.note.trim(), txns: [tx], createdAt: new Date().toISOString() };
+      const data = { kind: "holding", ...h, symbol: (isC ? h.currency : h.symbol.trim().toUpperCase()), name: (h.name.trim() || autoName), custodian: h.custodian.trim(), holder: h.holder.trim(), note: h.note.trim(), txns: tx ? [tx] : [], createdAt: new Date().toISOString() };
       if (data.cls === "idx" && data.symbol && !data.priceSymbol) { data.priceSymbol = data.symbol + ".JK"; data.source = "yahoo"; }
       if ((data.cls === "us" || data.cls === "etf") && data.symbol && !data.priceSymbol) { data.priceSymbol = data.symbol; data.source = "yahoo"; }
-      try { await onSaved(newId("A"), data.symbol ? `${data.symbol} · ${data.name}` : data.name, data); }
+      try { await onSaved(newId(isC ? "A-CASH" : "A"), !isC && data.symbol ? `${data.symbol} · ${data.name}` : data.name, data); }
       catch (e) { setErr("Could not save. Check your connection and try again."); setBusy(false); }
     };
     return (
-      <Modal wide title="Add an asset" sub={step === "find" ? "Search a stock, an ETF or a coin, or add anything else by hand." : step === "details" ? "Check the details, then record how the endowment got it." : "How the endowment got it."} onClose={onClose}>
+      <Modal wide title={isC && step !== "find" ? "Add a cash account" : "Add an asset"} sub={step === "find" ? "Search a stock, an ETF or a coin, or add anything else by hand." : step === "details" ? "Check the details." : isC ? "The opening balance, if there is one." : "How the endowment got it."} onClose={onClose}>
         {step === "find" && (
           <>
             <Search value={q} onChange={setQ} placeholder="Ticker or name: TLKM, Microsoft, VTI, Ethereum…" />
@@ -2728,23 +3092,24 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>
             <div className="fd-actions" style={{ marginTop: 14 }}>
               <button className="fd-btn ghost" onClick={manual}>Add by hand</button>
-              <small className="fd-sub" style={{ margin: 0 }}>For a deposit, property, gold or anything without a market price.</small>
+              <button className="fd-btn ghost" onClick={cashAcct}>Add a cash account</button>
             </div>
+            <p className="fd-sub" style={{ margin: "8px 0 0" }}>By hand: a deposit product, a bond, gold or anything without a market price. Cash account: a bank or broker balance that holds the endowment's money.</p>
           </>
         )}
         {step === "details" && (
           <div className="fd-form">
-            <div className="fd-adetail-h"><AssetLogo h={h} size={46} /><div><b>{h.symbol || "New asset"}</b><small>{h.name || "Name it below"}{h.exchange ? " · " + h.exchange : ""}</small></div></div>
+            <div className="fd-adetail-h"><AssetLogo h={h} size={46} /><div><b>{isC ? (h.name || autoName) : h.symbol || "New asset"}</b><small>{isC ? "Cash account" : (h.name || "Name it below") + (h.exchange ? " · " + h.exchange : "")}</small></div></div>
             <div className="fd-grid2">
-              <Field label="Asset class"><select className="fd-input" value={h.cls} onChange={e => set("cls", e.target.value)}>{Object.entries(ACLASS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></Field>
-              <Field label="Currency" hint="The currency it is priced and bought in"><select className="fd-input" value={h.currency} onChange={e => set("currency", e.target.value)}>{ASSET_CURS.map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
-              <Field label="Ticker or code (optional)"><input className="fd-input" value={h.symbol} maxLength={16} onChange={e => set("symbol", e.target.value.toUpperCase())} placeholder="TLKM" /></Field>
-              <Field label="Name"><input className="fd-input" value={h.name} maxLength={120} onChange={e => set("name", e.target.value)} placeholder="PT Telkom Indonesia (Persero) Tbk" /></Field>
-              <Field label="Broker or custodian" hint="Where it is held"><input className="fd-input" value={h.custodian} maxLength={120} onChange={e => set("custodian", e.target.value)} placeholder="Your broker or bank" /></Field>
+              {!isC && <Field label="Asset class"><select className="fd-input" value={h.cls} onChange={e => set("cls", e.target.value)}>{Object.entries(ACLASS).filter(([k]) => k !== "cash").map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></Field>}
+              <Field label="Currency" hint={isC ? "The currency of the balance" : "The currency it is priced and bought in"}><select className="fd-input" value={h.currency} onChange={e => set("currency", e.target.value)}>{ASSET_CURS.map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+              {!isC && <Field label="Ticker or code (optional)"><input className="fd-input" value={h.symbol} maxLength={16} onChange={e => set("symbol", e.target.value.toUpperCase())} placeholder="TLKM" /></Field>}
+              <Field label={isC ? "Name (optional)" : "Name"}><input className="fd-input" value={h.name} maxLength={120} onChange={e => set("name", e.target.value)} placeholder={isC ? autoName : "PT Telkom Indonesia (Persero) Tbk"} /></Field>
+              <Field label={isC ? "Bank or broker" : "Broker or custodian"} hint="Where it is held"><input className="fd-input" value={h.custodian} maxLength={120} onChange={e => set("custodian", e.target.value)} placeholder="Your broker or bank" /></Field>
               <Field label="Registered holder" hint="Whose name the account is in"><input className="fd-input" value={h.holder} maxLength={120} onChange={e => set("holder", e.target.value)} /></Field>
             </div>
-            <Field label="Logo address (optional)" hint="Filled in for you when found. Paste another image address to change it."><input className="fd-input" value={h.logo} onChange={e => set("logo", e.target.value.trim())} placeholder="https://…" spellCheck={false} /></Field>
-            {!h.source && h.cls !== "cash" && <p className="fd-sub" style={{ margin: 0 }}>{h.cls === "idx" || h.cls === "us" || h.cls === "etf" ? "Prices load automatically from the ticker." : "No automatic price for this asset: it is valued at cost until you set a price in its record."}</p>}
+            {!isC && <Field label="Logo address (optional)" hint="Filled in for you when found. Paste another image address to change it."><input className="fd-input" value={h.logo} onChange={e => set("logo", e.target.value.trim())} placeholder="https://…" spellCheck={false} /></Field>}
+            {!isC && !h.source && <p className="fd-sub" style={{ margin: 0 }}>{h.cls === "idx" || h.cls === "us" || h.cls === "etf" ? "Prices load automatically from the ticker." : "No automatic price for this asset: it is valued at cost until you set a price in its record."}</p>}
             <div className="fd-actions" style={{ marginTop: 6 }}>
               <button className="fd-btn primary" disabled={!ready} onClick={() => setStep("tx")}>Next</button>
               <button className="fd-btn ghost" onClick={() => setStep("find")}>Back</button>
@@ -2753,8 +3118,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         )}
         {step === "tx" && (
           <>
-            <div className="fd-adetail-h" style={{ marginBottom: 12 }}><AssetLogo h={h} size={38} /><div><b>{h.symbol || h.name}</b><small>{h.name} · {h.currency}</small></div></div>
-            <TxForm h={h} held={0} initial={{ type: "gift" }} submitLabel={busy ? "Saving…" : "Save asset"} onSubmit={tx => { if (tx.type === "sell" || tx.type === "dividend" || tx.type === "fee" || tx.type === "split") { setErr("Start with a gift in kind or a purchase."); return; } finish(tx); }} onCancel={() => setStep("details")} />
+            <div className="fd-adetail-h" style={{ marginBottom: 12 }}><AssetLogo h={h} size={38} /><div><b>{isC ? (h.name || autoName) : h.symbol || h.name}</b><small>{isC ? "Cash account" : h.name} · {h.currency}</small></div></div>
+            {isC ? (
+              <>
+                <TxForm h={{ ...h, id: "new" }} held={0} cashAccts={[]} types={["deposit"]} submitLabel={busy ? "Saving…" : "Save with this deposit"} onSubmit={finish} onCancel={() => setStep("details")} />
+                <button className="fd-btn quiet sm" style={{ marginTop: 10 }} disabled={busy} onClick={() => finish(null)}>Save with no balance yet</button>
+              </>
+            ) : <TxForm h={h} held={0} cashAccts={cashAccts} types={["gift", "buy"]} submitLabel={busy ? "Saving…" : "Save asset"} onSubmit={finish} onCancel={() => setStep("details")} />}
             {err && <div className="fd-msg err" style={{ marginTop: 10 }}>{err}</div>}
           </>
         )}
@@ -2762,65 +3132,103 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     );
   }
 
-  function AssetDialog({ h, price, fx, onClose, onSave }) {
-    const p = position(h);
+  function AssetDialog({ h, x, price, fx, cashAccts, heldAt, holdings, onClose, onSave, onTx }) {
+    const isC = h.cls === "cash";
+    const p = isC ? null : position(h, fx);
     const [mode, setMode] = useState("view");
     const [d, setD] = useState({ name: h.name, custodian: h.custodian || "", holder: h.holder || "", logo: h.logo || "", note: h.note || "", manualPrice: h.manualPrice || "" });
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
-    const last = h.cls === "cash" ? 1 : price && price.price ? price.price : h.manualPrice ? Number(h.manualPrice) : null;
-    const mv = last != null ? p.qty * last : p.cost;
-    const unreal = last != null ? mv - p.cost : 0;
     const write = async data => { setBusy(true); setErr(""); try { await onSave(data); setMode("view"); } catch (e) { setErr("Could not save. Try again."); } setBusy(false); };
-    const { id, updatedAt, ...base } = h;
-    const txs = (h.txns || []).map((t, i) => ({ t, i })).sort((a, b) => String(b.t.date).localeCompare(String(a.t.date)) || b.i - a.i).map(x => x.t);
+    const tx = async t => { setBusy(true); setErr(""); try { await onTx(t); setMode("view"); } catch (e) { setErr("Could not save. Try again."); } setBusy(false); };
+    const base = stripH(h);
+    const setVoid = (id, v) => write({ ...base, txns: (h.txns || []).map(t => t.id === id ? { ...t, void: v, voidAt: v ? new Date().toISOString() : null } : t) });
+    const bal = x.mvNative;
+    const txs = (h.txns || []).map((t, i) => ({ t, i })).sort((a, b) => String(b.t.date).localeCompare(String(a.t.date)) || b.i - a.i).map(o => o.t);
+    const cashName = id => id === "new" ? (null) : ((holdings.find(y => y.id === id) || {}).name || "");
+    const canArchive = Math.abs(isC ? bal : p.qty) < 1e-9;
+    let running = 0;
+    const statement = isC && x.cash ? x.cash.lines.map(l => ({ ...l, after: (running += l.v) })).reverse() : [];
+    if (h.virtual) return (
+      <Modal title={h.name} sub={h.currency} onClose={onClose}>
+        <p className="fd-sub">Money from a sale or dividend recorded without a cash account. Open that transaction's holding and record it again with an account, or add a cash account and move it there.</p>
+        <b>{fmtNative(h.currency, bal)}</b>
+      </Modal>
+    );
     return (
-      <Modal wide title={h.symbol ? `${h.symbol} · ${h.name}` : h.name} sub={[ACLASS[h.cls] ? ACLASS[h.cls].label : h.cls, h.exchange, h.currency, h.archived ? "Archived" : ""].filter(Boolean).join(" · ")} onClose={onClose}>
+      <Modal wide title={isC ? h.name : h.symbol ? `${h.symbol} · ${h.name}` : h.name} sub={[ACLASS[h.cls] ? ACLASS[h.cls].label : h.cls, h.exchange, h.currency, h.archived ? "Archived" : ""].filter(Boolean).join(" · ")} onClose={onClose}>
         {mode === "view" && (
           <>
-            <div className="fd-adetail-h"><AssetLogo h={h} size={52} /><div><b>{h.archived ? "Archived holding" : qfmt(h, p.qty)}</b><small>{last != null ? `Last price ${priceFmt(h.currency, last)}${price && price.at ? " · " + fdatetime(price.at) : h.manualPrice ? " · set by hand" : ""}` : "No price yet: valued at cost"}</small></div></div>
-            <Stats items={[
-              { label: "Market value", value: fmtNative(h.currency, mv), sub: h.currency !== "USD" && fx[h.currency] ? fmtNative("USD", mv / fx[h.currency]) : "" },
-              { label: "Cost basis", value: fmtNative(h.currency, p.cost), sub: p.qty > 0 ? "Average " + priceFmt(h.currency, p.avg) : "" },
-              { label: "Unrealised", value: sgn(v => fmtNative(h.currency, v), unreal), sub: p.cost > 0 && last != null ? pct(unreal / p.cost * 100) : "", tone: unreal >= 0 ? "ok" : "bad" },
-              { label: "Realised", value: sgn(v => fmtNative(h.currency, v), p.realized + p.income), sub: `Dividends ${fmtNative(h.currency, p.income)}` },
-            ]} />
+            <div className="fd-adetail-h"><AssetLogo h={h} size={52} /><div><b>{isC ? fmtNative(h.currency, bal) : h.archived ? "Archived holding" : qfmt(h, p.qty)}</b><small>{isC ? "Balance, worked out from every movement" : x.price != null ? `Last price ${priceFmt(h.currency, x.price)}${price && price.at ? " · " + fdatetime(price.at) : h.manualPrice ? " · set by hand" : ""}` : "No price yet: valued at cost"}</small></div></div>
+            {!isC && <Stats items={[
+              { label: "Market value", value: fmtNative(h.currency, x.mvNative), sub: h.currency !== "USD" ? fmtNative("USD", x.mvUsd) : "" },
+              { label: "Cost", value: fmtNative(h.currency, p.cost), sub: p.qty > 0 ? "Average " + priceFmt(h.currency, p.avg) : "" },
+              { label: "Unrealised gain", value: sgn(v => fmtNative(h.currency, v), x.unrealNative), sub: p.cost > 0 && x.price != null ? pct(x.unrealNative / p.cost * 100) : "", tone: x.unrealNative >= 0 ? "ok" : "bad" },
+              { label: "Earned", value: sgn(v => fmtNative(h.currency, v), p.earned), sub: [p.dividends && "dividends " + fmtNative(h.currency, p.dividends), p.interest && "interest " + fmtNative(h.currency, p.interest), p.rewards && "rewards " + fmtNative(h.currency, p.rewards), p.realized && "sales " + sgn(v => fmtNative(h.currency, v), p.realized)].filter(Boolean).join(" · ") || "Nothing yet", tone: p.earned > 0 ? "ok" : "" },
+            ]} />}
             <div className="fd-adl">
-              <div><span>Broker or custodian</span><b>{h.custodian || "Not set"}</b></div>
+              <div><span>{isC ? "Bank or broker" : "Broker or custodian"}</span><b>{h.custodian || "Not set"}</b></div>
               <div><span>Registered holder</span><b>{h.holder || "Not set"}</b></div>
-              <div><span>Price source</span><b>{h.source === "coingecko" ? "CoinGecko · " + h.priceSymbol : h.source === "yahoo" ? "Yahoo Finance · " + h.priceSymbol : h.manualPrice ? "Set by hand" : "None, valued at cost"}</b></div>
-              <div><span>Given · bought</span><b>{fmtNative(h.currency, p.given)} · {fmtNative(h.currency, p.bought)}</b></div>
+              {!isC && <div><span>Price source</span><b>{h.source === "coingecko" ? "CoinGecko · " + h.priceSymbol : h.source === "yahoo" ? "Yahoo Finance · " + h.priceSymbol : h.manualPrice ? "Set by hand" : "None, valued at cost"}</b></div>}
+              {!isC && <div><span>Given · bought</span><b>{fmtNative(h.currency, p.given)} · {fmtNative(h.currency, p.newMoney + p.fromCash)}</b></div>}
               {h.note && <div style={{ gridColumn: "1 / -1" }}><span>Note</span><b style={{ fontWeight: 400 }}>{h.note}</b></div>}
             </div>
-            <div className="fd-card-head" style={{ marginTop: 18 }}><h3 className="fd-h3" style={{ fontSize: 20 }}>Transactions</h3>{!h.archived && <button className="fd-btn primary sm" onClick={() => setMode("tx")}>Add transaction</button>}</div>
-            <div className="fd-table">
-              {txs.map(t => (
-                <div className="fd-tr" key={t.id} style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr)" }}>
-                  <div className="fd-td"><Tag tone={(TX[t.type] || {}).tone}>{(TX[t.type] || { label: t.type }).label}</Tag><small>{fdate(t.date)}</small></div>
-                  <div className="fd-td" data-l="Detail">{t.qty ? <b>{qfmt(h, t.qty)}</b> : t.type === "split" ? <b>× {t.ratio}</b> : null}{t.qty ? <small>at {priceFmt(h.currency, t.amount / t.qty)}{t.fee ? " · fees " + fmtNative(h.currency, t.fee) : ""}</small> : null}{t.note && <small>{t.note}</small>}</div>
-                  <div className="fd-td fd-amt" data-l="Amount">{t.amount ? <b className={t.type === "sell" || t.type === "dividend" ? "fd-up" : t.type === "fee" ? "fd-down" : ""}>{fmtNative(h.currency, t.amount)}</b> : <small>·</small>}</div>
+            <div className="fd-card-head" style={{ marginTop: 18 }}><h3 className="fd-h3" style={{ fontSize: 20 }}>{isC ? "Statement" : "Transactions"}</h3>{!h.archived && <button className="fd-btn primary sm" onClick={() => setMode("tx")}>{isC ? "Add a movement" : "Add transaction"}</button>}</div>
+            {isC ? (
+              statement.length === 0 ? <p className="fd-sub">No movements yet. Sales, dividends and interest paid into this account appear here by themselves.</p> : (
+                <div className="fd-table">
+                  {statement.map((l, i) => {
+                    const own = l.own && (h.txns || []).find(t => t.id === l.own);
+                    return (
+                      <div className="fd-tr" key={i} style={{ gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr)" }}>
+                        <div className="fd-td"><b style={{ fontWeight: 500 }}>{l.label}</b><small>{fdate(l.date)}{l.ref || l.exp ? " · recorded automatically" : ""}</small></div>
+                        <div className="fd-td fd-amt" data-l="Amount"><b className={l.v >= 0 ? "fd-up" : ""}>{sgn(v => fmtNative(h.currency, v), l.v)}</b></div>
+                        <div className="fd-td fd-amt" data-l="Balance"><small>{fmtNative(h.currency, l.after)}</small>{own && !h.archived && <Confirm className="fd-btn quiet sm" armedLabel="Click again to void" onConfirm={() => setVoid(own.id, true)}>Void</Confirm>}</div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              )
+            ) : (
+              <div className="fd-table">
+                {txs.map(t => (
+                  <div className={"fd-tr" + (t.void ? " dim" : "")} key={t.id} style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr)" }}>
+                    <div className="fd-td"><Tag tone={t.void ? "" : txDef(h, t.type).tone}>{txDef(h, t.type).label}</Tag><small>{fdate(t.date)}{t.void ? " · voided" : ""}</small></div>
+                    <div className="fd-td" data-l="Detail">
+                      {t.qty ? <b>{qfmt(h, t.qty)}</b> : t.type === "split" ? <b>× {t.ratio}</b> : null}
+                      {t.qty && t.amount ? <small>at {priceFmt(h.currency, t.amount / t.qty)}{t.fee ? " · fees " + fmtNative(h.currency, t.fee) : ""}</small> : null}
+                      {t.tax ? <small>Tax {fmtNative(h.currency, t.tax)} · received {fmtNative(h.currency, t.amount - t.tax)}</small> : null}
+                      {t.type === "reward" && t.kind ? <small>{(REWARD_KIND.find(k => k[0] === t.kind) || [0, t.kind])[1]}</small> : null}
+                      {t.cash ? <small>{t.cash === "new" ? "New money from outside" : (t.type === "buy" || t.type === "fee" ? "From " : "Into ") + cashName(t.cash)}</small> : null}
+                      {t.note && <small>{t.note}</small>}
+                    </div>
+                    <div className="fd-td fd-amt" data-l="Amount">
+                      {t.amount ? <b className={t.void ? "" : ["sell", "dividend", "interest", "reward"].includes(t.type) ? "fd-up" : t.type === "fee" ? "fd-down" : ""}>{fmtNative(h.currency, t.amount)}</b> : <small>·</small>}
+                      {!h.archived && (t.void ? <button className="fd-btn quiet sm" onClick={() => setVoid(t.id, false)}>Restore</button> : <Confirm className="fd-btn quiet sm" armedLabel="Click again to void" onConfirm={() => setVoid(t.id, true)}>Void</Confirm>)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="fd-actions" style={{ marginTop: 16 }}>
               <button className="fd-btn ghost sm" onClick={() => setMode("edit")}>Edit details</button>
-              {!h.archived ? <Confirm className="fd-btn quiet sm" armedLabel="Click again to archive" onConfirm={() => write({ ...base, archived: true, archivedAt: new Date().toISOString() })}>Archive</Confirm>
+              {!h.archived ? <Confirm className="fd-btn quiet sm" disabled={!canArchive} armedLabel="Click again to archive" onConfirm={() => write({ ...base, archived: true, archivedAt: new Date().toISOString() })}>Archive</Confirm>
                 : <button className="fd-btn quiet sm" onClick={() => write({ ...base, archived: false, archivedAt: null })}>Restore</button>}
-              <small className="fd-sub" style={{ margin: 0 }}>Archiving keeps the full history. Holdings are never deleted.</small>
+              <small className="fd-sub" style={{ margin: 0 }}>{!h.archived && !canArchive ? (isC ? "Move the balance out before archiving." : "Sell or move everything before archiving.") : "Voiding and archiving keep the full history. Nothing is deleted."}</small>
             </div>
           </>
         )}
-        {mode === "tx" && <TxForm h={h} held={p.qty} initial={{ type: "buy" }} submitLabel={busy ? "Saving…" : "Save transaction"} onSubmit={tx => write({ ...base, txns: [...(h.txns || []), tx] })} onCancel={() => setMode("view")} />}
+        {mode === "tx" && <TxForm h={h} held={isC ? bal : p.qty} heldAt={isC ? null : heldAt} cashAccts={cashAccts} types={isC ? null : ["buy", "sell", "dividend", "interest", "reward", "fee", "split", "gift"]} submitLabel={busy ? "Saving…" : "Save"} onSubmit={tx} onCancel={() => setMode("view")} />}
         {mode === "edit" && (
           <div className="fd-form">
             <div className="fd-grid2">
-              <Field label="Name"><input className="fd-input" value={d.name} maxLength={120} onChange={e => setD(x => ({ ...x, name: e.target.value }))} /></Field>
-              <Field label="Broker or custodian"><input className="fd-input" value={d.custodian} maxLength={120} onChange={e => setD(x => ({ ...x, custodian: e.target.value }))} /></Field>
-              <Field label="Registered holder"><input className="fd-input" value={d.holder} maxLength={120} onChange={e => setD(x => ({ ...x, holder: e.target.value }))} /></Field>
-              <Field label={`Price by hand (${h.currency})`} hint={h.source ? "Used only when the live price is not available" : "This asset has no live price"}><input className="fd-input" inputMode="decimal" value={d.manualPrice} onChange={e => setD(x => ({ ...x, manualPrice: e.target.value }))} placeholder="Optional" /></Field>
+              <Field label="Name"><input className="fd-input" value={d.name} maxLength={120} onChange={e => setD(y => ({ ...y, name: e.target.value }))} /></Field>
+              <Field label={isC ? "Bank or broker" : "Broker or custodian"}><input className="fd-input" value={d.custodian} maxLength={120} onChange={e => setD(y => ({ ...y, custodian: e.target.value }))} /></Field>
+              <Field label="Registered holder"><input className="fd-input" value={d.holder} maxLength={120} onChange={e => setD(y => ({ ...y, holder: e.target.value }))} /></Field>
+              {!isC && <Field label={`Price by hand (${h.currency})`} hint={h.source ? "Used only when the live price is not available" : "This asset has no live price"}><input className="fd-input" inputMode="decimal" value={d.manualPrice} onChange={e => setD(y => ({ ...y, manualPrice: e.target.value }))} placeholder="Optional" /></Field>}
             </div>
-            <Field label="Logo address"><input className="fd-input" value={d.logo} onChange={e => setD(x => ({ ...x, logo: e.target.value.trim() }))} placeholder="Leave empty for the automatic logo" spellCheck={false} /></Field>
-            <Field label="Note"><textarea className="fd-input" value={d.note} maxLength={1000} onChange={e => setD(x => ({ ...x, note: e.target.value }))} /></Field>
+            {!isC && <Field label="Logo address"><input className="fd-input" value={d.logo} onChange={e => setD(y => ({ ...y, logo: e.target.value.trim() }))} placeholder="Leave empty for the automatic logo" spellCheck={false} /></Field>}
+            <Field label="Note"><textarea className="fd-input" value={d.note} maxLength={1000} onChange={e => setD(y => ({ ...y, note: e.target.value }))} /></Field>
             <div className="fd-actions">
               <button className="fd-btn primary" disabled={busy || !d.name.trim()} onClick={() => write({ ...base, name: d.name.trim(), custodian: d.custodian.trim(), holder: d.holder.trim(), logo: d.logo, note: d.note.trim(), manualPrice: parseFloat(d.manualPrice) > 0 ? parseFloat(d.manualPrice) : null })}>{busy ? "Saving…" : "Save"}</button>
               <button className="fd-btn ghost" onClick={() => setMode("view")}>Cancel</button>
@@ -2854,6 +3262,262 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         <div className="fd-actions" style={{ marginTop: 10 }}>
           <button className="fd-btn primary" disabled={!ok || busy} onClick={async () => { setBusy(true); const targets = {}; Object.entries(t).forEach(([k, v]) => { if (parseFloat(v) > 0) targets[k] = parseFloat(v); }); try { await onSave({ opsShare: opsN, targets }); } catch (e) { setBusy(false); } }}>{busy ? "Saving…" : "Save"}</button>
           <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </Modal>
+    );
+  }
+
+  // ---------- the Operating costs page ----------
+  function OpsView({ store, go }) {
+    const P = usePortfolio(store);
+    const { rows, err, load, expenses, templates, nav, holdings } = P;
+    const [view, setView] = useState("USD");
+    const [year, setYear] = useState(String(new Date().getFullYear()));
+    const [q, setQ] = useState("");
+    const [editing, setEditing] = useState(null); // expense or {} for new
+    const [tplEdit, setTplEdit] = useState(null);
+    const [m, flash] = useFlash();
+    const liveFx = useFx(store);
+    const fx = { USD: 1, USDT: 1, ...Store_FX(store), ...(liveFx || {}), ...nav.fx };
+    const T = book(P, nav.last || {}, fx);
+    const U = e => usdOf(e.currency, +e.amount || 0, e.fx, fx);
+    const vf = usd => view === "IDR" ? "Rp " + Math.round(usd * (fx.IDR || 0)).toLocaleString("id-ID") : "$" + (Number(usd) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (err && !rows) return <><Head title="Operating costs" /><div className="fd-msg err">{err}</div></>;
+    if (!rows) return <><Head title="Operating costs" /><p className="fd-sub">Loading…</p></>;
+    const live = expenses.filter(e => !e.void);
+    const yNow = String(new Date().getFullYear());
+    const years = [...new Set([yNow].concat(expenses.map(e => String(e.date || "").slice(0, 4)).filter(Boolean)))].sort().reverse();
+    const ytd = live.filter(e => String(e.date).slice(0, 4) === yNow);
+    const sumU = list => list.reduce((a, e) => a + U(e), 0);
+    const monthly = templates.filter(t => !t.paused).reduce((a, t) => a + usdOf(t.currency, +t.amount || 0, null, fx) / (t.every === "year" ? 12 : 1), 0);
+    const ytdFounder = sumU(ytd.filter(e => !e.paidFrom || e.paidFrom === "founder"));
+    const inYear = expenses.filter(e => year === "all" || String(e.date).slice(0, 4) === year);
+    const term = q.trim().toLowerCase();
+    const listed = inYear.filter(e => !term || [e.payee, e.desc, e.programme, catLabel(e.category)].join(" ").toLowerCase().indexOf(term) >= 0)
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.id).localeCompare(String(a.id)));
+    const byCat = {};
+    inYear.filter(e => !e.void).forEach(e => { byCat[e.category || "other"] = (byCat[e.category || "other"] || 0) + U(e); });
+    const catTotal = Object.values(byCat).reduce((a, v) => a + v, 0);
+    const byFn = {};
+    inYear.filter(e => !e.void).forEach(e => { const f = e.fn || catFn(e.category); byFn[f] = (byFn[f] || 0) + U(e); });
+    // last 12 months
+    const months = [];
+    for (let i = 11; i >= 0; i--) { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i); const k = d.toISOString().slice(0, 7); months.push({ k, label: d.toLocaleDateString("en-GB", { month: "short" }), v: 0 }); }
+    live.forEach(e => { const mo = months.find(x => x.k === String(e.date).slice(0, 7)); if (mo) mo.v += U(e); });
+    const mMax = Math.max(1e-9, ...months.map(x => x.v));
+    const last12 = months.reduce((a, x) => a + x.v, 0);
+    const ratio = T.nav > 0 ? last12 / T.nav * 100 : null;
+    const acctName = id => id === "founder" || !id ? "You personally" : ((holdings.find(h => h.id === id) || {}).name || "Cash account");
+    const exportCsv = () => downloadCsv("brial-endowment-operating-costs-" + todayISO() + ".csv",
+      ["Date", "Paid to", "Category", "Function", "Programme or project", "Description", "Amount", "Currency", "Units per USD", "USD", "Paid by", "Recurring", "Receipt", "Status"],
+      expenses.slice().sort((a, b) => String(a.date).localeCompare(String(b.date))).map(e => [e.date, e.payee || "", catLabel(e.category), EXP_FN[e.fn || catFn(e.category)], e.programme || "", e.desc || "", e.amount, e.currency, e.fx || (e.currency === "USD" ? 1 : ""), Math.round(U(e) * 100) / 100, acctName(e.paidFrom), e.tpl ? "Yes" : "", e.receipt ? e.receipt.name : "", e.void ? "Voided" : ""]));
+    const G = "minmax(0,2fr) minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,1fr)";
+    const saveExp = async (id, data) => { await store.saveAsset({ id, name: ((data.payee || "Cost") + " · " + data.date).slice(0, 160), data }); await load(); };
+    return (
+      <>
+        <Head title="Operating costs" lede="What it takes to run the endowment: hosting, software, management and more. Internal; the public site never shows it.">
+          <Seg items={[["USD", "USD"], ["IDR", "IDR"]]} value={view} onChange={setView} />
+          <button className="fd-btn ghost sm" disabled={!expenses.length} onClick={exportCsv}>Export CSV</button>
+          <button className="fd-btn ghost sm" onClick={() => setTplEdit({})}>Add recurring cost</button>
+          <button className="fd-btn primary" onClick={() => setEditing({})}>Add cost</button>
+        </Head>
+        {m && <div style={{ marginBottom: 12 }}><Flash m={m} /></div>}
+        <Stats items={[
+          { label: "This year", value: vf(sumU(ytd)), sub: `${ytd.length} ${plural(ytd.length, "payment", "payments")} in ${yNow}` },
+          { label: "Monthly running cost", value: vf(monthly), sub: templates.filter(t => !t.paused).length ? `${templates.filter(t => !t.paused).length} recurring ${plural(templates.filter(t => !t.paused).length, "cost", "costs")}` : "No recurring costs yet" },
+          { label: "Operating budget available", value: vf(Math.max(0, T.available)), sub: T.available < 0 ? `Over the budget by ${vf(-T.available)}` : `${T.share}% of realised returns, after costs`, tone: T.available < 0 ? "bad" : "ok" },
+          { label: "Covered by you this year", value: vf(ytdFounder), sub: "Paid personally, never from the fund" },
+        ]} />
+
+        <div className="fd-tgrid fd-assets-grid" style={{ marginTop: 18 }}>
+          <div className="fd-card">
+            <div className="fd-card-head"><div><h2 className="fd-h2" style={{ marginTop: 0 }}>Recurring costs</h2><p className="fd-sub">Subscriptions and salaries. Each payment is recorded by itself on its date.</p></div></div>
+            {templates.length === 0 ? <p className="fd-sub">Add a subscription or a salary once, for example the domain every year or the manager every month. You never type it again.</p> : templates.slice().sort((a, b) => (a.paused ? 1 : 0) - (b.paused ? 1 : 0) || String(a.payee).localeCompare(String(b.payee))).map(t => {
+              const nd = t.paused ? null : nextDue(t);
+              return (
+                <div className={"fd-krow fd-rec" + (t.paused ? " dim" : "")} key={t.id} role="button" tabIndex={0} onClick={() => setTplEdit(t)} onKeyDown={e => { if (e.key === "Enter") setTplEdit(t); }}>
+                  <div><b>{t.payee}</b><small>{catLabel(t.category)} · {t.paused ? "Paused" : nd ? "Next " + fdate(nd) : "Ended"} · {acctName(t.paidFrom)}</small></div>
+                  <b>{fmtNative(t.currency, t.amount)}<small style={{ display: "inline", marginLeft: 4 }}>/ {t.every === "year" ? "year" : "month"}</small></b>
+                </div>
+              );
+            })}
+          </div>
+          <div className="fd-card">
+            <h2 className="fd-h2" style={{ marginTop: 0 }}>How costs are funded</h2>
+            <p className="fd-sub">Donations and the principal never pay running costs.</p>
+            <div className="fd-krow" style={{ borderTop: 0 }}><div><b>Operating budget earned</b><small>{T.share}% of realised returns since the start</small></div><b>{vf(T.allowance)}</b></div>
+            <div className="fd-krow"><div><b>Paid from the endowment</b><small>Costs paid from its cash accounts</small></div><b>{vf(T.opsEndow)}</b></div>
+            <div className="fd-krow"><div><b>Available now</b><small>{T.available < 0 ? "Pay new costs personally until returns catch up" : "Can pay the next costs from the endowment"}</small></div><b className={T.available < 0 ? "fd-down" : "fd-up"}>{sgn(vf, T.available)}</b></div>
+            <div className="fd-krow"><div><b>Covered by you personally</b><small>Since the start</small></div><b>{vf(T.opsFounder)}</b></div>
+            {ratio != null && <div className="fd-krow"><div><b>Cost ratio</b><small>Last 12 months of costs against net asset value</small></div><b>{ratio.toFixed(2)}%</b></div>}
+            {go && <button className="fd-btn ghost sm" style={{ marginTop: 12 }} onClick={() => go("assets")}>Open assets</button>}
+          </div>
+        </div>
+
+        <div className="fd-tgrid fd-assets-grid" style={{ marginTop: 16 }}>
+          <div className="fd-card">
+            <h2 className="fd-h2" style={{ marginTop: 0 }}>By category{year !== "all" ? ", " + year : ""}</h2>
+            {catTotal <= 0 ? <p className="fd-sub">Nothing recorded{year !== "all" ? " in " + year : ""}.</p> : Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+              <div className="fd-alloc" key={k}>
+                <div className="fd-alloc-h"><span><i style={{ background: CAT_COLOR[k] || "#9AA4B5" }} />{catLabel(k)}</span><b>{vf(v)}<small> · {(v / catTotal * 100).toFixed(0)}%</small></b></div>
+                <div className="fd-alloc-bar"><i style={{ width: (v / catTotal * 100) + "%", background: CAT_COLOR[k] || "#9AA4B5" }} /></div>
+              </div>
+            ))}
+            {catTotal > 0 && <p className="fd-sub" style={{ marginTop: 14 }}>By function: {Object.entries(byFn).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${EXP_FN[k] || k} ${(v / catTotal * 100).toFixed(0)}%`).join(" · ")}</p>}
+          </div>
+          <div className="fd-card">
+            <h2 className="fd-h2" style={{ marginTop: 0 }}>Last 12 months</h2>
+            <p className="fd-sub">{vf(last12)} in all.</p>
+            <div className="fd-mbars" role="img" aria-label={"Operating costs by month, last 12 months: " + vf(last12)}>
+              {months.map(x => <div key={x.k} title={x.label + ": " + vf(x.v)}><i style={{ height: Math.max(x.v > 0 ? 3 : 0, x.v / mMax * 100) + "%" }} /><span>{x.label.slice(0, 1)}</span></div>)}
+            </div>
+          </div>
+        </div>
+
+        <div className="fd-card-head" style={{ margin: "26px 0 12px" }}>
+          <h2 className="fd-h2" style={{ margin: 0 }}>Costs</h2>
+          <div className="fd-actions fd-costs-tools"><Seg items={years.map(y => [y, y]).concat([["all", "All"]])} value={year} onChange={setYear} /><Search value={q} onChange={setQ} placeholder="Search costs" /></div>
+        </div>
+        {listed.length === 0 ? <Empty title="No costs here">Add a cost by hand, or a recurring cost that records itself.</Empty> : (
+          <div className="fd-table">
+            <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Paid to</div><div>Category</div><div>Date and payer</div><div style={{ textAlign: "right" }}>Amount</div></div>
+            {listed.map(e => (
+              <div className={"fd-tr fd-hold fd-mv" + (e.void ? " dim" : "")} key={e.id} style={{ gridTemplateColumns: G }} role="button" tabIndex={0} onClick={() => setEditing(e)} onKeyDown={k => { if (k.key === "Enter") setEditing(e); }}>
+                <div className="fd-td full"><b>{e.payee || catLabel(e.category)}</b><small>{[e.desc, e.programme].filter(Boolean).join(" · ") || EXP_FN[e.fn || catFn(e.category)]}{e.void ? " · voided" : ""}</small></div>
+                <div className="fd-td" data-l="Category"><Tag>{catLabel(e.category)}</Tag>{e.tpl && <small>Recurring</small>}{e.receipt && <small>Receipt attached</small>}</div>
+                <div className="fd-td" data-l="Date">{fdate(e.date)}<small>{acctName(e.paidFrom)}</small></div>
+                <div className="fd-td fd-amt" data-l="Amount"><span className="num out">{fmtNative(e.currency, e.amount)}</span>{e.currency !== view && <small>{vf(U(e))}</small>}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {editing && <ExpenseDialog e={editing} fx={fx} T={T} cashAccts={T.cashAccts} known={[...new Set(expenses.map(x => x.programme).filter(Boolean))]} payees={[...new Set(expenses.map(x => x.payee).filter(Boolean))]}
+          onClose={() => setEditing(null)} onSave={async (id, data) => { await saveExp(id, data); setEditing(null); flash(data.void ? "Voided. It no longer counts." : "Saved."); }} />}
+        {tplEdit && <RecurringDialog t={tplEdit} T={T} cashAccts={T.cashAccts} onClose={() => setTplEdit(null)}
+          onSave={async (id, data) => {
+            await store.saveAsset({ id, name: ("Recurring · " + data.payee).slice(0, 160), data });
+            const r = await load(); setTplEdit(null);
+            const n = r ? await postRecurring(store, r) : 0; if (n) await load();
+            flash(n ? `Saved. ${n} ${plural(n, "payment", "payments")} recorded up to today.` : "Saved.");
+          }} />}
+      </>
+    );
+  }
+  // Which account pays: the endowment's cash only when its operating budget covers it
+  function PaidFrom({ value, onChange, currency, amountUsd, T, cashAccts }) {
+    const accts = (cashAccts || []).filter(a => a.currency === currency);
+    const over = amountUsd > Math.max(0, T.available) + 0.005;
+    return (
+      <Field label="Paid by" hint={value === "founder" ? "Recorded as your personal support. It never touches the fund." : over ? `Above the operating budget available (${"$" + Math.max(0, T.available).toFixed(2)}). The excess would come out of the principal.` : `From the operating budget, ${"$" + Math.max(0, T.available).toFixed(2)} available.`}>
+        <select className="fd-input" value={value} onChange={e => onChange(e.target.value)}>
+          <option value="founder">You personally</option>
+          {accts.map(a => <option key={a.id} value={a.id}>{a.name} · {fmtNative(a.currency, a.bal)}</option>)}
+        </select>
+      </Field>
+    );
+  }
+  function ExpenseDialog({ e, fx, T, cashAccts, known, payees, onClose, onSave }) {
+    const isNew = !e.id;
+    const [f, setF] = useState(() => ({ date: e.date || todayISO(), payee: e.payee || "", category: e.category || "hosting", fn: e.fn || catFn(e.category || "hosting"), fnTouched: !!e.fn, programme: e.programme || "", desc: e.desc || "", amount: e.amount != null ? String(e.amount) : "", currency: e.currency || "USD", paidFrom: e.paidFrom || "founder", receipt: e.receipt || null, note: e.note || "" }));
+    const [busy, setBusy] = useState(false), [up, setUp] = useState(false), [err, setErr] = useState("");
+    const set = (k, v) => setF(p => ({ ...p, [k]: v, ...(k === "category" && !p.fnTouched ? { fn: catFn(v) } : {}), ...(k === "fn" ? { fnTouched: true } : {}), ...(k === "currency" ? { paidFrom: "founder" } : {}) }));
+    const amt = parseFloat(String(f.amount).replace(/,/g, ""));
+    const rate = f.currency === "USD" ? 1 : (e.id && e.currency === f.currency && Number(e.fx) > 0 ? Number(e.fx) : Number(fx[f.currency]) || 0);
+    const usd = rate > 0 && amt > 0 ? amt / rate : 0;
+    const acct = (cashAccts || []).find(a => a.id === f.paidFrom);
+    const problems = [];
+    if (!f.date) problems.push("Choose a date."); else if (f.date > todayISO()) problems.push("Record a cost once it is paid.");
+    if (!f.payee.trim()) problems.push("Say who was paid.");
+    if (!(amt > 0)) problems.push("Enter the amount.");
+    if (acct && !e.id && amt > acct.bal + 1e-9) problems.push(`${acct.name} holds ${fmtNative(acct.currency, acct.bal)}.`);
+    const pick = async ev => {
+      const file = ev.target.files && ev.target.files[0]; ev.target.value = "";
+      if (!file) return;
+      const v = window.BrialFiles.validate(file);
+      if (!v.ok) { setErr(v.error); return; }
+      setUp(true); setErr("");
+      try { const meta = await window.BrialFiles.put(file); setF(p => ({ ...p, receipt: meta })); } catch (x) { setErr("Could not upload the receipt. Try again."); }
+      setUp(false);
+    };
+    const submit = async extra => {
+      setBusy(true); setErr("");
+      const data = { ...(e.id ? e : {}), kind: "expense", date: f.date, payee: f.payee.trim().slice(0, 120), category: f.category, fn: f.fn, programme: f.programme.trim().slice(0, 120), desc: f.desc.trim().slice(0, 300), amount: amt, currency: f.currency,
+        fx: f.currency === "USD" ? null : rate || null, paidFrom: f.paidFrom, receipt: f.receipt || null, note: f.note.trim().slice(0, 500), ...(extra || {}) };
+      delete data.id; delete data.updatedAt;
+      if (!e.id) data.createdAt = new Date().toISOString();
+      try { await onSave(e.id || newId("E"), data); } catch (x) { setErr("Could not save. Check your connection and try again."); setBusy(false); }
+    };
+    return (
+      <Modal wide title={isNew ? "Add an operating cost" : (e.payee || "Operating cost")} sub={isNew ? "A payment made to run the endowment." : e.tpl ? "Recorded automatically from a recurring cost. You can still correct it." : fdate(e.date)} onClose={onClose}>
+        <div className="fd-form">
+          <div className="fd-grid2">
+            <Field label="Date paid"><input className="fd-input" type="date" value={f.date} max={todayISO()} onChange={x => set("date", x.target.value)} /></Field>
+            <Field label="Paid to" hint="The company or person"><input className="fd-input" list="fd-payees" value={f.payee} maxLength={120} onChange={x => set("payee", x.target.value)} placeholder="Cloudflare, Anthropic, the manager…" /><datalist id="fd-payees">{payees.map(p => <option key={p} value={p} />)}</datalist></Field>
+            <Field label="Amount"><input className="fd-input" inputMode="decimal" value={f.amount} onChange={x => set("amount", x.target.value)} placeholder="0" /></Field>
+            <Field label="Currency" hint={f.currency !== "USD" && usd > 0 ? `About ${fmtNative("USD", usd)} at ${f.currency} ${nfmt(rate, 2)} per dollar` : ""}><select className="fd-input" value={f.currency} onChange={x => set("currency", x.target.value)}>{ASSET_CURS.map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+            <Field label="Category"><select className="fd-input" value={f.category} onChange={x => set("category", x.target.value)}>{EXP_CATS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
+            <Field label="Function" hint="How nonprofits group costs in their reports"><select className="fd-input" value={f.fn} onChange={x => set("fn", x.target.value)}>{Object.entries(EXP_FN).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
+            <Field label="Programme or project (optional)"><input className="fd-input" list="fd-progs" value={f.programme} maxLength={120} onChange={x => set("programme", x.target.value)} placeholder="Website, Scholar Portal, annual report…" /><datalist id="fd-progs">{known.map(p => <option key={p} value={p} />)}</datalist></Field>
+            <PaidFrom value={f.paidFrom} onChange={v => set("paidFrom", v)} currency={f.currency} amountUsd={e.id && e.paidFrom === f.paidFrom && e.paidFrom !== "founder" ? 0 : usd} T={T} cashAccts={cashAccts} />
+          </div>
+          <Field label="What it was for (optional)"><input className="fd-input" value={f.desc} maxLength={300} onChange={x => set("desc", x.target.value)} placeholder="Workers paid plan, October" /></Field>
+          <div className="fd-actions">
+            <span className="fd-upload"><span className="fd-btn ghost sm">{ICON.up}{up ? "Uploading…" : f.receipt ? "Replace the receipt" : "Attach a receipt"}</span><input type="file" accept={window.BrialFiles ? window.BrialFiles.allowedAccept : "*"} onChange={pick} disabled={up} aria-label="Attach a receipt" /></span>
+            {f.receipt && <><FileBtn file={f.receipt} label="Open receipt" /><small className="fd-sub" style={{ margin: 0 }}>{f.receipt.name} · private</small></>}
+          </div>
+          {problems.length > 0 && (f.payee || f.amount) && <small className="fd-bad">{problems[0]}</small>}
+          {err && <div className="fd-msg err">{err}</div>}
+          <div className="fd-actions" style={{ marginTop: 6 }}>
+            <button className="fd-btn primary" disabled={busy || up || problems.length > 0} onClick={() => submit()}>{busy ? "Saving…" : "Save"}</button>
+            <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+            {!isNew && (e.void ? <button className="fd-btn quiet sm" disabled={busy} onClick={() => submit({ void: false, voidAt: null })}>Restore</button>
+              : <Confirm className="fd-btn quiet sm" armedLabel="Click again to void" onConfirm={() => submit({ void: true, voidAt: new Date().toISOString() })}>Void</Confirm>)}
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+  function RecurringDialog({ t, T, cashAccts, onClose, onSave }) {
+    const isNew = !t.id;
+    const [f, setF] = useState(() => ({ payee: t.payee || "", category: t.category || "software", fn: t.fn || catFn(t.category || "software"), programme: t.programme || "", desc: t.desc || "", amount: t.amount != null ? String(t.amount) : "", currency: t.currency || "USD", every: t.every || "month", start: t.start || todayISO(), paidFrom: t.paidFrom || "founder", paused: !!t.paused }));
+    const [busy, setBusy] = useState(false), [err, setErr] = useState("");
+    const set = (k, v) => setF(p => ({ ...p, [k]: v, ...(k === "category" ? { fn: catFn(v) } : {}), ...(k === "currency" ? { paidFrom: "founder" } : {}) }));
+    const amt = parseFloat(String(f.amount).replace(/,/g, ""));
+    const ok = f.payee.trim() && amt > 0 && f.start;
+    const backfill = isNew && f.start < todayISO() ? dueDates({ ...f, id: "R-x" }, todayISO()).length : 0;
+    const submit = async () => {
+      setBusy(true); setErr("");
+      const resumed = t.paused && !f.paused;
+      const data = { kind: "recurring", payee: f.payee.trim().slice(0, 120), category: f.category, fn: f.fn, programme: f.programme.trim().slice(0, 120), desc: f.desc.trim().slice(0, 300), amount: amt, currency: f.currency, every: f.every,
+        start: isNew ? f.start : t.start, from: isNew ? f.start : resumed ? todayISO() : (t.from || t.start), paidFrom: f.paidFrom, paused: f.paused, createdAt: t.createdAt || new Date().toISOString() };
+      try { await onSave(t.id || newId("R"), data); } catch (x) { setErr("Could not save. Try again."); setBusy(false); }
+    };
+    return (
+      <Modal wide title={isNew ? "Add a recurring cost" : f.payee} sub="A subscription or salary. Each payment is recorded by itself on its date, at the amount set here." onClose={onClose}>
+        <div className="fd-form">
+          <div className="fd-grid2">
+            <Field label="Paid to"><input className="fd-input" value={f.payee} maxLength={120} onChange={x => set("payee", x.target.value)} placeholder="Claude Pro, Cloudflare, the manager…" /></Field>
+            <Field label="Category"><select className="fd-input" value={f.category} onChange={x => set("category", x.target.value)}>{EXP_CATS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
+            <Field label="Amount each time"><input className="fd-input" inputMode="decimal" value={f.amount} onChange={x => set("amount", x.target.value)} placeholder="0" /></Field>
+            <Field label="Currency"><select className="fd-input" value={f.currency} onChange={x => set("currency", x.target.value)}>{ASSET_CURS.map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+            <Field label="Every"><select className="fd-input" value={f.every} onChange={x => set("every", x.target.value)}><option value="month">Month</option><option value="year">Year</option></select></Field>
+            <Field label={isNew ? "First payment" : "Started"} hint={isNew ? (backfill ? `${backfill} past ${plural(backfill, "payment", "payments")} will be recorded now` : "Later payments follow on the same day") : "Change the amount for future payments; past ones stay as they were"}>
+              <input className="fd-input" type="date" value={f.start} disabled={!isNew} onChange={x => set("start", x.target.value)} />
+            </Field>
+            <Field label="Function"><select className="fd-input" value={f.fn} onChange={x => set("fn", x.target.value)}>{Object.entries(EXP_FN).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
+            <PaidFrom value={f.paidFrom} onChange={v => set("paidFrom", v)} currency={f.currency} amountUsd={0} T={T} cashAccts={cashAccts} />
+          </div>
+          <div className="fd-grid2">
+            <Field label="Programme or project (optional)"><input className="fd-input" value={f.programme} maxLength={120} onChange={x => set("programme", x.target.value)} placeholder="Website, Scholar Portal…" /></Field>
+            <Field label="What it is for (optional)"><input className="fd-input" value={f.desc} maxLength={300} onChange={x => set("desc", x.target.value)} placeholder="Pro plan, used for maintenance" /></Field>
+          </div>
+          {!isNew && <Switch on={!f.paused} onChange={v => setF(p => ({ ...p, paused: !v }))}>{f.paused ? "Paused: no new payments are recorded" : "Active"}</Switch>}
+          {err && <div className="fd-msg err">{err}</div>}
+          <div className="fd-actions" style={{ marginTop: 6 }}>
+            <button className="fd-btn primary" disabled={busy || !ok} onClick={submit}>{busy ? "Saving…" : "Save"}</button>
+            <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+          </div>
         </div>
       </Modal>
     );
@@ -5443,6 +6107,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         { id: "out", label: "Money out", icon: ICON.outflow, count: F.due, hot: F.due > 0 },
         { id: "ledger", label: "Ledger", icon: ICON.ledger },
         { id: "assets", label: "Assets", icon: ICON.assets },
+        { id: "costs", label: "Operating costs", icon: ICON.costs },
         { id: "channels", label: "Payment channels", icon: ICON.pay },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "overview";
@@ -5450,7 +6115,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         : t === "in" ? <DonationsView store={store} donations={store.listDonations()} title="Money in" />
         : t === "out" ? <MoneyOutView store={store} />
         : t === "ledger" ? <LedgerView store={store} />
-        : t === "assets" ? <AssetsView store={store} />
+        : t === "assets" ? <AssetsView store={store} go={setTab} />
+        : t === "costs" ? <OpsView store={store} go={setTab} />
         : <ChannelsView store={store} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
     }

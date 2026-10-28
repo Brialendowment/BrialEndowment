@@ -1218,6 +1218,7 @@ window.BrialClipboard = { copy: copyToClipboard };
     },
     async assetSearch(q) { const r = await Store._pricesFn({ action: "search", q }); return (r && r.results) || []; },
     assetQuotes(items, fx) { return Store._pricesFn({ action: "quote", items: items || [], fx: fx || [] }); },
+    assetEvents(items) { return Store._pricesFn({ action: "events", items: items || [] }); },
     // A sent email as it went out (or rebuilt for emails older than 19 Oct 2026).
     mailView(id) { return Store._mailFn({ action: "mail_view", id }); },
     // A PDF that was attached to a sent email, rebuilt on request (PDFs are never stored).
