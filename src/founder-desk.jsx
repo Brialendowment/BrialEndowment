@@ -2590,7 +2590,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     }
     return out;
   }
-  const nextDue = tpl => { const t = todayISO(), far = new Date(Date.now() + 400 * 864e5).toISOString().slice(0, 10); return dueDates(tpl, far).find(d => d > t) || null; };
+  const nextDue = tpl => { const t = todayISO(); if (String(tpl.start) > t) return tpl.start; const far = new Date(Date.now() + 400 * 864e5).toISOString().slice(0, 10); return dueDates(tpl, far).find(d => d > t) || null; };
   const recurId = (tpl, d) => "E-" + tpl.id.slice(2) + "-" + d.replace(/-/g, "");
   async function postRecurring(store, rows) {
     const S = parseRows(rows);
@@ -3336,7 +3336,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
               const nd = t.paused ? null : nextDue(t);
               return (
                 <div className={"fd-krow fd-rec" + (t.paused ? " dim" : "")} key={t.id} role="button" tabIndex={0} onClick={() => setTplEdit(t)} onKeyDown={e => { if (e.key === "Enter") setTplEdit(t); }}>
-                  <div><b>{t.payee}</b><small>{catLabel(t.category)} · {t.paused ? "Paused" : nd ? "Next " + fdate(nd) : "Ended"} · {acctName(t.paidFrom)}</small></div>
+                  <div><b>{t.payee}</b><small>{catLabel(t.category)} · {t.paused ? "Paused" : nd ? (String(t.start) > todayISO() ? "First payment " : "Next ") + fdate(nd) : "Ended"} · {acctName(t.paidFrom)}</small></div>
                   <b>{fmtNative(t.currency, t.amount)}<small style={{ display: "inline", marginLeft: 4 }}>/ {t.every === "year" ? "year" : "month"}</small></b>
                 </div>
               );
@@ -3484,13 +3484,15 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const [busy, setBusy] = useState(false), [err, setErr] = useState("");
     const set = (k, v) => setF(p => ({ ...p, [k]: v, ...(k === "category" ? { fn: catFn(v) } : {}), ...(k === "currency" ? { paidFrom: "founder" } : {}) }));
     const amt = parseFloat(String(f.amount).replace(/,/g, ""));
+    const startEditable = isNew || String(t.start) > todayISO();
+    const tooFar = f.start > new Date(Date.now() + 400 * 864e5).toISOString().slice(0, 10);
     const ok = f.payee.trim() && amt > 0 && f.start;
-    const backfill = isNew && f.start < todayISO() ? dueDates({ ...f, id: "R-x" }, todayISO()).length : 0;
+    const backfill = startEditable && f.start < todayISO() ? dueDates({ ...f, id: "R-x" }, todayISO()).length : 0;
     const submit = async () => {
       setBusy(true); setErr("");
       const resumed = t.paused && !f.paused;
       const data = { kind: "recurring", payee: f.payee.trim().slice(0, 120), category: f.category, fn: f.fn, programme: f.programme.trim().slice(0, 120), desc: f.desc.trim().slice(0, 300), amount: amt, currency: f.currency, every: f.every,
-        start: isNew ? f.start : t.start, from: isNew ? f.start : resumed ? todayISO() : (t.from || t.start), paidFrom: f.paidFrom, paused: f.paused, createdAt: t.createdAt || new Date().toISOString() };
+        start: startEditable ? f.start : t.start, from: startEditable ? f.start : resumed ? todayISO() : (t.from || t.start), paidFrom: f.paidFrom, paused: f.paused, createdAt: t.createdAt || new Date().toISOString() };
       try { await onSave(t.id || newId("R"), data); } catch (x) { setErr("Could not save. Try again."); setBusy(false); }
     };
     return (
@@ -3502,8 +3504,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             <Field label="Amount each time"><input className="fd-input" inputMode="decimal" value={f.amount} onChange={x => set("amount", x.target.value)} placeholder="0" /></Field>
             <Field label="Currency"><select className="fd-input" value={f.currency} onChange={x => set("currency", x.target.value)}>{ASSET_CURS.map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
             <Field label="Every"><select className="fd-input" value={f.every} onChange={x => set("every", x.target.value)}><option value="month">Month</option><option value="year">Year</option></select></Field>
-            <Field label={isNew ? "First payment" : "Started"} hint={isNew ? (backfill ? `${backfill} past ${plural(backfill, "payment", "payments")} will be recorded now` : "Later payments follow on the same day") : "Change the amount for future payments; past ones stay as they were"}>
-              <input className="fd-input" type="date" value={f.start} disabled={!isNew} onChange={x => set("start", x.target.value)} />
+            <Field label={startEditable ? "First payment" : "Started"} hint={tooFar && startEditable ? "More than a year away. Fine for a plan paid several years ahead; otherwise check the year." : startEditable ? (backfill ? `${backfill} past ${plural(backfill, "payment", "payments")} will be recorded now` : "Later payments follow on the same day") : "Change the amount for future payments; past ones stay as they were"}>
+              <input className="fd-input" type="date" value={f.start} disabled={!startEditable} onChange={x => set("start", x.target.value)} />
             </Field>
             <Field label="Function"><select className="fd-input" value={f.fn} onChange={x => set("fn", x.target.value)}>{Object.entries(EXP_FN).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></Field>
             <PaidFrom value={f.paidFrom} onChange={v => set("paidFrom", v)} currency={f.currency} amountUsd={0} T={T} cashAccts={cashAccts} />
