@@ -593,8 +593,8 @@ const Hero = ({
     v: "100%",
     l: "Disbursed directly to recipient"
   }, {
-    v: "0.00%",
-    l: "Administrative overhead"
+    v: "0%",
+    l: "Deducted from any gift"
   }].map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
@@ -800,7 +800,7 @@ const Transparency = () => {
     style: {
       color: "rgba(232,228,220,0.66)"
     }
-  }, "\xB7 100% direct, 0% overhead"))), /*#__PURE__*/React.createElement("div", {
+  }, "\xB7 every gift applied in full"))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "36px 32px",
       background: "rgba(20,36,66,0.6)",
@@ -1362,7 +1362,7 @@ const Philosophy = ({
       textAlign: "justify",
       textAlignLast: "left"
     }
-  }, "The Brial Endowment is a ", /*#__PURE__*/React.createElement("strong", { style: { fontWeight: 500 } }, "perpetual endowment"), ", capital held in trust across generations. Its principal is never spent. Its returns are given, forever, with zero administrative overhead and every movement recorded on a public ledger. Scholarships were our first pillar, and they are only the beginning: from the same enduring fund rise houses of worship, libraries, olive groves, clean water, and the institutions a community needs to stand on its own. What we plant today is meant to keep giving to generations we will never meet.")), /*#__PURE__*/React.createElement("div", {
+  }, "The Brial Endowment is a ", /*#__PURE__*/React.createElement("strong", { style: { fontWeight: 500 } }, "perpetual endowment"), ", capital held in trust across generations. Its principal is never spent. Its returns are given, forever. Every gift goes in full to its charitable work and its permanent principal, and every movement is recorded on a public ledger. Scholarships were our first pillar, and they are only the beginning: from the same enduring fund rise houses of worship, libraries, olive groves, clean water, and the institutions a community needs to stand on its own. What we plant today is meant to keep giving to generations we will never meet.")), /*#__PURE__*/React.createElement("div", {
     className: "b-pillars",
     style: {
       display: "grid",
@@ -1847,7 +1847,7 @@ const Footer = ({
     maxWidth: 620,
     lineHeight: 1.6
   }
-}, "Send USDT on " + ((w => /bep|bsc|bnb/i.test(w) ? "BNB Smart Chain (BEP-20)" : "Ethereum (ERC-20)")(window.BrialStore && window.BrialStore.walletInfo ? window.BrialStore.walletInfo().network : "")) + ", or scan QRIS from any Indonesian bank. 100% goes to the work of the endowment, with no fees and no overhead, and every gift is recorded in the open.")), /*#__PURE__*/React.createElement("div", {
+}, "Send USDT on " + ((w => /bep|bsc|bnb/i.test(w) ? "BNB Smart Chain (BEP-20)" : "Ethereum (ERC-20)")(window.BrialStore && window.BrialStore.walletInfo ? window.BrialStore.walletInfo().network : "")) + ", or scan QRIS from any Indonesian bank. 100% of your gift goes to the endowment's charitable work and its permanent principal. The endowment deducts nothing, and every gift is recorded in the open.")), /*#__PURE__*/React.createElement("div", {
   className: "b-donate-pill",
   style: {
     padding: "16px 28px",

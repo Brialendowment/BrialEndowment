@@ -8565,6 +8565,43 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-scrim{position:fixed;inset:0;z-index:300;background:rgba(5,11,22,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;animation:fdFade .18s ease-out}
 .fd-modal{width:100%;max-width:560px;max-height:calc(100vh - 36px);overflow:auto;background:#10213D;border:1px solid rgba(201,169,97,.3);border-radius:16px;padding:24px 24px 22px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9);animation:fdRise .25s cubic-bezier(.22,1,.36,1) both}
 .fd-modal.wide{max-width:760px}
+/* treasury assets */
+.fd-alogo{display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;overflow:hidden;background:#fff;border:1px solid var(--line2)}
+.fd-alogo img{width:100%;height:100%;object-fit:contain;padding:12%;box-sizing:border-box}
+.fd-alogo b{display:flex;width:100%;height:100%;align-items:center;justify-content:center;color:var(--gilt2);font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.02em}
+.fd-hold{cursor:pointer;transition:background .15s}
+.fd-hold:hover,.fd-hold:focus-visible{background:rgba(239,233,220,.035);outline:none}
+.fd-hold:focus-visible{box-shadow:inset 0 0 0 2px rgba(201,169,97,.5)}
+.fd-hold-a{display:flex;align-items:center;gap:12px}
+.fd-hold-a>span{min-width:0}
+.fd-hold-a small .fd-tag{margin-right:4px;vertical-align:1px}
+.fd-up{color:var(--sage)!important}.fd-down{color:var(--rose)!important}
+.fd-alloc{margin-top:12px}
+.fd-alloc-h{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin-bottom:6px}
+.fd-alloc-h span{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.fd-alloc-h i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.fd-alloc-h b{font-weight:600}.fd-alloc-h small{color:var(--faint);font-weight:400}
+.fd-alloc-bar{position:relative;height:8px;border-radius:99px;background:rgba(239,233,220,.07)}
+.fd-alloc-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.fd-alloc-bar em{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--text);border-radius:2px}
+.fd-ahits{margin-top:10px;max-height:min(52vh,420px);overflow:auto;border:1px solid var(--line);border-radius:12px;min-height:56px}
+.fd-ahits:empty{display:none}
+.fd-ahit{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);color:var(--text);padding:10px 14px;cursor:pointer;font:inherit}
+.fd-ahit:first-child{border-top:0}
+.fd-ahit:hover,.fd-ahit:focus-visible{background:rgba(201,169,97,.08);outline:none}
+.fd-ahit>span:nth-child(2){flex:1;min-width:0}
+.fd-ahit b{display:block;font-weight:600}.fd-ahit small{display:block;font-size:12px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-ahit-r{text-align:right;flex-shrink:0;max-width:40%}
+.fd-adetail-h{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.fd-adetail-h>div>b{display:block;font-size:17px;font-weight:600}.fd-adetail-h>div>small{display:block;color:var(--faint);font-size:12.5px}
+.fd-modal .fd-stat b{font-size:clamp(20px,2.4vw,26px);overflow-wrap:anywhere}
+.fd-tgrid.fd-assets-grid{align-items:start}
+.fd-adl{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:12px}
+.fd-adl span{display:block;font-size:11.5px;color:var(--faint)}.fd-adl b{display:block;font-weight:600;font-size:13.5px;overflow-wrap:anywhere}
+.fd-txsum{display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:4px}
+.fd-txsum span{font-size:12px;color:var(--faint)}.fd-txsum b{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--gilt2);font-variant-numeric:lining-nums tabular-nums}.fd-txsum small{font-size:12px;color:var(--faint)}
+.fd-linkbtn{background:none;border:0;padding:0;color:var(--gilt2);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:900px){.fd-hold-a{grid-column:1/-1}.fd-adl{grid-template-columns:1fr}.fd-ahit-r{max-width:34%}}
 .fd-modal.xl{max-width:1080px}
 .fd-aud{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}
 .fd-aud-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
@@ -8851,6 +8888,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     scholarships: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M2 9l10-5 10 5-10 5z" }), /* @__PURE__ */ React.createElement("path", { d: "M6 11v5c3 2 9 2 12 0v-5" })))
   };
   ICON.transport = I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 15v-3l2.5-4.5A2 2 0 0 1 7.3 6.5h9.4a2 2 0 0 1 1.8 1L21 12v3z" }), /* @__PURE__ */ React.createElement("path", { d: "M5 12h14" }), /* @__PURE__ */ React.createElement("circle", { cx: "7.5", cy: "16.5", r: "2" }), /* @__PURE__ */ React.createElement("circle", { cx: "16.5", cy: "16.5", r: "2" })));
+  ICON.assets = I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 19V5M4 19h16" }), /* @__PURE__ */ React.createElement("path", { d: "M7.5 15l3.5-4 3 2.5L19 8" }), /* @__PURE__ */ React.createElement("path", { d: "M15.5 8H19v3.5" })));
   ICON.email = ICON.contact;
   ICON.security = ICON.shield;
   ICON.impact = ICON.report;
@@ -10065,6 +10103,406 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     return /* @__PURE__ */ React.createElement("div", { className: "fd-ch" }, /* @__PURE__ */ React.createElement("div", { className: "fd-ch-legend", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { style: { background: C_IN } }), "Money in ", /* @__PURE__ */ React.createElement("b", null, money(totalIn))), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { style: { background: C_OUT } }), "Money out ", /* @__PURE__ */ React.createElement("b", null, money(totalOut)))), /* @__PURE__ */ React.createElement("div", { className: "fd-ch-plot", role: "img", "aria-label": `Money in and out by month, last 12 months. In ${money(totalIn)}, out ${money(totalOut)}.` }, [1, 0.5, 0].map((f) => /* @__PURE__ */ React.createElement("div", { key: f, className: "fd-ch-grid", style: { bottom: f * 100 + "%" } }, /* @__PURE__ */ React.createElement("span", null, kmoney(top * f)))), /* @__PURE__ */ React.createElement("div", { className: "fd-ch-cols" }, months.map((m) => /* @__PURE__ */ React.createElement("div", { key: m.key, className: "fd-ch-col" + (hover === m.key ? " on" : ""), tabIndex: 0, onMouseEnter: () => setHover(m.key), onMouseLeave: () => setHover(null), onFocus: () => setHover(m.key), onBlur: () => setHover(null), "aria-label": `${m.long}: in ${money(m.inn)}, out ${money(m.out)}` }, /* @__PURE__ */ React.createElement("div", { className: "fd-ch-bars" }, /* @__PURE__ */ React.createElement("i", { style: { height: h(m.inn), background: C_IN } }), /* @__PURE__ */ React.createElement("i", { style: { height: h(m.out), background: C_OUT } })), /* @__PURE__ */ React.createElement("span", { className: "fd-ch-x" }, m.label), hover === m.key && /* @__PURE__ */ React.createElement("div", { className: "fd-ch-tip" }, /* @__PURE__ */ React.createElement("b", null, m.long), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("i", { style: { background: C_IN } }), "In", /* @__PURE__ */ React.createElement("span", null, money(m.inn))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("i", { style: { background: C_OUT } }), "Out", /* @__PURE__ */ React.createElement("span", null, money(m.out)))))))));
   }
   const MoveRow = ({ x, G, showDir }) => /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-mv", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full" }, /* @__PURE__ */ React.createElement("b", null, x.title), x.detail && /* @__PURE__ */ React.createElement("small", null, x.detail)), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Category" }, /* @__PURE__ */ React.createElement(Tag, { tone: x.dir === "in" ? "ok" : "gold" }, x.category), x.pillar && x.category !== "Tuition" && x.category !== "Founding era" && /* @__PURE__ */ React.createElement("small", null, x.pillar), x.archived && /* @__PURE__ */ React.createElement("small", { style: { color: "var(--amber)" } }, "Archived · not counted"), x.dir === "in" && !x.settled && /* @__PURE__ */ React.createElement("small", { style: { color: "var(--amber)" } }, "Not verified yet")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Date" }, x.date ? fdate(x.date) : "Before 2026", x.ref && /* @__PURE__ */ React.createElement("small", { className: "fd-mono", title: x.ref }, x.ref.length > 18 ? x.ref.slice(0, 10) + "…" + x.ref.slice(-5) : x.ref)), /* @__PURE__ */ React.createElement("div", { className: "fd-td fd-amt", "data-l": "Amount" }, /* @__PURE__ */ React.createElement("span", { className: "num " + (x.dir === "in" ? "in" : "out") }, showDir ? x.dir === "in" ? "+" : "−" : "", money(x.amount))));
+  const ACLASS = {
+    idx: { label: "Indonesian stock", short: "IDX", color: "#C9A961" },
+    us: { label: "US stock", short: "US", color: "#8DB8E8" },
+    intl: { label: "Other stock", short: "Intl", color: "#A99BE0" },
+    etf: { label: "ETF or fund", short: "ETF", color: "#8FD4A8" },
+    crypto: { label: "Crypto", short: "Crypto", color: "#E7B76A" },
+    cash: { label: "Cash or deposit", short: "Cash", color: "#C8CFDB" },
+    other: { label: "Other", short: "Other", color: "#E58686" }
+  };
+  const ASSET_CURS = ["IDR", "USD", "EUR", "SGD", "GBP", "JPY", "HKD", "MYR", "TRY", "AUD", "CAD"];
+  const TX = {
+    gift: { label: "Gift in kind", tone: "gold", qty: true, price: true, hint: "An asset given to the endowment. Enter what it cost the giver, as the broker shows it." },
+    buy: { label: "Purchase", tone: "sky", qty: true, price: true, hint: "Bought by the endowment." },
+    sell: { label: "Sale", tone: "warn", qty: true, price: true, hint: "Sold. The gain or loss against the average cost is realised. Record where the proceeds went, for example in a cash or deposit holding, so the principal stays whole." },
+    dividend: { label: "Dividend or interest", tone: "ok", qty: false, price: false, hint: "Cash paid out by the asset, after tax." },
+    fee: { label: "Fee or tax", tone: "bad", qty: false, price: false, hint: "A charge from the broker, custodian or tax office." },
+    split: { label: "Split or bonus shares", tone: "", qty: false, price: false, hint: "Shares multiplied, for example 2 for a 2-for-1 split. Cost stays the same." }
+  };
+  const isLotted = (h) => h && h.cls === "idx";
+  const LOT = 100;
+  const assetLogo = (cls, symbol, priceSymbol) => cls === "crypto" || cls === "cash" || cls === "other" || !symbol ? "" : "https://financialmodelingprep.com/image-stock/" + encodeURIComponent(priceSymbol || symbol) + ".png";
+  const nfmt = (v, d = 2) => (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: d });
+  const qfmt = (h, q) => isLotted(h) ? `${nfmt(q / LOT, 2)} ${plural(q / LOT, "lot", "lots")} · ${nfmt(q, 0)} shares` : `${nfmt(q, h.cls === "crypto" ? 8 : 4)} ${h.cls === "crypto" ? h.symbol : "units"}`;
+  const priceFmt = (cur, v) => cur === "IDR" ? "Rp " + (Number(v) || 0).toLocaleString("id-ID", Math.abs(Math.round(v * 100) - Math.round(v) * 100) > 0 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumFractionDigits: 0 }) : (aCurSym(cur) || cur + " ") + (Number(v) || 0).toLocaleString("en-US", v < 1 ? { maximumFractionDigits: 6 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const aCurSym = (c) => ({ USD: "$", IDR: "Rp ", EUR: "€", SGD: "S$", GBP: "£", JPY: "¥", HKD: "HK$", MYR: "RM ", TRY: "₺", AUD: "A$", CAD: "C$", BTC: "₿" })[c] || "";
+  const pct = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Number(v) || 0).toFixed(2) + "%";
+  const sgn = (fmt, v) => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt(Math.abs(v));
+  function position(h) {
+    const tx = (h.txns || []).map((t, i) => ({ t, i })).sort((a, b) => String(a.t.date).localeCompare(String(b.t.date)) || a.i - b.i).map((x) => x.t);
+    let qty = 0, cost = 0, realized = 0, income = 0, fees = 0, given = 0, bought = 0, proceeds = 0;
+    for (const t of tx) {
+      const q = Number(t.qty) || 0, amt = Number(t.amount) || 0, fee = Number(t.fee) || 0;
+      if (t.type === "gift" || t.type === "buy") {
+        qty += q;
+        cost += amt + fee;
+        fees += fee;
+        if (t.type === "gift") given += amt + fee;
+        else bought += amt + fee;
+      } else if (t.type === "sell" && qty > 0) {
+        const sq = Math.min(q, qty), avg = cost / qty, out = avg * sq;
+        realized += amt - fee - out;
+        proceeds += amt - fee;
+        cost -= out;
+        qty -= sq;
+        fees += fee;
+        if (qty < 1e-12) {
+          qty = 0;
+          cost = 0;
+        }
+      } else if (t.type === "dividend") income += amt;
+      else if (t.type === "fee") {
+        fees += amt;
+        realized -= amt;
+      } else if (t.type === "split") {
+        const r = Number(t.ratio) || 1;
+        if (r > 0) qty *= r;
+      }
+    }
+    return { qty, cost, avg: qty > 0 ? cost / qty : 0, realized, income, fees, given, bought, proceeds, count: tx.length };
+  }
+  const newId = (p) => p + "-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
+  function AssetLogo({ h, size = 38 }) {
+    const [bad, setBad] = useState(false);
+    const src = h.logo || assetLogo(h.cls, h.symbol, h.priceSymbol);
+    useEffect(() => {
+      setBad(false);
+    }, [src]);
+    const letters = String(h.symbol || h.name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 4).toUpperCase() || "?";
+    let hue = 0;
+    for (const c of letters) hue = (hue * 31 + c.charCodeAt(0)) % 360;
+    return /* @__PURE__ */ React.createElement("span", { className: "fd-alogo", style: { width: size, height: size, borderRadius: Math.round(size * 0.28) } }, src && !bad ? /* @__PURE__ */ React.createElement("img", { src, alt: "", loading: "lazy", referrerPolicy: "no-referrer", onError: () => setBad(true) }) : /* @__PURE__ */ React.createElement("b", { style: { background: `hsl(${hue} 32% 26%)`, fontSize: size * (letters.length > 3 ? 0.26 : 0.32) } }, letters));
+  }
+  function AssetsView({ store }) {
+    const [rows, setRows] = useState(null);
+    const [err, setErr] = useState("");
+    const [live, setLive] = useState(null);
+    const [busy, setBusy] = useState("");
+    const [view, setView] = useState("USD");
+    const [adding, setAdding] = useState(false);
+    const [openId, setOpenId] = useState(null);
+    const [policyOpen, setPolicyOpen] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
+    const [m, flash] = useFlash();
+    const load = useCallback(async () => {
+      try {
+        setRows(await store.listAssets());
+        setErr("");
+      } catch (e) {
+        setErr("Could not load the assets. Check your connection and refresh.");
+        setRows((r) => r || []);
+      }
+    }, [store]);
+    useEffect(() => {
+      load();
+    }, [load]);
+    const holdings = (rows || []).filter((r) => r.id.indexOf("A-") === 0).map((r) => ({ ...r.data, id: r.id, name: r.data && r.data.name || r.name || r.id, updatedAt: r.updated_at }));
+    const policyRow = (rows || []).find((r) => r.id === "PORTFOLIO-POLICY");
+    const navRow = (rows || []).find((r) => r.id === "PORTFOLIO-NAV");
+    const policy = { opsShare: 10, targets: {}, ...policyRow && policyRow.data || {} };
+    const nav = { points: [], last: {}, fx: {}, ...navRow && navRow.data || {} };
+    const active = holdings.filter((h) => !h.archived);
+    const save = async (id, name, data) => {
+      await store.saveAsset({ id, name, data });
+      await load();
+    };
+    const rowsRef = useRef(rows);
+    rowsRef.current = rows;
+    const refresh = useCallback(async (quiet) => {
+      const rows2 = rowsRef.current;
+      const navRow2 = (rows2 || []).find((r) => r.id === "PORTFOLIO-NAV");
+      const nav2 = { points: [], last: {}, fx: {}, ...navRow2 && navRow2.data || {} };
+      const list = (rows2 || []).filter((r) => r.id.indexOf("A-") === 0 && !(r.data && r.data.archived)).map((r) => ({ ...r.data, id: r.id }));
+      const items = list.filter((h) => h.source && h.priceSymbol).map((h) => ({ key: h.id, source: h.source, symbol: h.priceSymbol }));
+      const curs = [.../* @__PURE__ */ new Set(["IDR", ...list.map((h) => h.currency).filter(Boolean)])];
+      if (!items.length && !quiet) return;
+      setBusy("prices");
+      try {
+        const r = await store.assetQuotes(items, curs);
+        setLive(r);
+        const lastAt = navRow2 && navRow2.updated_at ? new Date(navRow2.updated_at).getTime() : 0;
+        if (Date.now() - lastAt > 6 * 36e5 || !(navRow2 && navRow2.data && navRow2.data.points && navRow2.data.points.length)) {
+          const lastP = {};
+          Object.entries(r.quotes || {}).forEach(([k, q]) => {
+            if (q && q.price) lastP[k] = { price: q.price, prev: q.prevClose, at: q.at, source: q.source };
+          });
+          const fx2 = { ...nav2.fx, ...r.fx || {} };
+          const tot = totals(list, { ...nav2.last, ...lastP }, fx2);
+          const day = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+          const points = (nav2.points || []).filter((p) => p.d !== day).concat([{ d: day, mv: Math.round(tot.mv * 100) / 100, cost: Math.round(tot.cost * 100) / 100 }]).slice(-1500);
+          await store.saveAsset({ id: "PORTFOLIO-NAV", name: "__nav__", data: { points, last: { ...nav2.last, ...lastP }, fx: fx2, at: r.at } });
+          load();
+        }
+        if (!quiet) flash("Prices updated.");
+      } catch (e) {
+        if (!quiet) flash("Could not reach the price services. Showing the last saved prices.", "err");
+      }
+      setBusy("");
+    }, [store]);
+    const autoRef = useRef(false);
+    useEffect(() => {
+      if (rows && !autoRef.current) {
+        autoRef.current = true;
+        refresh(true);
+      }
+    }, [rows]);
+    const lastPrices = { ...nav.last };
+    if (live && live.quotes) Object.entries(live.quotes).forEach(([k, q]) => {
+      if (q && q.price) lastPrices[k] = { price: q.price, prev: q.prevClose, at: q.at, source: q.source };
+    });
+    const fx = { USD: 1, USDT: 1, ...Store_FX(store), ...nav.fx, ...live && live.fx || {} };
+    const T = totals(active, lastPrices, fx);
+    const toView = (usd) => view === "IDR" ? usd * (fx.IDR || 0) : usd;
+    const vf = (usd) => view === "IDR" ? "Rp " + Math.round(toView(usd)).toLocaleString("id-ID") : "$" + (Number(usd) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const priceAt = live && live.at || nav.at;
+    const realizedRet = T.realized + T.income;
+    const allowance = Math.max(0, realizedRet) * (Number(policy.opsShare) || 0) / 100;
+    if (err && !rows) return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Assets" }), /* @__PURE__ */ React.createElement("div", { className: "fd-msg err" }, err));
+    if (!rows) return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Assets" }), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Loading…"));
+    const byClass = {};
+    T.list.forEach((x) => {
+      byClass[x.h.cls] = (byClass[x.h.cls] || 0) + x.mvUsd;
+    });
+    const classes = Object.keys(ACLASS).filter((k) => byClass[k] > 0 || Number(policy.targets[k]) > 0);
+    const byCur = {};
+    T.list.forEach((x) => {
+      byCur[x.h.currency] = (byCur[x.h.currency] || 0) + x.mvUsd;
+    });
+    const G = "minmax(0,1.9fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr) minmax(0,.55fr)";
+    const archived = holdings.filter((h) => h.archived);
+    const open = holdings.find((h) => h.id === openId);
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Assets", lede: "What the endowment owns. Only you can see this page; the public site never shows the holdings." }, /* @__PURE__ */ React.createElement(Seg, { items: [["USD", "USD"], ["IDR", "IDR"]], value: view, onChange: setView }), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", disabled: !!busy || !active.length, onClick: () => refresh(false) }, busy === "prices" ? "Updating…" : "Refresh prices"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => setAdding(true) }, "Add asset")), m && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement(Flash, { m })), /* @__PURE__ */ React.createElement(Stats, { items: [
+      { label: "Market value", value: vf(T.mv), sub: T.missing ? `${T.missing} ${plural(T.missing, "asset", "assets")} at cost, no price yet` : `${active.length} ${plural(active.length, "holding", "holdings")}`, tone: "ok" },
+      { label: "Principal (cost basis)", value: vf(T.cost), sub: `Gifts in kind ${vf(T.given)} · purchases ${vf(T.bought)}` },
+      { label: "Unrealised return", value: sgn(vf, T.unreal), sub: T.cost > 0 ? pct(T.unreal / T.cost * 100) + " on cost" : "No holdings yet", tone: T.unreal >= 0 ? "ok" : "bad" },
+      { label: "Realised return", value: sgn(vf, realizedRet), sub: `Dividends ${vf(T.income)} · gains ${sgn(vf, T.realized)}`, tone: realizedRet > 0 ? "ok" : "" }
+    ] }), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "8px 0 18px" } }, priceAt ? `Prices from Yahoo Finance and CoinGecko, ${fdatetime(priceAt)}. Indonesian prices may be delayed up to 15 minutes.` : "No prices yet. Values show at cost until prices load.", fx.IDR ? ` 1 USD = Rp ${Math.round(fx.IDR).toLocaleString("id-ID")}.` : ""), active.length === 0 ? /* @__PURE__ */ React.createElement(Empty, { title: "No assets recorded yet" }, "Add the first holding: a stock, an ETF, a coin, a deposit or anything else the endowment owns.") : /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-th", style: { gridTemplateColumns: G } }, /* @__PURE__ */ React.createElement("div", null, "Asset"), /* @__PURE__ */ React.createElement("div", null, "Quantity"), /* @__PURE__ */ React.createElement("div", null, "Average cost"), /* @__PURE__ */ React.createElement("div", null, "Last price"), /* @__PURE__ */ React.createElement("div", null, "Market value"), /* @__PURE__ */ React.createElement("div", null, "Unrealised"), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, "Weight")), T.list.sort((a, b) => b.mvUsd - a.mvUsd).map((x) => {
+      const h = x.h, q = lastPrices[h.id], day = q && q.prev ? (q.price / q.prev - 1) * 100 : null;
+      return /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-hold", key: h.id, style: { gridTemplateColumns: G }, role: "button", tabIndex: 0, onClick: () => setOpenId(h.id), onKeyDown: (e) => {
+        if (e.key === "Enter") setOpenId(h.id);
+      } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td full fd-hold-a" }, /* @__PURE__ */ React.createElement(AssetLogo, { h }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, h.symbol || h.name), h.symbol && /* @__PURE__ */ React.createElement("small", null, h.name), /* @__PURE__ */ React.createElement("small", null, /* @__PURE__ */ React.createElement(Tag, null, ACLASS[h.cls] ? ACLASS[h.cls].short : h.cls), " ", h.currency))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Quantity" }, isLotted(h) ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", null, nfmt(x.p.qty / LOT, 2), " ", plural(x.p.qty / LOT, "lot", "lots")), /* @__PURE__ */ React.createElement("small", null, nfmt(x.p.qty, 0), " shares")) : /* @__PURE__ */ React.createElement("b", null, nfmt(x.p.qty, h.cls === "crypto" ? 8 : 4))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Average cost" }, /* @__PURE__ */ React.createElement("b", null, priceFmt(h.currency, x.p.avg)), /* @__PURE__ */ React.createElement("small", null, fmtNative(h.currency, x.p.cost))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Last price" }, x.price != null ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", null, priceFmt(h.currency, x.price)), day != null && /* @__PURE__ */ React.createElement("small", { className: day >= 0 ? "fd-up" : "fd-down" }, pct(day), " today")) : /* @__PURE__ */ React.createElement("small", null, "No price")), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Market value" }, /* @__PURE__ */ React.createElement("b", null, fmtNative(h.currency, x.mvNative)), h.currency !== view && /* @__PURE__ */ React.createElement("small", null, vf(x.mvUsd))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Unrealised" }, x.price != null ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", { className: x.unrealNative >= 0 ? "fd-up" : "fd-down" }, sgn((v) => fmtNative(h.currency, v), x.unrealNative)), /* @__PURE__ */ React.createElement("small", { className: x.unrealNative >= 0 ? "fd-up" : "fd-down" }, x.p.cost > 0 ? pct(x.unrealNative / x.p.cost * 100) : "")) : /* @__PURE__ */ React.createElement("small", null, "·")), /* @__PURE__ */ React.createElement("div", { className: "fd-td fd-amt", "data-l": "Weight" }, /* @__PURE__ */ React.createElement("b", null, T.mv > 0 ? (x.mvUsd / T.mv * 100).toFixed(1) + "%" : "·")));
+    })), archived.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setShowArchived((v) => !v) }, showArchived ? "Hide" : "Show", " ", archived.length, " archived ", plural(archived.length, "holding", "holdings")), showArchived && /* @__PURE__ */ React.createElement("div", { className: "fd-table", style: { marginTop: 8 } }, archived.map((h) => /* @__PURE__ */ React.createElement("div", { className: "fd-tr fd-hold dim", key: h.id, style: { gridTemplateColumns: "minmax(0,1fr) auto" }, role: "button", tabIndex: 0, onClick: () => setOpenId(h.id) }, /* @__PURE__ */ React.createElement("div", { className: "fd-td fd-hold-a" }, /* @__PURE__ */ React.createElement(AssetLogo, { h, size: 30 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, h.symbol || h.name), /* @__PURE__ */ React.createElement("small", null, h.name, " · archived ", h.archivedAt ? fdate(h.archivedAt) : ""))), /* @__PURE__ */ React.createElement("div", { className: "fd-td" }, /* @__PURE__ */ React.createElement("small", null, "Realised ", sgn((v) => fmtNative(h.currency, v), position(h).realized + position(h).income))))))), active.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "fd-tgrid fd-assets-grid", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2", style: { marginTop: 0 } }, "Allocation"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "By asset class", Object.keys(policy.targets || {}).some((k) => Number(policy.targets[k]) > 0) ? ", against your targets" : "", ".")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setPolicyOpen(true) }, "Policy and targets")), classes.map((k) => {
+      const w = T.mv > 0 ? (byClass[k] || 0) / T.mv * 100 : 0, tg = Number(policy.targets[k]) || 0;
+      return /* @__PURE__ */ React.createElement("div", { className: "fd-alloc", key: k }, /* @__PURE__ */ React.createElement("div", { className: "fd-alloc-h" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("i", { style: { background: ACLASS[k].color } }), ACLASS[k].label), /* @__PURE__ */ React.createElement("b", null, w.toFixed(1), "%", tg > 0 && /* @__PURE__ */ React.createElement("small", null, " · target ", tg, "%", Math.abs(w - tg) >= 5 ? w > tg ? " · above" : " · below" : ""))), /* @__PURE__ */ React.createElement("div", { className: "fd-alloc-bar" }, /* @__PURE__ */ React.createElement("i", { style: { width: Math.min(100, w) + "%", background: ACLASS[k].color } }), tg > 0 && /* @__PURE__ */ React.createElement("em", { style: { left: Math.min(100, tg) + "%" }, title: "Target " + tg + "%" })));
+    }), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { marginTop: 14 } }, "By currency: ", Object.entries(byCur).sort((a, b) => b[1] - a[1]).map(([c, v]) => `${c} ${T.mv > 0 ? (v / T.mv * 100).toFixed(1) : 0}%`).join(" · ")), (nav.points || []).length >= 2 && /* @__PURE__ */ React.createElement(NavChart, { points: nav.points, fmt: vf })), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2", style: { marginTop: 0 } }, "Spending policy"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { lineHeight: 1.6 } }, "Internal. The principal, every donation and every gifted asset at cost, is never spent. Up to ", policy.opsShare, "% of realised returns (dividends, interest and realised gains) may fund operations such as hosting, domains, software and management. Unrealised growth is not spent."), /* @__PURE__ */ React.createElement("div", { className: "fd-krow", style: { borderTop: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Realised returns to date"), /* @__PURE__ */ React.createElement("small", null, "Dividends ", vf(T.income), " and gains ", sgn(vf, T.realized))), /* @__PURE__ */ React.createElement("b", null, sgn(vf, realizedRet))), /* @__PURE__ */ React.createElement("div", { className: "fd-krow" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Available for operations"), /* @__PURE__ */ React.createElement("small", null, policy.opsShare, "% of positive realised returns")), /* @__PURE__ */ React.createElement("b", { className: "fd-up" }, vf(allowance))), /* @__PURE__ */ React.createElement("div", { className: "fd-krow" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Unrealised growth"), /* @__PURE__ */ React.createElement("small", null, "Counts only once sold or paid out")), /* @__PURE__ */ React.createElement("b", null, sgn(vf, T.unreal))), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 12 } }, "This policy stays inside the Founder Portal. The public site says only that 100% of every donation goes to the endowment's charitable work and its permanent principal."))), adding && /* @__PURE__ */ React.createElement(AddAssetDialog, { store, onClose: () => setAdding(false), onSaved: async (id, name, data) => {
+      await save(id, name, data);
+      setAdding(false);
+      flash("Asset added.");
+      setTimeout(() => refresh(true), 200);
+    } }), open && /* @__PURE__ */ React.createElement(AssetDialog, { h: open, price: lastPrices[open.id], fx, onClose: () => setOpenId(null), onSave: async (data) => {
+      await save(open.id, data.name || open.name, data);
+      flash("Saved.");
+    } }), policyOpen && /* @__PURE__ */ React.createElement(PolicyDialog, { policy, onClose: () => setPolicyOpen(false), onSave: async (p) => {
+      await save("PORTFOLIO-POLICY", "__policy__", p);
+      setPolicyOpen(false);
+      flash("Policy saved.");
+    } }));
+  }
+  const Store_FX = (store) => {
+    const f = store.FX_FALLBACK || {}, o = {};
+    ["IDR", "EUR", "SGD", "TRY"].forEach((k) => {
+      if (Number(f[k]) > 0) o[k] = Number(f[k]);
+    });
+    return o;
+  };
+  const fmtNative = (cur, v) => cur === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : (aCurSym(cur) || cur + " ") + (Number(v) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function totals(list, prices, fx) {
+    const usd = (cur, v) => {
+      if (!cur || cur === "USD" || cur === "USDT") return v;
+      const r = Number(fx[cur]);
+      return r > 0 ? v / r : 0;
+    };
+    const out = { list: [], mv: 0, cost: 0, unreal: 0, realized: 0, income: 0, given: 0, bought: 0, missing: 0 };
+    for (const h of list) {
+      const p = position(h), q = prices[h.id], price = h.cls === "cash" ? 1 : q && q.price ? q.price : h.manualPrice ? Number(h.manualPrice) : null;
+      const mvNative = price != null ? p.qty * price : p.cost;
+      if (price == null && p.qty > 0) out.missing++;
+      const x = { h, p, price, mvNative, unrealNative: price != null ? mvNative - p.cost : 0, mvUsd: usd(h.currency, mvNative) };
+      out.list.push(x);
+      out.mv += x.mvUsd;
+      out.cost += usd(h.currency, p.cost);
+      out.unreal += usd(h.currency, x.unrealNative);
+      out.realized += usd(h.currency, p.realized);
+      out.income += usd(h.currency, p.income);
+      out.given += usd(h.currency, p.given);
+      out.bought += usd(h.currency, p.bought);
+    }
+    return out;
+  }
+  function NavChart({ points, fmt }) {
+    const pts = points.slice(-365), W = 600, H = 120;
+    const vals = pts.map((p) => p.mv), lo = Math.min(...vals, ...pts.map((p) => p.cost)), hi = Math.max(...vals, ...pts.map((p) => p.cost));
+    const x = (i) => pts.length < 2 ? 0 : i / (pts.length - 1) * W, y = (v) => H - 8 - (hi === lo ? 0.5 : (v - lo) / (hi - lo)) * (H - 16);
+    const line = (k) => pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p[k]).toFixed(1)).join(" ");
+    return /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { marginBottom: 6 } }, "Value over time · ", /* @__PURE__ */ React.createElement("span", { style: { color: "var(--sage)" } }, "market value"), " · ", /* @__PURE__ */ React.createElement("span", { style: { color: "var(--faint)" } }, "cost")), /* @__PURE__ */ React.createElement("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", height: H, role: "img", "aria-label": `Portfolio value from ${fdate(pts[0].d)} to ${fdate(pts[pts.length - 1].d)}: ${fmt(pts[pts.length - 1].mv)}`, preserveAspectRatio: "none" }, /* @__PURE__ */ React.createElement("path", { d: line("cost"), fill: "none", stroke: "rgba(239,233,220,.3)", strokeWidth: "1.5", strokeDasharray: "4 4", vectorEffect: "non-scaling-stroke" }), /* @__PURE__ */ React.createElement("path", { d: line("mv"), fill: "none", stroke: "#8FD4A8", strokeWidth: "2", vectorEffect: "non-scaling-stroke" })), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { display: "flex", justifyContent: "space-between", margin: 0 } }, /* @__PURE__ */ React.createElement("span", null, fdate(pts[0].d)), /* @__PURE__ */ React.createElement("span", null, fdate(pts[pts.length - 1].d))));
+  }
+  function TxForm({ h, held, initial, onSubmit, onCancel, submitLabel = "Save" }) {
+    const lotted = isLotted(h);
+    const [t, setT] = useState(() => ({ type: "gift", date: new Date(Date.now() - (/* @__PURE__ */ new Date()).getTimezoneOffset() * 6e4).toISOString().slice(0, 10), qtyIn: "", priceMode: "avg", priceIn: "", totalIn: "", fee: "", amount: "", ratio: "", note: "", ...initial || {} }));
+    const set = (k, v) => setT((p) => ({ ...p, [k]: v }));
+    const D = TX[t.type];
+    const num = (s) => {
+      const v = parseFloat(String(s).replace(/,/g, "").replace(/\s/g, ""));
+      return isFinite(v) ? v : NaN;
+    };
+    const shares = (num(t.qtyIn) || 0) * (lotted ? LOT : 1);
+    const total = D.price ? t.priceMode === "avg" ? shares * (num(t.priceIn) || 0) : num(t.totalIn) || 0 : 0;
+    const problems = [];
+    if (!t.date) problems.push("Choose a date.");
+    if (D.qty && !(shares > 0)) problems.push(lotted ? "Enter the number of lots." : "Enter the quantity.");
+    if (t.type === "sell" && shares > held + 1e-9) problems.push(`You hold ${qfmt(h, held)}. You cannot sell more than that.`);
+    if (D.price && !(total > 0)) problems.push(t.priceMode === "avg" ? "Enter the price." : "Enter the total.");
+    if ((t.type === "dividend" || t.type === "fee") && !(num(t.amount) > 0)) problems.push("Enter the amount.");
+    if (t.type === "split" && !(num(t.ratio) > 0)) problems.push("Enter the ratio, for example 2.");
+    if (t.fee && !(num(t.fee) >= 0)) problems.push("The fee must be a number.");
+    const submit = () => {
+      if (problems.length) return;
+      const out = { id: newId("T"), type: t.type, date: t.date, note: t.note.trim().slice(0, 300) || void 0 };
+      if (D.qty) {
+        out.qty = shares;
+        out.amount = Math.round(total * 1e6) / 1e6;
+        out.fee = num(t.fee) > 0 ? num(t.fee) : 0;
+      }
+      if (t.type === "dividend" || t.type === "fee") out.amount = num(t.amount);
+      if (t.type === "split") out.ratio = num(t.ratio);
+      onSubmit(out);
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Type" }, /* @__PURE__ */ React.createElement("select", { className: "fd-input", value: t.type, onChange: (e) => set("type", e.target.value) }, Object.entries(TX).map(([k, v]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, v.label)))), /* @__PURE__ */ React.createElement(Field, { label: "Date" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "date", value: t.date, max: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), onChange: (e) => set("date", e.target.value) }))), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "-4px 0 4px" } }, D.hint), D.qty && /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: lotted ? "Lots" : "Quantity", hint: lotted ? `1 lot = ${LOT} shares${shares > 0 ? ` · ${nfmt(shares, 0)} shares` : ""}` : h.cls === "crypto" ? "Up to 8 decimals" : "" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: t.qtyIn, onChange: (e) => set("qtyIn", e.target.value), placeholder: lotted ? "10" : "1" })), /* @__PURE__ */ React.createElement(
+      Field,
+      {
+        label: t.priceMode === "avg" ? `Price per ${lotted ? "share" : h.cls === "crypto" ? "coin" : "unit"} (${h.currency})` : `Total (${h.currency})`,
+        hint: /* @__PURE__ */ React.createElement("button", { type: "button", className: "fd-linkbtn", onClick: () => set("priceMode", t.priceMode === "avg" ? "total" : "avg") }, t.priceMode === "avg" ? "Enter the total instead" : "Enter the price instead")
+      },
+      t.priceMode === "avg" ? /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: t.priceIn, onChange: (e) => set("priceIn", e.target.value), placeholder: lotted ? "3500" : "100" }) : /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: t.totalIn, onChange: (e) => set("totalIn", e.target.value), placeholder: lotted ? "3500000" : "1000" })
+    )), D.qty && /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: `Fees (${h.currency}, optional)` }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: t.fee, onChange: (e) => set("fee", e.target.value), placeholder: "0" })), /* @__PURE__ */ React.createElement("div", { className: "fd-txsum" }, total > 0 && shares > 0 ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", null, t.type === "sell" ? "Proceeds" : "Cost"), /* @__PURE__ */ React.createElement("b", null, fmtNative(h.currency, total + (t.type === "sell" ? -(num(t.fee) || 0) : num(t.fee) || 0))), /* @__PURE__ */ React.createElement("small", null, priceFmt(h.currency, total / shares), " per ", lotted ? "share" : "unit")) : null)), (t.type === "dividend" || t.type === "fee") && /* @__PURE__ */ React.createElement(Field, { label: `Amount (${h.currency})` }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: t.amount, onChange: (e) => set("amount", e.target.value), placeholder: "0" })), t.type === "split" && /* @__PURE__ */ React.createElement(Field, { label: "Ratio", hint: "New shares for each old share: 2 for a 2-for-1 split, 0.1 for a 1-for-10 reverse split." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: t.ratio, onChange: (e) => set("ratio", e.target.value), placeholder: "2" })), /* @__PURE__ */ React.createElement(Field, { label: "Note (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: t.note, maxLength: 300, onChange: (e) => set("note", e.target.value), placeholder: "Broker reference, reason or anything worth keeping" })), problems.length > 0 && (t.qtyIn || t.priceIn || t.totalIn || t.amount || t.ratio) && /* @__PURE__ */ React.createElement("small", { className: "fd-bad" }, problems[0]), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 6 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: problems.length > 0, onClick: submit }, submitLabel), onCancel && /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onCancel }, "Cancel")));
+  }
+  function AddAssetDialog({ store, onClose, onSaved }) {
+    const [step, setStep] = useState("find");
+    const [q, setQ] = useState("");
+    const [hits, setHits] = useState(null);
+    const [searching, setSearching] = useState(false);
+    const [h, setH] = useState({ cls: "idx", symbol: "", name: "", currency: "IDR", source: "", priceSymbol: "", logo: "", custodian: "", holder: "Founder, in trust for The Brial Endowment", note: "" });
+    const [err, setErr] = useState("");
+    const [busy, setBusy] = useState(false);
+    useEffect(() => {
+      const term = q.trim();
+      if (term.length < 2) {
+        setHits(null);
+        return;
+      }
+      let on = true;
+      setSearching(true);
+      const t = setTimeout(async () => {
+        try {
+          const r = await store.assetSearch(term);
+          const T = term.toUpperCase(), L = term.toLowerCase();
+          const rank = (x) => x.symbol === T ? 0 : String(x.name).toLowerCase() === L ? 1 : String(x.name).toLowerCase().indexOf(L) === 0 ? 2 : 3;
+          if (on) setHits(r.map((x, i) => ({ x, i })).sort((a, b) => rank(a.x) - rank(b.x) || a.i - b.i).map((o) => o.x));
+        } catch (e) {
+          if (on) setHits([]);
+        }
+        if (on) setSearching(false);
+      }, 350);
+      return () => {
+        on = false;
+        clearTimeout(t);
+      };
+    }, [q]);
+    const pick = (x) => {
+      setH((p) => ({ ...p, cls: x.cls, symbol: x.symbol, name: x.name, currency: x.currency || (x.cls === "idx" ? "IDR" : "USD"), source: x.source, priceSymbol: x.priceSymbol, logo: x.logo || "", exchange: x.exchange || "" }));
+      setStep("details");
+    };
+    const manual = () => {
+      setH((p) => ({ ...p, symbol: q.trim().toUpperCase().slice(0, 12), name: "", source: "", priceSymbol: "" }));
+      setStep("details");
+    };
+    const set = (k, v) => setH((p) => ({ ...p, [k]: v }));
+    const ready = h.name.trim() && h.currency && h.cls;
+    const finish = async (tx) => {
+      setBusy(true);
+      setErr("");
+      const data = { ...h, symbol: h.symbol.trim().toUpperCase(), name: h.name.trim(), custodian: h.custodian.trim(), holder: h.holder.trim(), note: h.note.trim(), txns: [tx], createdAt: (/* @__PURE__ */ new Date()).toISOString() };
+      if (data.cls === "idx" && data.symbol && !data.priceSymbol) {
+        data.priceSymbol = data.symbol + ".JK";
+        data.source = "yahoo";
+      }
+      if ((data.cls === "us" || data.cls === "etf") && data.symbol && !data.priceSymbol) {
+        data.priceSymbol = data.symbol;
+        data.source = "yahoo";
+      }
+      try {
+        await onSaved(newId("A"), data.symbol ? `${data.symbol} · ${data.name}` : data.name, data);
+      } catch (e) {
+        setErr("Could not save. Check your connection and try again.");
+        setBusy(false);
+      }
+    };
+    return /* @__PURE__ */ React.createElement(Modal, { wide: true, title: "Add an asset", sub: step === "find" ? "Search a stock, an ETF or a coin, or add anything else by hand." : step === "details" ? "Check the details, then record how the endowment got it." : "How the endowment got it.", onClose }, step === "find" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Search, { value: q, onChange: setQ, placeholder: "Ticker or name: TLKM, Microsoft, VTI, Ethereum…" }), /* @__PURE__ */ React.createElement("div", { className: "fd-ahits", role: "listbox", "aria-label": "Results" }, searching && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { padding: 12 } }, "Searching…"), !searching && hits && hits.length === 0 && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { padding: 12 } }, "Nothing found. Check the spelling, or add it by hand."), !searching && (hits || []).map((x) => /* @__PURE__ */ React.createElement("button", { key: x.source + x.priceSymbol, type: "button", role: "option", className: "fd-ahit", onClick: () => pick(x) }, /* @__PURE__ */ React.createElement(AssetLogo, { h: x, size: 34 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, x.symbol), /* @__PURE__ */ React.createElement("small", null, x.name)), /* @__PURE__ */ React.createElement("span", { className: "fd-ahit-r" }, /* @__PURE__ */ React.createElement(Tag, null, ACLASS[x.cls] ? ACLASS[x.cls].short : x.cls), /* @__PURE__ */ React.createElement("small", null, [x.exchange, x.currency].filter(Boolean).join(" · ")))))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 14 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: manual }, "Add by hand"), /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { margin: 0 } }, "For a deposit, property, gold or anything without a market price."))), step === "details" && /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("div", { className: "fd-adetail-h" }, /* @__PURE__ */ React.createElement(AssetLogo, { h, size: 46 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, h.symbol || "New asset"), /* @__PURE__ */ React.createElement("small", null, h.name || "Name it below", h.exchange ? " · " + h.exchange : ""))), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Asset class" }, /* @__PURE__ */ React.createElement("select", { className: "fd-input", value: h.cls, onChange: (e) => set("cls", e.target.value) }, Object.entries(ACLASS).map(([k, v]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, v.label)))), /* @__PURE__ */ React.createElement(Field, { label: "Currency", hint: "The currency it is priced and bought in" }, /* @__PURE__ */ React.createElement("select", { className: "fd-input", value: h.currency, onChange: (e) => set("currency", e.target.value) }, ASSET_CURS.map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, c)))), /* @__PURE__ */ React.createElement(Field, { label: "Ticker or code (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: h.symbol, maxLength: 16, onChange: (e) => set("symbol", e.target.value.toUpperCase()), placeholder: "TLKM" })), /* @__PURE__ */ React.createElement(Field, { label: "Name" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: h.name, maxLength: 120, onChange: (e) => set("name", e.target.value), placeholder: "PT Telkom Indonesia (Persero) Tbk" })), /* @__PURE__ */ React.createElement(Field, { label: "Broker or custodian", hint: "Where it is held" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: h.custodian, maxLength: 120, onChange: (e) => set("custodian", e.target.value), placeholder: "Your broker or bank" })), /* @__PURE__ */ React.createElement(Field, { label: "Registered holder", hint: "Whose name the account is in" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: h.holder, maxLength: 120, onChange: (e) => set("holder", e.target.value) }))), /* @__PURE__ */ React.createElement(Field, { label: "Logo address (optional)", hint: "Filled in for you when found. Paste another image address to change it." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: h.logo, onChange: (e) => set("logo", e.target.value.trim()), placeholder: "https://…", spellCheck: false })), !h.source && h.cls !== "cash" && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: 0 } }, h.cls === "idx" || h.cls === "us" || h.cls === "etf" ? "Prices load automatically from the ticker." : "No automatic price for this asset: it is valued at cost until you set a price in its record."), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 6 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !ready, onClick: () => setStep("tx") }, "Next"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setStep("find") }, "Back"))), step === "tx" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-adetail-h", style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement(AssetLogo, { h, size: 38 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, h.symbol || h.name), /* @__PURE__ */ React.createElement("small", null, h.name, " · ", h.currency))), /* @__PURE__ */ React.createElement(TxForm, { h, held: 0, initial: { type: "gift" }, submitLabel: busy ? "Saving…" : "Save asset", onSubmit: (tx) => {
+      if (tx.type === "sell" || tx.type === "dividend" || tx.type === "fee" || tx.type === "split") {
+        setErr("Start with a gift in kind or a purchase.");
+        return;
+      }
+      finish(tx);
+    }, onCancel: () => setStep("details") }), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 10 } }, err)));
+  }
+  function AssetDialog({ h, price, fx, onClose, onSave }) {
+    const p = position(h);
+    const [mode, setMode] = useState("view");
+    const [d, setD] = useState({ name: h.name, custodian: h.custodian || "", holder: h.holder || "", logo: h.logo || "", note: h.note || "", manualPrice: h.manualPrice || "" });
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const last = h.cls === "cash" ? 1 : price && price.price ? price.price : h.manualPrice ? Number(h.manualPrice) : null;
+    const mv = last != null ? p.qty * last : p.cost;
+    const unreal = last != null ? mv - p.cost : 0;
+    const write = async (data) => {
+      setBusy(true);
+      setErr("");
+      try {
+        await onSave(data);
+        setMode("view");
+      } catch (e) {
+        setErr("Could not save. Try again.");
+      }
+      setBusy(false);
+    };
+    const { id, updatedAt, ...base } = h;
+    const txs = (h.txns || []).map((t, i) => ({ t, i })).sort((a, b) => String(b.t.date).localeCompare(String(a.t.date)) || b.i - a.i).map((x) => x.t);
+    return /* @__PURE__ */ React.createElement(Modal, { wide: true, title: h.symbol ? `${h.symbol} · ${h.name}` : h.name, sub: [ACLASS[h.cls] ? ACLASS[h.cls].label : h.cls, h.exchange, h.currency, h.archived ? "Archived" : ""].filter(Boolean).join(" · "), onClose }, mode === "view" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "fd-adetail-h" }, /* @__PURE__ */ React.createElement(AssetLogo, { h, size: 52 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, h.archived ? "Archived holding" : qfmt(h, p.qty)), /* @__PURE__ */ React.createElement("small", null, last != null ? `Last price ${priceFmt(h.currency, last)}${price && price.at ? " · " + fdatetime(price.at) : h.manualPrice ? " · set by hand" : ""}` : "No price yet: valued at cost"))), /* @__PURE__ */ React.createElement(Stats, { items: [
+      { label: "Market value", value: fmtNative(h.currency, mv), sub: h.currency !== "USD" && fx[h.currency] ? fmtNative("USD", mv / fx[h.currency]) : "" },
+      { label: "Cost basis", value: fmtNative(h.currency, p.cost), sub: p.qty > 0 ? "Average " + priceFmt(h.currency, p.avg) : "" },
+      { label: "Unrealised", value: sgn((v) => fmtNative(h.currency, v), unreal), sub: p.cost > 0 && last != null ? pct(unreal / p.cost * 100) : "", tone: unreal >= 0 ? "ok" : "bad" },
+      { label: "Realised", value: sgn((v) => fmtNative(h.currency, v), p.realized + p.income), sub: `Dividends ${fmtNative(h.currency, p.income)}` }
+    ] }), /* @__PURE__ */ React.createElement("div", { className: "fd-adl" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Broker or custodian"), /* @__PURE__ */ React.createElement("b", null, h.custodian || "Not set")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Registered holder"), /* @__PURE__ */ React.createElement("b", null, h.holder || "Not set")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Price source"), /* @__PURE__ */ React.createElement("b", null, h.source === "coingecko" ? "CoinGecko · " + h.priceSymbol : h.source === "yahoo" ? "Yahoo Finance · " + h.priceSymbol : h.manualPrice ? "Set by hand" : "None, valued at cost")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", null, "Given · bought"), /* @__PURE__ */ React.createElement("b", null, fmtNative(h.currency, p.given), " · ", fmtNative(h.currency, p.bought))), h.note && /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "1 / -1" } }, /* @__PURE__ */ React.createElement("span", null, "Note"), /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 400 } }, h.note))), /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("h3", { className: "fd-h3", style: { fontSize: 20 } }, "Transactions"), !h.archived && /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary sm", onClick: () => setMode("tx") }, "Add transaction")), /* @__PURE__ */ React.createElement("div", { className: "fd-table" }, txs.map((t) => /* @__PURE__ */ React.createElement("div", { className: "fd-tr", key: t.id, style: { gridTemplateColumns: "minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr)" } }, /* @__PURE__ */ React.createElement("div", { className: "fd-td" }, /* @__PURE__ */ React.createElement(Tag, { tone: (TX[t.type] || {}).tone }, (TX[t.type] || { label: t.type }).label), /* @__PURE__ */ React.createElement("small", null, fdate(t.date))), /* @__PURE__ */ React.createElement("div", { className: "fd-td", "data-l": "Detail" }, t.qty ? /* @__PURE__ */ React.createElement("b", null, qfmt(h, t.qty)) : t.type === "split" ? /* @__PURE__ */ React.createElement("b", null, "× ", t.ratio) : null, t.qty ? /* @__PURE__ */ React.createElement("small", null, "at ", priceFmt(h.currency, t.amount / t.qty), t.fee ? " · fees " + fmtNative(h.currency, t.fee) : "") : null, t.note && /* @__PURE__ */ React.createElement("small", null, t.note)), /* @__PURE__ */ React.createElement("div", { className: "fd-td fd-amt", "data-l": "Amount" }, t.amount ? /* @__PURE__ */ React.createElement("b", { className: t.type === "sell" || t.type === "dividend" ? "fd-up" : t.type === "fee" ? "fd-down" : "" }, fmtNative(h.currency, t.amount)) : /* @__PURE__ */ React.createElement("small", null, "·"))))), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setMode("edit") }, "Edit details"), !h.archived ? /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn quiet sm", armedLabel: "Click again to archive", onConfirm: () => write({ ...base, archived: true, archivedAt: (/* @__PURE__ */ new Date()).toISOString() }) }, "Archive") : /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => write({ ...base, archived: false, archivedAt: null }) }, "Restore"), /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { margin: 0 } }, "Archiving keeps the full history. Holdings are never deleted."))), mode === "tx" && /* @__PURE__ */ React.createElement(TxForm, { h, held: p.qty, initial: { type: "buy" }, submitLabel: busy ? "Saving…" : "Save transaction", onSubmit: (tx) => write({ ...base, txns: [...h.txns || [], tx] }), onCancel: () => setMode("view") }), mode === "edit" && /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Name" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: d.name, maxLength: 120, onChange: (e) => setD((x) => ({ ...x, name: e.target.value })) })), /* @__PURE__ */ React.createElement(Field, { label: "Broker or custodian" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: d.custodian, maxLength: 120, onChange: (e) => setD((x) => ({ ...x, custodian: e.target.value })) })), /* @__PURE__ */ React.createElement(Field, { label: "Registered holder" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: d.holder, maxLength: 120, onChange: (e) => setD((x) => ({ ...x, holder: e.target.value })) })), /* @__PURE__ */ React.createElement(Field, { label: `Price by hand (${h.currency})`, hint: h.source ? "Used only when the live price is not available" : "This asset has no live price" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: d.manualPrice, onChange: (e) => setD((x) => ({ ...x, manualPrice: e.target.value })), placeholder: "Optional" }))), /* @__PURE__ */ React.createElement(Field, { label: "Logo address" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: d.logo, onChange: (e) => setD((x) => ({ ...x, logo: e.target.value.trim() })), placeholder: "Leave empty for the automatic logo", spellCheck: false })), /* @__PURE__ */ React.createElement(Field, { label: "Note" }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: d.note, maxLength: 1e3, onChange: (e) => setD((x) => ({ ...x, note: e.target.value })) })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: busy || !d.name.trim(), onClick: () => write({ ...base, name: d.name.trim(), custodian: d.custodian.trim(), holder: d.holder.trim(), logo: d.logo, note: d.note.trim(), manualPrice: parseFloat(d.manualPrice) > 0 ? parseFloat(d.manualPrice) : null }) }, busy ? "Saving…" : "Save"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setMode("view") }, "Cancel"))), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 10 } }, err));
+  }
+  function PolicyDialog({ policy, onClose, onSave }) {
+    var _a;
+    const [t, setT] = useState(() => {
+      const o = {};
+      Object.keys(ACLASS).forEach((k) => {
+        o[k] = policy.targets && policy.targets[k] ? String(policy.targets[k]) : "";
+      });
+      return o;
+    });
+    const [ops, setOps] = useState(String((_a = policy.opsShare) != null ? _a : 10));
+    const [busy, setBusy] = useState(false);
+    const sum = Object.values(t).reduce((a, v) => a + (parseFloat(v) || 0), 0);
+    const opsN = parseFloat(ops);
+    const ok = (sum === 0 || Math.abs(sum - 100) < 0.01) && opsN >= 0 && opsN <= 10;
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Policy and targets", sub: "Internal settings. They never appear on the public site.", onClose }, /* @__PURE__ */ React.createElement(Field, { label: "Share of realised returns for operations (%)", hint: "At most 10%. Donations and the principal are never used for running costs." }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: ops, onChange: (e) => setOps(e.target.value) })), /* @__PURE__ */ React.createElement("h3", { className: "fd-h3", style: { fontSize: 19, margin: "18px 0 4px" } }, "Target allocation"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 0 } }, "Optional. Leave all empty for no targets, or make them add up to 100%."), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, Object.entries(ACLASS).map(([k, v]) => /* @__PURE__ */ React.createElement(Field, { key: k, label: v.label + " (%)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: t[k], onChange: (e) => setT((p) => ({ ...p, [k]: e.target.value })), placeholder: "0" })))), /* @__PURE__ */ React.createElement("p", { className: sum && Math.abs(sum - 100) >= 0.01 ? "fd-bad" : "fd-sub", style: { marginTop: 8 } }, "Total ", nfmt(sum, 2), "%", sum && Math.abs(sum - 100) >= 0.01 ? ": it must be 100%." : ""), !(opsN >= 0 && opsN <= 10) && /* @__PURE__ */ React.createElement("p", { className: "fd-bad" }, "The operations share must be between 0 and 10%."), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !ok || busy, onClick: async () => {
+      setBusy(true);
+      const targets = {};
+      Object.entries(t).forEach(([k, v]) => {
+        if (parseFloat(v) > 0) targets[k] = parseFloat(v);
+      });
+      try {
+        await onSave({ opsShare: opsN, targets });
+      } catch (e) {
+        setBusy(false);
+      }
+    } }, busy ? "Saving…" : "Save"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
+  }
   function TreasuryOverview({ store, go }) {
     const F = useFlows(store);
     const pub = store.getPublicMetrics ? store.getPublicMetrics() : null;
@@ -13560,10 +13998,11 @@ With gratitude,`, sign: true });
         { id: "in", label: "Money in", icon: ICON.inflow, count: F.pendingIn, hot: F.pendingIn > 0 },
         { id: "out", label: "Money out", icon: ICON.outflow, count: F.due, hot: F.due > 0 },
         { id: "ledger", label: "Ledger", icon: ICON.ledger },
+        { id: "assets", label: "Assets", icon: ICON.assets },
         { id: "channels", label: "Payment channels", icon: ICON.pay }
       ];
       const t2 = nav.some((n) => n.id === tab) ? tab : "overview";
-      view = t2 === "overview" ? /* @__PURE__ */ React.createElement(TreasuryOverview, { store, go: setTab }) : t2 === "in" ? /* @__PURE__ */ React.createElement(DonationsView, { store, donations: store.listDonations(), title: "Money in" }) : t2 === "out" ? /* @__PURE__ */ React.createElement(MoneyOutView, { store }) : t2 === "ledger" ? /* @__PURE__ */ React.createElement(LedgerView, { store }) : /* @__PURE__ */ React.createElement(ChannelsView, { store });
+      view = t2 === "overview" ? /* @__PURE__ */ React.createElement(TreasuryOverview, { store, go: setTab }) : t2 === "in" ? /* @__PURE__ */ React.createElement(DonationsView, { store, donations: store.listDonations(), title: "Money in" }) : t2 === "out" ? /* @__PURE__ */ React.createElement(MoneyOutView, { store }) : t2 === "ledger" ? /* @__PURE__ */ React.createElement(LedgerView, { store }) : t2 === "assets" ? /* @__PURE__ */ React.createElement(AssetsView, { store }) : /* @__PURE__ */ React.createElement(ChannelsView, { store });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, view);
     }
     if (pillar === "impact") {

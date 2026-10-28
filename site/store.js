@@ -1193,6 +1193,31 @@ window.BrialClipboard = { copy: copyToClipboard };
     removeMailContact(audience, email) { return Store._mailRpc("be_mail_contact_remove", { p_audience: audience, p_email: email }); },
     sendAnnouncement(msg) { return Store._mailRpc("be_mail_send_announcement", { p_msg: msg }); },
     previewAnnouncement(msg) { return Store._mailFn({ action: "preview_announcement", message: msg }); },
+    // ----- Endowment assets (founder only; never part of the public snapshot) -----
+    async listAssets() {
+      const c = sbAuth();
+      if (!c || !_founderMode) throw new Error("forbidden");
+      const { data, error } = await c.from("endowment_assets").select("*").order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    async saveAsset(row) {
+      const c = sbAuth();
+      if (!c || !_founderMode) throw new Error("forbidden");
+      const { error } = await c.from("endowment_assets").upsert({ id: row.id, name: String(row.name || "").slice(0, 160), data: row.data || {} });
+      if (error) throw error;
+      return true;
+    },
+    async _pricesFn(body) {
+      const c = sbAuth();
+      if (!c || !_founderMode) throw new Error("forbidden");
+      const { data, error } = await c.functions.invoke("be-prices", { body });
+      if (error) throw error;
+      if (data && data.error) throw new Error(data.error);
+      return data;
+    },
+    async assetSearch(q) { const r = await Store._pricesFn({ action: "search", q }); return (r && r.results) || []; },
+    assetQuotes(items, fx) { return Store._pricesFn({ action: "quote", items: items || [], fx: fx || [] }); },
     // A sent email as it went out (or rebuilt for emails older than 19 Oct 2026).
     mailView(id) { return Store._mailFn({ action: "mail_view", id }); },
     // A PDF that was attached to a sent email, rebuilt on request (PDFs are never stored).

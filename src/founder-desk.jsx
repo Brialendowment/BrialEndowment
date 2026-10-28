@@ -192,6 +192,43 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-scrim{position:fixed;inset:0;z-index:300;background:rgba(5,11,22,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;animation:fdFade .18s ease-out}
 .fd-modal{width:100%;max-width:560px;max-height:calc(100vh - 36px);overflow:auto;background:#10213D;border:1px solid rgba(201,169,97,.3);border-radius:16px;padding:24px 24px 22px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9);animation:fdRise .25s cubic-bezier(.22,1,.36,1) both}
 .fd-modal.wide{max-width:760px}
+/* treasury assets */
+.fd-alogo{display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;overflow:hidden;background:#fff;border:1px solid var(--line2)}
+.fd-alogo img{width:100%;height:100%;object-fit:contain;padding:12%;box-sizing:border-box}
+.fd-alogo b{display:flex;width:100%;height:100%;align-items:center;justify-content:center;color:var(--gilt2);font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.02em}
+.fd-hold{cursor:pointer;transition:background .15s}
+.fd-hold:hover,.fd-hold:focus-visible{background:rgba(239,233,220,.035);outline:none}
+.fd-hold:focus-visible{box-shadow:inset 0 0 0 2px rgba(201,169,97,.5)}
+.fd-hold-a{display:flex;align-items:center;gap:12px}
+.fd-hold-a>span{min-width:0}
+.fd-hold-a small .fd-tag{margin-right:4px;vertical-align:1px}
+.fd-up{color:var(--sage)!important}.fd-down{color:var(--rose)!important}
+.fd-alloc{margin-top:12px}
+.fd-alloc-h{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin-bottom:6px}
+.fd-alloc-h span{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.fd-alloc-h i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.fd-alloc-h b{font-weight:600}.fd-alloc-h small{color:var(--faint);font-weight:400}
+.fd-alloc-bar{position:relative;height:8px;border-radius:99px;background:rgba(239,233,220,.07)}
+.fd-alloc-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.fd-alloc-bar em{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--text);border-radius:2px}
+.fd-ahits{margin-top:10px;max-height:min(52vh,420px);overflow:auto;border:1px solid var(--line);border-radius:12px;min-height:56px}
+.fd-ahits:empty{display:none}
+.fd-ahit{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);color:var(--text);padding:10px 14px;cursor:pointer;font:inherit}
+.fd-ahit:first-child{border-top:0}
+.fd-ahit:hover,.fd-ahit:focus-visible{background:rgba(201,169,97,.08);outline:none}
+.fd-ahit>span:nth-child(2){flex:1;min-width:0}
+.fd-ahit b{display:block;font-weight:600}.fd-ahit small{display:block;font-size:12px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-ahit-r{text-align:right;flex-shrink:0;max-width:40%}
+.fd-adetail-h{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.fd-adetail-h>div>b{display:block;font-size:17px;font-weight:600}.fd-adetail-h>div>small{display:block;color:var(--faint);font-size:12.5px}
+.fd-modal .fd-stat b{font-size:clamp(20px,2.4vw,26px);overflow-wrap:anywhere}
+.fd-tgrid.fd-assets-grid{align-items:start}
+.fd-adl{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-radius:12px}
+.fd-adl span{display:block;font-size:11.5px;color:var(--faint)}.fd-adl b{display:block;font-weight:600;font-size:13.5px;overflow-wrap:anywhere}
+.fd-txsum{display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:4px}
+.fd-txsum span{font-size:12px;color:var(--faint)}.fd-txsum b{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--gilt2);font-variant-numeric:lining-nums tabular-nums}.fd-txsum small{font-size:12px;color:var(--faint)}
+.fd-linkbtn{background:none;border:0;padding:0;color:var(--gilt2);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+@media (max-width:900px){.fd-hold-a{grid-column:1/-1}.fd-adl{grid-template-columns:1fr}.fd-ahit-r{max-width:34%}}
 .fd-modal.xl{max-width:1080px}
 .fd-aud{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}
 .fd-aud-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
@@ -480,6 +517,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     scholarships: I(<><path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c3 2 9 2 12 0v-5" /></>),
   };
   ICON.transport = I(<><path d="M3 15v-3l2.5-4.5A2 2 0 0 1 7.3 6.5h9.4a2 2 0 0 1 1.8 1L21 12v3z" /><path d="M5 12h14" /><circle cx="7.5" cy="16.5" r="2" /><circle cx="16.5" cy="16.5" r="2" /></>);
+  ICON.assets = I(<><path d="M4 19V5M4 19h16" /><path d="M7.5 15l3.5-4 3 2.5L19 8" /><path d="M15.5 8H19v3.5" /></>);
   // Foundation office consoles reuse the matching section icon in their sidebar header.
   ICON.email = ICON.contact; ICON.security = ICON.shield; ICON.impact = ICON.report;
 
@@ -2316,6 +2354,510 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       <div className="fd-td fd-amt" data-l="Amount"><span className={"num " + (x.dir === "in" ? "in" : "out")}>{showDir ? (x.dir === "in" ? "+" : "−") : ""}{money(x.amount)}</span></div>
     </div>
   );
+
+  // ============================================================
+  // ASSETS: the endowment's portfolio (founder only, never shown on the public site)
+  // Average-cost accounting, as Indonesian brokers report it. Principal is the cost of what was
+  // given or bought; returns are price growth, realised gains and dividends.
+  // ============================================================
+  const ACLASS = {
+    idx: { label: "Indonesian stock", short: "IDX", color: "#C9A961" },
+    us: { label: "US stock", short: "US", color: "#8DB8E8" },
+    intl: { label: "Other stock", short: "Intl", color: "#A99BE0" },
+    etf: { label: "ETF or fund", short: "ETF", color: "#8FD4A8" },
+    crypto: { label: "Crypto", short: "Crypto", color: "#E7B76A" },
+    cash: { label: "Cash or deposit", short: "Cash", color: "#C8CFDB" },
+    other: { label: "Other", short: "Other", color: "#E58686" },
+  };
+  const ASSET_CURS = ["IDR", "USD", "EUR", "SGD", "GBP", "JPY", "HKD", "MYR", "TRY", "AUD", "CAD"];
+  const TX = {
+    gift: { label: "Gift in kind", tone: "gold", qty: true, price: true, hint: "An asset given to the endowment. Enter what it cost the giver, as the broker shows it." },
+    buy: { label: "Purchase", tone: "sky", qty: true, price: true, hint: "Bought by the endowment." },
+    sell: { label: "Sale", tone: "warn", qty: true, price: true, hint: "Sold. The gain or loss against the average cost is realised. Record where the proceeds went, for example in a cash or deposit holding, so the principal stays whole." },
+    dividend: { label: "Dividend or interest", tone: "ok", qty: false, price: false, hint: "Cash paid out by the asset, after tax." },
+    fee: { label: "Fee or tax", tone: "bad", qty: false, price: false, hint: "A charge from the broker, custodian or tax office." },
+    split: { label: "Split or bonus shares", tone: "", qty: false, price: false, hint: "Shares multiplied, for example 2 for a 2-for-1 split. Cost stays the same." },
+  };
+  const isLotted = h => h && h.cls === "idx";
+  const LOT = 100;
+  const assetLogo = (cls, symbol, priceSymbol) => cls === "crypto" || cls === "cash" || cls === "other" || !symbol ? "" : "https://financialmodelingprep.com/image-stock/" + encodeURIComponent(priceSymbol || symbol) + ".png";
+  const nfmt = (v, d = 2) => (Number(v) || 0).toLocaleString("en-US", { maximumFractionDigits: d });
+  const qfmt = (h, q) => isLotted(h) ? `${nfmt(q / LOT, 2)} ${plural(q / LOT, "lot", "lots")} · ${nfmt(q, 0)} shares` : `${nfmt(q, h.cls === "crypto" ? 8 : 4)} ${h.cls === "crypto" ? h.symbol : "units"}`;
+  const priceFmt = (cur, v) => cur === "IDR" ? "Rp " + (Number(v) || 0).toLocaleString("id-ID", Math.abs(Math.round(v * 100) - Math.round(v) * 100) > 0 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumFractionDigits: 0 }) : (aCurSym(cur) || cur + " ") + (Number(v) || 0).toLocaleString("en-US", v < 1 ? { maximumFractionDigits: 6 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const aCurSym = c => ({ USD: "$", IDR: "Rp ", EUR: "€", SGD: "S$", GBP: "£", JPY: "¥", HKD: "HK$", MYR: "RM ", TRY: "₺", AUD: "A$", CAD: "C$", BTC: "₿" })[c] || "";
+  const pct = v => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + Math.abs(Number(v) || 0).toFixed(2) + "%";
+  const sgn = (fmt, v) => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt(Math.abs(v));
+
+  // Running position from the transaction history (average cost method)
+  function position(h) {
+    const tx = (h.txns || []).map((t, i) => ({ t, i })).sort((a, b) => String(a.t.date).localeCompare(String(b.t.date)) || a.i - b.i).map(x => x.t);
+    let qty = 0, cost = 0, realized = 0, income = 0, fees = 0, given = 0, bought = 0, proceeds = 0;
+    for (const t of tx) {
+      const q = Number(t.qty) || 0, amt = Number(t.amount) || 0, fee = Number(t.fee) || 0;
+      if (t.type === "gift" || t.type === "buy") { qty += q; cost += amt + fee; fees += fee; if (t.type === "gift") given += amt + fee; else bought += amt + fee; }
+      else if (t.type === "sell" && qty > 0) { const sq = Math.min(q, qty), avg = cost / qty, out = avg * sq; realized += amt - fee - out; proceeds += amt - fee; cost -= out; qty -= sq; fees += fee; if (qty < 1e-12) { qty = 0; cost = 0; } }
+      else if (t.type === "dividend") income += amt;
+      else if (t.type === "fee") { fees += amt; realized -= amt; }
+      else if (t.type === "split") { const r = Number(t.ratio) || 1; if (r > 0) qty *= r; }
+    }
+    return { qty, cost, avg: qty > 0 ? cost / qty : 0, realized, income, fees, given, bought, proceeds, count: tx.length };
+  }
+  const newId = p => p + "-" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
+
+  function AssetLogo({ h, size = 38 }) {
+    const [bad, setBad] = useState(false);
+    const src = h.logo || assetLogo(h.cls, h.symbol, h.priceSymbol);
+    useEffect(() => { setBad(false); }, [src]);
+    const letters = String(h.symbol || h.name || "?").replace(/[^A-Za-z0-9]/g, "").slice(0, 4).toUpperCase() || "?";
+    let hue = 0; for (const c of letters) hue = (hue * 31 + c.charCodeAt(0)) % 360;
+    return (
+      <span className="fd-alogo" style={{ width: size, height: size, borderRadius: Math.round(size * 0.28) }}>
+        {src && !bad ? <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setBad(true)} />
+          : <b style={{ background: `hsl(${hue} 32% 26%)`, fontSize: size * (letters.length > 3 ? 0.26 : 0.32) }}>{letters}</b>}
+      </span>
+    );
+  }
+
+  function AssetsView({ store }) {
+    const [rows, setRows] = useState(null);
+    const [err, setErr] = useState("");
+    const [live, setLive] = useState(null); // { quotes, fx, at }
+    const [busy, setBusy] = useState("");
+    const [view, setView] = useState("USD");
+    const [adding, setAdding] = useState(false);
+    const [openId, setOpenId] = useState(null);
+    const [policyOpen, setPolicyOpen] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
+    const [m, flash] = useFlash();
+    const load = useCallback(async () => {
+      try { setRows(await store.listAssets()); setErr(""); }
+      catch (e) { setErr("Could not load the assets. Check your connection and refresh."); setRows(r => r || []); }
+    }, [store]);
+    useEffect(() => { load(); }, [load]);
+    const holdings = (rows || []).filter(r => r.id.indexOf("A-") === 0).map(r => ({ ...r.data, id: r.id, name: (r.data && r.data.name) || r.name || r.id, updatedAt: r.updated_at }));
+    const policyRow = (rows || []).find(r => r.id === "PORTFOLIO-POLICY");
+    const navRow = (rows || []).find(r => r.id === "PORTFOLIO-NAV");
+    const policy = { opsShare: 10, targets: {}, ...((policyRow && policyRow.data) || {}) };
+    const nav = { points: [], last: {}, fx: {}, ...((navRow && navRow.data) || {}) };
+    const active = holdings.filter(h => !h.archived);
+    const save = async (id, name, data) => { await store.saveAsset({ id, name, data }); await load(); };
+
+    // prices: live when refreshed, otherwise the last saved prices
+    const rowsRef = useRef(rows); rowsRef.current = rows;
+    const refresh = useCallback(async (quiet) => {
+      const rows = rowsRef.current;
+      const navRow = (rows || []).find(r => r.id === "PORTFOLIO-NAV");
+      const nav = { points: [], last: {}, fx: {}, ...((navRow && navRow.data) || {}) };
+      const list = (rows || []).filter(r => r.id.indexOf("A-") === 0 && !(r.data && r.data.archived)).map(r => ({ ...r.data, id: r.id }));
+      const items = list.filter(h => h.source && h.priceSymbol).map(h => ({ key: h.id, source: h.source, symbol: h.priceSymbol }));
+      const curs = [...new Set(["IDR", ...list.map(h => h.currency).filter(Boolean)])];
+      if (!items.length && !quiet) return;
+      setBusy("prices");
+      try {
+        const r = await store.assetQuotes(items, curs);
+        setLive(r);
+        // keep the latest prices with the portfolio, and one value point a day (at most every 6 hours)
+        const lastAt = navRow && navRow.updated_at ? new Date(navRow.updated_at).getTime() : 0;
+        if (Date.now() - lastAt > 6 * 3600e3 || !(navRow && navRow.data && navRow.data.points && navRow.data.points.length)) {
+          const lastP = {}; Object.entries(r.quotes || {}).forEach(([k, q]) => { if (q && q.price) lastP[k] = { price: q.price, prev: q.prevClose, at: q.at, source: q.source }; });
+          const fx = { ...nav.fx, ...(r.fx || {}) };
+          const tot = totals(list, { ...nav.last, ...lastP }, fx);
+          const day = new Date().toISOString().slice(0, 10);
+          const points = (nav.points || []).filter(p => p.d !== day).concat([{ d: day, mv: Math.round(tot.mv * 100) / 100, cost: Math.round(tot.cost * 100) / 100 }]).slice(-1500);
+          await store.saveAsset({ id: "PORTFOLIO-NAV", name: "__nav__", data: { points, last: { ...nav.last, ...lastP }, fx, at: r.at } });
+          load();
+        }
+        if (!quiet) flash("Prices updated.");
+      } catch (e) { if (!quiet) flash("Could not reach the price services. Showing the last saved prices.", "err"); }
+      setBusy("");
+    }, [store]);
+    const autoRef = useRef(false);
+    useEffect(() => { if (rows && !autoRef.current) { autoRef.current = true; refresh(true); } }, [rows]);
+
+    const lastPrices = { ...nav.last };
+    if (live && live.quotes) Object.entries(live.quotes).forEach(([k, q]) => { if (q && q.price) lastPrices[k] = { price: q.price, prev: q.prevClose, at: q.at, source: q.source }; });
+    const fx = { USD: 1, USDT: 1, ...Store_FX(store), ...nav.fx, ...((live && live.fx) || {}) };
+    const T = totals(active, lastPrices, fx);
+    const toView = usd => view === "IDR" ? usd * (fx.IDR || 0) : usd;
+    const vf = usd => view === "IDR" ? "Rp " + Math.round(toView(usd)).toLocaleString("id-ID") : "$" + (Number(usd) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const priceAt = (live && live.at) || nav.at;
+    const realizedRet = T.realized + T.income;
+    const allowance = Math.max(0, realizedRet) * (Number(policy.opsShare) || 0) / 100;
+
+    if (err && !rows) return <><Head title="Assets" /><div className="fd-msg err">{err}</div></>;
+    if (!rows) return <><Head title="Assets" /><p className="fd-sub">Loading…</p></>;
+    const byClass = {};
+    T.list.forEach(x => { byClass[x.h.cls] = (byClass[x.h.cls] || 0) + x.mvUsd; });
+    const classes = Object.keys(ACLASS).filter(k => byClass[k] > 0 || Number(policy.targets[k]) > 0);
+    const byCur = {};
+    T.list.forEach(x => { byCur[x.h.currency] = (byCur[x.h.currency] || 0) + x.mvUsd; });
+    const G = "minmax(0,1.9fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr) minmax(0,.55fr)";
+    const archived = holdings.filter(h => h.archived);
+    const open = holdings.find(h => h.id === openId);
+    return (
+      <>
+        <Head title="Assets" lede="What the endowment owns. Only you can see this page; the public site never shows the holdings.">
+          <Seg items={[["USD", "USD"], ["IDR", "IDR"]]} value={view} onChange={setView} />
+          <button className="fd-btn ghost sm" disabled={!!busy || !active.length} onClick={() => refresh(false)}>{busy === "prices" ? "Updating…" : "Refresh prices"}</button>
+          <button className="fd-btn primary" onClick={() => setAdding(true)}>Add asset</button>
+        </Head>
+        {m && <div style={{ marginBottom: 12 }}><Flash m={m} /></div>}
+        <Stats items={[
+          { label: "Market value", value: vf(T.mv), sub: T.missing ? `${T.missing} ${plural(T.missing, "asset", "assets")} at cost, no price yet` : `${active.length} ${plural(active.length, "holding", "holdings")}`, tone: "ok" },
+          { label: "Principal (cost basis)", value: vf(T.cost), sub: `Gifts in kind ${vf(T.given)} · purchases ${vf(T.bought)}` },
+          { label: "Unrealised return", value: sgn(vf, T.unreal), sub: T.cost > 0 ? pct(T.unreal / T.cost * 100) + " on cost" : "No holdings yet", tone: T.unreal >= 0 ? "ok" : "bad" },
+          { label: "Realised return", value: sgn(vf, realizedRet), sub: `Dividends ${vf(T.income)} · gains ${sgn(vf, T.realized)}`, tone: realizedRet > 0 ? "ok" : "" },
+        ]} />
+        <p className="fd-sub" style={{ margin: "8px 0 18px" }}>
+          {priceAt ? `Prices from Yahoo Finance and CoinGecko, ${fdatetime(priceAt)}. Indonesian prices may be delayed up to 15 minutes.` : "No prices yet. Values show at cost until prices load."}
+          {fx.IDR ? ` 1 USD = Rp ${Math.round(fx.IDR).toLocaleString("id-ID")}.` : ""}
+        </p>
+
+        {active.length === 0 ? (
+          <Empty title="No assets recorded yet">Add the first holding: a stock, an ETF, a coin, a deposit or anything else the endowment owns.</Empty>
+        ) : (
+          <div className="fd-table">
+            <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Asset</div><div>Quantity</div><div>Average cost</div><div>Last price</div><div>Market value</div><div>Unrealised</div><div style={{ textAlign: "right" }}>Weight</div></div>
+            {T.list.sort((a, b) => b.mvUsd - a.mvUsd).map(x => {
+              const h = x.h, q = lastPrices[h.id], day = q && q.prev ? (q.price / q.prev - 1) * 100 : null;
+              return (
+                <div className="fd-tr fd-hold" key={h.id} style={{ gridTemplateColumns: G }} role="button" tabIndex={0} onClick={() => setOpenId(h.id)} onKeyDown={e => { if (e.key === "Enter") setOpenId(h.id); }}>
+                  <div className="fd-td full fd-hold-a"><AssetLogo h={h} /><span><b>{h.symbol || h.name}</b>{h.symbol && <small>{h.name}</small>}<small><Tag>{ACLASS[h.cls] ? ACLASS[h.cls].short : h.cls}</Tag> {h.currency}</small></span></div>
+                  <div className="fd-td" data-l="Quantity">{isLotted(h) ? <><b>{nfmt(x.p.qty / LOT, 2)} {plural(x.p.qty / LOT, "lot", "lots")}</b><small>{nfmt(x.p.qty, 0)} shares</small></> : <b>{nfmt(x.p.qty, h.cls === "crypto" ? 8 : 4)}</b>}</div>
+                  <div className="fd-td" data-l="Average cost"><b>{priceFmt(h.currency, x.p.avg)}</b><small>{fmtNative(h.currency, x.p.cost)}</small></div>
+                  <div className="fd-td" data-l="Last price">{x.price != null ? <><b>{priceFmt(h.currency, x.price)}</b>{day != null && <small className={day >= 0 ? "fd-up" : "fd-down"}>{pct(day)} today</small>}</> : <small>No price</small>}</div>
+                  <div className="fd-td" data-l="Market value"><b>{fmtNative(h.currency, x.mvNative)}</b>{h.currency !== view && <small>{vf(x.mvUsd)}</small>}</div>
+                  <div className="fd-td" data-l="Unrealised">{x.price != null ? <><b className={x.unrealNative >= 0 ? "fd-up" : "fd-down"}>{sgn(v => fmtNative(h.currency, v), x.unrealNative)}</b><small className={x.unrealNative >= 0 ? "fd-up" : "fd-down"}>{x.p.cost > 0 ? pct(x.unrealNative / x.p.cost * 100) : ""}</small></> : <small>·</small>}</div>
+                  <div className="fd-td fd-amt" data-l="Weight"><b>{T.mv > 0 ? (x.mvUsd / T.mv * 100).toFixed(1) + "%" : "·"}</b></div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {archived.length > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <button className="fd-btn quiet sm" onClick={() => setShowArchived(v => !v)}>{showArchived ? "Hide" : "Show"} {archived.length} archived {plural(archived.length, "holding", "holdings")}</button>
+            {showArchived && <div className="fd-table" style={{ marginTop: 8 }}>{archived.map(h => (
+              <div className="fd-tr fd-hold dim" key={h.id} style={{ gridTemplateColumns: "minmax(0,1fr) auto" }} role="button" tabIndex={0} onClick={() => setOpenId(h.id)}>
+                <div className="fd-td fd-hold-a"><AssetLogo h={h} size={30} /><span><b>{h.symbol || h.name}</b><small>{h.name} · archived {h.archivedAt ? fdate(h.archivedAt) : ""}</small></span></div>
+                <div className="fd-td"><small>Realised {sgn(v => fmtNative(h.currency, v), position(h).realized + position(h).income)}</small></div>
+              </div>))}</div>}
+          </div>
+        )}
+
+        {active.length > 0 && (
+          <div className="fd-tgrid fd-assets-grid" style={{ marginTop: 18 }}>
+            <div className="fd-card">
+              <div className="fd-card-head"><div><h2 className="fd-h2" style={{ marginTop: 0 }}>Allocation</h2><p className="fd-sub">By asset class{Object.keys(policy.targets || {}).some(k => Number(policy.targets[k]) > 0) ? ", against your targets" : ""}.</p></div><button className="fd-btn quiet sm" onClick={() => setPolicyOpen(true)}>Policy and targets</button></div>
+              {classes.map(k => {
+                const w = T.mv > 0 ? (byClass[k] || 0) / T.mv * 100 : 0, tg = Number(policy.targets[k]) || 0;
+                return (
+                  <div className="fd-alloc" key={k}>
+                    <div className="fd-alloc-h"><span><i style={{ background: ACLASS[k].color }} />{ACLASS[k].label}</span><b>{w.toFixed(1)}%{tg > 0 && <small> · target {tg}%{Math.abs(w - tg) >= 5 ? (w > tg ? " · above" : " · below") : ""}</small>}</b></div>
+                    <div className="fd-alloc-bar"><i style={{ width: Math.min(100, w) + "%", background: ACLASS[k].color }} />{tg > 0 && <em style={{ left: Math.min(100, tg) + "%" }} title={"Target " + tg + "%"} />}</div>
+                  </div>
+                );
+              })}
+              <div className="fd-sub" style={{ marginTop: 14 }}>By currency: {Object.entries(byCur).sort((a, b) => b[1] - a[1]).map(([c, v]) => `${c} ${T.mv > 0 ? (v / T.mv * 100).toFixed(1) : 0}%`).join(" · ")}</div>
+              {(nav.points || []).length >= 2 && <NavChart points={nav.points} fmt={vf} />}
+            </div>
+            <div className="fd-card">
+              <h2 className="fd-h2" style={{ marginTop: 0 }}>Spending policy</h2>
+              <p className="fd-sub" style={{ lineHeight: 1.6 }}>Internal. The principal, every donation and every gifted asset at cost, is never spent. Up to {policy.opsShare}% of realised returns (dividends, interest and realised gains) may fund operations such as hosting, domains, software and management. Unrealised growth is not spent.</p>
+              <div className="fd-krow" style={{ borderTop: 0 }}><div><b>Realised returns to date</b><small>Dividends {vf(T.income)} and gains {sgn(vf, T.realized)}</small></div><b>{sgn(vf, realizedRet)}</b></div>
+              <div className="fd-krow"><div><b>Available for operations</b><small>{policy.opsShare}% of positive realised returns</small></div><b className="fd-up">{vf(allowance)}</b></div>
+              <div className="fd-krow"><div><b>Unrealised growth</b><small>Counts only once sold or paid out</small></div><b>{sgn(vf, T.unreal)}</b></div>
+              <p className="fd-sub" style={{ marginTop: 12 }}>This policy stays inside the Founder Portal. The public site says only that 100% of every donation goes to the endowment's charitable work and its permanent principal.</p>
+            </div>
+          </div>
+        )}
+
+        {adding && <AddAssetDialog store={store} onClose={() => setAdding(false)} onSaved={async (id, name, data) => { await save(id, name, data); setAdding(false); flash("Asset added."); setTimeout(() => refresh(true), 200); }} />}
+        {open && <AssetDialog h={open} price={lastPrices[open.id]} fx={fx} onClose={() => setOpenId(null)} onSave={async data => { await save(open.id, data.name || open.name, data); flash("Saved."); }} />}
+        {policyOpen && <PolicyDialog policy={policy} onClose={() => setPolicyOpen(false)} onSave={async p => { await save("PORTFOLIO-POLICY", "__policy__", p); setPolicyOpen(false); flash("Policy saved."); }} />}
+      </>
+    );
+  }
+  const Store_FX = store => { const f = store.FX_FALLBACK || {}, o = {}; ["IDR", "EUR", "SGD", "TRY"].forEach(k => { if (Number(f[k]) > 0) o[k] = Number(f[k]); }); return o; };
+  const fmtNative = (cur, v) => cur === "IDR" ? "Rp " + Math.round(Number(v) || 0).toLocaleString("id-ID") : (aCurSym(cur) || cur + " ") + (Number(v) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Every holding valued in US dollars (fx = units of a currency per one dollar)
+  function totals(list, prices, fx) {
+    const usd = (cur, v) => { if (!cur || cur === "USD" || cur === "USDT") return v; const r = Number(fx[cur]); return r > 0 ? v / r : 0; };
+    const out = { list: [], mv: 0, cost: 0, unreal: 0, realized: 0, income: 0, given: 0, bought: 0, missing: 0 };
+    for (const h of list) {
+      const p = position(h), q = prices[h.id], price = h.cls === "cash" ? 1 : q && q.price ? q.price : (h.manualPrice ? Number(h.manualPrice) : null);
+      const mvNative = price != null ? p.qty * price : p.cost;
+      if (price == null && p.qty > 0) out.missing++;
+      const x = { h, p, price, mvNative, unrealNative: price != null ? mvNative - p.cost : 0, mvUsd: usd(h.currency, mvNative) };
+      out.list.push(x);
+      out.mv += x.mvUsd; out.cost += usd(h.currency, p.cost); out.unreal += usd(h.currency, x.unrealNative);
+      out.realized += usd(h.currency, p.realized); out.income += usd(h.currency, p.income);
+      out.given += usd(h.currency, p.given); out.bought += usd(h.currency, p.bought);
+    }
+    return out;
+  }
+  function NavChart({ points, fmt }) {
+    const pts = points.slice(-365), W = 600, H = 120;
+    const vals = pts.map(p => p.mv), lo = Math.min(...vals, ...pts.map(p => p.cost)), hi = Math.max(...vals, ...pts.map(p => p.cost));
+    const x = i => (pts.length < 2 ? 0 : i / (pts.length - 1) * W), y = v => H - 8 - (hi === lo ? 0.5 : (v - lo) / (hi - lo)) * (H - 16);
+    const line = k => pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p[k]).toFixed(1)).join(" ");
+    return (
+      <div style={{ marginTop: 16 }}>
+        <div className="fd-sub" style={{ marginBottom: 6 }}>Value over time · <span style={{ color: "var(--sage)" }}>market value</span> · <span style={{ color: "var(--faint)" }}>cost</span></div>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={`Portfolio value from ${fdate(pts[0].d)} to ${fdate(pts[pts.length - 1].d)}: ${fmt(pts[pts.length - 1].mv)}`} preserveAspectRatio="none">
+          <path d={line("cost")} fill="none" stroke="rgba(239,233,220,.3)" strokeWidth="1.5" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+          <path d={line("mv")} fill="none" stroke="#8FD4A8" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        </svg>
+        <div className="fd-sub" style={{ display: "flex", justifyContent: "space-between", margin: 0 }}><span>{fdate(pts[0].d)}</span><span>{fdate(pts[pts.length - 1].d)}</span></div>
+      </div>
+    );
+  }
+
+  // One transaction: what it is, when, how much
+  function TxForm({ h, held, initial, onSubmit, onCancel, submitLabel = "Save" }) {
+    const lotted = isLotted(h);
+    const [t, setT] = useState(() => ({ type: "gift", date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10), qtyIn: "", priceMode: "avg", priceIn: "", totalIn: "", fee: "", amount: "", ratio: "", note: "", ...(initial || {}) }));
+    const set = (k, v) => setT(p => ({ ...p, [k]: v }));
+    const D = TX[t.type];
+    const num = s => { const v = parseFloat(String(s).replace(/,/g, "").replace(/\s/g, "")); return isFinite(v) ? v : NaN; };
+    const shares = (num(t.qtyIn) || 0) * (lotted ? LOT : 1);
+    const total = D.price ? (t.priceMode === "avg" ? shares * (num(t.priceIn) || 0) : num(t.totalIn) || 0) : 0;
+    const problems = [];
+    if (!t.date) problems.push("Choose a date.");
+    if (D.qty && !(shares > 0)) problems.push(lotted ? "Enter the number of lots." : "Enter the quantity.");
+    if (t.type === "sell" && shares > held + 1e-9) problems.push(`You hold ${qfmt(h, held)}. You cannot sell more than that.`);
+    if (D.price && !(total > 0)) problems.push(t.priceMode === "avg" ? "Enter the price." : "Enter the total.");
+    if ((t.type === "dividend" || t.type === "fee") && !(num(t.amount) > 0)) problems.push("Enter the amount.");
+    if (t.type === "split" && !(num(t.ratio) > 0)) problems.push("Enter the ratio, for example 2.");
+    if (t.fee && !(num(t.fee) >= 0)) problems.push("The fee must be a number.");
+    const submit = () => {
+      if (problems.length) return;
+      const out = { id: newId("T"), type: t.type, date: t.date, note: t.note.trim().slice(0, 300) || undefined };
+      if (D.qty) { out.qty = shares; out.amount = Math.round(total * 1e6) / 1e6; out.fee = num(t.fee) > 0 ? num(t.fee) : 0; }
+      if (t.type === "dividend" || t.type === "fee") out.amount = num(t.amount);
+      if (t.type === "split") out.ratio = num(t.ratio);
+      onSubmit(out);
+    };
+    return (
+      <div className="fd-form">
+        <div className="fd-grid2">
+          <Field label="Type"><select className="fd-input" value={t.type} onChange={e => set("type", e.target.value)}>{Object.entries(TX).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></Field>
+          <Field label="Date"><input className="fd-input" type="date" value={t.date} max={new Date().toISOString().slice(0, 10)} onChange={e => set("date", e.target.value)} /></Field>
+        </div>
+        <p className="fd-sub" style={{ margin: "-4px 0 4px" }}>{D.hint}</p>
+        {D.qty && (
+          <div className="fd-grid2">
+            <Field label={lotted ? "Lots" : "Quantity"} hint={lotted ? `1 lot = ${LOT} shares${shares > 0 ? ` · ${nfmt(shares, 0)} shares` : ""}` : h.cls === "crypto" ? "Up to 8 decimals" : ""}>
+              <input className="fd-input" inputMode="decimal" value={t.qtyIn} onChange={e => set("qtyIn", e.target.value)} placeholder={lotted ? "10" : "1"} />
+            </Field>
+            <Field label={t.priceMode === "avg" ? `Price per ${lotted ? "share" : h.cls === "crypto" ? "coin" : "unit"} (${h.currency})` : `Total (${h.currency})`}
+              hint={<button type="button" className="fd-linkbtn" onClick={() => set("priceMode", t.priceMode === "avg" ? "total" : "avg")}>{t.priceMode === "avg" ? "Enter the total instead" : "Enter the price instead"}</button>}>
+              {t.priceMode === "avg" ? <input className="fd-input" inputMode="decimal" value={t.priceIn} onChange={e => set("priceIn", e.target.value)} placeholder={lotted ? "3500" : "100"} />
+                : <input className="fd-input" inputMode="decimal" value={t.totalIn} onChange={e => set("totalIn", e.target.value)} placeholder={lotted ? "3500000" : "1000"} />}
+            </Field>
+          </div>
+        )}
+        {D.qty && (
+          <div className="fd-grid2">
+            <Field label={`Fees (${h.currency}, optional)`}><input className="fd-input" inputMode="decimal" value={t.fee} onChange={e => set("fee", e.target.value)} placeholder="0" /></Field>
+            <div className="fd-txsum">{total > 0 && shares > 0 ? <><span>{t.type === "sell" ? "Proceeds" : "Cost"}</span><b>{fmtNative(h.currency, total + (t.type === "sell" ? -(num(t.fee) || 0) : (num(t.fee) || 0)))}</b><small>{priceFmt(h.currency, total / shares)} per {lotted ? "share" : "unit"}</small></> : null}</div>
+          </div>
+        )}
+        {(t.type === "dividend" || t.type === "fee") && <Field label={`Amount (${h.currency})`}><input className="fd-input" inputMode="decimal" value={t.amount} onChange={e => set("amount", e.target.value)} placeholder="0" /></Field>}
+        {t.type === "split" && <Field label="Ratio" hint="New shares for each old share: 2 for a 2-for-1 split, 0.1 for a 1-for-10 reverse split."><input className="fd-input" inputMode="decimal" value={t.ratio} onChange={e => set("ratio", e.target.value)} placeholder="2" /></Field>}
+        <Field label="Note (optional)"><input className="fd-input" value={t.note} maxLength={300} onChange={e => set("note", e.target.value)} placeholder="Broker reference, reason or anything worth keeping" /></Field>
+        {problems.length > 0 && (t.qtyIn || t.priceIn || t.totalIn || t.amount || t.ratio) && <small className="fd-bad">{problems[0]}</small>}
+        <div className="fd-actions" style={{ marginTop: 6 }}>
+          <button className="fd-btn primary" disabled={problems.length > 0} onClick={submit}>{submitLabel}</button>
+          {onCancel && <button className="fd-btn ghost" onClick={onCancel}>Cancel</button>}
+        </div>
+      </div>
+    );
+  }
+
+  function AddAssetDialog({ store, onClose, onSaved }) {
+    const [step, setStep] = useState("find");
+    const [q, setQ] = useState("");
+    const [hits, setHits] = useState(null);
+    const [searching, setSearching] = useState(false);
+    const [h, setH] = useState({ cls: "idx", symbol: "", name: "", currency: "IDR", source: "", priceSymbol: "", logo: "", custodian: "", holder: "Founder, in trust for The Brial Endowment", note: "" });
+    const [err, setErr] = useState("");
+    const [busy, setBusy] = useState(false);
+    useEffect(() => {
+      const term = q.trim();
+      if (term.length < 2) { setHits(null); return; }
+      let on = true; setSearching(true);
+      const t = setTimeout(async () => {
+        try {
+          const r = await store.assetSearch(term);
+          const T = term.toUpperCase(), L = term.toLowerCase();
+          const rank = x => (x.symbol === T ? 0 : String(x.name).toLowerCase() === L ? 1 : String(x.name).toLowerCase().indexOf(L) === 0 ? 2 : 3);
+          if (on) setHits(r.map((x, i) => ({ x, i })).sort((a, b) => rank(a.x) - rank(b.x) || a.i - b.i).map(o => o.x));
+        } catch (e) { if (on) setHits([]); }
+        if (on) setSearching(false);
+      }, 350);
+      return () => { on = false; clearTimeout(t); };
+    }, [q]);
+    const pick = x => { setH(p => ({ ...p, cls: x.cls, symbol: x.symbol, name: x.name, currency: x.currency || (x.cls === "idx" ? "IDR" : "USD"), source: x.source, priceSymbol: x.priceSymbol, logo: x.logo || "", exchange: x.exchange || "" })); setStep("details"); };
+    const manual = () => { setH(p => ({ ...p, symbol: q.trim().toUpperCase().slice(0, 12), name: "", source: "", priceSymbol: "" })); setStep("details"); };
+    const set = (k, v) => setH(p => ({ ...p, [k]: v }));
+    const ready = h.name.trim() && h.currency && h.cls;
+    const finish = async tx => {
+      setBusy(true); setErr("");
+      const data = { ...h, symbol: h.symbol.trim().toUpperCase(), name: h.name.trim(), custodian: h.custodian.trim(), holder: h.holder.trim(), note: h.note.trim(), txns: [tx], createdAt: new Date().toISOString() };
+      if (data.cls === "idx" && data.symbol && !data.priceSymbol) { data.priceSymbol = data.symbol + ".JK"; data.source = "yahoo"; }
+      if ((data.cls === "us" || data.cls === "etf") && data.symbol && !data.priceSymbol) { data.priceSymbol = data.symbol; data.source = "yahoo"; }
+      try { await onSaved(newId("A"), data.symbol ? `${data.symbol} · ${data.name}` : data.name, data); }
+      catch (e) { setErr("Could not save. Check your connection and try again."); setBusy(false); }
+    };
+    return (
+      <Modal wide title="Add an asset" sub={step === "find" ? "Search a stock, an ETF or a coin, or add anything else by hand." : step === "details" ? "Check the details, then record how the endowment got it." : "How the endowment got it."} onClose={onClose}>
+        {step === "find" && (
+          <>
+            <Search value={q} onChange={setQ} placeholder="Ticker or name: TLKM, Microsoft, VTI, Ethereum…" />
+            <div className="fd-ahits" role="listbox" aria-label="Results">
+              {searching && <p className="fd-sub" style={{ padding: 12 }}>Searching…</p>}
+              {!searching && hits && hits.length === 0 && <p className="fd-sub" style={{ padding: 12 }}>Nothing found. Check the spelling, or add it by hand.</p>}
+              {!searching && (hits || []).map(x => (
+                <button key={x.source + x.priceSymbol} type="button" role="option" className="fd-ahit" onClick={() => pick(x)}>
+                  <AssetLogo h={x} size={34} />
+                  <span><b>{x.symbol}</b><small>{x.name}</small></span>
+                  <span className="fd-ahit-r"><Tag>{ACLASS[x.cls] ? ACLASS[x.cls].short : x.cls}</Tag><small>{[x.exchange, x.currency].filter(Boolean).join(" · ")}</small></span>
+                </button>
+              ))}
+            </div>
+            <div className="fd-actions" style={{ marginTop: 14 }}>
+              <button className="fd-btn ghost" onClick={manual}>Add by hand</button>
+              <small className="fd-sub" style={{ margin: 0 }}>For a deposit, property, gold or anything without a market price.</small>
+            </div>
+          </>
+        )}
+        {step === "details" && (
+          <div className="fd-form">
+            <div className="fd-adetail-h"><AssetLogo h={h} size={46} /><div><b>{h.symbol || "New asset"}</b><small>{h.name || "Name it below"}{h.exchange ? " · " + h.exchange : ""}</small></div></div>
+            <div className="fd-grid2">
+              <Field label="Asset class"><select className="fd-input" value={h.cls} onChange={e => set("cls", e.target.value)}>{Object.entries(ACLASS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select></Field>
+              <Field label="Currency" hint="The currency it is priced and bought in"><select className="fd-input" value={h.currency} onChange={e => set("currency", e.target.value)}>{ASSET_CURS.map(c => <option key={c} value={c}>{c}</option>)}</select></Field>
+              <Field label="Ticker or code (optional)"><input className="fd-input" value={h.symbol} maxLength={16} onChange={e => set("symbol", e.target.value.toUpperCase())} placeholder="TLKM" /></Field>
+              <Field label="Name"><input className="fd-input" value={h.name} maxLength={120} onChange={e => set("name", e.target.value)} placeholder="PT Telkom Indonesia (Persero) Tbk" /></Field>
+              <Field label="Broker or custodian" hint="Where it is held"><input className="fd-input" value={h.custodian} maxLength={120} onChange={e => set("custodian", e.target.value)} placeholder="Your broker or bank" /></Field>
+              <Field label="Registered holder" hint="Whose name the account is in"><input className="fd-input" value={h.holder} maxLength={120} onChange={e => set("holder", e.target.value)} /></Field>
+            </div>
+            <Field label="Logo address (optional)" hint="Filled in for you when found. Paste another image address to change it."><input className="fd-input" value={h.logo} onChange={e => set("logo", e.target.value.trim())} placeholder="https://…" spellCheck={false} /></Field>
+            {!h.source && h.cls !== "cash" && <p className="fd-sub" style={{ margin: 0 }}>{h.cls === "idx" || h.cls === "us" || h.cls === "etf" ? "Prices load automatically from the ticker." : "No automatic price for this asset: it is valued at cost until you set a price in its record."}</p>}
+            <div className="fd-actions" style={{ marginTop: 6 }}>
+              <button className="fd-btn primary" disabled={!ready} onClick={() => setStep("tx")}>Next</button>
+              <button className="fd-btn ghost" onClick={() => setStep("find")}>Back</button>
+            </div>
+          </div>
+        )}
+        {step === "tx" && (
+          <>
+            <div className="fd-adetail-h" style={{ marginBottom: 12 }}><AssetLogo h={h} size={38} /><div><b>{h.symbol || h.name}</b><small>{h.name} · {h.currency}</small></div></div>
+            <TxForm h={h} held={0} initial={{ type: "gift" }} submitLabel={busy ? "Saving…" : "Save asset"} onSubmit={tx => { if (tx.type === "sell" || tx.type === "dividend" || tx.type === "fee" || tx.type === "split") { setErr("Start with a gift in kind or a purchase."); return; } finish(tx); }} onCancel={() => setStep("details")} />
+            {err && <div className="fd-msg err" style={{ marginTop: 10 }}>{err}</div>}
+          </>
+        )}
+      </Modal>
+    );
+  }
+
+  function AssetDialog({ h, price, fx, onClose, onSave }) {
+    const p = position(h);
+    const [mode, setMode] = useState("view");
+    const [d, setD] = useState({ name: h.name, custodian: h.custodian || "", holder: h.holder || "", logo: h.logo || "", note: h.note || "", manualPrice: h.manualPrice || "" });
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const last = h.cls === "cash" ? 1 : price && price.price ? price.price : h.manualPrice ? Number(h.manualPrice) : null;
+    const mv = last != null ? p.qty * last : p.cost;
+    const unreal = last != null ? mv - p.cost : 0;
+    const write = async data => { setBusy(true); setErr(""); try { await onSave(data); setMode("view"); } catch (e) { setErr("Could not save. Try again."); } setBusy(false); };
+    const { id, updatedAt, ...base } = h;
+    const txs = (h.txns || []).map((t, i) => ({ t, i })).sort((a, b) => String(b.t.date).localeCompare(String(a.t.date)) || b.i - a.i).map(x => x.t);
+    return (
+      <Modal wide title={h.symbol ? `${h.symbol} · ${h.name}` : h.name} sub={[ACLASS[h.cls] ? ACLASS[h.cls].label : h.cls, h.exchange, h.currency, h.archived ? "Archived" : ""].filter(Boolean).join(" · ")} onClose={onClose}>
+        {mode === "view" && (
+          <>
+            <div className="fd-adetail-h"><AssetLogo h={h} size={52} /><div><b>{h.archived ? "Archived holding" : qfmt(h, p.qty)}</b><small>{last != null ? `Last price ${priceFmt(h.currency, last)}${price && price.at ? " · " + fdatetime(price.at) : h.manualPrice ? " · set by hand" : ""}` : "No price yet: valued at cost"}</small></div></div>
+            <Stats items={[
+              { label: "Market value", value: fmtNative(h.currency, mv), sub: h.currency !== "USD" && fx[h.currency] ? fmtNative("USD", mv / fx[h.currency]) : "" },
+              { label: "Cost basis", value: fmtNative(h.currency, p.cost), sub: p.qty > 0 ? "Average " + priceFmt(h.currency, p.avg) : "" },
+              { label: "Unrealised", value: sgn(v => fmtNative(h.currency, v), unreal), sub: p.cost > 0 && last != null ? pct(unreal / p.cost * 100) : "", tone: unreal >= 0 ? "ok" : "bad" },
+              { label: "Realised", value: sgn(v => fmtNative(h.currency, v), p.realized + p.income), sub: `Dividends ${fmtNative(h.currency, p.income)}` },
+            ]} />
+            <div className="fd-adl">
+              <div><span>Broker or custodian</span><b>{h.custodian || "Not set"}</b></div>
+              <div><span>Registered holder</span><b>{h.holder || "Not set"}</b></div>
+              <div><span>Price source</span><b>{h.source === "coingecko" ? "CoinGecko · " + h.priceSymbol : h.source === "yahoo" ? "Yahoo Finance · " + h.priceSymbol : h.manualPrice ? "Set by hand" : "None, valued at cost"}</b></div>
+              <div><span>Given · bought</span><b>{fmtNative(h.currency, p.given)} · {fmtNative(h.currency, p.bought)}</b></div>
+              {h.note && <div style={{ gridColumn: "1 / -1" }}><span>Note</span><b style={{ fontWeight: 400 }}>{h.note}</b></div>}
+            </div>
+            <div className="fd-card-head" style={{ marginTop: 18 }}><h3 className="fd-h3" style={{ fontSize: 20 }}>Transactions</h3>{!h.archived && <button className="fd-btn primary sm" onClick={() => setMode("tx")}>Add transaction</button>}</div>
+            <div className="fd-table">
+              {txs.map(t => (
+                <div className="fd-tr" key={t.id} style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr)" }}>
+                  <div className="fd-td"><Tag tone={(TX[t.type] || {}).tone}>{(TX[t.type] || { label: t.type }).label}</Tag><small>{fdate(t.date)}</small></div>
+                  <div className="fd-td" data-l="Detail">{t.qty ? <b>{qfmt(h, t.qty)}</b> : t.type === "split" ? <b>× {t.ratio}</b> : null}{t.qty ? <small>at {priceFmt(h.currency, t.amount / t.qty)}{t.fee ? " · fees " + fmtNative(h.currency, t.fee) : ""}</small> : null}{t.note && <small>{t.note}</small>}</div>
+                  <div className="fd-td fd-amt" data-l="Amount">{t.amount ? <b className={t.type === "sell" || t.type === "dividend" ? "fd-up" : t.type === "fee" ? "fd-down" : ""}>{fmtNative(h.currency, t.amount)}</b> : <small>·</small>}</div>
+                </div>
+              ))}
+            </div>
+            <div className="fd-actions" style={{ marginTop: 16 }}>
+              <button className="fd-btn ghost sm" onClick={() => setMode("edit")}>Edit details</button>
+              {!h.archived ? <Confirm className="fd-btn quiet sm" armedLabel="Click again to archive" onConfirm={() => write({ ...base, archived: true, archivedAt: new Date().toISOString() })}>Archive</Confirm>
+                : <button className="fd-btn quiet sm" onClick={() => write({ ...base, archived: false, archivedAt: null })}>Restore</button>}
+              <small className="fd-sub" style={{ margin: 0 }}>Archiving keeps the full history. Holdings are never deleted.</small>
+            </div>
+          </>
+        )}
+        {mode === "tx" && <TxForm h={h} held={p.qty} initial={{ type: "buy" }} submitLabel={busy ? "Saving…" : "Save transaction"} onSubmit={tx => write({ ...base, txns: [...(h.txns || []), tx] })} onCancel={() => setMode("view")} />}
+        {mode === "edit" && (
+          <div className="fd-form">
+            <div className="fd-grid2">
+              <Field label="Name"><input className="fd-input" value={d.name} maxLength={120} onChange={e => setD(x => ({ ...x, name: e.target.value }))} /></Field>
+              <Field label="Broker or custodian"><input className="fd-input" value={d.custodian} maxLength={120} onChange={e => setD(x => ({ ...x, custodian: e.target.value }))} /></Field>
+              <Field label="Registered holder"><input className="fd-input" value={d.holder} maxLength={120} onChange={e => setD(x => ({ ...x, holder: e.target.value }))} /></Field>
+              <Field label={`Price by hand (${h.currency})`} hint={h.source ? "Used only when the live price is not available" : "This asset has no live price"}><input className="fd-input" inputMode="decimal" value={d.manualPrice} onChange={e => setD(x => ({ ...x, manualPrice: e.target.value }))} placeholder="Optional" /></Field>
+            </div>
+            <Field label="Logo address"><input className="fd-input" value={d.logo} onChange={e => setD(x => ({ ...x, logo: e.target.value.trim() }))} placeholder="Leave empty for the automatic logo" spellCheck={false} /></Field>
+            <Field label="Note"><textarea className="fd-input" value={d.note} maxLength={1000} onChange={e => setD(x => ({ ...x, note: e.target.value }))} /></Field>
+            <div className="fd-actions">
+              <button className="fd-btn primary" disabled={busy || !d.name.trim()} onClick={() => write({ ...base, name: d.name.trim(), custodian: d.custodian.trim(), holder: d.holder.trim(), logo: d.logo, note: d.note.trim(), manualPrice: parseFloat(d.manualPrice) > 0 ? parseFloat(d.manualPrice) : null })}>{busy ? "Saving…" : "Save"}</button>
+              <button className="fd-btn ghost" onClick={() => setMode("view")}>Cancel</button>
+            </div>
+          </div>
+        )}
+        {err && <div className="fd-msg err" style={{ marginTop: 10 }}>{err}</div>}
+      </Modal>
+    );
+  }
+
+  function PolicyDialog({ policy, onClose, onSave }) {
+    const [t, setT] = useState(() => { const o = {}; Object.keys(ACLASS).forEach(k => { o[k] = policy.targets && policy.targets[k] ? String(policy.targets[k]) : ""; }); return o; });
+    const [ops, setOps] = useState(String(policy.opsShare ?? 10));
+    const [busy, setBusy] = useState(false);
+    const sum = Object.values(t).reduce((a, v) => a + (parseFloat(v) || 0), 0);
+    const opsN = parseFloat(ops);
+    const ok = (sum === 0 || Math.abs(sum - 100) < 0.01) && opsN >= 0 && opsN <= 10;
+    return (
+      <Modal title="Policy and targets" sub="Internal settings. They never appear on the public site." onClose={onClose}>
+        <Field label="Share of realised returns for operations (%)" hint="At most 10%. Donations and the principal are never used for running costs.">
+          <input className="fd-input" inputMode="decimal" value={ops} onChange={e => setOps(e.target.value)} />
+        </Field>
+        <h3 className="fd-h3" style={{ fontSize: 19, margin: "18px 0 4px" }}>Target allocation</h3>
+        <p className="fd-sub" style={{ marginTop: 0 }}>Optional. Leave all empty for no targets, or make them add up to 100%.</p>
+        <div className="fd-grid2">
+          {Object.entries(ACLASS).map(([k, v]) => <Field key={k} label={v.label + " (%)"}><input className="fd-input" inputMode="decimal" value={t[k]} onChange={e => setT(p => ({ ...p, [k]: e.target.value }))} placeholder="0" /></Field>)}
+        </div>
+        <p className={sum && Math.abs(sum - 100) >= 0.01 ? "fd-bad" : "fd-sub"} style={{ marginTop: 8 }}>Total {nfmt(sum, 2)}%{sum && Math.abs(sum - 100) >= 0.01 ? ": it must be 100%." : ""}</p>
+        {!(opsN >= 0 && opsN <= 10) && <p className="fd-bad">The operations share must be between 0 and 10%.</p>}
+        <div className="fd-actions" style={{ marginTop: 10 }}>
+          <button className="fd-btn primary" disabled={!ok || busy} onClick={async () => { setBusy(true); const targets = {}; Object.entries(t).forEach(([k, v]) => { if (parseFloat(v) > 0) targets[k] = parseFloat(v); }); try { await onSave({ opsShare: opsN, targets }); } catch (e) { setBusy(false); } }}>{busy ? "Saving…" : "Save"}</button>
+          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </Modal>
+    );
+  }
 
   function TreasuryOverview({ store, go }) {
     const F = useFlows(store);
@@ -4900,6 +5442,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         { id: "in", label: "Money in", icon: ICON.inflow, count: F.pendingIn, hot: F.pendingIn > 0 },
         { id: "out", label: "Money out", icon: ICON.outflow, count: F.due, hot: F.due > 0 },
         { id: "ledger", label: "Ledger", icon: ICON.ledger },
+        { id: "assets", label: "Assets", icon: ICON.assets },
         { id: "channels", label: "Payment channels", icon: ICON.pay },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "overview";
@@ -4907,6 +5450,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         : t === "in" ? <DonationsView store={store} donations={store.listDonations()} title="Money in" />
         : t === "out" ? <MoneyOutView store={store} />
         : t === "ledger" ? <LedgerView store={store} />
+        : t === "assets" ? <AssetsView store={store} />
         : <ChannelsView store={store} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
     }

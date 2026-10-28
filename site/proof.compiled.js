@@ -46,7 +46,7 @@
       h("div", { style: { padding: "clamp(56px, 8vw, 100px) clamp(20px, 4vw, 56px) clamp(40px, 5vw, 60px)", maxWidth: 1160, margin: "0 auto" } },
         h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, "\u00a7 Proof of giving"),
         h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(46px, 7vw, 92px)", lineHeight: 1, letterSpacing: "-0.02em", margin: "24px 0 0" } }, "The Open Ledger."),
-        h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(19px, 2.2vw, 26px)", color: "rgba(232,228,220,0.75)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.45 } }, "Every grant the endowment has made: dated, named, and totalled live from the public database. Nothing is withheld for overhead.")),
+        h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(19px, 2.2vw, 26px)", color: "rgba(232,228,220,0.75)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.45 } }, "Every grant the endowment has made: dated, named, and totalled live from the public database. Every gift is applied in full, with nothing deducted.")),
 
       h("div", { style: { background: CREAM, color: NAVY, padding: "clamp(40px, 6vw, 64px) clamp(20px, 4vw, 56px)" } },
         h("div", { style: { maxWidth: 1160, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "clamp(26px, 4vw, 56px)" } },

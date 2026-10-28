@@ -745,6 +745,7 @@ select.bsp-input option{background:#0A1628}
         )}
         <GraduationRecord applicant={applicant} />
         <History applicant={applicant} />
+        {window.BrialScamNotice && <section className="bsp-sec">{React.createElement(window.BrialScamNotice, { compact: true })}</section>}
         {d.status === "active" && (
           <section className="bsp-sec">
             <h2 className="bsp-h2">{t("How your scholarship works")}</h2>
@@ -969,6 +970,8 @@ select.bsp-input option{background:#0A1628}
     };
     const st = { open: ["warn", "Open"], replied: ["gold", "Replied"], resolved: ["ok", "Resolved"] };
     return (
+      <>
+      {window.BrialScamNotice && React.createElement(window.BrialScamNotice, { style: { marginBottom: 18 } })}
       <div className="bsp-row" style={{ marginTop: 0, alignItems: "start" }}>
         <div className="bsp-card">
           <h3 className="bsp-h3">{t("Message the foundation")}</h3>
@@ -999,6 +1002,7 @@ select.bsp-input option{background:#0A1628}
           )}
         </div>
       </div>
+      </>
     );
   }
 
