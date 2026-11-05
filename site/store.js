@@ -946,14 +946,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         url: links[p.id] || (p.id === "lynk" && /lynk\.id\//i.test((book && book.link) || "") ? book.link : "") })).filter(x => x.url);
     },
     saveLibraryPartners(list) {
-      const clean = (Array.isArray(list) ? list : []).map((p, i) => ({
-        id: String(p.id || ("partner-" + Date.now().toString(36) + i)).slice(0, 40),
-        name: String(p.name || "").trim().slice(0, 60),
-        label: String(p.label || "").trim().slice(0, 40),
-        logo: String(p.logo || ""),
-        link: /^https?:\/\//i.test(String(p.link || "").trim()) ? String(p.link).trim() : "",
-        shown: p.shown !== false,
-      })).filter(p => p.name);
+      const clean = Store._cleanPartners(list);
       const rec = { id: "LIBRARY-PARTNERS", name: "__libpartners__", amount: 0, data: { partners: clean } };
       const idx = _donations.findIndex(x => x.id === "LIBRARY-PARTNERS");
       if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
@@ -962,6 +955,42 @@ window.BrialClipboard = { copy: copyToClipboard };
       const first = clean.find(p => p.shown && p.link);
       if (first && first.link !== Store.getPillarLinks().library) Store.savePillarLink("library", first.link);
       return upsertDonation(rec);
+    },
+
+    // ----- Partners of every other pillar (same shape as the Library's) -----
+    PILLAR_PARTNER_DEFAULTS: {
+      worship: [{ id: "minang", name: "Minang Bandung", label: "", logo: "builtin:minang", link: "", shown: true, tile: false }],
+      foodland: [{ id: "zaytoun", name: "Zaytoun", label: "Palestine", logo: "builtin:zaytoun", link: "https://zaytoun.uk/", shown: true, tile: false }],
+      transport: [{ id: "go2rent", name: "go2rent", label: "Car rental", logo: "/partners/go2rent/logo-light.svg", link: "https://www.gotworent.com/", shown: true, tile: false }],
+    },
+    getPillarPartners(key) {
+      if (key === "library") return Store.getLibraryPartners();
+      const d = _donations.find(x => x.id === "PILLAR-PARTNERS");
+      const all = d && d.data && d.data.partners && typeof d.data.partners === "object" ? d.data.partners : null;
+      if (all && Array.isArray(all[key])) return all[key];
+      return (Store.PILLAR_PARTNER_DEFAULTS[key] || []).map(x => ({ ...x }));
+    },
+    savePillarPartners(key, list) {
+      if (key === "library") return Store.saveLibraryPartners(list);
+      const prev = _donations.find(x => x.id === "PILLAR-PARTNERS");
+      const all = { ...((prev && prev.data && prev.data.partners) || {}) };
+      all[key] = Store._cleanPartners(list);
+      const rec = { id: "PILLAR-PARTNERS", name: "__pillarpartners__", amount: 0, data: { partners: all } };
+      const idx = _donations.findIndex(x => x.id === "PILLAR-PARTNERS");
+      if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
+      saveCache(); notify({ key: "pillar-partners" });
+      return upsertDonation(rec);
+    },
+    _cleanPartners(list) {
+      return (Array.isArray(list) ? list : []).map((p, i) => ({
+        id: String(p.id || ("partner-" + Date.now().toString(36) + i)).slice(0, 40),
+        name: String(p.name || "").trim().slice(0, 60),
+        label: String(p.label || "").trim().slice(0, 40),
+        logo: String(p.logo || ""),
+        link: /^https?:\/\//i.test(String(p.link || "").trim()) ? String(p.link).trim() : "",
+        shown: p.shown !== false,
+        tile: p.tile !== false,
+      })).filter(p => p.name);
     },
 
     // ----- Reforestation & Land programme content (key "foodland", once Food & Land) (founder-managed page copy) -----

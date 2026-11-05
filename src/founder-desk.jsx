@@ -195,6 +195,8 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-plogo{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:0 6px;background:#fff;border-radius:6px;border:1px solid var(--line2)}
 .fd-plogo img{display:block;width:auto;max-width:120px}
 .fd-plogo b{color:#0A1628;font-family:'JetBrains Mono',monospace}
+.fd-plogo.dark{background:#0A1628;border-color:rgba(201,169,97,.3)}.fd-plogo.dark b{color:var(--gilt2)}
+.fd-ppreview-one{font-size:12px;font-weight:500;color:var(--text)}
 .fd-prow>.fd-plogo{width:96px}
 .fd-plabel{display:inline-block;margin-left:8px;font-size:11px;font-weight:500;color:var(--faint);vertical-align:1px}
 .fd-plogo-edit{display:flex;gap:16px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px}
@@ -1125,9 +1127,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const src = window.BrialStore && window.BrialStore.partnerLogo ? window.BrialStore.partnerLogo(p) : p.logo;
     const [bad, setBad] = useState(false);
     useEffect(() => setBad(false), [src]);
-    return <span className="fd-plogo" style={{ height: size, minWidth: size }}>{src && !bad ? <img src={src} alt="" style={{ height: Math.round(size * 0.66) }} onError={() => setBad(true)} /> : <b style={{ fontSize: size * 0.36 }}>{String(p.name || "?").slice(0, 2).toUpperCase()}</b>}</span>;
+    return <span className={"fd-plogo" + (p.tile === false ? " dark" : "")} style={{ height: size, minWidth: size }}>{src && !bad ? <img src={src} alt="" style={{ height: Math.round(size * 0.66) }} onError={() => setBad(true)} /> : <b style={{ fontSize: size * 0.36 }}>{String(p.name || "?").slice(0, 2).toUpperCase()}</b>}</span>;
   };
-  function PartnerForm({ partner, onSave, onClose, onRemove }) {
+  function PartnerForm({ partner, onSave, onClose, onRemove, kind }) {
+    const books = kind === "library";
     const isNew = !partner.id;
     const [p, setP] = useState(() => ({ name: "", label: "", logo: "", link: "", shown: true, ...partner }));
     const [up, setUp] = useState(false), [err, setErr] = useState("");
@@ -1145,13 +1148,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       setUp(false);
     };
     return (
-      <Modal wide title={isNew ? "Add a partner" : "Edit " + partner.name} sub="A store or platform that sells the endowment's books." onClose={onClose}>
+      <Modal wide title={isNew ? "Add a partner" : "Edit " + partner.name} sub={books ? "A store or platform that sells the endowment's books." : "An organisation this pillar works with: a builder, a programme partner, a supplier or a sponsor."} onClose={onClose}>
         <div className="fd-form">
           <div className="fd-plogo-edit">
             <PartnerLogo p={p} size={64} />
             <div>
               <b>Logo</b>
-              <small>PNG, JPG or WebP. It is shown on a small white tile, so a logo on a white or clear background works best.</small>
+              <small>PNG, JPG or WebP. Turn on the white tile for a dark logo; turn it off for a logo made for dark backgrounds.</small>
               <div className="fd-actions" style={{ marginTop: 8 }}>
                 <span className="fd-upload"><span className="fd-btn ghost sm">{ICON.up}{up ? "Uploading…" : p.logo ? "Replace logo" : "Upload logo"}</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={pick} disabled={up} aria-label="Upload logo" /></span>
                 {p.logo && p.logo.indexOf("builtin:") !== 0 && <button className="fd-btn quiet sm" onClick={() => set("logo", "")}>Remove logo</button>}
@@ -1159,14 +1162,17 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>
           </div>
           <div className="fd-grid2">
-            <Field label="Name"><input className="fd-input" value={p.name} maxLength={60} onChange={e => set("name", e.target.value)} placeholder="Google Play Books" /></Field>
-            <Field label="Short description (optional)" hint="Shown in the Founder Portal only"><input className="fd-input" value={p.label} maxLength={40} onChange={e => set("label", e.target.value)} placeholder="eBook store" /></Field>
+            <Field label="Name"><input className="fd-input" value={p.name} maxLength={60} onChange={e => set("name", e.target.value)} placeholder={books ? "Google Play Books" : "Yayasan Minang Bandung"} /></Field>
+            <Field label="Short description (optional)" hint="Shown after the name when this is the pillar's only partner"><input className="fd-input" value={p.label} maxLength={40} onChange={e => set("label", e.target.value)} placeholder={books ? "eBook store" : "Builder, Palestine, sponsor…"} /></Field>
           </div>
-          <Field label="Profile page" hint="The page on this store that lists all the endowment's books. Leave it empty while the store is still setting up: the partner then shows as coming soon.">
+          <Field label={books ? "Profile page" : "Website (optional)"} hint={books ? "The page on this store that lists all the endowment's books. Leave it empty while the store is still setting up: the partner then shows as coming soon." : "The partner's website or programme page, for your records and the e-book style buttons."}>
             <input className="fd-input" value={p.link} onChange={e => set("link", e.target.value)} placeholder="https://…" spellCheck={false} />
           </Field>
           {badLink && <small className="fd-bad">Use a web address, for example https://…</small>}
-          <Switch on={p.shown} onChange={v => set("shown", v)}>{p.shown ? "Shown on the public site" : "Hidden on the public site"}</Switch>
+          <div className="fd-actions" style={{ gap: 18 }}>
+            <Switch on={p.shown} onChange={v => set("shown", v)}>{p.shown ? "Shown on the public site" : "Hidden on the public site"}</Switch>
+            <Switch on={p.tile !== false} onChange={v => set("tile", v)}>{p.tile !== false ? "White tile behind the logo" : "Logo on the dark card as it is"}</Switch>
+          </div>
           {err && <div className="fd-msg err">{err}</div>}
         </div>
         <div className="fd-actions" style={{ marginTop: 20 }}>
@@ -1177,40 +1183,43 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       </Modal>
     );
   }
-  function LibraryPartnersView({ store }) {
-    const list = store.getLibraryPartners();
+  function PillarPartnersView({ store, pillarKey, name }) {
+    const books = pillarKey === "library";
+    const list = store.getPillarPartners ? store.getPillarPartners(pillarKey) : [];
     const [edit, setEdit] = useState(null);
     const [m, flash] = useFlash();
-    const commit = async (next, msg) => { try { await store.saveLibraryPartners(next); flash(msg); } catch (e) { flash("Could not save. Check your connection and try again.", "err"); } };
+    const commit = async (next, msg) => { try { await store.savePillarPartners(pillarKey, next); flash(msg); } catch (e) { flash("Could not save. Check your connection and try again.", "err"); } };
     const move = (i, d) => { const j = i + d; if (j < 0 || j >= list.length) return; const n = list.slice(); [n[i], n[j]] = [n[j], n[i]]; commit(n, "Order saved."); };
     const shown = list.filter(p => p.shown !== false);
-    const books = store.listEbooks();
-    const carried = p => books.filter(b => (store.bookStoreLinks ? store.bookStoreLinks(b) : []).some(x => x.partner.id === p.id)).length;
+    const bookList = books ? store.listEbooks() : [];
+    const carried = p => bookList.filter(b => (store.bookStoreLinks ? store.bookStoreLinks(b) : []).some(x => x.partner.id === p.id)).length;
     return (
       <>
-        <Head title="Partners" lede="The stores that sell the endowment's books. They appear on the Library card and on the e-book page, in this order.">
+        <Head title="Partners" lede={books ? "The stores that sell the endowment's books. They appear on the Library card and on the e-book page, in this order." : "The organisations " + (name || "this pillar") + " works with. They appear on the pillar's card on the public site, in this order."}>
           <button className="fd-btn primary" onClick={() => setEdit({})}>Add a partner</button>
         </Head>
         <div className="fd-toolbar"><Flash m={m} /></div>
         <div className="fd-card fd-ppreview">
-          <div className="fd-card-head" style={{ marginBottom: 10 }}><div><h2 className="fd-h2" style={{ marginTop: 0 }}>On the public site</h2><p className="fd-sub">How the Library card shows your partners.</p></div><a className="fd-btn ghost sm" href="/ebooks" target="_blank" rel="noopener noreferrer">Open the e-book page {ICON.ext}</a></div>
-          {shown.length === 0 ? <p className="fd-sub">No partner is shown. The Library card shows no partner box.</p> : (
+          <div className="fd-card-head" style={{ marginBottom: 10 }}><div><h2 className="fd-h2" style={{ marginTop: 0 }}>On the public site</h2><p className="fd-sub">How the {name || "pillar"} card shows your partners.</p></div>{books && <a className="fd-btn ghost sm" href="/ebooks" target="_blank" rel="noopener noreferrer">Open the e-book page {ICON.ext}</a>}</div>
+          {shown.length === 0 ? <p className="fd-sub">No partner is shown, so the card shows no partner box.</p> : shown.length === 1 ? (
+            <div className="fd-ppreview-box"><div className="fd-ppreview-top" style={{ marginBottom: 0 }}><i>The Brial Endowment</i><span>×</span><PartnerLogo p={shown[0]} size={26} /><b className="fd-ppreview-one">{shown[0].label ? shown[0].name + " · " + shown[0].label : shown[0].name}</b></div></div>
+          ) : (
             <div className="fd-ppreview-box">
-              <div className="fd-ppreview-top"><i>The Brial Endowment</i><span>×</span><em>{shown.length === 1 ? "1 partner" : shown.length + " partners"}</em></div>
+              <div className="fd-ppreview-top"><i>The Brial Endowment</i><span>×</span><em>{shown.length + " partners"}</em></div>
               <div className="fd-ppreview-chips">{shown.map(p => <span key={p.id}><PartnerLogo p={p} size={22} />{p.name}</span>)}</div>
             </div>
           )}
         </div>
         <div className="fd-table" style={{ marginTop: 16 }}>
-          {list.length === 0 ? <Empty title="No partners yet.">Add the first store that sells your books.</Empty> : list.map((p, i) => (
+          {list.length === 0 ? <Empty title="No partners yet.">{books ? "Add the first store that sells your books." : "Add the first organisation this pillar works with."}</Empty> : list.map((p, i) => (
             <div key={p.id} className={"fd-tr fd-prow" + (p.shown === false ? " dim" : "")} style={{ gridTemplateColumns: "auto minmax(0,1fr) auto" }}>
               <PartnerLogo p={p} size={46} />
               <div className="fd-td">
                 <b>{p.name}{p.label && <span className="fd-plabel">{p.label}</span>}</b>
-                {p.link ? <a className="fd-mono" href={p.link} target="_blank" rel="noopener noreferrer">{p.link.replace(/^https?:\/\//, "")}</a> : <small>No profile page yet: shown as coming soon</small>}
+                {p.link ? <a className="fd-mono" href={p.link} target="_blank" rel="noopener noreferrer">{p.link.replace(/^https?:\/\//, "")}</a> : <small>{books ? "No profile page yet: shown as coming soon" : "No website added"}</small>}
                 <div className="fd-actions" style={{ marginTop: 6 }}>
-                  {p.shown === false ? <Tag>Hidden</Tag> : p.link ? <Tag tone="ok">Live</Tag> : <Tag tone="warn">Coming soon</Tag>}
-                  <Tag>{carried(p)} of {books.length} {plural(books.length, "book", "books")}</Tag>
+                  {p.shown === false ? <Tag>Hidden</Tag> : books ? (p.link ? <Tag tone="ok">Live</Tag> : <Tag tone="warn">Coming soon</Tag>) : null}
+                  {books && <Tag>{carried(p)} of {bookList.length} {plural(bookList.length, "book", "books")}</Tag>}
                 </div>
               </div>
               <div className="fd-actions">
@@ -1222,8 +1231,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>
           ))}
         </div>
-        <p className="fd-sub" style={{ marginTop: 14 }}>Each book's link on each store is set in the Catalogue: open a book and fill in "Where to buy it". The Library's main link follows the first shown partner that has a profile page.</p>
-        {edit && <PartnerForm partner={edit} onClose={() => setEdit(null)}
+        {books ? <p className="fd-sub" style={{ marginTop: 14 }}>Each book's link on each store is set in the Catalogue: open a book and fill in "Where to buy it". The Library's main link follows the first shown partner that has a profile page.</p>
+          : <p className="fd-sub" style={{ marginTop: 14 }}>One partner shows with its logo and name; two or more show as a row of logos. The pillar's button is set separately under "Partner button".</p>}
+        {edit && <PartnerForm kind={pillarKey} partner={edit} onClose={() => setEdit(null)}
           onRemove={edit.id ? () => { commit(list.filter(x => x.id !== edit.id), edit.name + " removed."); setEdit(null); } : null}
           onSave={np => { const exists = list.some(x => x.id === np.id); commit(exists ? list.map(x => x.id === np.id ? np : x) : [...list, { ...np, id: "partner-" + Date.now().toString(36) }], exists ? "Partner saved." : np.name + " added."); setEdit(null); }} />}
       </>
@@ -6238,6 +6248,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         { id: "gifts", label: "Donations", icon: ICON.gift, count: unver, hot: unver > 0 },
         { id: "help", label: "Help desk", icon: ICON.help, count: open, hot: open > 0 },
         { id: "accounts", label: "Accounts", icon: ICON.users, count: apps.length },
+        { id: "partners", label: "Partners", icon: ICON.link, count: store.getPillarPartners ? store.getPillarPartners("scholarships").length : 0 },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "apps";
       const openRecord = id => { setFocus(id); setTab("apps"); };
@@ -6246,6 +6257,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         : t === "scholars" ? <ScholarsView store={store} scholars={scholars} openRecord={openRecord} />
         : t === "gifts" ? <DonationsView store={store} donations={donations} />
         : t === "help" ? <HelpDeskView store={store} reports={reports} />
+        : t === "partners" ? <PillarPartnersView store={store} pillarKey="scholarships" name="Scholarships" />
         : <AccountsView store={store} apps={apps} deleted={store.listDeleted()} openRecord={openRecord} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
@@ -6253,10 +6265,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       nav = [
         { id: "catalog", label: "Catalogue", icon: ICON.book, count: store.listEbooks().length },
         { id: "sales", label: "Sales", icon: ICON.sale, count: store.listLibrarySales().length },
-        { id: "partners", label: "Partners", icon: ICON.link, count: store.getLibraryPartners ? store.getLibraryPartners().length : 0 },
+        { id: "partners", label: "Partners", icon: ICON.users, count: store.getPillarPartners ? store.getPillarPartners("library").length : 0 },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "catalog";
-      view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <LibraryPartnersView store={store} />;
+      view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <PillarPartnersView store={store} pillarKey="library" name="Library" />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     if (pillar === "treasury") {
@@ -6305,10 +6317,11 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       nav = [
         { id: "contrib", label: "Contributions", icon: ICON.inflow, count: store.listEnterpriseIncome ? store.listEnterpriseIncome("go2rent").length : 0 },
         { id: "story", label: "Programme page", icon: ICON.story },
+        { id: "partners", label: "Partners", icon: ICON.users, count: store.getPillarPartners ? store.getPillarPartners(pillar).length : 0 },
         { id: "link", label: "Partner button", icon: ICON.link },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "contrib";
-      view = t === "contrib" ? <ContributionsView store={store} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
+      view = t === "contrib" ? <ContributionsView store={store} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : t === "partners" ? <PillarPartnersView store={store} pillarKey={pillar} name={cfg.name} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     if (pillar === "foodclothing") {
@@ -6317,10 +6330,11 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         { id: "grants", label: "Distributions", icon: ICON.grant, count: store.getPillarGrants().filter(g => g.pillar === cfg.grantName && !g.archived).length },
         { id: "counts", label: "Rough totals", icon: ICON.overview },
         { id: "story", label: "Programme page", icon: ICON.story },
+        { id: "partners", label: "Partners", icon: ICON.users, count: store.getPillarPartners ? store.getPillarPartners(pillar).length : 0 },
         { id: "link", label: "Partner button", icon: ICON.link },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "grants";
-      view = t === "counts" ? <CountsView store={store} /> : t === "grants" ? <DistributionsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
+      view = t === "counts" ? <CountsView store={store} /> : t === "grants" ? <DistributionsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : t === "partners" ? <PillarPartnersView store={store} pillarKey={pillar} name={cfg.name} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     const cfg = PILLARS[pillar];
@@ -6328,10 +6342,11 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     nav = [
       { id: "grants", label: "Grants", icon: ICON.grant, count: store.getPillarGrants().filter(g => g.pillar === cfg.grantName && !g.archived).length },
       { id: "story", label: "Programme page", icon: ICON.story },
+      { id: "partners", label: "Partners", icon: ICON.users, count: store.getPillarPartners ? store.getPillarPartners(pillar).length : 0 },
       { id: "link", label: cfg.linkMode === "pillar" ? "Pillar link" : "Partner button", icon: ICON.link },
     ];
     const t = nav.some(n => n.id === tab) ? tab : "grants";
-    view = t === "grants" ? <GrantsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
+    view = t === "grants" ? <GrantsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : t === "partners" ? <PillarPartnersView store={store} pillarKey={pillar} name={cfg.name} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
     return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
   }
   FounderDesk.Home = FounderHome;
