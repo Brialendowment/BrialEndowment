@@ -192,6 +192,31 @@ input[type=date].fd-input,input[type=time].fd-input{color-scheme:dark}
 .fd-scrim{position:fixed;inset:0;z-index:300;background:rgba(5,11,22,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;animation:fdFade .18s ease-out}
 .fd-modal{width:100%;max-width:560px;max-height:calc(100vh - 36px);overflow:auto;background:#10213D;border:1px solid rgba(201,169,97,.3);border-radius:16px;padding:24px 24px 22px;box-shadow:0 40px 100px -30px rgba(0,0,0,.9);animation:fdRise .25s cubic-bezier(.22,1,.36,1) both}
 .fd-modal.wide{max-width:760px}
+.fd-plogo{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:0 6px;background:#fff;border-radius:6px;border:1px solid var(--line2)}
+.fd-plogo img{display:block;width:auto;max-width:120px}
+.fd-plogo b{color:#0A1628;font-family:'JetBrains Mono',monospace}
+.fd-prow>.fd-plogo{width:96px}
+.fd-plabel{display:inline-block;margin-left:8px;font-size:11px;font-weight:500;color:var(--faint);vertical-align:1px}
+.fd-plogo-edit{display:flex;gap:16px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px}
+.fd-plogo-edit b{display:block;font-weight:600}.fd-plogo-edit small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
+.fd-plogo-edit .fd-plogo{min-width:110px!important}
+.fd-ppreview-box{background:#0A1628;border:1px solid rgba(201,169,97,.25);padding:12px 14px;max-width:460px}
+.fd-ppreview-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.fd-ppreview-top i{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gilt)}.fd-ppreview-top span{color:var(--muted)}
+.fd-ppreview-top em{font-style:normal;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.fd-ppreview-chips{display:flex;flex-wrap:wrap;gap:6px}
+.fd-ppreview-chips>span{display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;border:1px solid rgba(232,228,220,.14);background:rgba(232,228,220,.06);font-size:12px;font-weight:500;border-radius:4px}
+.fd-ppreview-chips .fd-plogo{border-radius:3px;border:0}
+.fd-booklinks{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px}
+.fd-booklinks-h b{display:block;font-weight:600}.fd-booklinks-h small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
+.fd-booklink{display:grid;grid-template-columns:76px 150px minmax(0,1fr);gap:10px;align-items:center}
+.fd-booklink>.fd-plogo{width:76px}
+.fd-booklink-n b{display:block;font-size:13.5px;font-weight:600}.fd-booklink-n small{display:block;font-size:11px;color:var(--amber)}
+.fd-booklink .fd-bad{grid-column:3}
+.fd-storechip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px 3px 3px;border:1px solid var(--line2);border-radius:6px;color:var(--text);text-decoration:none;font-size:12px;font-weight:500}
+.fd-storechip .fd-plogo{border:0;border-radius:4px}
+.fd-storechip:hover{border-color:var(--gilt)}
+@media (max-width:640px){.fd-booklink{grid-template-columns:auto minmax(0,1fr)}.fd-booklink .fd-input,.fd-booklink .fd-bad{grid-column:1/-1}.fd-prow{grid-template-columns:auto minmax(0,1fr)!important}.fd-prow>.fd-actions{grid-column:1/-1}}
 /* treasury assets */
 .fd-alogo.cash{background:rgba(201,169,97,.12);border-color:rgba(201,169,97,.35)}
 .fd-alogo.cash b{color:var(--gilt2);background:none}
@@ -1036,9 +1061,24 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // LIBRARY
   // ============================================================
   const BLANK_BOOK = () => ({ id: "book-" + Date.now().toString(36), lang: "", langCode: "", title: "", subtitle: "", cover: "", link: "", getLabel: "Get the e-book", supportNote: "A portion of every sale supports Brial Endowment scholarships.", accent: "#C9A961", desc: "", points: [] });
-  function BookForm({ book, onSave, onClose }) {
-    const [b, setB] = useState(book);
+  function BookForm({ book, onSave, onClose, partners }) {
+    const parts = partners || [];
+    const [b, setB] = useState(() => {
+      const links = { ...(book.links || {}) };
+      if (!links.lynk && /lynk\.id\//i.test(book.link || "") && parts.some(p => p.id === "lynk")) links.lynk = book.link;
+      return { ...book, links };
+    });
     const set = (k, v) => setB(p => ({ ...p, [k]: v }));
+    const setLink = (id, v) => setB(p => ({ ...p, links: { ...(p.links || {}), [id]: v } }));
+    const badLink = v => v && !/^https?:\/\/\S+\.\S+/i.test(v.trim());
+    const finish = () => {
+      const links = {};
+      Object.entries(b.links || {}).forEach(([k, v]) => { if (v && !badLink(v)) links[k] = v.trim(); });
+      const first = parts.find(p => links[p.id]);
+      // the main link is the first partner that sells this book, or a page that is not a store (a paper, for example)
+      const link = first ? links[first.id] : (b.link || "").trim();
+      onSave({ ...b, links, link, points: (b.points || []).filter(p => p.trim()) }); onClose();
+    };
     return (
       <Modal wide title={book.title ? "Edit book" : "Add a book"} sub="Shown in the e-book catalogue on the public site." onClose={onClose}>
         <div className="fd-form">
@@ -1057,17 +1097,136 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           </div>
           <Field label="Description"><textarea className="fd-input" value={b.desc} onChange={e => set("desc", e.target.value)} /></Field>
           <Field label="Key points" hint="One per line."><textarea className="fd-input" style={{ minHeight: 90 }} value={(b.points || []).join("\n")} onChange={e => set("points", e.target.value.split("\n"))} /></Field>
-          <div className="fd-grid2">
-            <Field label="Store link"><input className="fd-input" value={b.link} onChange={e => set("link", e.target.value)} placeholder="https://lynk.id/…" /></Field>
-            <Field label="Button label"><input className="fd-input" value={b.getLabel} onChange={e => set("getLabel", e.target.value)} /></Field>
+          <div className="fd-booklinks">
+            <div className="fd-booklinks-h"><b>Where to buy it</b><small>One link per store. The first store that has a link is the main button; the others show as "Also on".</small></div>
+            {parts.map(p => (
+              <label className="fd-booklink" key={p.id}>
+                <PartnerLogo p={p} size={30} />
+                <span className="fd-booklink-n"><b>{p.name}</b>{p.shown === false && <small>Hidden on the site</small>}</span>
+                <input className="fd-input" value={(b.links || {})[p.id] || ""} onChange={e => setLink(p.id, e.target.value)} placeholder={"Link to this book on " + p.name} spellCheck={false} />
+                {badLink((b.links || {})[p.id]) && <small className="fd-bad">Use a web address, for example https://…</small>}
+              </label>
+            ))}
+            <Field label="Other page (optional)" hint="Only for a book that is not sold in a store, such as a free paper. Used when no store has a link."><input className="fd-input" value={parts.some(p => (b.links || {})[p.id]) ? "" : b.link} disabled={parts.some(p => (b.links || {})[p.id])} onChange={e => set("link", e.target.value)} placeholder="https://…" spellCheck={false} /></Field>
           </div>
+          <Field label="Button label"><input className="fd-input" value={b.getLabel} onChange={e => set("getLabel", e.target.value)} /></Field>
           <Field label="Support note"><input className="fd-input" value={b.supportNote} onChange={e => set("supportNote", e.target.value)} /></Field>
         </div>
         <div className="fd-actions" style={{ marginTop: 20 }}>
-          <button className="fd-btn primary" disabled={!b.title.trim()} onClick={() => { onSave({ ...b, points: (b.points || []).filter(p => p.trim()) }); onClose(); }}>Save book</button>
+          <button className="fd-btn primary" disabled={!b.title.trim() || Object.values(b.links || {}).some(badLink)} onClick={finish}>Save book</button>
           <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
         </div>
       </Modal>
+    );
+  }
+
+  // ---------------- library partners ----------------
+  const PartnerLogo = ({ p, size = 34 }) => {
+    const src = window.BrialStore && window.BrialStore.partnerLogo ? window.BrialStore.partnerLogo(p) : p.logo;
+    const [bad, setBad] = useState(false);
+    useEffect(() => setBad(false), [src]);
+    return <span className="fd-plogo" style={{ height: size, minWidth: size }}>{src && !bad ? <img src={src} alt="" style={{ height: Math.round(size * 0.66) }} onError={() => setBad(true)} /> : <b style={{ fontSize: size * 0.36 }}>{String(p.name || "?").slice(0, 2).toUpperCase()}</b>}</span>;
+  };
+  function PartnerForm({ partner, onSave, onClose, onRemove }) {
+    const isNew = !partner.id;
+    const [p, setP] = useState(() => ({ name: "", label: "", logo: "", link: "", shown: true, ...partner }));
+    const [up, setUp] = useState(false), [err, setErr] = useState("");
+    const set = (k, v) => setP(x => ({ ...x, [k]: v }));
+    const badLink = p.link && !/^https?:\/\/\S+\.\S+/i.test(p.link.trim());
+    const pick = async e => {
+      const f = e.target.files && e.target.files[0]; e.target.value = "";
+      if (!f) return;
+      if (!/^image\/(png|jpeg|webp|gif)$/i.test(f.type || "")) { setErr("Use a PNG, JPG or WebP image. A logo on a white or clear background looks best."); return; }
+      const v = window.BrialFiles.validate(f);
+      if (!v.ok) { setErr(v.error); return; }
+      setUp(true); setErr("");
+      try { const meta = await window.BrialFiles.put(f, { public: true }); set("logo", meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : "")); }
+      catch (x) { setErr("Could not upload the logo. Try again."); }
+      setUp(false);
+    };
+    return (
+      <Modal wide title={isNew ? "Add a partner" : "Edit " + partner.name} sub="A store or platform that sells the endowment's books." onClose={onClose}>
+        <div className="fd-form">
+          <div className="fd-plogo-edit">
+            <PartnerLogo p={p} size={64} />
+            <div>
+              <b>Logo</b>
+              <small>PNG, JPG or WebP. It is shown on a small white tile, so a logo on a white or clear background works best.</small>
+              <div className="fd-actions" style={{ marginTop: 8 }}>
+                <span className="fd-upload"><span className="fd-btn ghost sm">{ICON.up}{up ? "Uploading…" : p.logo ? "Replace logo" : "Upload logo"}</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={pick} disabled={up} aria-label="Upload logo" /></span>
+                {p.logo && p.logo.indexOf("builtin:") !== 0 && <button className="fd-btn quiet sm" onClick={() => set("logo", "")}>Remove logo</button>}
+              </div>
+            </div>
+          </div>
+          <div className="fd-grid2">
+            <Field label="Name"><input className="fd-input" value={p.name} maxLength={60} onChange={e => set("name", e.target.value)} placeholder="Google Play Books" /></Field>
+            <Field label="Short description (optional)" hint="Shown in the Founder Portal only"><input className="fd-input" value={p.label} maxLength={40} onChange={e => set("label", e.target.value)} placeholder="eBook store" /></Field>
+          </div>
+          <Field label="Profile page" hint="The page on this store that lists all the endowment's books. Leave it empty while the store is still setting up: the partner then shows as coming soon.">
+            <input className="fd-input" value={p.link} onChange={e => set("link", e.target.value)} placeholder="https://…" spellCheck={false} />
+          </Field>
+          {badLink && <small className="fd-bad">Use a web address, for example https://…</small>}
+          <Switch on={p.shown} onChange={v => set("shown", v)}>{p.shown ? "Shown on the public site" : "Hidden on the public site"}</Switch>
+          {err && <div className="fd-msg err">{err}</div>}
+        </div>
+        <div className="fd-actions" style={{ marginTop: 20 }}>
+          <button className="fd-btn primary" disabled={!p.name.trim() || badLink || up} onClick={() => onSave({ ...p, name: p.name.trim(), link: (p.link || "").trim() })}>{isNew ? "Add partner" : "Save"}</button>
+          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+          {!isNew && onRemove && <Confirm onConfirm={onRemove} armedLabel="Click again to remove">Remove partner</Confirm>}
+        </div>
+      </Modal>
+    );
+  }
+  function LibraryPartnersView({ store }) {
+    const list = store.getLibraryPartners();
+    const [edit, setEdit] = useState(null);
+    const [m, flash] = useFlash();
+    const commit = async (next, msg) => { try { await store.saveLibraryPartners(next); flash(msg); } catch (e) { flash("Could not save. Check your connection and try again.", "err"); } };
+    const move = (i, d) => { const j = i + d; if (j < 0 || j >= list.length) return; const n = list.slice(); [n[i], n[j]] = [n[j], n[i]]; commit(n, "Order saved."); };
+    const shown = list.filter(p => p.shown !== false);
+    const books = store.listEbooks();
+    const carried = p => books.filter(b => (store.bookStoreLinks ? store.bookStoreLinks(b) : []).some(x => x.partner.id === p.id)).length;
+    return (
+      <>
+        <Head title="Partners" lede="The stores that sell the endowment's books. They appear on the Library card and on the e-book page, in this order.">
+          <button className="fd-btn primary" onClick={() => setEdit({})}>Add a partner</button>
+        </Head>
+        <div className="fd-toolbar"><Flash m={m} /></div>
+        <div className="fd-card fd-ppreview">
+          <div className="fd-card-head" style={{ marginBottom: 10 }}><div><h2 className="fd-h2" style={{ marginTop: 0 }}>On the public site</h2><p className="fd-sub">How the Library card shows your partners.</p></div><a className="fd-btn ghost sm" href="/ebooks" target="_blank" rel="noopener noreferrer">Open the e-book page {ICON.ext}</a></div>
+          {shown.length === 0 ? <p className="fd-sub">No partner is shown. The Library card shows no partner box.</p> : (
+            <div className="fd-ppreview-box">
+              <div className="fd-ppreview-top"><i>The Brial Endowment</i><span>×</span><em>{shown.length === 1 ? "1 partner" : shown.length + " partners"}</em></div>
+              <div className="fd-ppreview-chips">{shown.map(p => <span key={p.id}><PartnerLogo p={p} size={22} />{p.name}</span>)}</div>
+            </div>
+          )}
+        </div>
+        <div className="fd-table" style={{ marginTop: 16 }}>
+          {list.length === 0 ? <Empty title="No partners yet.">Add the first store that sells your books.</Empty> : list.map((p, i) => (
+            <div key={p.id} className={"fd-tr fd-prow" + (p.shown === false ? " dim" : "")} style={{ gridTemplateColumns: "auto minmax(0,1fr) auto" }}>
+              <PartnerLogo p={p} size={46} />
+              <div className="fd-td">
+                <b>{p.name}{p.label && <span className="fd-plabel">{p.label}</span>}</b>
+                {p.link ? <a className="fd-mono" href={p.link} target="_blank" rel="noopener noreferrer">{p.link.replace(/^https?:\/\//, "")}</a> : <small>No profile page yet: shown as coming soon</small>}
+                <div className="fd-actions" style={{ marginTop: 6 }}>
+                  {p.shown === false ? <Tag>Hidden</Tag> : p.link ? <Tag tone="ok">Live</Tag> : <Tag tone="warn">Coming soon</Tag>}
+                  <Tag>{carried(p)} of {books.length} {plural(books.length, "book", "books")}</Tag>
+                </div>
+              </div>
+              <div className="fd-actions">
+                <button className="fd-btn quiet sm" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">↑</button>
+                <button className="fd-btn quiet sm" disabled={i === list.length - 1} onClick={() => move(i, 1)} aria-label="Move down">↓</button>
+                <Switch on={p.shown !== false} onChange={v => commit(list.map(x => x.id === p.id ? { ...x, shown: v } : x), v ? p.name + " is shown." : p.name + " is hidden.")}>{p.shown !== false ? "Shown" : "Hidden"}</Switch>
+                <button className="fd-btn ghost sm" onClick={() => setEdit(p)}>Edit</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="fd-sub" style={{ marginTop: 14 }}>Each book's link on each store is set in the Catalogue: open a book and fill in "Where to buy it". The Library's main link follows the first shown partner that has a profile page.</p>
+        {edit && <PartnerForm partner={edit} onClose={() => setEdit(null)}
+          onRemove={edit.id ? () => { commit(list.filter(x => x.id !== edit.id), edit.name + " removed."); setEdit(null); } : null}
+          onSave={np => { const exists = list.some(x => x.id === np.id); commit(exists ? list.map(x => x.id === np.id ? np : x) : [...list, { ...np, id: "partner-" + Date.now().toString(36) }], exists ? "Partner saved." : np.name + " added."); setEdit(null); }} />}
+      </>
     );
   }
   function CatalogView({ store }) {
@@ -1084,7 +1243,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           {books.length === 0 ? <Empty title="The catalogue is empty.">Add your first book.</Empty> : books.map((b, i) => (
             <div key={b.id || i} className="fd-tr" style={{ gridTemplateColumns: "auto minmax(0,1fr) auto" }}>
               {b.cover ? <Img className="fd-cover" src={b.cover} fallback={<div className="fd-cover">Cover</div>} /> : <div className="fd-cover">No cover</div>}
-              <div className="fd-td"><b>{b.title || "Untitled"}</b><small>{b.subtitle}</small><div className="fd-actions" style={{ marginTop: 6 }}>{(b.langCode || b.lang) && <Tag>{b.langCode || b.lang}</Tag>}{b.link ? <a className="fd-mono" href={b.link} target="_blank" rel="noopener noreferrer">{b.link.replace(/^https?:\/\//, "")}</a> : <Tag tone="warn">No store link</Tag>}</div></div>
+              <div className="fd-td"><b>{b.title || "Untitled"}</b><small>{b.subtitle}</small><div className="fd-actions" style={{ marginTop: 6 }}>{(b.langCode || b.lang) && <Tag>{b.langCode || b.lang}</Tag>}{(() => { const sl = store.bookStoreLinks ? store.bookStoreLinks(b) : []; return sl.length ? sl.map(x => <a key={x.partner.id} className="fd-storechip" href={x.url} target="_blank" rel="noopener noreferrer" title={x.url}><PartnerLogo p={x.partner} size={18} />{x.partner.name}</a>) : b.link ? <a className="fd-mono" href={b.link} target="_blank" rel="noopener noreferrer">{b.link.replace(/^https?:\/\//, "")}</a> : <Tag tone="warn">No store link</Tag>; })()}</div></div>
               <div className="fd-actions">
                 <button className="fd-btn quiet sm" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">↑</button>
                 <button className="fd-btn quiet sm" disabled={i === books.length - 1} onClick={() => move(i, 1)} aria-label="Move down">↓</button>
@@ -1094,7 +1253,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>
           ))}
         </div>
-        {edit && <BookForm book={edit} onClose={() => setEdit(null)} onSave={nb => { const exists = books.some(x => x.id === nb.id); commit(exists ? books.map(x => (x.id === nb.id ? nb : x)) : [...books, nb], exists ? "Book updated." : "Book added."); }} />}
+        {edit && <BookForm book={edit} partners={store.getLibraryPartners ? store.getLibraryPartners() : []} onClose={() => setEdit(null)} onSave={nb => { const exists = books.some(x => x.id === nb.id); commit(exists ? books.map(x => (x.id === nb.id ? nb : x)) : [...books, nb], exists ? "Book updated." : "Book added."); }} />}
       </>
     );
   }
@@ -6094,10 +6253,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       nav = [
         { id: "catalog", label: "Catalogue", icon: ICON.book, count: store.listEbooks().length },
         { id: "sales", label: "Sales", icon: ICON.sale, count: store.listLibrarySales().length },
-        { id: "link", label: "Pillar link", icon: ICON.link },
+        { id: "partners", label: "Partners", icon: ICON.link, count: store.getLibraryPartners ? store.getLibraryPartners().length : 0 },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "catalog";
-      view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <LinkView store={store} pillarKey={pillar} cfg={meta} />;
+      view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <LibraryPartnersView store={store} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     if (pillar === "treasury") {

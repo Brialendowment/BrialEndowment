@@ -1,3 +1,16 @@
+
+// Several partners on one pillar card: "The Brial Endowment ×" then each partner's logo on a white chip
+window.BrialPartnerStrip = function (partners, opts) {
+  const h = React.createElement, o = opts || {};
+  return h("div", { style: { marginTop: o.marginTop != null ? o.marginTop : 18, padding: "10px 12px", background: "rgba(232,228,220,0.06)", border: "1px solid rgba(201,169,97,0.25)", minWidth: 0 } },
+    h("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
+      h("span", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: 13, fontStyle: "italic", color: "#C9A961" } }, "The Brial Endowment"),
+      h("span", { style: { color: "rgba(232,228,220,0.66)", fontSize: 13 } }, "\xD7"),
+      h("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)" } }, partners.length === 1 ? "1 partner" : partners.length + " partners")),
+    h("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, partners.map((x, i) => h("span", { key: i, title: x.name, style: { display: "inline-flex", alignItems: "center", gap: 7, padding: "4px 9px 4px 5px", background: "rgba(232,228,220,0.08)", border: "1px solid rgba(232,228,220,0.14)", borderRadius: 3, minWidth: 0 } },
+      x.src ? h("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", height: 22, minWidth: 22, padding: "0 4px", background: "#fff", borderRadius: 2 } }, h("img", { src: x.src, alt: "", style: { height: 16, maxWidth: 64, width: "auto", display: "block" } })) : null,
+      h("span", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 11, fontWeight: 500, color: "rgba(232,228,220,0.88)", whiteSpace: "nowrap" } }, x.name)))));
+};
 (function(){
 const {
   useState,
@@ -1095,6 +1108,11 @@ const Philosophy = ({
       src: (window.BRIAL_LOGOS || {}).lynk,
       name: "Lynk · Storefront"
     },
+    // the stores that sell the books, managed in the Founder Portal
+    get partners() {
+      const S = window.BrialStore;
+      return S && S.getLibraryPartners ? S.getLibraryPartners().filter(x => x.shown !== false).map(x => ({ src: S.partnerLogo(x), name: x.name })) : null;
+    },
     d: "The endowment's own books and guides, beginning with our scholarship handbooks in three languages. Every copy sold is planted straight back into the fund.",
     icon: /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 64 64",
@@ -1455,7 +1473,7 @@ const Philosophy = ({
         color: active ? "#C9A961" : "#6B5D32",
         marginTop: 7
       }
-    }, p.sub), p.partner && p.partner.src && /*#__PURE__*/React.createElement("div", {
+    }, p.sub), p.partners && p.partners.length ? window.BrialPartnerStrip(p.partners) : p.partner && p.partner.src && /*#__PURE__*/React.createElement("div", {
       style: {
         display: "flex",
         alignItems: "center",

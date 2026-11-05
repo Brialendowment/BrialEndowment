@@ -8,11 +8,19 @@ const {
 // GLOBAL SCHOLARSHIP E-BOOKS — founder-managed catalog
 // ============================================================
 
+// ---------- Where each book is sold: one link per library partner ----------
+const storeLinks = book => (window.BrialStore && window.BrialStore.bookStoreLinks ? window.BrialStore.bookStoreLinks(book) : []);
+const primaryLink = book => (storeLinks(book)[0] || {}).url || book.link;
+const partnerChip = (p, href, key, accent) => /*#__PURE__*/React.createElement(href ? "a" : "span", {
+  key, href: href || undefined, target: href ? "_blank" : undefined, rel: href ? "noopener noreferrer" : undefined, title: href ? p.name : p.name + " · coming soon",
+  style: { display: "inline-flex", alignItems: "center", gap: 9, padding: "7px 13px 7px 7px", border: "1px solid " + (href ? (accent || "#C9A961") + "66" : "rgba(232,228,220,0.16)"), background: "rgba(232,228,220,0.05)", color: href ? "#E8E4DC" : "rgba(232,228,220,0.55)", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 500, whiteSpace: "nowrap" }
+}, (() => { const src = window.BrialStore && window.BrialStore.partnerLogo ? window.BrialStore.partnerLogo(p) : ""; return src ? /*#__PURE__*/React.createElement("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", height: 26, minWidth: 26, padding: "0 5px", background: "#fff", borderRadius: 2 } }, /*#__PURE__*/React.createElement("img", { src, alt: "", style: { height: 18, maxWidth: 76, width: "auto", display: "block" } })) : null; })(), p.name, href ? /*#__PURE__*/React.createElement("span", { style: { fontFamily: "serif", fontSize: 15, opacity: 0.8 } }, "\u2197") : /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.7 } }, "Soon"));
+
 // ---------- Real cover image ----------
 const BookCover = ({
   book
 }) => /*#__PURE__*/React.createElement("a", {
-  href: book.link,
+  href: primaryLink(book),
   target: "_blank",
   rel: "noopener noreferrer",
   style: {
@@ -144,7 +152,7 @@ const EBookSection = ({
     color: "rgba(232,228,220,0.8)"
   }
 }, p)))), /*#__PURE__*/React.createElement("a", {
-  href: book.link,
+  href: primaryLink(book),
   target: "_blank",
   rel: "noopener noreferrer",
   style: {
@@ -167,7 +175,11 @@ const EBookSection = ({
     fontFamily: "serif",
     fontSize: 20
   }
-}, "\u2197")), book.supportNote && /*#__PURE__*/React.createElement("div", {
+}, "\u2197")), storeLinks(book).length > 1 && /*#__PURE__*/React.createElement("div", {
+  style: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 16, maxWidth: 640 }
+}, /*#__PURE__*/React.createElement("span", {
+  style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)", marginRight: 4 }
+}, "Also on"), storeLinks(book).slice(1).map((x, i) => partnerChip(x.partner, x.url, i, book.accent))), book.supportNote && /*#__PURE__*/React.createElement("div", {
   style: {
     display: "flex",
     alignItems: "center",
@@ -338,7 +350,7 @@ const EBooksPage = ({
       color: "rgba(232,228,220,0.72)",
       margin: 0
     }
-  }, "Three complete master guides for scholarship hunters, in English, Bahasa Indonesia, and Fran\xE7ais. Everything you need to find, apply for, and secure fully-funded education abroad. Proceeds support the mission of The Brial Endowment."), (() => { const libLink = window.BrialStore?.getPillarLink?.("library") || ""; const libHidden = window.BrialStore?.getPillarLinkHidden?.("library") || false; return libLink && !libHidden ? /*#__PURE__*/React.createElement("a", { href: libLink, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 12, marginTop: 30, padding: "16px 30px", background: "linear-gradient(120deg, #EAD9A8, #C9A961 55%, #B08F4C)", color: "#131A33", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "View all books in our library \u2197") : null; })()), /*#__PURE__*/React.createElement("div", {
+  }, "Three complete master guides for scholarship hunters, in English, Bahasa Indonesia, and Fran\xE7ais. Everything you need to find, apply for, and secure fully-funded education abroad. Proceeds support the mission of The Brial Endowment."), (() => { const S = window.BrialStore; const parts = S && S.getLibraryPartners ? S.getLibraryPartners().filter(x => x.shown !== false) : []; if (parts.length) return /*#__PURE__*/React.createElement("div", { style: { marginTop: 30 } }, /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A961", marginBottom: 12 } }, "Find all our books on"), /*#__PURE__*/React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, parts.map((x, i) => partnerChip(x, x.link, i)))); const libLink = S?.getPillarLink?.("library") || ""; const libHidden = S?.getPillarLinkHidden?.("library") || false; return libLink && !libHidden ? /*#__PURE__*/React.createElement("a", { href: libLink, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 12, marginTop: 30, padding: "16px 30px", background: "linear-gradient(120deg, #EAD9A8, #C9A961 55%, #B08F4C)", color: "#131A33", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "View all books in our library \u2197") : null; })()), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 30
     }

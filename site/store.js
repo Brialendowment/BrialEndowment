@@ -913,6 +913,8 @@ window.BrialClipboard = { copy: copyToClipboard };
         subtitle: (b.subtitle || "").trim(),
         cover: b.cover || "",
         link: (b.link || "").trim(),
+        // one store link per library partner, by partner id
+        links: Object.fromEntries(Object.entries(b.links && typeof b.links === "object" ? b.links : {}).map(([k, v]) => [k, String(v || "").trim()]).filter(([, v]) => /^https?:\/\//i.test(v))),
         desc: (b.desc || "").trim(),
         getLabel: (b.getLabel || "").trim(),
         supportNote: (b.supportNote || "").trim(),
@@ -924,6 +926,42 @@ window.BrialClipboard = { copy: copyToClipboard };
       if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
       saveCache(); notify({ key: "ebooks" });
       upsertDonation(rec).catch(e => console.error(e));
+    },
+
+    // ----- Library partners: the stores that sell the endowment's books (public, founder-managed) -----
+    getLibraryPartners() {
+      const d = _donations.find(x => x.id === "LIBRARY-PARTNERS");
+      if (d && d.data && Array.isArray(d.data.partners)) return d.data.partners;
+      return [{ id: "lynk", name: "Lynk", label: "Storefront", logo: "builtin:lynk", link: Store.getPillarLinks().library || "https://lynk.id/brial", shown: true }];
+    },
+    // A partner logo is an image address, or "builtin:<key>" for a logo embedded in partner-logos.js
+    partnerLogo(p) {
+      const l = String((p && p.logo) || "");
+      return l.indexOf("builtin:") === 0 ? ((window.BRIAL_LOGOS || {})[l.slice(8)] || "") : l;
+    },
+    // A book's store links in partner order; older books keep their single Lynk link
+    bookStoreLinks(book) {
+      const links = (book && book.links) || {};
+      return Store.getLibraryPartners().filter(p => p.shown !== false).map(p => ({ partner: p,
+        url: links[p.id] || (p.id === "lynk" && /lynk\.id\//i.test((book && book.link) || "") ? book.link : "") })).filter(x => x.url);
+    },
+    saveLibraryPartners(list) {
+      const clean = (Array.isArray(list) ? list : []).map((p, i) => ({
+        id: String(p.id || ("partner-" + Date.now().toString(36) + i)).slice(0, 40),
+        name: String(p.name || "").trim().slice(0, 60),
+        label: String(p.label || "").trim().slice(0, 40),
+        logo: String(p.logo || ""),
+        link: /^https?:\/\//i.test(String(p.link || "").trim()) ? String(p.link).trim() : "",
+        shown: p.shown !== false,
+      })).filter(p => p.name);
+      const rec = { id: "LIBRARY-PARTNERS", name: "__libpartners__", amount: 0, data: { partners: clean } };
+      const idx = _donations.findIndex(x => x.id === "LIBRARY-PARTNERS");
+      if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
+      saveCache(); notify({ key: "library-partners" });
+      // the Library's main link follows the first visible partner that has one
+      const first = clean.find(p => p.shown && p.link);
+      if (first && first.link !== Store.getPillarLinks().library) Store.savePillarLink("library", first.link);
+      return upsertDonation(rec);
     },
 
     // ----- Reforestation & Land programme content (key "foodland", once Food & Land) (founder-managed page copy) -----
