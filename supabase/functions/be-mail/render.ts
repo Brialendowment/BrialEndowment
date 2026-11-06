@@ -152,7 +152,9 @@ export function receiptEmail(d: any, rc: any, opts: { copy?: boolean; note?: str
       ["Verified", esc(day(d.verifiedAt || rc.issued_at))],
       ["Payment reference", ref ? `<span style="font-family:Consolas,Menlo,monospace;font-weight:500">${esc(ref)}</span>` : ""],
     ],
-    body: `<p style="margin:0">Every verified gift is recorded on our public ledger${d.anonymous ? ", listed anonymously as you asked" : ""}, so you can see where the endowment's money goes.</p>`,
+    body: `<p style="margin:0">Every verified gift is recorded on our public ledger${d.anonymous ? ", listed anonymously as you asked" : ""}, so you can see where the endowment's money goes.</p>` +
+      `<p style="margin:18px 0 0;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:16px;line-height:1.6;color:${NAVY}">And all praise belongs to God, the first Giver of every gift. May He accept it from you, and bless what remains with you.</p>` +
+      `<p style="margin:8px 0 0;font-size:13px"><a href="https://brialendowment.org/#dedication" style="color:${GILT};text-decoration:none">Why we say this &rarr;</a></p>`,
     cta: { label: "See the public ledger", href: LEDGER },
     note: `Please keep this receipt for your records. No goods or services were provided in exchange for this gift. If any detail is wrong, simply reply to this email.`,
   });
