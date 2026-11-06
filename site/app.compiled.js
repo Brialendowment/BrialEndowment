@@ -248,7 +248,7 @@ const Nav = ({
     stroke: "#C9A961",
     strokeWidth: "1.2"
   }, /*#__PURE__*/React.createElement("path", {
-    d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z"
+    d: "M18 3 L20.79 11.26 L28.61 7.39 L24.74 15.21 L33 18 L24.74 20.79 L28.61 28.61 L20.79 24.74 L18 33 L15.21 24.74 L7.39 28.61 L11.26 20.79 L3 18 L11.26 15.21 L7.39 7.39 L15.21 11.26 Z"
   }), /*#__PURE__*/React.createElement("circle", {
     cx: "18",
     cy: "18",
@@ -2294,7 +2294,7 @@ const Footer = ({
   stroke: "#C9A961",
   strokeWidth: "1.2"
 }, /*#__PURE__*/React.createElement("path", {
-  d: "M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z"
+  d: "M18 3 L20.79 11.26 L28.61 7.39 L24.74 15.21 L33 18 L24.74 20.79 L28.61 28.61 L20.79 24.74 L18 33 L15.21 24.74 L7.39 28.61 L11.26 20.79 L3 18 L11.26 15.21 L7.39 7.39 L15.21 11.26 Z"
 }), /*#__PURE__*/React.createElement("circle", {
   cx: "18",
   cy: "18",

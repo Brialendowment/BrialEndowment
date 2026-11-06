@@ -547,7 +547,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     search: I(<><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>, 16),
     up: I(<><path d="M12 16V4M7 9l5-5 5 5M5 20h14" /></>, 16),
     ext: I(<><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" /></>, 14),
-    star: <svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#C9A961" strokeWidth="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" /><circle cx="18" cy="18" r="4" fill="#C9A961" stroke="none" /></g></svg>,
+    star: <svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#C9A961" strokeWidth="1.2"><path d="M18 3 L20.79 11.26 L28.61 7.39 L24.74 15.21 L33 18 L24.74 20.79 L28.61 28.61 L20.79 24.74 L18 33 L15.21 24.74 L7.39 28.61 L11.26 20.79 L3 18 L11.26 15.21 L7.39 7.39 L15.21 11.26 Z" /><circle cx="18" cy="18" r="4" fill="#C9A961" stroke="none" /></g></svg>,
     worship: I(<><path d="M12 3c-2 2-4 3.5-4 6h8c0-2.5-2-4-4-6z" /><path d="M6 21V12h12v9M10 21v-4h4v4M4 21h16" /></>),
     library: I(<><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z" /><path d="M12 6v14" /></>),
     foodland: I(<><path d="M12 21v-9" /><path d="M12 12c0-4 3-7 7-7 0 4-3 7-7 7zM12 14c0-3-2.5-5.5-6-5.5 0 3.5 2.5 5.5 6 5.5z" /></>),
@@ -5477,7 +5477,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <p className="fg-verse">“When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, and a righteous child who prays for them.”<small>Sahih Muslim</small></p>
           {step !== "password" ? (
           <form className="fg-card" onSubmit={submitCode}>
-            <div className="fg-mark"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#E2C98E" strokeWidth="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" /><circle cx="18" cy="18" r="4" fill="#E2C98E" stroke="none" /></g></svg></div>
+            <div className="fg-mark"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#E2C98E" strokeWidth="1.2"><path d="M18 3 L20.79 11.26 L28.61 7.39 L24.74 15.21 L33 18 L24.74 20.79 L28.61 28.61 L20.79 24.74 L18 33 L15.21 24.74 L7.39 28.61 L11.26 20.79 L3 18 L11.26 15.21 L7.39 7.39 L15.21 11.26 Z" /><circle cx="18" cy="18" r="4" fill="#E2C98E" stroke="none" /></g></svg></div>
             <p className="fg-k">Two-step verification</p>
             <h1 className="fg-h">{step === "recovery" ? "Use a recovery code." : "Enter your code."}</h1>
             <div className="fg-f">
@@ -5496,7 +5496,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           </form>
           ) : (
           <form className="fg-card" onSubmit={submit}>
-            <div className="fg-mark"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#E2C98E" strokeWidth="1.2"><path d="M18 3 L23 11 L33 13 L26 21 L28 31 L18 26 L8 31 L10 21 L3 13 L13 11 Z" /><circle cx="18" cy="18" r="4" fill="#E2C98E" stroke="none" /></g></svg></div>
+            <div className="fg-mark"><svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><g fill="none" stroke="#E2C98E" strokeWidth="1.2"><path d="M18 3 L20.79 11.26 L28.61 7.39 L24.74 15.21 L33 18 L24.74 20.79 L28.61 28.61 L20.79 24.74 L18 33 L15.21 24.74 L7.39 28.61 L11.26 20.79 L3 18 L11.26 15.21 L7.39 7.39 L15.21 11.26 Z" /><circle cx="18" cy="18" r="4" fill="#E2C98E" stroke="none" /></g></svg></div>
             <p className="fg-k">Founder Portal</p>
             <h1 className="fg-h">Welcome back.</h1>
             <div className="fg-f"><label htmlFor="fg-email">Email</label><div className="fg-in"><input id="fg-email" type="email" autoFocus value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" spellCheck={false} /></div></div>

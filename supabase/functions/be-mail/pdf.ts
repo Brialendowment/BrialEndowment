@@ -123,8 +123,15 @@ export async function receiptPdf(r: ReceiptData): Promise<Uint8Array> {
 
   // letterhead
   let y = H - 64;
+  // the endowment's mark: an eight-pointed star with a filled centre
   const star = (cx: number, cy: number, s: number) => {
-    page.drawSvgPath(`M 0 ${-s} L ${s * 0.28} ${-s * 0.28} L ${s} 0 L ${s * 0.28} ${s * 0.28} L 0 ${s} L ${-s * 0.28} ${s * 0.28} L ${-s} 0 L ${-s * 0.28} ${-s * 0.28} Z`, { x: cx, y: cy, color: GILT });
+    let d = "";
+    for (let i = 0; i < 16; i++) {
+      const a = -Math.PI / 2 + (i * Math.PI) / 8, rr = i % 2 === 0 ? s : s * 0.486;
+      d += (i ? " L " : "M ") + (rr * Math.cos(a)).toFixed(2) + " " + (rr * Math.sin(a)).toFixed(2);
+    }
+    page.drawSvgPath(d + " Z", { x: cx, y: cy, borderColor: GILT, borderWidth: Math.max(0.7, s * 0.1) });
+    page.drawCircle({ x: cx, y: cy, size: s * 0.21, color: GILT });
   };
   star(M + 7, y + 4, 7);
   text(page, "THE BRIAL ENDOWMENT", M + 22, y, F.sansBold, 9.5, NAVY, { spacing: 2.2 });

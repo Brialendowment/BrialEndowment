@@ -60,7 +60,7 @@ export function layout(b: Block) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid ${LINE};border-radius:14px;overflow:hidden">
 <tr><td style="background:${NAVY};padding:22px 32px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-  <td style="font-family:Georgia,'Times New Roman',serif;color:${GILT_SOFT};font-size:13px;letter-spacing:2px;text-transform:uppercase;white-space:nowrap">&#10022;&nbsp; The Brial Endowment</td>
+  <td style="font-family:Georgia,'Times New Roman',serif;color:${GILT_SOFT};font-size:13px;letter-spacing:2px;text-transform:uppercase;white-space:nowrap"><img src="${SITE}/email-mark.png" width="16" height="16" alt="" style="display:inline-block;vertical-align:-3px;border:0;outline:none">&nbsp; The Brial Endowment</td>
   ${b.kicker ? `<td align="right" style="font-family:Arial,Helvetica,sans-serif;color:#C8CFDB;font-size:11px;letter-spacing:1.5px;text-transform:uppercase">${esc(b.kicker)}</td>` : ""}
   </tr></table>
 </td></tr>
