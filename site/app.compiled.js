@@ -1,4 +1,14 @@
 
+// Amiri (Arabic) for the Basmalah and the dedication to Allah, served from /fonts.
+(function () {
+  if (typeof document === "undefined" || document.getElementById("be-amiri")) return;
+  var R = "U+0600-06FF,U+0750-077F,U+0870-08FF,U+200C-200E,U+2010-2011,U+FB50-FDFF,U+FE70-FEFC";
+  var st = document.createElement("style");
+  st.id = "be-amiri";
+  st.textContent = "@font-face{font-family:'Amiri';font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/amiri-arabic-400-normal.woff2) format('woff2');unicode-range:" + R + "}@font-face{font-family:'Amiri';font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/amiri-arabic-700-normal.woff2) format('woff2');unicode-range:" + R + "}";
+  document.head.appendChild(st);
+})();
+
 // Partners on a pillar card, managed in the Founder Portal (Pillar > Partners).
 // One partner keeps the original layout; several show as a row of logo chips.
 window.BrialPartnersFor = function (key) {
@@ -449,6 +459,32 @@ const Hero = ({
       zIndex: 2
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "b-basmala",
+    style: {
+      textAlign: "center",
+      marginBottom: 56,
+      opacity: 0,
+      animation: "fadeIn 1s 0.1s forwards"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    lang: "ar",
+    dir: "rtl",
+    style: {
+      fontFamily: "'Amiri', 'Scheherazade New', serif",
+      fontSize: 34,
+      lineHeight: 1.6,
+      color: "#E4C989"
+    }
+  }, "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u064e\u0647\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 10,
+      letterSpacing: "0.24em",
+      textTransform: "uppercase",
+      color: "rgba(244,239,227,0.55)",
+      marginTop: 4
+    }
+  }, "In the name of Allah, the Most Gracious, the Most Merciful")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       justifyContent: "space-between",
@@ -1669,6 +1705,208 @@ const Philosophy = ({
 // ============================================================
 // CTA STRIP + FOOTER
 // ============================================================
+const Dedication = () => {
+  const ar = (text, size, extra) => /*#__PURE__*/React.createElement("div", {
+    lang: "ar",
+    dir: "rtl",
+    className: "b-ar",
+    style: Object.assign({
+      fontFamily: "'Amiri', 'Scheherazade New', serif",
+      fontSize: size,
+      lineHeight: 1.9,
+      color: "#E4C989"
+    }, extra || {})
+  }, text);
+  const ref = t => /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+      letterSpacing: "0.16em",
+      textTransform: "uppercase",
+      color: "rgba(201,169,97,0.8)",
+      marginTop: 12
+    }
+  }, t);
+  const card = (label, arLabel, body) => /*#__PURE__*/React.createElement("div", {
+    className: "b-ded-card",
+    style: {
+      border: "1px solid rgba(201,169,97,0.28)",
+      borderRadius: 4,
+      padding: "28px 26px",
+      background: "rgba(10,22,40,0.55)",
+      textAlign: "left"
+    }
+  }, ar(arLabel, 24, { lineHeight: 1.4, textAlign: "right" }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+      letterSpacing: "0.16em",
+      textTransform: "uppercase",
+      color: "#C9A961",
+      margin: "14px 0 10px"
+    }
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 15,
+      lineHeight: 1.7,
+      color: "rgba(244,239,227,0.82)"
+    }
+  }, body));
+  const para = t => /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontSize: 23,
+      lineHeight: 1.6,
+      color: "rgba(244,239,227,0.9)",
+      margin: "0 0 22px"
+    }
+  }, t);
+  const rule = /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 72,
+      height: 1,
+      background: "rgba(201,169,97,0.6)",
+      margin: "48px auto"
+    }
+  });
+  return /*#__PURE__*/React.createElement("section", {
+    id: "dedication",
+    className: "b-ded",
+    style: {
+      position: "relative",
+      overflow: "hidden",
+      padding: "140px 56px",
+      background: "radial-gradient(ellipse at 50% 0%, #15284A 0%, #0A1628 55%, #060E1C 100%)",
+      color: "#F4EFE3",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("style", null, ".b-ded-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:36px}.b-ar{word-spacing:.08em}@media (max-width:760px){.b-ded{padding:96px 20px!important}.b-ded-grid{grid-template-columns:1fr}.b-ded-h{font-size:40px!important}.b-ded-top{font-size:30px!important}}"), /*#__PURE__*/React.createElement("svg", {
+    "aria-hidden": "true",
+    viewBox: "0 0 600 600",
+    style: {
+      position: "absolute",
+      left: "50%",
+      top: 40,
+      width: 760,
+      marginLeft: -380,
+      opacity: 0.09,
+      pointerEvents: "none"
+    }
+  }, /*#__PURE__*/React.createElement("g", {
+    fill: "none",
+    stroke: "#C9A961",
+    strokeWidth: "1"
+  }, /*#__PURE__*/React.createElement("rect", {
+    x: "150", y: "150", width: "300", height: "300"
+  }), /*#__PURE__*/React.createElement("rect", {
+    x: "150", y: "150", width: "300", height: "300",
+    transform: "rotate(45 300 300)"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "300", cy: "300", r: "212"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "300", cy: "300", r: "250", strokeDasharray: "2 6"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "300", cy: "300", r: "120"
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      maxWidth: 880,
+      margin: "0 auto"
+    }
+  }, /*#__PURE__*/React.createElement(Eyebrow, null, "Dedicated to Allah"), ar("\u0643\u064f\u0644\u0651\u064f \u0645\u064e\u0646\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u064e\u0627 \u0641\u064e\u0627\u0646\u064d \ufd3f\u0662\u0666\ufd3e \u0648\u064e\u064a\u064e\u0628\u0652\u0642\u064e\u0649\u0670 \u0648\u064e\u062c\u0652\u0647\u064f \u0631\u064e\u0628\u0651\u0650\u0643\u064e \u0630\u064f\u0648 \u0627\u0644\u0652\u062c\u064e\u0644\u064e\u0627\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u0625\u0650\u0643\u0652\u0631\u064e\u0627\u0645\u0650 \ufd3f\u0662\u0667\ufd3e", 34, {
+    marginTop: 34
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "b-ded-top",
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 26,
+      lineHeight: 1.45,
+      color: "rgba(244,239,227,0.85)",
+      marginTop: 18
+    }
+  }, "Everyone upon the earth will pass away, and there will remain the Face of your Lord, Owner of Majesty and Honour."), ref("Ar-Rahman 55:26-27"), rule, /*#__PURE__*/React.createElement("h2", {
+    className: "b-ded-h",
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontWeight: 400,
+      fontSize: 56,
+      lineHeight: 1.1,
+      margin: "0 0 36px",
+      color: "#F4EFE3"
+    }
+  }, "Everything here belongs to ", /*#__PURE__*/React.createElement("em", {
+    style: {
+      color: "#C9A961"
+    }
+  }, "Him.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 720,
+      margin: "0 auto",
+      textAlign: "left"
+    }
+  }, para("This endowment began as a prayer. A student with almost nothing asked Allah for a scholarship, and it was given. He asked again, and it was given again. There is no way to repay the One who owns everything, so we do the only thing we can: we pass His kindness on to His creation."), para("We are mortal. Allah is Al-Hayy, the Ever-Living, and Al-Warith, the Inheritor of all things. So we place this endowment in His hands: its principal and its returns, its records and its systems, and every pillar it raises. When its founder and every steward after him are gone, it remains His. We ask Him to keep it giving, generation after generation, until the Last Day.")), ar("\u0648\u064e\u0644\u0650\u0644\u0651\u064e\u0647\u0650 \u0645\u0650\u064a\u0631\u064e\u0627\u062b\u064f \u0627\u0644\u0633\u0651\u064e\u0645\u064e\u0627\u0648\u064e\u0627\u062a\u0650 \u0648\u064e\u0627\u0644\u0652\u0623\u064e\u0631\u0652\u0636\u0650", 30, {
+    marginTop: 18
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 21,
+      color: "rgba(244,239,227,0.8)",
+      marginTop: 6
+    }
+  }, "And to Allah belongs the inheritance of the heavens and the earth."), ref("Al-Hadid 57:10"), rule, ar("\u0625\u0650\u0630\u064e\u0627 \u0645\u064e\u0627\u062a\u064e \u0627\u0644\u0652\u0625\u0650\u0646\u0652\u0633\u064e\u0627\u0646\u064f \u0627\u0646\u0652\u0642\u064e\u0637\u064e\u0639\u064e \u0639\u064e\u0646\u0652\u0647\u064f \u0639\u064e\u0645\u064e\u0644\u064f\u0647\u064f \u0625\u0650\u0644\u0651\u064e\u0627 \u0645\u0650\u0646\u0652 \u062b\u064e\u0644\u064e\u0627\u062b\u064e\u0629\u064d: \u0625\u0650\u0644\u0651\u064e\u0627 \u0645\u0650\u0646\u0652 \u0635\u064e\u062f\u064e\u0642\u064e\u0629\u064d \u062c\u064e\u0627\u0631\u0650\u064a\u064e\u0629\u064d\u060c \u0623\u064e\u0648\u0652 \u0639\u0650\u0644\u0652\u0645\u064d \u064a\u064f\u0646\u0652\u062a\u064e\u0641\u064e\u0639\u064f \u0628\u0650\u0647\u0650\u060c \u0623\u064e\u0648\u0652 \u0648\u064e\u0644\u064e\u062f\u064d \u0635\u064e\u0627\u0644\u0650\u062d\u064d \u064a\u064e\u062f\u0652\u0639\u064f\u0648 \u0644\u064e\u0647\u064f", 24), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 21,
+      lineHeight: 1.5,
+      color: "rgba(244,239,227,0.82)",
+      marginTop: 8
+    }
+  }, "When a person dies, their deeds come to an end except for three: a charity that continues, knowledge that benefits, or a righteous child who prays for them."), ref("Prophet Muhammad \ufdfa \xB7 Sahih Muslim"), /*#__PURE__*/React.createElement("div", {
+    className: "b-ded-grid"
+  }, card("A charity that continues", "\u0635\u064e\u062f\u064e\u0642\u064e\u0629\u064c \u062c\u064e\u0627\u0631\u0650\u064a\u064e\u0629\u064c", "The houses of worship, the wells, the trees and the meals. Each one is planted to keep giving after the hands that planted it are still."), card("Knowledge that benefits", "\u0639\u0650\u0644\u0652\u0645\u064c \u064a\u064f\u0646\u0652\u062a\u064e\u0641\u064e\u0639\u064f \u0628\u0650\u0647\u0650", "The scholarships and the library. Every student who learns and teaches others carries this charity further than we ever could.")), rule, ar("\ufd3f \u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u062a\u064e\u0642\u064e\u0628\u0651\u064e\u0644\u0652 \u0645\u0650\u0646\u0651\u064e\u0627 \u0625\u0650\u0646\u0651\u064e\u0643\u064e \u0623\u064e\u0646\u0652\u062a\u064e \u0627\u0644\u0633\u0651\u064e\u0645\u0650\u064a\u0639\u064f \u0627\u0644\u0652\u0639\u064e\u0644\u0650\u064a\u0645\u064f \ufd3e", 38), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 24,
+      color: "rgba(244,239,227,0.88)",
+      marginTop: 8
+    }
+  }, "Our Lord, accept this from us. You are the All-Hearing, the All-Knowing."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Manrope', sans-serif",
+      fontSize: 14,
+      lineHeight: 1.7,
+      color: "rgba(244,239,227,0.62)",
+      maxWidth: 560,
+      margin: "10px auto 0"
+    }
+  }, "The prayer of Ibrahim and Ismail as they raised the foundations of the House."), ref("Al-Baqarah 2:127"), rule, /*#__PURE__*/React.createElement("div", {
+    className: "b-ded-h",
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 40,
+      lineHeight: 1.3,
+      color: "#F4EFE3",
+      maxWidth: 760,
+      margin: "0 auto"
+    }
+  }, "\u201CWe entrusted this gift to God, to flow and keep giving long after we are gone.\u201D"), ref("Inscribed on a Brial Endowment well \xB7 16 July 2026"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 64,
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 12,
+      letterSpacing: "0.2em",
+      textTransform: "uppercase",
+      color: "#C9A961"
+    }
+  }, "Held in trust for Allah \xB7 the Ever-Living \xB7 the Inheritor of all things")));
+};
+
 const CtaStrip = ({
   onApply
 }) => /*#__PURE__*/React.createElement("section", {
@@ -2142,13 +2380,20 @@ const Footer = ({
     paddingTop: 32,
     display: "flex",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 12,
     fontFamily: "'JetBrains Mono', monospace",
     fontSize: 11,
     color: "rgba(232,228,220,0.66)",
     letterSpacing: "0.18em",
     textTransform: "uppercase"
   }
-}, /*#__PURE__*/React.createElement("div", null, "\xA9 MMXXVI \xB7 The Brial Endowment"), /*#__PURE__*/React.createElement("div", null, "brialendowment.org"))));
+}, /*#__PURE__*/React.createElement("div", null, "\xA9 MMXXVI \xB7 The Brial Endowment"), /*#__PURE__*/React.createElement("div", {
+  className: "b-foot-trust",
+  style: {
+    color: "#C9A961"
+  }
+}, "Held in trust for Allah, the Ever-Living"), /*#__PURE__*/React.createElement("div", null, "brialendowment.org"))));
 
 // ============================================================
 // APP
@@ -2279,7 +2524,7 @@ const App = () => {
     onWater: () => setView("water"),
     onEbooks: () => setView("ebooks"),
     onPillarView: v => setView(v)
-  }), /*#__PURE__*/React.createElement(Transparency, null), /*#__PURE__*/React.createElement(CtaStrip, {
+  }), /*#__PURE__*/React.createElement(Transparency, null), /*#__PURE__*/React.createElement(Dedication, null), /*#__PURE__*/React.createElement(CtaStrip, {
     onApply: () => goToScholar("signup")
   }), /*#__PURE__*/React.createElement(Footer, {
     onAdmin: () => setView("admin"),
