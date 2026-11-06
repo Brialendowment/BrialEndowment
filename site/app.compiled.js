@@ -1814,7 +1814,51 @@ const Dedication = () => {
       maxWidth: 880,
       margin: "0 auto"
     }
-  }, /*#__PURE__*/React.createElement(Eyebrow, null, "Dedicated to God"), ar("\u0643\u064f\u0644\u0651\u064f \u0645\u064e\u0646\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u064e\u0627 \u0641\u064e\u0627\u0646\u064d \ufd3f\u0662\u0666\ufd3e \u0648\u064e\u064a\u064e\u0628\u0652\u0642\u064e\u0649\u0670 \u0648\u064e\u062c\u0652\u0647\u064f \u0631\u064e\u0628\u0651\u0650\u0643\u064e \u0630\u064f\u0648 \u0627\u0644\u0652\u062c\u064e\u0644\u064e\u0627\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u0625\u0650\u0643\u0652\u0631\u064e\u0627\u0645\u0650 \ufd3f\u0662\u0667\ufd3e", 34, {
+  }, /*#__PURE__*/React.createElement(Eyebrow, null, "Dedicated to God"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 22
+    }
+  }, ar("\u0642\u064f\u0644\u0652 \u0647\u064f\u0648\u064e \u0627\u0644\u0644\u0651\u064e\u0647\u064f \u0623\u064e\u062d\u064e\u062f\u064c \ufd3f\u0661\ufd3e", 32, {
+    marginTop: 18,
+    lineHeight: 1.6
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 22,
+      color: "rgba(244,239,227,0.85)"
+    }
+  }, "Say: He is God, the One."), ar("\u0627\u0644\u0644\u0651\u064e\u0647\u064f \u0627\u0644\u0635\u0651\u064e\u0645\u064e\u062f\u064f \ufd3f\u0662\ufd3e", 32, {
+    marginTop: 18,
+    lineHeight: 1.6
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 22,
+      color: "rgba(244,239,227,0.85)"
+    }
+  }, "God, the Eternal, on whom all depend."), ar("\u0644\u064e\u0645\u0652 \u064a\u064e\u0644\u0650\u062f\u0652 \u0648\u064e\u0644\u064e\u0645\u0652 \u064a\u064f\u0648\u0644\u064e\u062f\u0652 \ufd3f\u0663\ufd3e", 32, {
+    marginTop: 18,
+    lineHeight: 1.6
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 22,
+      color: "rgba(244,239,227,0.85)"
+    }
+  }, "He neither begets, nor was He begotten."), ar("\u0648\u064e\u0644\u064e\u0645\u0652 \u064a\u064e\u0643\u064f\u0646\u0652 \u0644\u064e\u0647\u064f \u0643\u064f\u0641\u064f\u0648\u064b\u0627 \u0623\u064e\u062d\u064e\u062f\u064c \ufd3f\u0664\ufd3e", 32, {
+    marginTop: 18,
+    lineHeight: 1.6
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Cormorant Garamond', serif",
+      fontStyle: "italic",
+      fontSize: 22,
+      color: "rgba(244,239,227,0.85)"
+    }
+  }, "And there is none comparable to Him."), ref("Al-Ikhlas 112:1-4")), rule, ar("\u0643\u064f\u0644\u0651\u064f \u0645\u064e\u0646\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u064e\u0627 \u0641\u064e\u0627\u0646\u064d \ufd3f\u0662\u0666\ufd3e \u0648\u064e\u064a\u064e\u0628\u0652\u0642\u064e\u0649\u0670 \u0648\u064e\u062c\u0652\u0647\u064f \u0631\u064e\u0628\u0651\u0650\u0643\u064e \u0630\u064f\u0648 \u0627\u0644\u0652\u062c\u064e\u0644\u064e\u0627\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u0625\u0650\u0643\u0652\u0631\u064e\u0627\u0645\u0650 \ufd3f\u0662\u0667\ufd3e", 34, {
     marginTop: 34
   }), /*#__PURE__*/React.createElement("div", {
     className: "b-ded-top",
