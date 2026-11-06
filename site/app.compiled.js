@@ -285,7 +285,7 @@ const Nav = ({
       gap: 28,
       alignItems: "center"
     }
-  }, ["Mission", "Transparency", "Scholars"].map(item => /*#__PURE__*/React.createElement("a", {
+  }, ["Mission", "Transparency", "Dedication", "Scholars"].map(item => /*#__PURE__*/React.createElement("a", {
     key: item,
     href: `#${item.toLowerCase()}`,
     style: {
@@ -484,7 +484,7 @@ const Hero = ({
       color: "rgba(244,239,227,0.55)",
       marginTop: 4
     }
-  }, "In the name of Allah, the Most Gracious, the Most Merciful")), /*#__PURE__*/React.createElement("div", {
+  }, "In the name of God, the Most Gracious, the Most Merciful")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       justifyContent: "space-between",
@@ -1814,7 +1814,7 @@ const Dedication = () => {
       maxWidth: 880,
       margin: "0 auto"
     }
-  }, /*#__PURE__*/React.createElement(Eyebrow, null, "Dedicated to Allah"), ar("\u0643\u064f\u0644\u0651\u064f \u0645\u064e\u0646\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u064e\u0627 \u0641\u064e\u0627\u0646\u064d \ufd3f\u0662\u0666\ufd3e \u0648\u064e\u064a\u064e\u0628\u0652\u0642\u064e\u0649\u0670 \u0648\u064e\u062c\u0652\u0647\u064f \u0631\u064e\u0628\u0651\u0650\u0643\u064e \u0630\u064f\u0648 \u0627\u0644\u0652\u062c\u064e\u0644\u064e\u0627\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u0625\u0650\u0643\u0652\u0631\u064e\u0627\u0645\u0650 \ufd3f\u0662\u0667\ufd3e", 34, {
+  }, /*#__PURE__*/React.createElement(Eyebrow, null, "Dedicated to God"), ar("\u0643\u064f\u0644\u0651\u064f \u0645\u064e\u0646\u0652 \u0639\u064e\u0644\u064e\u064a\u0652\u0647\u064e\u0627 \u0641\u064e\u0627\u0646\u064d \ufd3f\u0662\u0666\ufd3e \u0648\u064e\u064a\u064e\u0628\u0652\u0642\u064e\u0649\u0670 \u0648\u064e\u062c\u0652\u0647\u064f \u0631\u064e\u0628\u0651\u0650\u0643\u064e \u0630\u064f\u0648 \u0627\u0644\u0652\u062c\u064e\u0644\u064e\u0627\u0644\u0650 \u0648\u064e\u0627\u0644\u0652\u0625\u0650\u0643\u0652\u0631\u064e\u0627\u0645\u0650 \ufd3f\u0662\u0667\ufd3e", 34, {
     marginTop: 34
   }), /*#__PURE__*/React.createElement("div", {
     className: "b-ded-top",
@@ -1846,7 +1846,7 @@ const Dedication = () => {
       margin: "0 auto",
       textAlign: "left"
     }
-  }, para("This endowment began as a prayer. A student with almost nothing asked Allah for a scholarship, and it was given. He asked again, and it was given again. There is no way to repay the One who owns everything, so we do the only thing we can: we pass His kindness on to His creation."), para("We are mortal. Allah is Al-Hayy, the Ever-Living, and Al-Warith, the Inheritor of all things. So we place this endowment in His hands: its principal and its returns, its records and its systems, and every pillar it raises. When its founder and every steward after him are gone, it remains His. We ask Him to keep it giving, generation after generation, until the Last Day.")), ar("\u0648\u064e\u0644\u0650\u0644\u0651\u064e\u0647\u0650 \u0645\u0650\u064a\u0631\u064e\u0627\u062b\u064f \u0627\u0644\u0633\u0651\u064e\u0645\u064e\u0627\u0648\u064e\u0627\u062a\u0650 \u0648\u064e\u0627\u0644\u0652\u0623\u064e\u0631\u0652\u0636\u0650", 30, {
+  }, para("This endowment began as a prayer. A student with almost nothing asked God for a scholarship, and it was given. He asked again, and it was given again. There is no way to repay the One who owns everything, so we do the only thing we can: we pass His kindness on to His creation."), para("We are mortal. God is the Ever-Living, the Inheritor of all things. So we place this endowment in His hands: its principal and its returns, its records and its systems, and every pillar it raises. When its founder and every steward after him are gone, it remains His. We ask Him to keep it giving, generation after generation, until the Last Day.")), ar("\u0648\u064e\u0644\u0650\u0644\u0651\u064e\u0647\u0650 \u0645\u0650\u064a\u0631\u064e\u0627\u062b\u064f \u0627\u0644\u0633\u0651\u064e\u0645\u064e\u0627\u0648\u064e\u0627\u062a\u0650 \u0648\u064e\u0627\u0644\u0652\u0623\u064e\u0631\u0652\u0636\u0650", 30, {
     marginTop: 18
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1856,7 +1856,7 @@ const Dedication = () => {
       color: "rgba(244,239,227,0.8)",
       marginTop: 6
     }
-  }, "And to Allah belongs the inheritance of the heavens and the earth."), ref("Al-Hadid 57:10"), rule, ar("\u0625\u0650\u0630\u064e\u0627 \u0645\u064e\u0627\u062a\u064e \u0627\u0644\u0652\u0625\u0650\u0646\u0652\u0633\u064e\u0627\u0646\u064f \u0627\u0646\u0652\u0642\u064e\u0637\u064e\u0639\u064e \u0639\u064e\u0646\u0652\u0647\u064f \u0639\u064e\u0645\u064e\u0644\u064f\u0647\u064f \u0625\u0650\u0644\u0651\u064e\u0627 \u0645\u0650\u0646\u0652 \u062b\u064e\u0644\u064e\u0627\u062b\u064e\u0629\u064d: \u0625\u0650\u0644\u0651\u064e\u0627 \u0645\u0650\u0646\u0652 \u0635\u064e\u062f\u064e\u0642\u064e\u0629\u064d \u062c\u064e\u0627\u0631\u0650\u064a\u064e\u0629\u064d\u060c \u0623\u064e\u0648\u0652 \u0639\u0650\u0644\u0652\u0645\u064d \u064a\u064f\u0646\u0652\u062a\u064e\u0641\u064e\u0639\u064f \u0628\u0650\u0647\u0650\u060c \u0623\u064e\u0648\u0652 \u0648\u064e\u0644\u064e\u062f\u064d \u0635\u064e\u0627\u0644\u0650\u062d\u064d \u064a\u064e\u062f\u0652\u0639\u064f\u0648 \u0644\u064e\u0647\u064f", 24), /*#__PURE__*/React.createElement("div", {
+  }, "And to God belongs the inheritance of the heavens and the earth."), ref("Al-Hadid 57:10"), rule, ar("\u0625\u0650\u0630\u064e\u0627 \u0645\u064e\u0627\u062a\u064e \u0627\u0644\u0652\u0625\u0650\u0646\u0652\u0633\u064e\u0627\u0646\u064f \u0627\u0646\u0652\u0642\u064e\u0637\u064e\u0639\u064e \u0639\u064e\u0646\u0652\u0647\u064f \u0639\u064e\u0645\u064e\u0644\u064f\u0647\u064f \u0625\u0650\u0644\u0651\u064e\u0627 \u0645\u0650\u0646\u0652 \u062b\u064e\u0644\u064e\u0627\u062b\u064e\u0629\u064d: \u0625\u0650\u0644\u0651\u064e\u0627 \u0645\u0650\u0646\u0652 \u0635\u064e\u062f\u064e\u0642\u064e\u0629\u064d \u062c\u064e\u0627\u0631\u0650\u064a\u064e\u0629\u064d\u060c \u0623\u064e\u0648\u0652 \u0639\u0650\u0644\u0652\u0645\u064d \u064a\u064f\u0646\u0652\u062a\u064e\u0641\u064e\u0639\u064f \u0628\u0650\u0647\u0650\u060c \u0623\u064e\u0648\u0652 \u0648\u064e\u0644\u064e\u062f\u064d \u0635\u064e\u0627\u0644\u0650\u062d\u064d \u064a\u064e\u062f\u0652\u0639\u064f\u0648 \u0644\u064e\u0647\u064f", 24), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontStyle: "italic",
@@ -1904,7 +1904,7 @@ const Dedication = () => {
       textTransform: "uppercase",
       color: "#C9A961"
     }
-  }, "Held in trust for Allah \xB7 the Ever-Living \xB7 the Inheritor of all things")));
+  }, "Held in trust for God \xB7 the Ever-Living \xB7 the Inheritor of all things")));
 };
 
 const CtaStrip = ({
@@ -2393,7 +2393,7 @@ const Footer = ({
   style: {
     color: "#C9A961"
   }
-}, "Held in trust for Allah, the Ever-Living"), /*#__PURE__*/React.createElement("div", null, "brialendowment.org"))));
+}, "Held in trust for God, the Ever-Living"), /*#__PURE__*/React.createElement("div", null, "brialendowment.org"))));
 
 // ============================================================
 // APP
