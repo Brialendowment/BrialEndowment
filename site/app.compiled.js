@@ -1149,7 +1149,7 @@ const Philosophy = ({
       d: "M28 56 L28 46 Q32 42 36 46 L36 56"
     }))
   }, {
-    t: "The Library",
+    t: "Library & Knowledge Center",
     k: "library",
     sub: "Pustaka",
     status: "active",
@@ -2468,7 +2468,7 @@ const App = () => {
 
   // Tab title follows the view
   useEffect(() => {
-    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "The Library", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
+    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
     try { document.title = T[view] ? T[view] + " | The Brial Endowment" : "The Brial Endowment | A Perpetual Philanthropic Endowment"; } catch (e) {}
   }, [view]);
   // Always start a new view at the top (fixes landing on previous scroll position)

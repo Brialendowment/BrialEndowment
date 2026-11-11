@@ -823,7 +823,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       const iso = obj.date ? new Date(obj.date).toISOString() : now();
       const rec = {
         id: "SALE-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5).toUpperCase(),
-        name: "The Library · " + title + (qty > 1 ? " ×" + qty : ""),
+        name: "Library & Knowledge Center · " + title + (qty > 1 ? " ×" + qty : ""),
         anonymous: false,
         amount: Number(obj.amount) || 0,
         message: (obj.note || "").trim(),

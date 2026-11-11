@@ -686,7 +686,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     schools: { name: "Schools", grantName: "Schools", accent: "#C9BC7F", unit: ["school", "schools"], unitLabel: "Schools raised", get: s => s.getPillarContent("schools"), save: (s, v) => s.savePillarContent("schools", v), unitField: "units", partner: "", project: "e.g. Primary school, phase I", firstEntry: "The first school", linkMode: "partner", linkHelp: "The education partner's programme page. Hide the button while there is no active partner." },
     livestock: { name: "Livestock & Enterprise", grantName: "Livestock & Enterprise", accent: "#C9A07F", unit: ["placement", "placements"], unitLabel: "Placements", get: s => s.getPillarContent("livestock"), save: (s, v) => s.savePillarContent("livestock", v), unitField: "units", partner: "", project: "e.g. Goat herd, family batch I", firstEntry: "The first herd", linkMode: "partner", linkHelp: "The enterprise partner's programme page. Hide the button while there is no active partner." },
     infra: { name: "Sustainable Infrastructure", grantName: "Sustainable Infrastructure", accent: "#9FA8B8", unit: ["work", "works"], unitLabel: "Works completed", get: s => s.getPillarContent("infra"), save: (s, v) => s.savePillarContent("infra", v), unitField: "units", partner: "", project: "e.g. Footbridge, phase I", firstEntry: "The first bridge", linkMode: "partner", linkHelp: "The works partner's programme page. Hide the button while there is no active partner." },
-    library: { name: "The Library", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
+    library: { name: "Library & Knowledge Center", accent: "#C98A61", linkMode: "pillar", linkHelp: "Usually your Lynk storefront (for example https://lynk.id/brial) where readers browse and buy the books." },
     scholarships: { name: "Scholarships", accent: "#C9A961" },
     transport: { name: "Transportation", accent: "#E8834A", linkMode: "partner", linkHelp: "Where the Rent with go2rent button sends visitors, usually https://www.gotworent.com/.", note: "the road",
       get: s => s.getPillarContent("transport"), save: (s, v) => s.savePillarContent("transport", v),
@@ -1231,7 +1231,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>
           ))}
         </div>
-        {books ? <p className="fd-sub" style={{ marginTop: 14 }}>Each book's link on each store is set in the Catalogue: open a book and fill in "Where to buy it". The Library's main link follows the first shown partner that has a profile page.</p>
+        {books ? <p className="fd-sub" style={{ marginTop: 14 }}>Each book's link on each store is set in the Catalogue: open a book and fill in "Where to buy it". Library & Knowledge Center's main link follows the first shown partner that has a profile page.</p>
           : <p className="fd-sub" style={{ marginTop: 14 }}>One partner shows with its logo and name; two or more show as a row of logos. The pillar's button is set separately under "Partner button".</p>}
         {edit && <PartnerForm kind={pillarKey} partner={edit} onClose={() => setEdit(null)}
           onRemove={edit.id ? () => { commit(list.filter(x => x.id !== edit.id), edit.name + " removed."); setEdit(null); } : null}
