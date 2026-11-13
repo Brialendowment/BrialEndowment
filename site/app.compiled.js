@@ -356,7 +356,10 @@ const Hero = ({
     return () => clearInterval(t);
   }, []);
   return /*#__PURE__*/React.createElement("section", {
+    id: "main-content",
+    tabIndex: -1,
     style: {
+      outline: "none",
       position: "relative",
       minHeight: "100vh",
       padding: "180px 56px 120px",
@@ -2544,7 +2547,11 @@ const App = () => {
       background: "#0A1628",
       minHeight: "100vh"
     }
-  }, /*#__PURE__*/React.createElement(SeljukPattern, null), /*#__PURE__*/React.createElement(Nav, {
+  }, /*#__PURE__*/React.createElement("style", null, ".b-skip{position:fixed;left:-9999px;top:10px;z-index:1000;padding:12px 18px;background:#C9A961;color:#0A1628;font-family:'Manrope',sans-serif;font-size:14px;font-weight:600;text-decoration:none}.b-skip:focus{left:12px;outline:2px solid #E8E4DC;outline-offset:2px}"), /*#__PURE__*/React.createElement("a", {
+    className: "b-skip",
+    href: "#main-content",
+    onClick: e => { e.preventDefault(); const t = document.getElementById("main-content"); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView(); } }
+  }, "Skip to main content"), /*#__PURE__*/React.createElement(SeljukPattern, null), /*#__PURE__*/React.createElement(Nav, {
     onApply: () => goToScholar("signup"),
     onDonate: () => setView("donate")
   }), /*#__PURE__*/React.createElement(Hero, {

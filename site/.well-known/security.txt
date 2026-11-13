@@ -1,0 +1,6 @@
+# Security contact for The Brial Endowment (RFC 9116)
+Contact: mailto:hello@brialendowment.org
+Expires: 2027-11-13T00:00:00.000Z
+Preferred-Languages: en, id
+Canonical: https://brialendowment.org/.well-known/security.txt
+Policy: https://brialendowment.org/privacy

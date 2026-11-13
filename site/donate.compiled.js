@@ -398,7 +398,7 @@ const DonationForm = ({
     if (m === "usdt") return parseFloat(form.amount) || 0;
     if (m === "btc") return (parseFloat(form.btc) || 0) * btcRate();
     if (m === "bank" || m === "qris") return (parseFloat(form.idr) || 0) / rate("IDR");
-    if (m === "wire") { const w = parseFloat(form.wireAmount) || 0; return form.wireCur === "USD" ? w : w / (rate(form.wireCur) || (form.wireCur === "EUR" ? 0.86 : 1.3)); }
+    if (m === "wire") { const w = parseFloat(form.wireAmount) || 0; return form.wireCur === "USD" ? w : w / (rate(form.wireCur) || (form.wireCur === "EUR" ? 0.9 : 1.29)); }
     const v = parseFloat(form.cardAmount) || 0;
     return form.cardCur === "USD" ? v : v / rate("IDR");
   })();
@@ -413,6 +413,7 @@ const DonationForm = ({
       if (!(parseFloat(form.amount) > 0)) return setError("Please enter the amount you sent.");
       if (!form.txHash.trim()) return setError("Please paste your transaction hash so we can verify it on chain.");
       if (/^[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("This looks like a Bitcoin transaction ID (no 0x at the start). If you sent Bitcoin, choose BTC above; a USDT hash starts with 0x.");
+      if (!/^0x[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("That does not look like a complete transaction hash. It starts with 0x and has 66 characters in all. Please copy it again from your wallet or the exchange withdrawal page.");
     } else if (m === "btc") {
       if (!(parseFloat(form.btc) > 0)) return setError("Please enter the amount of BTC you sent.");
       if (/^0x[0-9a-fA-F]{64}$/.test(form.txHash.trim())) return setError("This looks like a USDT (BNB Chain or Ethereum) hash, because it starts with 0x. If you sent USDT, choose USDT above; a Bitcoin transaction ID has no 0x.");
@@ -422,6 +423,8 @@ const DonationForm = ({
     } else if (m === "wire") {
       if (!(parseFloat(form.wireAmount) > 0)) return setError("Please enter the amount you sent.");
     } else if (!(parseFloat(form.cardAmount) > 0)) return setError("Please enter the amount you paid at the card checkout.");
+    if (form.email.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(form.email.trim())) return setError("Please check your email address, or leave it empty if you do not need a receipt.");
+    if (!(usd > 0) || usd > 100000000) return setError("Please check the amount.");
     if (!form.agreement) return setError("Please confirm you understand donations are non-refundable.");
     const when = form.paidAt ? new Date(form.paidAt) : null;
     const whenTxt = when && !isNaN(when) ? when.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) + " " + when.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
@@ -433,7 +436,7 @@ const DonationForm = ({
       payment = { method: m, currency: "IDR", paid: parseFloat(form.idr), rate: rate("IDR"), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
     } else if (m === "wire") {
       txHash = ["Bank wire", form.wireCur + " " + (parseFloat(form.wireAmount) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), whenTxt].filter(Boolean).join(" · ");
-      payment = { method: "wire", currency: form.wireCur, paid: parseFloat(form.wireAmount), rate: form.wireCur === "USD" ? 1 : (rate(form.wireCur) || (form.wireCur === "EUR" ? 0.86 : 1.3)), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
+      payment = { method: "wire", currency: form.wireCur, paid: parseFloat(form.wireAmount), rate: form.wireCur === "USD" ? 1 : (rate(form.wireCur) || (form.wireCur === "EUR" ? 0.9 : 1.29)), paidAt: form.paidAt || "", sender: form.sender.trim(), ref: form.ref.trim() };
     } else {
       const paidTxt = form.cardCur === "USD" ? fmtUSD(form.cardAmount) : fmtIDR(form.cardAmount);
       txHash = ["Card via Lynk", paidTxt, whenTxt].filter(Boolean).join(" · ");
@@ -457,7 +460,7 @@ const DonationForm = ({
     h("input", { id: "don-amount", type: "number", inputMode: "decimal", min: "0", step: "any", value, onChange: e => onChange(e.target.value), placeholder, style: { flex: 1, minWidth: 0, padding: "12px 0", background: "transparent", border: "none", color: "#E8E4DC", fontSize: 28, fontFamily: serif, outline: "none" } }),
     after || null);
   const approx = usd > 0 && m !== "usdt" && !(m === "card" && form.cardCur === "USD") && !(m === "wire" && form.wireCur === "USD")
-    ? hint("About " + fmtUSD(usd) + " at today's rate (" + (m === "wire" ? "1 " + form.wireCur + " = " + fmtUSD(1 / (rate(form.wireCur) || (form.wireCur === "EUR" ? 0.86 : 1.3))) : "1 USD = " + fmtIDR(rate("IDR"))) + (fx && fx.source && fx.source !== "estimate" ? ", " + fx.source : ", estimate") + "). We confirm the final figure when we match your transfer.")
+    ? hint("About " + fmtUSD(usd) + " at today's rate (" + (m === "wire" ? "1 " + form.wireCur + " = " + fmtUSD(1 / (rate(form.wireCur) || (form.wireCur === "EUR" ? 0.9 : 1.29))) : "1 USD = " + fmtIDR(rate("IDR"))) + (fx && fx.source && fx.source !== "estimate" ? ", " + fx.source : ", estimate") + "). We confirm the final figure when we match your transfer.")
     : null;
 
   if (step === "done" && sent) {
@@ -837,9 +840,11 @@ const DonatePage = ({
     return () => window.removeEventListener("brial:donate-method", f);
   }, []);
   const rawDonations = store.listDonations();
-  // Real public gifts only: drop internal aggregates, fold in pillar grants as their own rows
+  // Real public gifts only: drop internal aggregates, fold in pillar grants as their own rows.
+  // Only gifts the endowment has confirmed are shown or counted: a form entry that has not
+  // been matched to a payment must never appear on the public page or move the total.
   const donations = (() => {
-    const real = (rawDonations || []).filter(d => d.id !== "LEGACY-SUMMARY" && d.id !== "PILLAR-GRANTS" && d.id !== "PILLAR-LINKS" && d.id !== "EBOOKS-CATALOG" && d.id !== "FOODLAND-CONTENT" && d.id !== "PAYMENT-CONFIG" && d.id !== "WORSHIP-CONTENT" && d.id !== "WATER-CONTENT" && d.id !== "PILLAR-STATUS" && String(d.id || "").indexOf("PILLAR-CONTENT-") !== 0 && String(d.name || "").slice(0, 2) !== "__");
+    const real = (rawDonations || []).filter(d => d.id !== "LEGACY-SUMMARY" && d.id !== "PILLAR-GRANTS" && d.id !== "PILLAR-LINKS" && d.id !== "EBOOKS-CATALOG" && d.id !== "FOODLAND-CONTENT" && d.id !== "PAYMENT-CONFIG" && d.id !== "WORSHIP-CONTENT" && d.id !== "WATER-CONTENT" && d.id !== "PILLAR-STATUS" && String(d.id || "").indexOf("PILLAR-CONTENT-") !== 0 && String(d.name || "").slice(0, 2) !== "__" && d.verified === true);
     const pillarRows = (store.getPillarGrants ? store.getPillarGrants().filter(g => !g.archived && Number(g.amount) > 0) : []).map(g => ({
       id: g.id,
       name: (g.partner || "Pillar grant") + (g.project ? " · " + g.project : ""),

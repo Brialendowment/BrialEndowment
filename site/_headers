@@ -4,8 +4,9 @@
 # - nosniff: browsers must trust the declared file type.
 # - Referrer-Policy: other sites only see "brialendowment.org", never full URLs.
 # - Permissions-Policy: no camera / microphone / location access for any script.
+# - base-uri / object-src: a page cannot be re-pointed at another site's files, and no plug-in content can load.
 /*
-  Content-Security-Policy: frame-ancestors 'none'
+  Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
@@ -15,3 +16,7 @@
 # Serve the PWA manifest with its proper type (required now that nosniff is on).
 /manifest.webmanifest
   Content-Type: application/manifest+json
+
+# Security contact file (RFC 9116), served as plain text.
+/.well-known/security.txt
+  Content-Type: text/plain; charset=utf-8
