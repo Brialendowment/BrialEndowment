@@ -1252,6 +1252,8 @@ window.BrialClipboard = { copy: copyToClipboard };
     // ----- USDT gifts checked on chain by the be-chain worker (founder only) -----
     chainStatus() { return Store._mailRpc("be_chain_status"); },
     chainRecheck(id) { return Store._mailRpc("be_chain_recheck", { p_id: id }); },
+    // Public progress of one gift's check: { state: "pending" | "searching" | "confirming" | "verified" | "review" | "gone", ... }
+    giftStatus(id) { return rpc("be_gift_status", { p_id: id }); },
     mailPreview() { return Store._mailFn({ action: "preview", kind: "receipt" }); },
     sendMessage(msg) { return Store._mailRpc("be_mail_send_message", { p_msg: msg }); },
     previewMessage(msg) { return Store._mailFn({ action: "preview_message", message: msg }); },
@@ -1498,6 +1500,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         if (c === "invalid_email") return { error: "Please enter a valid email address." };
         if (c === "weak_password") return { error: "Password must be at least 8 characters." };
         if (c === "consent_required") return { error: "Please tick the boxes to agree before continuing." };
+        if (c === "rate_limited") return { error: "Many new accounts have been created in the last hour, so we have paused new sign-ups for a short while to keep everyone safe. Nothing is wrong with our server or with your details. Please try again in about an hour.", limited: true };
         return { error: "Could not create the account right now. Please check your connection and try again." };
       }
     },
@@ -1792,7 +1795,10 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Auth & sessions -----
     // Verified on the server; returns the scholar's own record or null.
+    // Why the last scholar sign-in failed: "locked" (too many attempts), "offline" (server not reached) or null (wrong details)
+    lastSignInError() { return Store._signInError || null; },
     async authApplicant(email, password) {
+      Store._signInError = null;
       try {
         const res = await rpc("be_applicant_login", { p_email: (email || "").trim(), p_password: password || "" });
         if (!res || !res.token) return null;
@@ -1804,8 +1810,8 @@ window.BrialClipboard = { copy: copyToClipboard };
         setTimeout(() => { refreshAll(); }, 0);   // pulls the scholar's reports
         return a;
       } catch (e) {
-        if (errCode(e) === "too_many_attempts") console.warn("Too many sign-in attempts. Try again in 15 minutes.");
-        else console.error("Sign-in failed:", e);
+        if (errCode(e) === "too_many_attempts") { Store._signInError = "locked"; console.warn("Too many sign-in attempts. Try again in 15 minutes."); }
+        else { Store._signInError = "offline"; console.error("Sign-in failed:", e); }
         return null;
       }
     },
@@ -2048,7 +2054,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       rpc("be_submit_donation", { p_donation: donation }).then(row => {
         const saved = rowToDonation(row);
         const k = _donations.findIndex(x => x.id === id);
-        if (k >= 0 && saved) { _donations[k] = { ...saved, email: donation.email }; saveCache(); notify({ key: saved.id }); }
+        if (k >= 0 && saved) { _donations[k] = { ...saved, email: donation.email, message: donation.message }; saveCache(); notify({ key: saved.id }); }
       }).catch(e => {
         _donations = _donations.filter(x => x.id !== id); saveCache(); notify({ key: id });
         reportWriteFailure(e);

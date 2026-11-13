@@ -364,6 +364,45 @@ const methodMeta = (k, wallet, pay) => ({
 const fmtIDR = n => "Rp " + Math.round(Number(n) || 0).toLocaleString("id-ID");
 const fmtUSD = n => "$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const blankDonation = method => ({ method: method || "usdt", name: "", email: "", country: "", amount: "", idr: "", cardAmount: "", cardCur: "IDR", wireAmount: "", wireCur: "USD", btc: "", paidAt: "", sender: "", ref: "", message: "", txHash: "", anonymous: false, agreement: false });
+// Live progress of a crypto gift after it is recorded: asks the server every few seconds
+// what the on-chain check has found, until the gift is verified or handed to the founder.
+const GiftTracker = ({ store, txHash }) => {
+  const [st, setSt] = useStateD(null);
+  useEffectD(() => {
+    let stop = false, timer = 0, tries = 0;
+    const tick = async () => {
+      if (stop) return;
+      tries++;
+      const row = (store.listDonations() || []).find(x => x.txHash === txHash);
+      let s = null;
+      if (row && /^D-\d+$/.test(row.id) && store.giftStatus) { try { s = await store.giftStatus(row.id); } catch (e) {} }
+      if (stop) return;
+      if (s && s.state) setSt(s);
+      if (s && s.state === "verified") { try { store.refresh && store.refresh(); } catch (e) {} return; }
+      if (s && (s.state === "review" || s.state === "gone")) return;
+      if (tries < 90) timer = setTimeout(tick, tries < 18 ? 10000 : 30000);
+    };
+    timer = setTimeout(tick, 3500);
+    return () => { stop = true; clearTimeout(timer); };
+  }, [txHash]);
+  const state = st ? st.state : "searching";
+  if (state === "gone") return null;
+  const done = state === "verified", review = state === "review";
+  const conf = Number(st && st.confirmations) || 0, need = Number(st && st.required) || 0;
+  const pct = done ? 100 : state === "confirming" && need > 0 ? Math.max(8, Math.min(96, Math.round(conf / need * 100))) : 6;
+  const tone = done ? DS.green : review ? DS.goldSoft : DS.teal;
+  const text = done ? "Verified on chain. Your gift now shows as Verified in the list below."
+    : review ? "Your transaction needs a short look by the endowment before it is confirmed. You do not need to do anything; we will write to you if we have a question."
+    : state === "confirming" ? "Found on " + (st.network || "the network") + (need > 0 ? ": " + conf + " of " + need + " confirmations." : ". Waiting for confirmations.")
+    : "Looking for your transaction on chain. This usually takes a few minutes, and this box updates by itself.";
+  return hD("div", { role: "status", "aria-live": "polite", style: { marginTop: 20, padding: "16px 18px", background: "rgba(10,22,40,0.5)", border: "1px solid " + (done ? "rgba(134,229,167,0.45)" : "rgba(232,228,220,0.18)") } },
+    hD("div", { style: { fontFamily: DS.mono, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: tone } }, done ? "\u2713 Verified" : review ? "In review" : state === "confirming" ? "Confirming" : "Checking"),
+    review ? null : hD("div", { "aria-hidden": "true", style: { height: 4, background: "rgba(232,228,220,0.12)", marginTop: 12 } },
+      hD("div", { style: { height: 4, width: pct + "%", background: tone, transition: "width 0.8s ease" } })),
+    hD("div", { style: { fontFamily: DS.sans, fontSize: 14, lineHeight: 1.6, color: DS.body, marginTop: 12 } }, text),
+    st && st.explorer && /^https:\/\//.test(st.explorer) ? hD("a", { href: st.explorer, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", marginTop: 10, padding: "6px 0", fontFamily: DS.mono, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: DS.goldSoft, textDecoration: "underline", textUnderlineOffset: 3 } }, "View the transaction \u2197") : null);
+};
+
 const DonationForm = ({
   wallet,
   method,
@@ -446,7 +485,7 @@ const DonationForm = ({
     setStep("submitting");
     setTimeout(() => {
       const d = store.submitDonation({ ...form, amount, txHash, payment });
-      setSent({ method: m, amount, payment, email: form.email });
+      setSent({ method: m, amount, payment, email: form.email, txHash });
       setStep("done");
       onSubmitted?.(d);
     }, 700);
@@ -474,6 +513,7 @@ const DonationForm = ({
         auto ? (sent.method === "btc" ? "We are reading your transaction on the Bitcoin network now. " : "We are reading your transaction on chain now. ") : "We will match your gift against " + where + ", usually within one or two days. ",
         sent.email ? h(React.Fragment, null, "Your receipt for ", h("strong", { style: { color: "#86E5A7" } }, sent.method === "bank" || sent.method === "qris" ? fmtIDR(sent.payment.paid) : sent.method === "btc" ? Number(sent.payment.paid) + " BTC" : sent.method === "wire" ? sent.payment.currency + " " + Number(sent.payment.paid).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtUSD(sent.amount)), " will arrive at ", h("strong", { style: { color: "#E8E4DC" } }, sent.email), auto ? (sent.method === "btc" ? " once it has " + ((pay.btc && pay.btc.confirmations) || 2) + " confirmations, usually within half an hour, at its dollar value on that day." : " once the deposit clears " + wallet.confirmations + " confirmations, usually within a few minutes.") : " as soon as it is matched.")
           : "Your gift will appear on our open ledger as soon as it is matched."),
+      auto && sent.txHash ? h(GiftTracker, { store, txHash: sent.txHash }) : null,
       h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(19px, 2vw, 22px)", lineHeight: 1.5, color: "#E3C98A", margin: "22px 0 0", paddingTop: 20, borderTop: "1px solid rgba(201,169,97,0.22)", textWrap: "balance" } },
         "And all praise belongs to God, the first Giver of every gift. May He accept it from you, and bless what remains with you."),
       h("button", { onClick: () => { setStep("form"); setSent(null); setForm(blankDonation(m)); }, style: { marginTop: 28, minHeight: 46, padding: "0 22px", background: "transparent", border: "1px solid rgba(232,228,220,0.2)", color: "rgba(232,228,220,0.8)", cursor: "pointer", fontFamily: sans, fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Record another donation"));
@@ -841,10 +881,10 @@ const DonatePage = ({
   }, []);
   const rawDonations = store.listDonations();
   // Real public gifts only: drop internal aggregates, fold in pillar grants as their own rows.
-  // Only gifts the endowment has confirmed are shown or counted: a form entry that has not
-  // been matched to a payment must never appear on the public page or move the total.
+  // A gift that is not confirmed yet is listed as Pending for everyone to see, and joins the
+  // totals only once the founder, or the on-chain check, has verified it.
   const donations = (() => {
-    const real = (rawDonations || []).filter(d => d.id !== "LEGACY-SUMMARY" && d.id !== "PILLAR-GRANTS" && d.id !== "PILLAR-LINKS" && d.id !== "EBOOKS-CATALOG" && d.id !== "FOODLAND-CONTENT" && d.id !== "PAYMENT-CONFIG" && d.id !== "WORSHIP-CONTENT" && d.id !== "WATER-CONTENT" && d.id !== "PILLAR-STATUS" && String(d.id || "").indexOf("PILLAR-CONTENT-") !== 0 && String(d.name || "").slice(0, 2) !== "__" && d.verified === true);
+    const real = (rawDonations || []).filter(d => d.id !== "LEGACY-SUMMARY" && d.id !== "PILLAR-GRANTS" && d.id !== "PILLAR-LINKS" && d.id !== "EBOOKS-CATALOG" && d.id !== "FOODLAND-CONTENT" && d.id !== "PAYMENT-CONFIG" && d.id !== "WORSHIP-CONTENT" && d.id !== "WATER-CONTENT" && d.id !== "PILLAR-STATUS" && String(d.id || "").indexOf("PILLAR-CONTENT-") !== 0 && String(d.name || "").slice(0, 2) !== "__");
     const pillarRows = (store.getPillarGrants ? store.getPillarGrants().filter(g => !g.archived && Number(g.amount) > 0) : []).map(g => ({
       id: g.id,
       name: (g.partner || "Pillar grant") + (g.project ? " · " + g.project : ""),
@@ -856,9 +896,11 @@ const DonatePage = ({
     }));
     return [...real, ...pillarRows].sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
   })();
+  const confirmed = donations.filter(d => d.verified === true);
+  const recentRows = donations.slice(0, 6);
   const [copied, copy] = useCopy();
-  const totalRaised = donations.reduce((a, d) => a + (d.amount || 0), 0);
-  const donorCount = donations.length;
+  const totalRaised = confirmed.reduce((a, d) => a + (d.amount || 0), 0);
+  const donorCount = confirmed.length;
   const net = usdtNet(wallet.network);
   const panel = method === "qris" ? hD(QrisCard, { qris: pay.qris })
     : method === "bank" ? hD(BankTab, { pay, curs: bCurs, cur: bCur, onCur: setBankCur, copied, copy })
@@ -900,7 +942,7 @@ const DonatePage = ({
         hD("div", { style: { minWidth: 0 } }, hD(DonationForm, { wallet, method: formMethod, methodLabel: method === "crypto" ? (cAsset === "BTC" ? "Bitcoin (BTC)" : "USDT") : methodMeta(method, wallet, pay).title + (method === "bank" && bCurs.length > 1 ? " · " + bCur : ""), wireCur: bCur, onWireCur: setBankCur, curOptions: bCurs, assets: cAssets, onAsset: setCryptoAsset }))),
 
       // ---- recent gifts ----
-      donations.length > 0 && hD("section", { "aria-labelledby": "don-recent", style: { marginTop: 80 } },
+      recentRows.length > 0 && hD("section", { "aria-labelledby": "don-recent", style: { marginTop: 80 } },
         hD("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 22, flexWrap: "wrap", gap: 14 } },
           hD("div", null,
             dEyebrow("\xA7 III · Recent patrons"),
@@ -909,7 +951,7 @@ const DonatePage = ({
             hD("span", { style: { fontFamily: DS.sans, fontSize: 13, color: DS.mute } }, "Anonymous donors appear as “Anonymous patron”."),
             hD("a", { href: "/proof", style: { fontFamily: DS.sans, fontSize: 13, color: DS.goldSoft, textDecoration: "underline", textUnderlineOffset: 3 } }, "See the full ledger →"))),
         hD("div", { role: "list", style: { display: "flex", flexDirection: "column", gap: 1, background: "rgba(201,169,97,0.12)" } },
-          donations.slice(0, 6).map(d => hD("div", { key: d.id, role: "listitem", className: "b-don-row", style: { display: "grid", gridTemplateColumns: "minmax(0, 1.6fr) minmax(90px, 0.6fr) minmax(0, 1.2fr) 112px", gap: 20, padding: "18px 24px", background: "rgba(20,36,66,0.55)", alignItems: "center" } },
+          recentRows.map(d => hD("div", { key: d.id, role: "listitem", className: "b-don-row", style: { display: "grid", gridTemplateColumns: "minmax(0, 1.6fr) minmax(90px, 0.6fr) minmax(0, 1.2fr) 112px", gap: 20, padding: "18px 24px", background: "rgba(20,36,66,0.55)", alignItems: "center" } },
             hD("div", { className: "b-don-row-name", style: { minWidth: 0 } },
               hD("div", { style: { fontFamily: DS.serif, fontSize: 21, color: DS.ink, letterSpacing: "-0.01em", lineHeight: 1.25 } }, d.anonymous ? "Anonymous patron" : d.name),
               fmtGiftDate(d.submittedAt) ? hD("div", { style: { fontFamily: DS.mono, fontSize: 11, color: DS.mute, letterSpacing: "0.08em", marginTop: 4 } }, fmtGiftDate(d.submittedAt)) : null,

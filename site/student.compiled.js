@@ -636,7 +636,10 @@ const ApplicantAuth = ({
       setTimeout(async () => {
         const a = await store.authApplicant(form.email, form.password);
         if (!a) {
-          setError("Email or password incorrect.");
+          const why = store.lastSignInError ? store.lastSignInError() : null;
+          setError(why === "locked" ? "Too many sign-in attempts. To protect your account, sign-in is paused for 15 minutes. Nothing is wrong with our server. Please try again after that."
+            : why === "offline" ? "We could not reach the server just now. Please check your connection and try again."
+            : "Email or password incorrect.");
           setLoading(false);
           return;
         }
