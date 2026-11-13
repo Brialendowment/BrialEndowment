@@ -13554,40 +13554,23 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       }
     };
   }
-  // The 3D gate (site/founder-gate-3d.js, three.js) is fetched when the sign-in opens.
-  // Without WebGL, or if it fails to load or run, the painted 2D gate below takes over.
-  const gateScripts = {};
-  const loadGateScripts = urls => urls.reduce((p, u) => p.then(() => gateScripts[u] || (gateScripts[u] = new Promise((ok, no) => {
-    const s = document.createElement("script");
-    s.src = u; s.async = true; s.onload = () => ok();
-    s.onerror = () => { delete gateScripts[u]; s.remove(); no(new Error("load")); };
-    document.head.appendChild(s);
-  }))), Promise.resolve());
   function GateScene({ narrow }) {
-    const host = useRef(null), scene = useRef(null), narrowNow = useRef(narrow);
-    narrowNow.current = narrow;
+    const host = useRef(null), scene = useRef(null);
     useEffect(() => {
-      // paint after the sign-in form is on screen, so typing never waits for the picture
       let on = true;
-      const paint2d = () => { if (on && host.current && !scene.current) scene.current = paintGateScene(host.current, { narrow: narrowNow.current }); };
-      const drop3d = () => { if (scene.current) { try { scene.current.destroy(); } catch (e) {} scene.current = null; } paint2d(); };
       const id = setTimeout(() => {
-        if (!on || !host.current) return;
-        const L = window.BRIAL_LAZY || {};
-        let gl = false;
-        try { const c = document.createElement("canvas"); gl = !!(c.getContext("webgl2") || c.getContext("webgl")); } catch (e) {}
-        if (!gl || !L.three || !L.gate3d) return paint2d();
-        loadGateScripts([L.three, L.gate3d]).then(() => {
-          if (!on || !host.current || scene.current) return;
-          try {
-            if (!window.BrialGate3D || !window.BrialGate3D.supported()) throw new Error("3d unavailable");
-            scene.current = window.BrialGate3D.mount(host.current, { narrow: narrowNow.current, onFail: drop3d });
-          } catch (e) { console.warn("3D gate fell back to the painted gate:", e); drop3d(); }
-        }, paint2d);
+        if (on && host.current) scene.current = paintGateScene(host.current, { narrow });
       }, 30);
-      return () => { on = false; clearTimeout(id); if (scene.current) scene.current.destroy(); scene.current = null; };
+      return () => {
+        on = false;
+        clearTimeout(id);
+        if (scene.current) scene.current.destroy();
+        scene.current = null;
+      };
     }, []);
-    useEffect(() => { if (scene.current) scene.current.setNarrow(narrow); }, [narrow]);
+    useEffect(() => {
+      if (scene.current) scene.current.setNarrow(narrow);
+    }, [narrow]);
     return /* @__PURE__ */ React.createElement("div", { ref: host, className: "fg-scene" + (narrow ? " narrow" : ""), "aria-hidden": "true" });
   }
   const GateSound = (() => {
