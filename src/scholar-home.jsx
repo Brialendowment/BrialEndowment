@@ -36,7 +36,7 @@ const SH = (() => {
     "ID card / passport": "KTP / paspor", "Profile photo": "Foto profil", "Report card": "Rapor", "Student card": "Kartu mahasiswa",
     "Not provided": "Tidak ada", "Spot a mistake? Request a correction from the Account tab.": "Ada yang salah? Ajukan koreksi dari tab Akun.",
     "Sign-in email": "Email masuk", "Change password": "Ganti password", "New password": "Password baru", "Confirm new password": "Ulangi password baru",
-    "At least 8 characters.": "Minimal 8 karakter.", "Show passwords": "Tampilkan password", "Save new password": "Simpan password baru",
+    "At least 8 characters.": "Minimal 8 karakter.", "Show passwords": "Tampilkan password", "Save new password": "Simpan password baru", "Current password": "Password saat ini", "Enter your current password.": "Masukkan password Anda saat ini.", "Your current password is not correct.": "Password saat ini tidak benar.",
     "Password updated. Other devices have been signed out.": "Password diperbarui. Perangkat lain sudah dikeluarkan.",
     "Passwords do not match.": "Password tidak sama.", "Password must be at least 8 characters.": "Password minimal 8 karakter.",
     "Request a correction": "Ajukan koreksi data", "Changes to your details are checked by the foundation before they take effect.": "Perubahan data diperiksa yayasan sebelum berlaku.",
@@ -884,17 +884,19 @@ select.bsp-input option{background:#0A1628}
     ["profile.highSchool.finalGPA", "High school final grade", "Nilai akhir SMA"],
   ];
   function Account({ applicant, store }) {
-    const [pw, setPw] = useState(""), [pw2, setPw2] = useState(""), [show, setShow] = useState(false), [pwMsg, setPwMsg] = useState(null), [pwBusy, setPwBusy] = useState(false);
+    const [cur, setCur] = useState(""), [pw, setPw] = useState(""), [pw2, setPw2] = useState(""), [show, setShow] = useState(false), [pwMsg, setPwMsg] = useState(null), [pwBusy, setPwBusy] = useState(false);
     const [fk, setFk] = useState(FIELDS[0][0]), [val, setVal] = useState(""), [rMsg, setRMsg] = useState(null);
     const reqs = applicant.changeRequests || [];
     const savePw = async () => {
       setPwMsg(null);
+      if (!cur) return setPwMsg({ err: t("Enter your current password.") });
       if (pw.length < 8) return setPwMsg({ err: t("Password must be at least 8 characters.") });
       if (pw !== pw2) return setPwMsg({ err: t("Passwords do not match.") });
       setPwBusy(true);
-      const r = await store.updateAccount(applicant.id, { password: pw });
+      const r = await store.updateAccount(applicant.id, { password: pw, current: cur });
       setPwBusy(false);
-      if (r && r.error) return setPwMsg({ err: r.error });
+      if (r && r.error) return setPwMsg({ err: t(r.error) });
+      setCur("");
       setPw(""); setPw2("");
       setPwMsg({ ok: t("Password updated. Other devices have been signed out.") });
     };
@@ -947,6 +949,7 @@ select.bsp-input option{background:#0A1628}
         <div className="bsp-card">
           <h3 className="bsp-h3">{t("Change password")}</h3>
           <dl className="bsp-dl" style={{ gridTemplateColumns: "1fr", marginTop: 12 }}><Row label="Sign-in email" value={applicant.email} /></dl>
+          <label className="bsp-field"><span>{t("Current password")}</span><input className="bsp-input" type={show ? "text" : "password"} autoComplete="current-password" value={cur} onChange={e => setCur(e.target.value)} /></label>
           <label className="bsp-field"><span>{t("New password")}</span><input className="bsp-input" type={show ? "text" : "password"} autoComplete="new-password" value={pw} onChange={e => setPw(e.target.value)} /><div className="bsp-hint">{t("At least 8 characters.")}</div></label>
           <label className="bsp-field"><span>{t("Confirm new password")}</span><input className="bsp-input" type={show ? "text" : "password"} autoComplete="new-password" value={pw2} onChange={e => setPw2(e.target.value)} /></label>
           <label className="bsp-check"><input type="checkbox" checked={show} onChange={e => setShow(e.target.checked)} />{t("Show passwords")}</label>

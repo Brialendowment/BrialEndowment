@@ -1668,7 +1668,8 @@ window.BrialClipboard = { copy: copyToClipboard };
     },
 
     // ----- Account self-service (email / password) -----
-    async updateAccount(id, { email, password }) {
+    // A scholar changing their own email or password must give their current password (`current`).
+    async updateAccount(id, { email, password, current }) {
       const a = Store.getApplicant(id);
       if (!a) return { error: "Account not found." };
       const tok = getToken();
@@ -1678,8 +1679,10 @@ window.BrialClipboard = { copy: copyToClipboard };
         const pw = password || "";
         if (pw && pw.length < 8) return { error: "Password must be at least 8 characters." };
         if (!e && !pw) return { error: "Nothing to update." };
+        if (!current) return { error: "Please enter your current password to confirm this change." };
         try {
-          const row = await rpc("be_applicant_update_account", { p_token: tok, p_email: e, p_password: pw });
+          const row = await rpc("be_applicant_update_account", { p_token: tok, p_email: e, p_password: pw, p_current: String(current) });
+          if (row && row.error === "wrong_password") return { error: "Your current password is not correct." };
           const fresh = rowToApplicant(row);
           const k = _applicants.findIndex(x => x.id === fresh.id);
           if (k >= 0) _applicants[k] = fresh; else _applicants.unshift(fresh);
@@ -1689,6 +1692,8 @@ window.BrialClipboard = { copy: copyToClipboard };
           const c = errCode(err);
           if (c === "email_exists") return { error: "That email is already used by another account." };
           if (c === "invalid_session") return { error: "Your session has expired. Please sign in again." };
+          if (c === "too_many_attempts") return { error: "Too many attempts. To protect your account, changes are paused for 15 minutes. Please try again after that." };
+          if (c === "weak_password") return { error: "Password must be at least 8 characters." };
           return { error: "Could not update your account right now. Please try again." };
         }
       }

@@ -3364,9 +3364,12 @@ const AccountSettings = ({
   const [fieldKey, setFieldKey] = useState(FIELDS[0].key);
   const [value, setValue] = useState("");
   const [value2, setValue2] = useState("");
+  const [curPw, setCurPw] = useState("");
   const [reveal, setReveal] = useState(false);
   const [msg, setMsg] = useState(null);
   const selected = FIELDS.find(f => f.key === fieldKey);
+  // changing the sign-in email or the password is confirmed with the current password
+  const needsCurrent = isRegistered && (selected.type === "email" || selected.type === "password");
 
   // For "registered" status — direct save (not yet submitted, no approval needed)
   const directSave = async () => {
@@ -3383,16 +3386,24 @@ const AccountSettings = ({
       });
       return;
     }
+    if (needsCurrent && !curPw) {
+      setMsg({
+        err: "Please enter your current password to confirm this change."
+      });
+      return;
+    }
     if (selected.type === "email") {
       const r = await store.updateAccount(applicant.id, {
-        email: value.trim()
+        email: value.trim(),
+        current: curPw
       });
       if (r.error) return setMsg({
         err: r.error
       });
     } else if (selected.type === "password") {
       const r = await store.updateAccount(applicant.id, {
-        password: value
+        password: value,
+        current: curPw
       });
       if (r.error) return setMsg({
         err: r.error
@@ -3410,6 +3421,7 @@ const AccountSettings = ({
     });
     setValue("");
     setValue2("");
+    setCurPw("");
   };
 
   // For submitted+ status — create a change request
@@ -3619,7 +3631,35 @@ const AccountSettings = ({
       color: "rgba(232,228,220,0.6)",
       letterSpacing: "0.08em"
     }
-  }, "Show password"))), msg && /*#__PURE__*/React.createElement("div", {
+  }, "Show password"))), needsCurrent && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    htmlFor: "acct-current-pw",
+    style: {
+      display: "block",
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+      color: "rgba(232,228,220,0.66)",
+      letterSpacing: "0.14em",
+      textTransform: "uppercase",
+      marginBottom: 8
+    }
+  }, "Your current password"), /*#__PURE__*/React.createElement("input", {
+    id: "acct-current-pw",
+    value: curPw,
+    onChange: e => setCurPw(e.target.value),
+    type: reveal ? "text" : "password",
+    autoComplete: "current-password",
+    style: {
+      width: "100%",
+      padding: "11px 0",
+      background: "transparent",
+      border: "none",
+      borderBottom: "1px solid rgba(232,228,220,0.2)",
+      color: "#E8E4DC",
+      fontSize: 16,
+      fontFamily: "'JetBrains Mono', monospace",
+      outline: "none"
+    }
+  })), msg && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "10px 14px",
       background: msg.err ? "rgba(229,134,134,0.08)" : "rgba(134,229,167,0.08)",
@@ -3801,7 +3841,7 @@ const SH = (() => {
     "Confirm new password": "Ulangi password baru",
     "At least 8 characters.": "Minimal 8 karakter.",
     "Show passwords": "Tampilkan password",
-    "Save new password": "Simpan password baru",
+    "Save new password": "Simpan password baru", "Current password": "Password saat ini", "Enter your current password.": "Masukkan password Anda saat ini.", "Your current password is not correct.": "Password saat ini tidak benar.",
     "Password updated. Other devices have been signed out.": "Password diperbarui. Perangkat lain sudah dikeluarkan.",
     "Passwords do not match.": "Password tidak sama.",
     "Password must be at least 8 characters.": "Password minimal 8 karakter.",
@@ -4402,17 +4442,19 @@ select.bsp-input option{background:#0A1628}
     ["profile.highSchool.finalGPA", "High school final grade", "Nilai akhir SMA"]
   ];
   function Account({ applicant, store }) {
-    const [pw, setPw] = useState(""), [pw2, setPw2] = useState(""), [show, setShow] = useState(false), [pwMsg, setPwMsg] = useState(null), [pwBusy, setPwBusy] = useState(false);
+    const [cur, setCur] = useState(""), [pw, setPw] = useState(""), [pw2, setPw2] = useState(""), [show, setShow] = useState(false), [pwMsg, setPwMsg] = useState(null), [pwBusy, setPwBusy] = useState(false);
     const [fk, setFk] = useState(FIELDS[0][0]), [val, setVal] = useState(""), [rMsg, setRMsg] = useState(null);
     const reqs = applicant.changeRequests || [];
     const savePw = async () => {
       setPwMsg(null);
+      if (!cur) return setPwMsg({ err: t("Enter your current password.") });
       if (pw.length < 8) return setPwMsg({ err: t("Password must be at least 8 characters.") });
       if (pw !== pw2) return setPwMsg({ err: t("Passwords do not match.") });
       setPwBusy(true);
-      const r = await store.updateAccount(applicant.id, { password: pw });
+      const r = await store.updateAccount(applicant.id, { password: pw, current: cur });
       setPwBusy(false);
-      if (r && r.error) return setPwMsg({ err: r.error });
+      if (r && r.error) return setPwMsg({ err: t(r.error) });
+      setCur("");
       setPw("");
       setPw2("");
       setPwMsg({ ok: t("Password updated. Other devices have been signed out.") });
@@ -4435,7 +4477,7 @@ select.bsp-input option{background:#0A1628}
     } }, FIELDS.map((f) => /* @__PURE__ */ React.createElement("option", { key: f[0], value: f[0] }, L(f[1], f[2]))))), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Correct value")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", type: fk === "email" ? "email" : "text", value: val, onChange: (e) => setVal(e.target.value) })), rMsg && /* @__PURE__ */ React.createElement("div", { className: "bsp-msg " + (rMsg.err ? "err" : "ok") }, rMsg.err || rMsg.ok), /* @__PURE__ */ React.createElement("div", { className: "bsp-actions", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", onClick: sendReq }, t("Send request"))), reqs.length > 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3", style: { marginTop: 30, marginBottom: 6 } }, t("Your requests")), /* @__PURE__ */ React.createElement("ul", { className: "bsp-list" }, reqs.slice(0, 8).map((r) => {
       const s = stat[r.status] || stat.pending;
       return /* @__PURE__ */ React.createElement("li", { key: r.id }, /* @__PURE__ */ React.createElement("div", { className: "bsp-li-head" }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("b", null, r.label), /* @__PURE__ */ React.createElement("div", { className: "bsp-li-meta" }, r.type === "password" ? "••••••••" : r.value)), /* @__PURE__ */ React.createElement("span", { className: "bsp-tag " + s[0] }, t(s[1]))), r.status === "rejected" && r.reason && /* @__PURE__ */ React.createElement("div", { className: "bsp-li-meta", style: { marginTop: 6 } }, t("Reason:"), " ", r.reason));
-    })))), /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Change password")), /* @__PURE__ */ React.createElement("dl", { className: "bsp-dl", style: { gridTemplateColumns: "1fr", marginTop: 12 } }, /* @__PURE__ */ React.createElement(Row, { label: "Sign-in email", value: applicant.email })), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("New password")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", type: show ? "text" : "password", autoComplete: "new-password", value: pw, onChange: (e) => setPw(e.target.value) }), /* @__PURE__ */ React.createElement("div", { className: "bsp-hint" }, t("At least 8 characters."))), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Confirm new password")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", type: show ? "text" : "password", autoComplete: "new-password", value: pw2, onChange: (e) => setPw2(e.target.value) })), /* @__PURE__ */ React.createElement("label", { className: "bsp-check" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: show, onChange: (e) => setShow(e.target.checked) }), t("Show passwords")), pwMsg && /* @__PURE__ */ React.createElement("div", { className: "bsp-msg " + (pwMsg.err ? "err" : "ok") }, pwMsg.err || pwMsg.ok), /* @__PURE__ */ React.createElement("div", { className: "bsp-actions", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", disabled: pwBusy, onClick: savePw }, pwBusy ? /* @__PURE__ */ React.createElement("span", { className: "bsp-spin" }) : t("Save new password")))));
+    })))), /* @__PURE__ */ React.createElement("div", { className: "bsp-card" }, /* @__PURE__ */ React.createElement("h3", { className: "bsp-h3" }, t("Change password")), /* @__PURE__ */ React.createElement("dl", { className: "bsp-dl", style: { gridTemplateColumns: "1fr", marginTop: 12 } }, /* @__PURE__ */ React.createElement(Row, { label: "Sign-in email", value: applicant.email })), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Current password")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", type: show ? "text" : "password", autoComplete: "current-password", value: cur, onChange: (e) => setCur(e.target.value) })), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("New password")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", type: show ? "text" : "password", autoComplete: "new-password", value: pw, onChange: (e) => setPw(e.target.value) }), /* @__PURE__ */ React.createElement("div", { className: "bsp-hint" }, t("At least 8 characters."))), /* @__PURE__ */ React.createElement("label", { className: "bsp-field" }, /* @__PURE__ */ React.createElement("span", null, t("Confirm new password")), /* @__PURE__ */ React.createElement("input", { className: "bsp-input", type: show ? "text" : "password", autoComplete: "new-password", value: pw2, onChange: (e) => setPw2(e.target.value) })), /* @__PURE__ */ React.createElement("label", { className: "bsp-check" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: show, onChange: (e) => setShow(e.target.checked) }), t("Show passwords")), pwMsg && /* @__PURE__ */ React.createElement("div", { className: "bsp-msg " + (pwMsg.err ? "err" : "ok") }, pwMsg.err || pwMsg.ok), /* @__PURE__ */ React.createElement("div", { className: "bsp-actions", style: { marginTop: 18 } }, /* @__PURE__ */ React.createElement("button", { className: "bsp-btn primary", disabled: pwBusy, onClick: savePw }, pwBusy ? /* @__PURE__ */ React.createElement("span", { className: "bsp-spin" }) : t("Save new password")))));
   }
   const TOPICS = [["payment", "Payment"], ["data", "My details"], ["technical", "Technical problem"], ["other", "Something else"]];
   function Help({ applicant, store }) {
