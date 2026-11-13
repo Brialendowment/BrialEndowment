@@ -20,3 +20,11 @@
 # Security contact file (RFC 9116), served as plain text.
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
+
+# Fonts and third-party libraries never change under the same address, so browsers may
+# keep them for a year. The site's own scripts are loaded with a version stamp
+# (/store.js?v=...), see scripts/stamp-assets.py.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+/vendor/*
+  Cache-Control: public, max-age=31536000, immutable

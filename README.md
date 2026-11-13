@@ -4,11 +4,12 @@ Situs statis brialendowment.org. Tidak ada build step: Cloudflare Pages langsung
 setiap ada push ke `main` (header keamanan di `site/_headers`, redirect di `site/_redirects`).
 
 ## Isi
-- `site/` — file website. `index.html` adalah versi bundel (semua script + font tertanam);
-  file `.js` / `.css` terpisah adalah sumbernya (`index-source.html` memuatnya satu per satu).
-- **Setelah mengedit file `site/*.js`, jalankan `python scripts/sync-bundles.py`.** Setiap halaman HTML membawa salinan
-  script terkompres dan pengunjung menjalankan salinan itu; tanpa langkah ini perubahan tidak terlihat di situs.
-  `python scripts/sync-bundles.py --check` hanya melaporkan. Pratinjau lokal: `python scripts/dev-server.py` (http://localhost:8788).
+- `site/` — file website. Setiap halaman (`index.html`, `donate.html`, …) memuat file terpisah: script situs di `site/*.js`,
+  pustaka pihak ketiga di `site/vendor/`, font di `site/fonts/`. Tidak ada lagi bundel, CDN, atau Google Fonts.
+  Founder Portal (`admin.compiled.js`) baru diunduh saat dibuka.
+- **Setelah mengedit file apa pun di `site/`, jalankan `python scripts/stamp-assets.py`.** Halaman memuat file dengan
+  cap versi (`/store.js?v=1a2b3c4d`); tanpa langkah ini browser pengunjung bisa tetap memakai salinan lama.
+  `python scripts/stamp-assets.py --check` hanya melaporkan. Pratinjau lokal: `python scripts/dev-server.py` (http://localhost:8788).
 - `supabase/migrations/` — perubahan database keamanan, dijalankan **berurutan**.
 
 ## V3 vs V2 — perbaikan keamanan data

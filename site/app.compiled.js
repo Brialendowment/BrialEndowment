@@ -345,6 +345,39 @@ const Nav = ({
 // ============================================================
 // HERO
 // ============================================================
+// Fetches a script the first time a view needs it, then renders that view.
+const BrialLazyPortal = ({ src, ready, render, label, onExit }) => {
+  const [state, setState] = React.useState(() => (ready() ? "ok" : src ? "loading" : "failed"));
+  React.useEffect(() => {
+    if (state !== "loading") return;
+    if (ready()) { setState("ok"); return; }
+    let s = document.querySelector('script[data-brial-lazy="' + src + '"]');
+    if (s && s.dataset.failed) { s.remove(); s = null; }
+    if (!s) {
+      s = document.createElement("script");
+      s.src = src; s.async = true; s.dataset.brialLazy = src;
+      document.body.appendChild(s);
+    }
+    const done = () => setState(ready() ? "ok" : "failed");
+    const fail = () => { s.dataset.failed = "1"; setState("failed"); };
+    s.addEventListener("load", done);
+    s.addEventListener("error", fail);
+    return () => { s.removeEventListener("load", done); s.removeEventListener("error", fail); };
+  }, [state]);
+  if (state === "ok") return render();
+  const btn = { minHeight: 46, padding: "0 22px", background: "transparent", border: "1px solid rgba(201,169,97,0.5)", color: "#C9A961", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase" };
+  return /*#__PURE__*/React.createElement("div", {
+    role: "status",
+    style: { minHeight: "100vh", background: "#0A1628", color: "#E8E4DC", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 22, padding: 24, textAlign: "center" }
+  }, state === "loading" ? /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: { width: 32, height: 32, border: "2px solid rgba(201,169,97,0.2)", borderTopColor: "#C9A961", borderRadius: "50%", animation: "spin 0.9s linear infinite" }
+  }) : null, /*#__PURE__*/React.createElement("div", {
+    style: { fontFamily: "'Manrope', sans-serif", fontSize: 15, lineHeight: 1.6, maxWidth: 420 }
+  }, state === "loading" ? label + "\u2026" : "This page could not be loaded. Please check your connection and try again."), state === "failed" ? /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }
+  }, src ? /*#__PURE__*/React.createElement("button", { type: "button", style: btn, onClick: () => setState("loading") }, "Try again") : null, /*#__PURE__*/React.createElement("button", { type: "button", style: btn, onClick: onExit }, "Back to the site")) : null);
+};
 const Hero = ({
   onApply,
   onEbooks
@@ -2486,6 +2519,18 @@ const App = () => {
   if (view === "admin" && window.AdminPortal) {
     return /*#__PURE__*/React.createElement(window.AdminPortal, {
       onExit: () => setView("landing")
+    });
+  }
+  if (view === "admin") {
+    // The Founder Portal is a large file that only the founder needs, so it is fetched on demand.
+    return /*#__PURE__*/React.createElement(BrialLazyPortal, {
+      src: window.BRIAL_LAZY && window.BRIAL_LAZY.admin,
+      ready: () => !!window.AdminPortal,
+      label: "Opening the Founder Portal",
+      onExit: () => setView("landing"),
+      render: () => /*#__PURE__*/React.createElement(window.AdminPortal, {
+        onExit: () => setView("landing")
+      })
     });
   }
   if (view === "scholar" && window.ScholarPortal) {
