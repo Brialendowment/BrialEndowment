@@ -6,11 +6,12 @@ Usage:  python3 scripts/build-scholar-home.py /path/to/esbuild [--bundle]
   * The compiled block sits between the START/END markers inside the
     student.compiled.js IIFE (re-running replaces it).
   * PortalHome hands accepted scholars to it.
-  * --bundle also refreshes the matching entries inside site/index.html
-    (the self-unpacking bundle Netlify serves) for every site/*.js file
-    whose content changed since git HEAD.
+  * Afterwards the per-view pages (site/scholars.html, donate.html, ...) are
+    regenerated from site/index.html and the ?v= asset stamps are refreshed
+    (scripts/stamp-assets.py).
+  * --bundle is accepted and ignored: the self-unpacking bundle no longer exists.
 """
-import base64, gzip, json, re, subprocess, sys
+import re, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -48,60 +49,6 @@ def inject(code):
     p.write_text(s, encoding="utf-8")
 
 
-def refresh_bundle(ref="HEAD"):
-    """Refresh bundle entries for site/*.js files that differ from git `ref`."""
-    idx = SITE / "index.html"
-    h = idx.read_text(encoding="utf-8")
-    m = re.search(r'(<script type="__bundler/manifest">)(.*?)(</script>)', h, re.S)
-    man = json.loads(m.group(2))
-    changed = {}
-    for f in SITE.glob("*.js"):
-        try:
-            old = subprocess.check_output(["git", "show", ref + ":site/" + f.name], cwd=ROOT, stderr=subprocess.DEVNULL)
-        except subprocess.CalledProcessError:
-            continue
-        new = f.read_bytes()
-        if old != new:
-            changed[old] = (f.name, new)
-    hits = []
-    for e in man.values():
-        b = base64.b64decode(e["data"])
-        comp = bool(e.get("compressed"))
-        raw = gzip.decompress(b) if comp else b
-        if raw in changed:
-            name, new = changed[raw]
-            e["data"] = base64.b64encode(gzip.compress(new) if comp else new).decode()
-            hits.append(name)
-    h = h[:m.start(2)] + json.dumps(man, separators=(",", ":")) + h[m.end(2):]
-    # Stylesheets are inlined in the page template (a JSON string): swap the old text for the new.
-    tm = re.search(r'(<script type="__bundler/template">)(.*?)(</script>)', h, re.S)
-    tpl = json.loads(tm.group(2))
-    css_hits = []
-    for f in SITE.glob("*.css"):
-        try:
-            old = subprocess.check_output(["git", "show", ref + ":site/" + f.name], cwd=ROOT, stderr=subprocess.DEVNULL).decode("utf-8")
-        except subprocess.CalledProcessError:
-            continue
-        new = f.read_text(encoding="utf-8")
-        if old != new and tpl.count(old) == 1:
-            tpl = tpl.replace(old, new)
-            css_hits.append(f.name)
-    if css_hits:
-        enc = json.dumps(tpl, ensure_ascii=False).replace("</", "<\\u002F")
-        h = h[:tm.start(2)] + enc + h[tm.end(2):]
-    idx.write_text(h, encoding="utf-8")
-    missing = sorted(set(n for n, _ in changed.values()) - set(hits))
-    print("bundle refreshed:", sorted(hits + css_hits), "| not in bundle:", missing)
-    build_seo_pages()
-
-
-if __name__ == "__main__":
-    inject(compile_jsx(sys.argv[1]))
-    print("injected scholar home")
-    if "--bundle" in sys.argv:
-        refresh_bundle()
-
-
 # ---- Clean addresses with their own preview (title, description, image) ----
 # Each public view is also served as site/<slug>.html (Cloudflare serves it at /<slug>):
 # the same app, with a head that Google and link previews can read.
@@ -122,57 +69,58 @@ SEO_PAGES = {
 }
 
 
-def build_seo_pages():
-    import html as _h
-    src = (SITE / "index.html").read_text(encoding="utf-8")
-    m = re.search(r'(<script type="__bundler/template">)(.*?)(</script>)', src, re.S)
-    base = json.loads(m.group(2))
+SEO_TAGS = [
+    # (regex up to the value, what it takes: "title" | "desc" | "url" | "img")
+    (r'(<meta name="description" content=")[^"]*(")', "desc"),
+    (r'(<link rel="canonical" href=")[^"]*(")', "url"),
+    (r'(<meta property="og:title" content=")[^"]*(")', "title"),
+    (r'(<meta property="og:description" content=")[^"]*(")', "desc"),
+    (r'(<meta property="og:url" content=")[^"]*(")', "url"),
+    (r'(<meta property="og:image:alt" content=")[^"]*(")', "title"),
+    (r'(<meta name="twitter:title" content=")[^"]*(")', "title"),
+    (r'(<meta name="twitter:description" content=")[^"]*(")', "desc"),
+]
+IMG_TAGS = [r'(<meta property="og:image" content=")[^"]*(")', r'(<meta name="twitter:image" content=")[^"]*(")']
 
-    def setattr_(t, pattern, value):
+
+def build_seo_pages():
+    """Write site/<slug>.html for every SEO_PAGES entry: site/index.html with only the
+    title, description, canonical and preview tags of the head replaced."""
+    import html as _h
+    src = (SITE / "index.html").read_text(encoding="utf-8", newline="")
+
+    def sub(t, pattern, value):
         new, n = re.subn(pattern, lambda mm: mm.group(1) + _h.escape(value, quote=True) + mm.group(2), t, count=1)
-        assert n == 1, "SEO tag not found: " + pattern
+        assert n == 1, "SEO tag not found in index.html: " + pattern
         return new
 
     for slug, (name, desc, img) in SEO_PAGES.items():
         title = name + " | The Brial Endowment"
-        url = "https://brialendowment.org/" + slug
-        t = re.sub(r"<title>.*?</title>", "<title>" + _h.escape(title) + "</title>", base, count=1)
-        t = setattr_(t, r'(<meta name="description" content=")[^"]*(")', desc)
-        t = setattr_(t, r'(<link rel="canonical" href=")[^"]*(")', url)
-        t = setattr_(t, r'(<meta property="og:title" content=")[^"]*(")', title)
-        t = setattr_(t, r'(<meta property="og:description" content=")[^"]*(")', desc)
-        t = setattr_(t, r'(<meta property="og:url" content=")[^"]*(")', url)
-        t = setattr_(t, r'(<meta property="og:image:alt" content=")[^"]*(")', title)
-        t = setattr_(t, r'(<meta name="twitter:title" content=")[^"]*(")', title)
-        t = setattr_(t, r'(<meta name="twitter:description" content=")[^"]*(")', desc)
+        vals = {"title": title, "desc": desc, "url": "https://brialendowment.org/" + slug}
+        t, n = re.subn(r"<title>.*?</title>", lambda mm: "<title>" + _h.escape(title) + "</title>", src, count=1)
+        assert n == 1, "<title> not found in index.html"
+        for pattern, key in SEO_TAGS:
+            t = sub(t, pattern, vals[key])
         if img:
-            t = setattr_(t, r'(<meta property="og:image" content=")[^"]*(")', img)
-            t = setattr_(t, r'(<meta name="twitter:image" content=")[^"]*(")', img)
-        enc = json.dumps(t, ensure_ascii=False).replace("</", "<\\u002F")
-        out = src[:m.start(2)] + enc + src[m.end(2):]
-        out = outer_head(out, t, title)
-        (SITE / (slug + ".html")).write_text(out, encoding="utf-8")
-    # the home page gets the same readable head
-    (SITE / "index.html").write_text(outer_head(src, base, None), encoding="utf-8")
+            for pattern in IMG_TAGS:
+                t = sub(t, pattern, img)
+        (SITE / (slug + ".html")).write_text(t, encoding="utf-8", newline="")
     print("seo pages:", ", ".join(SEO_PAGES))
 
 
-def outer_head(page, tpl, title):
-    """Copy the description, canonical, preview (Open Graph), JSON-LD, app icon and manifest tags
-    from the bundled template into the outer page head, where link previews, crawlers and the
-    browser's install check read them before the bundle unpacks."""
-    import html as _h
-    a = tpl.index('<meta name="google-site-verification"')
-    b = tpl.index("</script>", tpl.index("application/ld+json")) + len("</script>")
-    keep = [ln for ln in tpl[a:b].split("\n")
-            if ln.strip().startswith(("<meta ", '<link rel="canonical"', '<script type="application/ld+json"',
-                                      '<link rel="icon"', '<link rel="shortcut icon"', '<link rel="apple-touch-icon"',
-                                      '<link rel="manifest"', '<script id="b-pwa-early"'))
-            and "google-site-verification" not in ln]
-    block = "<!--seo-->\n" + "\n".join(keep) + "\n<!--/seo-->"
-    page = re.sub(r"<!--seo-->.*?<!--/seo-->\n?", "", page, count=1, flags=re.S)
-    head_end = page.index("</title>") + len("</title>")
-    page = page[:head_end] + "\n" + block + page[head_end:]
-    if title:
-        page = re.sub(r"<title>.*?</title>", "<title>" + _h.escape(title) + "</title>", page, count=1)
-    return page
+def stamp_assets():
+    subprocess.check_call([sys.executable, str(ROOT / "scripts" / "stamp-assets.py")])
+
+
+def finish():
+    """After injecting a compiled block: rebuild the per-view pages, then refresh the ?v= stamps."""
+    build_seo_pages()
+    stamp_assets()
+
+
+if __name__ == "__main__":
+    inject(compile_jsx(sys.argv[1]))
+    print("injected scholar home")
+    if "--bundle" in sys.argv:
+        print("--bundle ignored: bundles no longer exist")
+    finish()

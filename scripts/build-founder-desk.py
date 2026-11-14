@@ -6,7 +6,9 @@ Usage:  python3 scripts/build-founder-desk.py /path/to/esbuild [--bundle]
   * The compiled block sits between the START/END markers just before the
     MAIN PORTAL section (re-running replaces it).
   * AdminPortalGated hands every pillar (after the chooser) to it.
-  * --bundle refreshes site/index.html exactly like build-scholar-home.py.
+  * Afterwards the per-view pages are regenerated and the ?v= stamps refreshed
+    (shared code in build-scholar-home.py).
+  * --bundle is accepted and ignored: the self-unpacking bundle no longer exists.
 """
 import importlib.util, re, subprocess, sys
 from pathlib import Path
@@ -206,6 +208,7 @@ if __name__ == "__main__":
     inject(compile_jsx(sys.argv[1]))
     print("injected founder desk")
     if "--bundle" in sys.argv:
-        spec = importlib.util.spec_from_file_location("bsh", ROOT / "scripts" / "build-scholar-home.py")
-        m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-        m.refresh_bundle()
+        print("--bundle ignored: bundles no longer exist")
+    spec = importlib.util.spec_from_file_location("bsh", ROOT / "scripts" / "build-scholar-home.py")
+    m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+    m.finish()

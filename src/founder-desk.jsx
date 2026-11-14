@@ -1918,7 +1918,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     if ("BarcodeDetector" in window) {
       try { const r = await new window.BarcodeDetector({ formats: ["qr_code"] }).detect(bmp); if (r && r[0] && r[0].rawValue) return r[0].rawValue; } catch (e) {}
     }
-    if (!window.jsQR) await new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
+    if (!window.jsQR) await new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "/vendor/jsqr.js"; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
     const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
     const c = document.createElement("canvas"); c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
     const x = c.getContext("2d"); x.drawImage(bmp, 0, 0, c.width, c.height);

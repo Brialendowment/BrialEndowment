@@ -3369,7 +3369,7 @@ const AccountSettings = ({
   const [msg, setMsg] = useState(null);
   const selected = FIELDS.find(f => f.key === fieldKey);
   // changing the sign-in email or the password is confirmed with the current password
-  const needsCurrent = isRegistered && (selected.type === "email" || selected.type === "password");
+  const needsCurrent = selected.type === "password" || isRegistered && selected.type === "email";
 
   // For "registered" status — direct save (not yet submitted, no approval needed)
   const directSave = async () => {
@@ -3499,7 +3499,7 @@ const AccountSettings = ({
       color: "rgba(232,228,220,0.66)",
       marginTop: 4
     }
-  }, "For your security, changes after submission must be approved by the foundation.")), /*#__PURE__*/React.createElement("button", {
+  }, "For your security, changes after submission must be approved by the foundation. A new password takes effect at once, confirmed with your current password.")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setOpen(o => !o),
     style: {
       padding: "12px 22px",
@@ -3670,7 +3670,7 @@ const AccountSettings = ({
       letterSpacing: "0.06em"
     }
   }, msg.err || msg.ok), /*#__PURE__*/React.createElement("button", {
-    onClick: isRegistered ? directSave : submitRequest,
+    onClick: isRegistered || selected.type === "password" ? directSave : submitRequest,
     style: {
       padding: "13px 22px",
       background: "#C9A961",
@@ -3684,7 +3684,7 @@ const AccountSettings = ({
       fontWeight: 500,
       justifySelf: "start"
     }
-  }, isRegistered ? "Save change →" : "Send request →")), !isRegistered && reqs.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, isRegistered || selected.type === "password" ? "Save change →" : "Send request →")), !isRegistered && reqs.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 28
     }

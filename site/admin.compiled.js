@@ -9743,7 +9743,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     }
     if (!window.jsQR) await new Promise((ok, no) => {
       const sc = document.createElement("script");
-      sc.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
+      sc.src = "/vendor/jsqr.js";
       sc.onload = ok;
       sc.onerror = no;
       document.head.appendChild(sc);
