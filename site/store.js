@@ -871,7 +871,8 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Enterprise income (companies that give part of their returns, e.g. go2rent for Transportation) -----
     // Enters the ledger as a verified gift, like a Library sale; never counted as distributed.
-    ENTERPRISES: { go2rent: { name: "go2rent", pillar: "transport", pillarName: "Transportation" } },
+    // The Venture: the endowment's own e-commerce products; a share of the profit is given back.
+    ENTERPRISES: { go2rent: { name: "go2rent", pillar: "transport", pillarName: "Transportation", ref: "GO2" }, venture: { name: "Store profits", pillar: "venture", pillarName: "The Venture", ref: "VEN" } },
     listEnterpriseIncome(source) {
       return _donations
         .filter(d => d.data && d.data.enterprise && (!source || d.data.enterprise.source === source))
@@ -883,13 +884,14 @@ window.BrialClipboard = { copy: copyToClipboard };
       const ent = Store.ENTERPRISES[src];
       const dte = new Date(obj.date || now());
       const ymd = dte.getFullYear() + String(dte.getMonth() + 1).padStart(2, "0") + String(dte.getDate()).padStart(2, "0");
-      const ref = "GO2-" + ymd + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+      const ref = (ent.ref || "GO2") + "-" + ymd + "-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+      const pName = Store.getPillarName ? Store.getPillarName(ent.pillar) || ent.pillarName : ent.pillarName;
       const iso = obj.date ? new Date(obj.date).toISOString() : now();
       const period = (obj.period || "").trim();
       const note = (obj.note || "").trim();
       const rec = {
         id: "ENT-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5).toUpperCase(),
-        name: ent.pillarName + " \u00b7 " + ent.name + (period ? " \u00b7 " + period : ""),
+        name: pName + " \u00b7 " + ent.name + (period ? " \u00b7 " + period : ""),
         anonymous: false,
         amount: Number(obj.amount) || 0,
         message: note,
@@ -1111,13 +1113,17 @@ window.BrialClipboard = { copy: copyToClipboard };
         livestock: { programme: "Livestock & Enterprise", intro: "Charity that multiplies. The endowment places productive capital (herds, tools and small enterprise) in the hands of families who tend it: the offspring and the profits stay with them, the dignity of earning returns, and the gift funds itself again." },
         infra: { programme: "Sustainable Infrastructure", intro: "The quiet foundations. The endowment funds bridges, power and public works with local partners, surveyed with the community that will use them, built to endure, and maintained so a village can stand, trade and grow on its own." },
         foodclothing: { programme: "Food & Clothing", intro: "Food on the table and clothes to wear, given where the need is plain to see. The endowment shares staple food (rice, pasta, cooking oil) and clothing in good condition with orphanages, families and people on the street, at Ramadan and through the year. Every kilogram and every garment is counted, and the people who receive them are never named or photographed." },
-        transport: { programme: "Transportation", partnerLine: "go2rent", location: "T\u00fcrkiye and Northern Cyprus", fleet: "730+", regions: "9", airports: "9", support: "24/7", factsNote: "Fleet figures from go2rent, July 2026: 730 to 985 vehicles, growing for the summer season and smaller in winter.", intro: "Not every pillar gives. Some pillars earn, so that the others can keep giving. go2rent is a car rental company that serves travellers, families and companies across T\u00fcrkiye and Northern Cyprus. The founder of the Brial Endowment is a co-founder of go2rent, and a share of his returns from the company is given to the endowment. Every contribution is recorded on the open ledger, like every other gift." }
+        transport: { programme: "Transportation", partnerLine: "go2rent", location: "T\u00fcrkiye and Northern Cyprus", fleet: "730+", regions: "9", airports: "9", support: "24/7", factsNote: "Fleet figures from go2rent, July 2026: 730 to 985 vehicles, growing for the summer season and smaller in winter.", intro: "Not every pillar gives. Some pillars earn, so that the others can keep giving. go2rent is a car rental company that serves travellers, families and companies across T\u00fcrkiye and Northern Cyprus. The founder of the Brial Endowment is a co-founder of go2rent, and a share of his returns from the company is given to the endowment. Every contribution is recorded on the open ledger, like every other gift." },
+        venture: { programme: "The Venture", location: "Online, delivered worldwide", partnerLine: "", products: [], hideAmounts: false,
+          intro: "The pillar that trades. The Venture makes and sells products under the endowment's name, honestly priced and honestly described. A share of the profit returns to the endowment, to support its programmes and the work of running it, so that giving does not depend on giving alone." },
       };
       const def = { partnerLine: "", units: 0, location: "", articles: [], ...(DEFS[key] || { programme: key, intro: "" }) };
       const d = _donations.find(x => x.id === "PILLAR-CONTENT-" + String(key).toUpperCase());
       if (d && d.data && d.data.content) {
         const f = d.data.content;
-        return { ...def, ...f, articles: Array.isArray(f.articles) ? f.articles : [] };
+        const out = { ...def, ...f, articles: Array.isArray(f.articles) ? f.articles : [] };
+        if (key === "venture") out.products = Array.isArray(f.products) ? f.products.filter(x => x && typeof x === "object") : [];
+        return out;
       }
       return def;
     },
@@ -1373,7 +1379,7 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Pillar visibility: which pillars are live on the public site -----
     getPillarActive(key) {
-      const DEF = { scholarships: true, worship: true, library: true, foodland: true, water: true, hospitals: false, schools: false, livestock: false, infra: false, transport: true, foodclothing: true };
+      const DEF = { scholarships: true, worship: true, library: true, foodland: true, water: true, hospitals: false, schools: false, livestock: false, infra: false, transport: true, venture: true, foodclothing: true };
       const d = _donations.find(x => x.id === "PILLAR-STATUS");
       const map = (d && d.data && d.data.active) || {};
       if (map[key] !== undefined) return !!map[key];
@@ -1392,7 +1398,7 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Pillar names: the founder can rename a pillar; the record key and the
     // grant label stored on each grant stay the same, only the shown name changes -----
-    PILLAR_DEFAULT_NAMES: { scholarships: "Scholarships", worship: "Houses of Worship", library: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure" },
+    PILLAR_DEFAULT_NAMES: { scholarships: "Scholarships", worship: "Houses of Worship", library: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", water: "Clean Water", transport: "Transportation", venture: "The Venture", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure" },
     isRenamablePillar(key) { return Object.prototype.hasOwnProperty.call(Store.PILLAR_DEFAULT_NAMES, key); },
     getPillarName(key) {
       const def = Store.PILLAR_DEFAULT_NAMES[key];

@@ -573,6 +573,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     infra: I(<><path d="M2 18h20M4 18c2-6 14-6 16 0M8 18v-4M12 18v-5M16 18v-4" /></>),
     scholarships: I(<><path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c3 2 9 2 12 0v-5" /></>),
   };
+  ICON.venture = I(<><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /><path d="M9.5 13.5l2 2 3.5-3.5" /></>);
   ICON.transport = I(<><path d="M3 15v-3l2.5-4.5A2 2 0 0 1 7.3 6.5h9.4a2 2 0 0 1 1.8 1L21 12v3z" /><path d="M5 12h14" /><circle cx="7.5" cy="16.5" r="2" /><circle cx="16.5" cy="16.5" r="2" /></>);
   ICON.assets = I(<><path d="M4 19V5M4 19h16" /><path d="M7.5 15l3.5-4 3 2.5L19 8" /><path d="M15.5 8H19v3.5" /></>);
   ICON.costs = I(<><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z" /><path d="M9 8.5h6M9 12h6M9 15.5h3" /></>);
@@ -750,6 +751,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     transport: { name: "Transportation", accent: "#E8834A", linkMode: "partner", linkHelp: "Where the Rent with go2rent button sends visitors, usually https://www.gotworent.com/.", note: "the road",
       get: s => s.getPillarContent("transport"), save: (s, v) => s.savePillarContent("transport", v),
       facts: [["fleet", "Vehicles in service", "730+"], ["regions", "Regions", "9"], ["airports", "Airport desks", "9"], ["support", "Support", "24/7"]] },
+    venture: { name: "The Venture", accent: "#B9A3E3", linkMode: "partner", linkHelp: "Where the Visit the store button sends visitors: your online shop or marketplace page.", note: "the workshop",
+      get: s => s.getPillarContent("venture"),
+      // the product list is saved from Products; the programme page never overwrites it
+      save: (s, v) => s.savePillarContent("venture", { ...v, products: s.getPillarContent("venture").products, hideAmounts: s.getPillarContent("venture").hideAmounts }) },
     site: { name: "Site settings", accent: "#9FB4D9", sub: "Applies to the whole public site" },
     treasury: { name: "Treasury", accent: "#7FC9A8", sub: "Money in and out of the endowment" },
     impact: { name: "Impact Report", accent: "#E2C98E", sub: "The yearly report to the world" },
@@ -1380,37 +1385,124 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
 
 
   // ============================================================
+  // THE VENTURE: the endowment's e-commerce products
+  // Kept in PILLAR-CONTENT-VENTURE as products: [{ id, name, tagline, price, category, link, photo, shown, soldOut }]
+  // ============================================================
+  const okLink = u => !u || /^https?:\/\/[^\s]+\.[^\s]+/i.test(String(u).trim());
+  function ProductsView({ store, name }) {
+    const read = () => store.getPillarContent("venture").products;
+    const [list, setList] = useState(read);
+    const [saved, setSaved] = useState(() => JSON.stringify(read()));
+    const [m, flash] = useFlash();
+    const dirty = JSON.stringify(list) !== saved;
+    const setP = (id, patch) => setList(l => l.map(p => (p.id === id ? { ...p, ...patch } : p)));
+    const add = () => setList(l => [{ id: "pr-" + Date.now().toString(36), name: "", tagline: "", price: "", category: "", link: "", photo: null, shown: false, soldOut: false }, ...l]);
+    const del = id => setList(l => l.filter(p => p.id !== id));
+    const move = (i, d) => setList(l => { const j = i + d; if (j < 0 || j >= l.length) return l; const n = l.slice(); const t = n[i]; n[i] = n[j]; n[j] = t; return n; });
+    const bad = list.filter(p => !String(p.name || "").trim() || !okLink(p.link));
+    const save = () => {
+      const clean = list.map(p => ({ ...p, name: String(p.name || "").trim(), link: String(p.link || "").trim() }));
+      store.savePillarContent("venture", { ...store.getPillarContent("venture"), products: clean });
+      setList(clean); setSaved(JSON.stringify(clean)); flash("Saved. The public page is updated.");
+    };
+    useEffect(() => {
+      const h = e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
+      window.addEventListener("beforeunload", h);
+      return () => window.removeEventListener("beforeunload", h);
+    }, [dirty]);
+    const live = list.filter(p => p.shown).length;
+    return (
+      <>
+        <Head title="Products" lede={`What visitors can buy from ${name}. Each product links to where it is sold: your shop, a marketplace or a store page. Hidden products stay here until you show them.`}><button className="fd-btn primary" onClick={add}>Add a product</button></Head>
+        <Stats items={[{ label: "Products", value: list.length }, { label: "Shown on the page", value: live, tone: live ? "ok" : "" }, { label: "Sold out", value: list.filter(p => p.soldOut).length }]} />
+        {list.length === 0 && <div className="fd-card"><Empty title="No products yet.">Add the first product. Until one is shown, the public page says the first products are on their way.</Empty></div>}
+        {list.map((p, i) => {
+          const img = p.photo && (p.photo.url || p.photo.path) ? (p.photo.url || window.brialSupabase.publicUrl(p.photo.path)) : null;
+          return (
+            <div className="fd-card" key={p.id}>
+              <div className="fd-card-head">
+                <div className="fd-actions" style={{ gap: 8 }}>
+                  <Tag tone={p.shown ? "ok" : ""} dot>{p.shown ? "Shown" : "Hidden"}</Tag>
+                  {p.soldOut && <Tag tone="warn">Sold out</Tag>}
+                </div>
+                <div className="fd-actions">
+                  <button className="fd-btn quiet sm" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">↑</button>
+                  <button className="fd-btn quiet sm" disabled={i === list.length - 1} onClick={() => move(i, 1)} aria-label="Move down">↓</button>
+                  <button className={"fd-btn sm " + (p.shown ? "ghost" : "ok")} onClick={() => setP(p.id, { shown: !p.shown })}>{p.shown ? "Hide" : "Show on the page"}</button>
+                  <Confirm onConfirm={() => del(p.id)}>Delete</Confirm>
+                </div>
+              </div>
+              <div className="fd-form">
+                <div className="fd-grid2">
+                  <Field label="Product name"><input className="fd-input" value={p.name || ""} maxLength={80} onChange={e => setP(p.id, { name: e.target.value })} placeholder="e.g. Olive wood prayer beads" /></Field>
+                  <Field label="Category (optional)"><input className="fd-input" value={p.category || ""} maxLength={40} onChange={e => setP(p.id, { category: e.target.value })} placeholder="e.g. Books, Home, Apparel" /></Field>
+                </div>
+                <Field label="Short description" hint="One or two sentences: what it is and why it is worth having."><textarea className="fd-input" style={{ minHeight: 80 }} value={p.tagline || ""} maxLength={320} onChange={e => setP(p.id, { tagline: e.target.value })} /></Field>
+                <div className="fd-grid2" style={{ gridTemplateColumns: "180px minmax(0,1fr)" }}>
+                  <Field label="Price (as shown)"><input className="fd-input" value={p.price || ""} maxLength={30} onChange={e => setP(p.id, { price: e.target.value })} placeholder="e.g. US$12 or Rp 150.000" /></Field>
+                  <Field label="Where to buy" hint={okLink(p.link) ? "The Buy button opens this page in a new tab." : "Please enter a full address starting with https://"}><input className="fd-input" value={p.link || ""} onChange={e => setP(p.id, { link: e.target.value })} placeholder="https://…" /></Field>
+                </div>
+                <div className="fd-actions">
+                  {img && <Img className="fd-thumb" src={img} />}
+                  <PhotoUpload onUploaded={meta => setP(p.id, { photo: { url: meta.url, path: meta.path, name: meta.name } })}>{img ? "Replace photo" : "Add photo"}</PhotoUpload>
+                  {img && <button className="fd-btn quiet sm" onClick={() => setP(p.id, { photo: null })}>Remove photo</button>}
+                  <Switch on={!!p.soldOut} onChange={v => setP(p.id, { soldOut: v })}>Sold out</Switch>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {(dirty || m) && (
+          <div className="fd-savebar">
+            <span style={{ color: dirty ? "var(--amber)" : "var(--sage)", fontWeight: 600 }}>{dirty ? (bad.length ? "Every product needs a name and a valid link (or no link)." : "You have unsaved changes") : m && m.text}</span>
+            <div className="fd-actions">
+              {dirty && <button className="fd-btn quiet" onClick={() => setList(JSON.parse(saved))}>Discard</button>}
+              <button className="fd-btn primary" disabled={!dirty || bad.length > 0} onClick={save}>Save and publish</button>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // ============================================================
   // TRANSPORTATION: contributions from go2rent (enterprise income)
   // ============================================================
-  function ContributionsView({ store }) {
-    const list = store.listEnterpriseIncome ? store.listEnterpriseIncome("go2rent") : [];
+  const ENT_TEXT = {
+    go2rent: { pillar: "transport", from: "your go2rent returns", lede: "Money given to the endowment from your returns in go2rent. Each contribution enters the public ledger as verified income and shows on the {name} page.", empty: "When you give part of your go2rent returns to the endowment, record it here.", note: "e.g. Share of Q3 returns" },
+    venture: { pillar: "venture", from: "the profit of The Venture", lede: "The share of The Venture's profit given to the endowment. Each contribution enters the public ledger as verified income and shows on the {name} page.", empty: "When part of the store's profit is given to the endowment, record it here.", note: "e.g. Share of October sales" },
+  };
+  function ContributionsView({ store, source = "go2rent" }) {
+    const T = ENT_TEXT[source] || ENT_TEXT.go2rent;
+    const pageName = store.getPillarName ? store.getPillarName(T.pillar) : "pillar";
+    const list = store.listEnterpriseIncome ? store.listEnterpriseIncome(source) : [];
     const [open, setOpen] = useState(false);
     const blank = () => ({ amount: "", period: "", txRef: "", note: "", date: today() });
     const [f, setF] = useState(blank);
     const set = (k, v) => setF(p => ({ ...p, [k]: v }));
     const total = list.reduce((a, x) => a + (Number(x.amount) || 0), 0);
     const last = list[0];
-    const content = store.getPillarContent("transport");
+    const content = store.getPillarContent(T.pillar);
     const hide = !!content.hideAmounts;
-    const setHide = v => store.savePillarContent("transport", { ...store.getPillarContent("transport"), hideAmounts: !!v });
+    const setHide = v => store.savePillarContent(T.pillar, { ...store.getPillarContent(T.pillar), hideAmounts: !!v });
     const save = () => {
-      store.addEnterpriseIncome({ source: "go2rent", amount: parseFloat(f.amount), period: f.period, txRef: f.txRef, note: f.note, date: new Date(f.date).toISOString() });
+      store.addEnterpriseIncome({ source, amount: parseFloat(f.amount), period: f.period, txRef: f.txRef, note: f.note, date: new Date(f.date).toISOString() });
       setF(blank()); setOpen(false);
     };
     const G = "minmax(0,1.6fr) minmax(0,.8fr) minmax(0,1.2fr) auto";
     return (
       <>
-        <Head title="Contributions" lede="Money given to the endowment from your returns in go2rent. Each contribution enters the public ledger as verified income and shows on the Transportation page."><button className="fd-btn primary" onClick={() => setOpen(true)}>Record a contribution</button></Head>
+        <Head title="Contributions" lede={T.lede.replace("{name}", pageName)}><button className="fd-btn primary" onClick={() => setOpen(true)}>Record a contribution</button></Head>
         <Stats items={[{ label: "Returned to the endowment", value: money(total), tone: total > 0 ? "ok" : "" }, { label: "Contributions", value: list.length }, { label: "Latest", value: last ? fdate(last.date) : "None yet" }]} />
         <div className="fd-card">
           <div className="fd-card-head" style={{ marginBottom: 0 }}>
-            <div><h2 className="fd-h2">{hide ? "Amounts are hidden on the public page" : "Amounts are shown on the public page"}</h2><p className="fd-sub">{hide ? "The Transportation page lists each contribution by period, without the dollar figures. The open ledger still records every amount." : "The Transportation page shows the total returned to the endowment and the amount of each contribution."}</p></div>
+            <div><h2 className="fd-h2">{hide ? "Amounts are hidden on the public page" : "Amounts are shown on the public page"}</h2><p className="fd-sub">{hide ? `The ${pageName} page lists each contribution by period, without the dollar figures. The open ledger still records every amount.` : `The ${pageName} page shows the total returned to the endowment and the amount of each contribution.`}</p></div>
             <Switch on={!hide} onChange={v => setHide(!v)}>{hide ? "Hidden" : "Shown"}</Switch>
           </div>
         </div>
         <div className="fd-table">
           <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>Period</div><div>Amount</div><div>Reference · date</div><div /></div>
-          {list.length === 0 ? <Empty title="No contributions recorded yet.">When you give part of your go2rent returns to the endowment, record it here.</Empty> : list.map(x => (
+          {list.length === 0 ? <Empty title="No contributions recorded yet.">{T.empty}</Empty> : list.map(x => (
             <div key={x.id} className="fd-tr" style={{ gridTemplateColumns: G }}>
               <div className="fd-td full"><b>{x.period || "Contribution"}</b>{x.note && <small>{x.note}</small>}</div>
               <div className="fd-td" data-l="Amount"><span className="num">{money(x.amount)}</span></div>
@@ -1420,7 +1512,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           ))}
         </div>
         {open && (
-          <Modal title="Record a contribution" sub="From your go2rent returns to the endowment" onClose={() => setOpen(false)}>
+          <Modal title="Record a contribution" sub={"From " + T.from + " to the endowment"} onClose={() => setOpen(false)}>
             <div className="fd-form">
               <div className="fd-grid3">
                 <Field label="Amount (USD)"><div className="fd-money"><input className="fd-input" inputMode="decimal" value={f.amount} onChange={e => set("amount", e.target.value)} /></div></Field>
@@ -1428,7 +1520,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                 <Field label="Date given"><input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} /></Field>
               </div>
               <Field label="Transaction reference (optional)" hint="A blockchain hash or bank reference. Left empty, a reference is made for you."><input className="fd-input" value={f.txRef} onChange={e => set("txRef", e.target.value)} /></Field>
-              <Field label="Note (optional)" hint="Shown on the public ledger."><input className="fd-input" value={f.note} onChange={e => set("note", e.target.value)} placeholder="e.g. Share of Q3 returns" /></Field>
+              <Field label="Note (optional)" hint="Shown on the public ledger."><input className="fd-input" value={f.note} onChange={e => set("note", e.target.value)} placeholder={T.note} /></Field>
             </div>
             <div className="fd-actions" style={{ marginTop: 20 }}>
               <button className="fd-btn primary" disabled={!(parseFloat(f.amount) > 0)} onClick={save}>Record contribution</button>
@@ -2530,7 +2622,15 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   const isEntD = d => !!(d.data && d.data.enterprise) || String(d.id || "").indexOf("ENT-") === 0;
 
   // One list of movements, built from the same records as the public totals (src/impact-core.js)
-  function useFlows(store) { return window.BrialImpactCore.flows(store, { titleCase, instCase }); }
+  function useFlows(store) {
+    const F = window.BrialImpactCore.flows(store, { titleCase, instCase });
+    // an enterprise contribution names the pillar it came from (Transportation, The Venture)
+    F.income.forEach(x => {
+      const e = x.category === "Enterprise" && x.raw && x.raw.data && x.raw.data.enterprise;
+      if (e && e.pillar && e.pillar !== "transport") x.detail = [(store.getPillarName ? store.getPillarName(e.pillar) : e.pillar) + " pillar", x.raw.message].filter(Boolean).join(" \u00b7 ");
+    });
+    return F;
+  }
 
   function InOutChart({ inRows, outRows }) {
     const [hover, setHover] = useState(null);
@@ -4460,7 +4560,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // FOUNDER HOME — the chooser, in two swipeable groups
   // ============================================================
   const GROUPS = [
-    { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "foodclothing", "water", "hospitals", "schools", "livestock", "infra", "transport"] },
+    { id: "pillars", label: "Pillars", title: "Which pillar are you managing?", lede: "Each pillar of the endowment has its own console. Choose one to begin.", only: ["scholarships", "worship", "library", "foodland", "foodclothing", "water", "hospitals", "schools", "livestock", "infra", "transport", "venture"] },
     { id: "office", label: "Foundation office", title: "Run the foundation.", lede: "The money, the yearly report, the email, security, the website and the records: the work that serves every pillar.", only: ["treasury", "impact", "email", "security", "site", "backup"] },
   ];
   function FounderHome(props) {
@@ -6371,6 +6471,19 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       ];
       const t = nav.some(n => n.id === tab) ? tab : "contrib";
       view = t === "contrib" ? <ContributionsView store={store} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : t === "partners" ? <PillarPartnersView store={store} pillarKey={pillar} name={cfg.name} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
+      return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
+    }
+    if (pillar === "venture") {
+      const cfg = named(PILLARS.venture);
+      nav = [
+        { id: "products", label: "Products", icon: ICON.venture, count: store.getPillarContent("venture").products.length },
+        { id: "contrib", label: "Contributions", icon: ICON.inflow, count: store.listEnterpriseIncome ? store.listEnterpriseIncome("venture").length : 0 },
+        { id: "story", label: "Programme page", icon: ICON.story },
+        { id: "partners", label: "Partners", icon: ICON.users, count: store.getPillarPartners ? store.getPillarPartners(pillar).length : 0 },
+        { id: "link", label: "Store button", icon: ICON.link },
+      ];
+      const t = nav.some(n => n.id === tab) ? tab : "products";
+      view = t === "products" ? <ProductsView store={store} name={cfg.name} /> : t === "contrib" ? <ContributionsView store={store} source="venture" /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : t === "partners" ? <PillarPartnersView store={store} pillarKey={pillar} name={cfg.name} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     if (pillar === "foodclothing") {

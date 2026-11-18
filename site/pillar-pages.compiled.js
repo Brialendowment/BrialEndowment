@@ -591,8 +591,150 @@
         h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.66)" } }, "Every journey carries something home.")));
   };
 
+  // ============================================================
+  // THE VENTURE: the endowment's e-commerce products. A share of the profit returns to the
+  // endowment. Content: BrialStore.getPillarContent("venture") (products, intro, articles);
+  // contributions: BrialStore.listEnterpriseIncome("venture"); store link: getPillarLink("venture").
+  // ============================================================
+  const VenturePage = ({ onExit, onDonate }) => {
+    const read = () => {
+      const S = window.BrialStore;
+      return {
+        c: S && S.getPillarContent ? S.getPillarContent("venture") : null,
+        link: S && S.getPillarLink ? S.getPillarLink("venture") : "",
+        hidden: S && S.getPillarLinkHidden ? S.getPillarLinkHidden("venture") : false,
+        income: S && S.listEnterpriseIncome ? S.listEnterpriseIncome("venture") : []
+      };
+    };
+    const [st, setSt] = useState(read);
+    useEffect(() => {
+      const f = () => setSt(read());
+      window.addEventListener("brial:change", f);
+      window.addEventListener("brial:ready", f);
+      return () => { window.removeEventListener("brial:change", f); window.removeEventListener("brial:ready", f); };
+    }, []);
+    useEffect(() => { window.scrollTo(0, 0); BrialDeepScroll("venture"); }, []);
+    const c = st.c;
+    if (!c) return null;
+    const name = c.programme || renamed("venture") || "The Venture";
+    const tag = (renamed("venture") || "The Venture").toUpperCase();
+    const safe = u => (/^https?:\/\//i.test(String(u || "").trim()) ? String(u).trim() : "");
+    const storeLink = !st.hidden ? safe(st.link) : "";
+    const products = (c.products || []).filter(p => p && p.shown && String(p.name || "").trim());
+    const hideAmt = !!c.hideAmounts;
+    const n = st.income.length;
+    const total = st.income.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+    const usd = v => "$" + Number(v || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const pad = "clamp(20px, 4vw, 56px)";
+    const eyebrow = t => h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, t);
+    const h2 = t => h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(32px, 4.4vw, 54px)", lineHeight: 1.08, margin: "18px 0 0", color: CREAM } }, t);
+    const goldBtn = (href, label) => h("a", { href, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", background: `linear-gradient(120deg, #EAD9A8, ${GOLD} 55%, #B08F4C)`, color: "#131A33", textDecoration: "none", padding: "17px 34px", fontFamily: sans, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, label);
+    const goLedger = () => { try { history.pushState({ brialView: "proof" }, "", "/proof"); window.dispatchEvent(new PopStateEvent("popstate", { state: { brialView: "proof" } })); } catch (e) { location.href = "/proof"; } };
+    const steps = [
+      { n: "01", t: "Make", d: "Products chosen and made with care, honestly priced and honestly described, under the endowment's name." },
+      { n: "02", t: "Sell", d: "They are sold online, through our own shop and trusted marketplaces, and delivered to the buyer." },
+      { n: "03", t: "Return", d: "A share of the profit is given to the endowment and recorded on the open ledger, to support its programmes and the work of running it." }
+    ];
+    const imgOf = p => (p.photo && (p.photo.url || p.photo.path) ? (p.photo.url || (window.brialSupabase ? window.brialSupabase.publicUrl(p.photo.path) : "")) : "");
+
+    return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both", overflowX: "hidden" }, "data-screen-label": "The Venture" },
+      h("style", null, ".b-vn-card{transition:border-color .25s ease,transform .25s ease}.b-vn-card:hover{border-color:rgba(201,169,97,.55)!important;transform:translateY(-2px)}.b-vn-buy:hover{background:" + GOLD + "!important;color:" + NAVY + "!important}@media (prefers-reduced-motion:reduce){.b-vn-card,.b-vn-card:hover{transition:none;transform:none}}"),
+      h("div", { style: { position: "sticky", top: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px " + pad, background: "rgba(10,22,40,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: "1px solid rgba(201,169,97,0.18)" } },
+        h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", minHeight: 40, flexShrink: 0 }, "aria-label": "Return to the Endowment" }, "←", h("span", { className: "b-hide-sm" }, " Return to the Endowment")),
+        h("div", { style: { display: "flex", alignItems: "center", gap: 12, minWidth: 0 } },
+          h(Seal, { size: 26 }),
+          h("span", { className: "b-tr-tag", style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "PILLAR · " + tag))),
+
+      // Hero
+      h("div", { style: { padding: "clamp(56px, 8vw, 110px) " + pad + " clamp(50px, 7vw, 80px)", maxWidth: 1280, margin: "0 auto" } },
+        eyebrow("§ The Trading Pillar · Usaha"),
+        h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(50px, 7.4vw, 104px)", lineHeight: 0.98, letterSpacing: "-0.02em", margin: "26px 0 0" } }, name + "."),
+        h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(20px, 2.3vw, 27px)", color: "rgba(232,228,220,0.75)", margin: "24px 0 0", maxWidth: 640, lineHeight: 1.45 } }, "The pillar that trades. Good things, sold honestly, and a share of what they earn comes home to the endowment."),
+        h("div", { style: { display: "flex", gap: 16, marginTop: 40, flexWrap: "wrap", alignItems: "center" } },
+          products.length ? h("a", { href: "#venture-products", onClick: e => { e.preventDefault(); const el = document.getElementById("venture-products"); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" }); }, style: { display: "inline-block", border: "1px solid rgba(201,169,97,0.5)", color: "#E4C989", textDecoration: "none", padding: "15px 26px", fontFamily: sans, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "See the products ↓") : null,
+          storeLink ? goldBtn(storeLink, "Visit the store ↗") : null,
+          h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.6)", textTransform: "uppercase" } }, c.location || "Online, delivered worldwide"))),
+
+      // How it works
+      h("div", { style: { padding: "0 " + pad + " clamp(70px, 9vw, 100px)" } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto", borderTop: "1px solid rgba(201,169,97,0.18)", paddingTop: "clamp(50px, 7vw, 80px)" } },
+          eyebrow("§ How the pillar works"),
+          c.intro ? h("p", { style: { fontFamily: sans, fontSize: 15, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.75)", maxWidth: 720, margin: "22px 0 0", textWrap: "pretty" } }, c.intro) : null,
+          h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 14, marginTop: 44 } },
+            steps.map(f => h("div", { key: f.n, style: { border: "1px solid rgba(201,169,97,0.22)", background: "rgba(232,228,220,0.04)", padding: "26px 24px" } },
+              h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.14em" } }, f.n),
+              h("div", { style: { fontFamily: serif, fontSize: 23, marginTop: 12 } }, f.t),
+              h("div", { style: { fontFamily: sans, fontSize: 13, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.65)", marginTop: 10 } }, f.d)))))),
+
+      // Products
+      h("div", { id: "venture-products", style: { background: "rgba(232,228,220,0.02)", borderTop: "1px solid rgba(201,169,97,0.14)", borderBottom: "1px solid rgba(201,169,97,0.14)", padding: "clamp(60px, 8vw, 100px) " + pad } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto" } },
+          eyebrow("§ The products"),
+          h2(products.length ? "Made to be worth having." : "The first products are on their way."),
+          products.length
+            ? h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(250px, 100%), 1fr))", gap: 18, marginTop: 44 } },
+                products.map(p => {
+                  const img = imgOf(p), buy = p.soldOut ? "" : safe(p.link);
+                  return h("article", { key: p.id, className: "b-vn-card", style: { display: "flex", flexDirection: "column", background: "rgba(20,36,66,0.45)", border: "1px solid rgba(201,169,97,0.2)", minWidth: 0 } },
+                    h("div", { style: { position: "relative", aspectRatio: "1 / 1", background: "linear-gradient(160deg, #16294A, #0A1628 70%)", overflow: "hidden" } },
+                      img ? h("img", { src: img, alt: p.name, loading: "lazy", style: { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" } })
+                          : h("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, h(Seal, { size: 46 })),
+                      p.soldOut ? h("span", { style: { position: "absolute", top: 14, left: 14, fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", background: "rgba(10,22,40,0.85)", color: "#E4C989", padding: "7px 10px", border: "1px solid rgba(201,169,97,0.4)" } }, "Sold out") : null),
+                    h("div", { style: { padding: "20px 20px 22px", display: "flex", flexDirection: "column", flex: 1 } },
+                      p.category ? h("div", { style: { fontFamily: mono, fontSize: 10.5, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(232,228,220,0.55)" } }, p.category) : null,
+                      h("h3", { style: { fontFamily: serif, fontWeight: 400, fontSize: 25, lineHeight: 1.15, margin: p.category ? "8px 0 0" : 0, color: CREAM } }, p.name),
+                      p.tagline ? h("p", { style: { fontFamily: sans, fontSize: 13.5, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.68)", margin: "10px 0 0" } }, p.tagline) : null,
+                      h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginTop: "auto", paddingTop: 20, flexWrap: "wrap" } },
+                        h("span", { style: { fontFamily: serif, fontSize: 24, color: GOLD } }, p.price || ""),
+                        buy ? h("a", { className: "b-vn-buy", href: buy, target: "_blank", rel: "noopener noreferrer", "aria-label": "Buy " + p.name, style: { display: "inline-block", border: "1px solid " + GOLD, color: "#E4C989", textDecoration: "none", padding: "11px 18px", fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", transition: "background .2s, color .2s" } }, "Buy ↗")
+                            : h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,228,220,0.5)" } }, p.soldOut ? "Sold out" : "Coming soon"))));
+                }))
+            : h("p", { style: { fontFamily: sans, fontSize: 14.5, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.7)", maxWidth: 620, margin: "18px 0 0" } }, "The Venture is preparing its first products. They will appear here, each with a link to where it can be bought."))),
+
+      // Quote
+      h("div", { style: { padding: "clamp(70px, 9vw, 110px) " + pad } },
+        h("div", { style: { maxWidth: 900, margin: "0 auto", textAlign: "center" } },
+          h(Seal, { size: 34 }),
+          h("blockquote", { style: { fontFamily: serif, fontStyle: "italic", fontWeight: 300, fontSize: "clamp(24px, 3.2vw, 38px)", lineHeight: 1.5, color: CREAM, margin: "34px 0 0" } }, "“God has made ", h("em", { style: { color: GOLD } }, "trade lawful"), ".”"),
+          h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)", marginTop: 30 } }, "Al-Baqarah 2:275"))),
+
+      // Returned to the endowment
+      h("div", { style: { padding: "0 " + pad + " clamp(70px, 9vw, 110px)" } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto", border: "1px solid rgba(201,169,97,0.3)", background: "rgba(20,36,66,0.45)", padding: "clamp(28px, 4vw, 48px)" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "end", gap: 24, flexWrap: "wrap" } },
+            h("div", { style: { minWidth: 0 } },
+              eyebrow("§ Returned to the endowment"),
+              hideAmt
+                ? (n ? h("div", { style: { fontFamily: serif, fontSize: "clamp(48px, 6vw, 80px)", lineHeight: 1, marginTop: 16, color: CREAM } }, n + " " + (n === 1 ? "contribution" : "contributions")) : null)
+                : h("div", { style: { fontFamily: serif, fontSize: "clamp(48px, 6vw, 80px)", lineHeight: 1, marginTop: 16, color: CREAM } }, usd(total)),
+              (!hideAmt || n) ? h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)", marginTop: 10 } }, hideAmt ? "Each one verified on the open ledger" : n + " " + (n === 1 ? "contribution" : "contributions") + " · verified on the open ledger") : null),
+            h("button", { onClick: goLedger, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "13px 22px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase" } }, "Open ledger →")),
+          n
+            ? h("div", { style: { marginTop: 28, borderTop: "1px solid rgba(201,169,97,0.18)" } },
+                st.income.slice(0, 12).map(x => h("div", { key: x.id, style: { display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", padding: "14px 0", borderBottom: "1px solid rgba(201,169,97,0.12)" } },
+                  h("span", { style: { fontFamily: sans, fontSize: 14, color: "rgba(232,228,220,0.85)" } }, x.period || fmtDate(x.date)),
+                  h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", color: "rgba(232,228,220,0.66)" } }, (x.txRef || "") + " · " + fmtDate(x.date)),
+                  hideAmt ? null : h("span", { style: { fontFamily: serif, fontSize: 20, color: GOLD } }, usd(x.amount)))))
+            : h("p", { style: { fontFamily: sans, fontSize: 14, fontWeight: 300, color: "rgba(232,228,220,0.6)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.7 } }, "The first contribution will appear here, and on the open ledger, as soon as it is made."))),
+
+      h(Stories, { articles: c.articles, title: "From the workshop.", shareKey: "venture" }),
+
+      // Call to action
+      h("div", { style: { padding: "clamp(70px, 10vw, 120px) " + pad, textAlign: "center" } },
+        eyebrow("Shop with purpose"),
+        h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(30px, 4.4vw, 52px)", margin: "20px 0 0", lineHeight: 1.1 } }, "Buy something good.", h("br", null), h("em", { style: { fontStyle: "italic" } }, "Let it keep giving.")),
+        h("div", { style: { display: "flex", justifyContent: "center", gap: 20, marginTop: 44, flexWrap: "wrap" } },
+          storeLink ? goldBtn(storeLink, "Visit the store ↗") : null,
+          onDonate ? h("button", { onClick: onDonate, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "17px 34px", cursor: "pointer", fontFamily: sans, fontSize: 12.5, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Give to the endowment") : null),
+        h("p", { style: { fontFamily: sans, fontSize: 12, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.66)", maxWidth: 640, margin: "34px auto 0" } }, "A purchase is a sale, not a donation, and is made with the shop where you buy it. A share of The Venture's profit, not of each sale, is given to the endowment to support its programmes and the work of running it. Gifts made to the endowment itself go entirely to its charitable work and its permanent principal.")),
+
+      h("div", { style: { borderTop: "1px solid rgba(201,169,97,0.2)", padding: "26px " + pad, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+        h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.66)" } }, "© MMXXVI · THE BRIAL ENDOWMENT"),
+        h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.66)" } }, "Honest trade, lasting good.")));
+  };
+
   window.BrialStories = Stories;
   window.WorshipPage = WorshipPage;
   window.WaterPage = WaterPage;
-  window.BrialPillarPages = { worship: WorshipPage, water: WaterPage, hospitals: HospitalsPage, schools: SchoolsPage, livestock: LivestockPage, infra: InfraPage, transport: TransportPage, foodclothing: FoodClothingPage };
+  window.BrialPillarPages = { worship: WorshipPage, water: WaterPage, hospitals: HospitalsPage, schools: SchoolsPage, livestock: LivestockPage, infra: InfraPage, transport: TransportPage, venture: VenturePage, foodclothing: FoodClothingPage };
 })();

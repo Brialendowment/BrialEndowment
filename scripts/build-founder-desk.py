@@ -98,6 +98,14 @@ TRANSPORT_TILE = ("  }, {\n    id: \"transport\",\n    label: \"Transportation\"
     "/*#__PURE__*/React.createElement(\"circle\", { cx: \"20\", cy: \"42\", r: \"5\" }), "
     "/*#__PURE__*/React.createElement(\"circle\", { cx: \"44\", cy: \"42\", r: \"5\" }), "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M6 50 H58\" }))\n")
+# The Venture tile (Pillars): the endowment's e-commerce products, a share of the profit given back
+VENTURE_TILE = ("  }, {\n    id: \"venture\",\n    label: \"The Venture\",\n    sub: \"Usaha\",\n    accent: \"#B9A3E3\",\n"
+    "    d: \"The endowment's e-commerce products. Keep the product list, record the share of profit given back, and curate the public page and its Visit the store button.\",\n"
+    "    meta: (n => n + \" product\" + (n === 1 ? \"\" : \"s\") + \" shown\")(store && store.getPillarContent ? (store.getPillarContent(\"venture\").products || []).filter(p => p && p.shown).length : 0),\n"
+    "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M14 22 H50 L47 52 Q46.6 55 43.6 55 H20.4 Q17.4 55 17 52 Z\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M24 22 V17 Q24 9 32 9 Q40 9 40 17 V22\" }), "
+    "/*#__PURE__*/React.createElement(\"path\", { d: \"M25 37 L30 42 L39 32\" }))\n")
 # Food & Clothing tile (Pillars), placed after Reforestation & Land: counts of food and clothing shared
 FOODCLOTHING_ANCHOR = "  }, {\n    id: \"water\",\n"
 FOODCLOTHING_TILE = ("  }, {\n    id: \"foodclothing\",\n    label: \"Food & Clothing\",\n    sub: \"Sandang & Pangan\",\n    accent: \"#D9A97A\",\n"
@@ -196,6 +204,9 @@ def inject(code):
     if "id: \"transport\",\n    label: \"Transportation\"," not in s:
         assert s.count(TREASURY_ANCHOR) == 1, "transport tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, TRANSPORT_TILE + TREASURY_ANCHOR)
+    if "id: \"venture\",\n    label: \"The Venture\"," not in s:
+        assert s.count(TREASURY_ANCHOR) == 1, "venture tile anchor not found"
+        s = s.replace(TREASURY_ANCHOR, VENTURE_TILE + TREASURY_ANCHOR)
     assert len(TOGGLE_RE.findall(s)) == 1, "pillar switch condition not found"
     s = TOGGLE_RE.sub(lambda m: "store && store.getPillarActive && " + " && ".join('c.id !== "%s"' % x for x in NOT_PILLARS) + " ? ", s)
     s = patch_portal_nav(s)

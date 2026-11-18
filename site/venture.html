@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<link rel="me" href="https://lynk.id/" />
+<link rel="me" href="https://lynk.id/brial" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-site-verification" content="w-GRKztn41-SVim8PvJtwlf0KDs6wjGBXjoJFBjeMWI">
+<meta name="google-site-verification" content="zH1zotqpB44pG0-RDwJOrUE72drs4QnECDsxlR2e5Uw">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=9">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=9">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=9">
+<link rel="shortcut icon" href="/favicon.ico?v=9">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=9">
+<title>The Venture | The Brial Endowment</title>
+<meta name="description" content="The pillar that trades: products made and sold under the endowment&#x27;s name, with a share of the profit returned to support its programmes.">
+<link rel="canonical" href="https://brialendowment.org/venture">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0A1628">
+<meta name="application-name" content="Brial">
+<meta name="apple-mobile-web-app-title" content="Brial">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<script id="b-pwa-early">addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__brialBip=e});</script>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Brial Endowment">
+<meta property="og:title" content="The Venture | The Brial Endowment">
+<meta property="og:description" content="The pillar that trades: products made and sold under the endowment&#x27;s name, with a share of the profit returned to support its programmes.">
+<meta property="og:url" content="https://brialendowment.org/venture">
+<meta property="og:image" content="https://brialendowment.org/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Venture | The Brial Endowment">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Venture | The Brial Endowment">
+<meta name="twitter:description" content="The pillar that trades: products made and sold under the endowment&#x27;s name, with a share of the profit returned to support its programmes.">
+<meta name="twitter:image" content="https://brialendowment.org/og-cover.jpg">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"NGO","name":"The Brial Endowment","alternateName":"Brial Endowment","url":"https://brialendowment.org/","logo":"https://brialendowment.org/favicon.png","image":"https://brialendowment.org/og-cover.jpg","description":"A perpetual philanthropic endowment: the principal is never spent and the returns are given forever. It funds university scholarships paid directly to students, and community programmes such as houses of worship, libraries, food and land, and clean water, all recorded on a public ledger.","sameAs":["https://www.instagram.com/brialendowment"],"foundingDate":"2024","nonprofitStatus":"Nonprofit","knowsAbout":["Perpetual endowment","Scholarships","Waqf","Sustainable development"]}</script>
+<link rel="preconnect" href="https://sdlrjqdbxxzddgivnjws.supabase.co" crossorigin="">
+<link rel="dns-prefetch" href="https://sdlrjqdbxxzddgivnjws.supabase.co">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/cormorant-garamond-normal-latin.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/manrope-normal-latin.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/jetbrains-mono-normal-latin.woff2">
+<link rel="stylesheet" href="/fonts/fonts.css?v=1de54646">
+<style>/* ============================================================
+   BRIAL — MOBILE FIXES
+   The React views use inline styles, so responsive behavior is
+   applied here via class hooks + !important media overrides.
+   ============================================================ */
+
+/* ---------- pillar grid: the last card fills the rest of its row, so no empty cell shows ---------- */
+.b-pillars > :nth-last-child(2):nth-child(3n+1) { grid-column: span 3; }
+.b-pillars > :nth-last-child(2):nth-child(3n+2) { grid-column: span 2; }
+
+/* ---------- tablets & small laptops ---------- */
+@media (max-width: 900px) {
+  .b-pillars > :nth-last-child(2) { grid-column: auto !important; }
+  .b-pillars > :nth-last-child(2):nth-child(odd) { grid-column: span 2 !important; }
+  .b-hero-sub, .b-2col, .b-tiles3 {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+  .b-metrics4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .b-metrics4 > div { border-left: none !important; }
+  .b-pillars { grid-template-columns: repeat(2, 1fr) !important; }
+  .b-foot {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 40px !important;
+  }
+  .b-foot > div:first-child { grid-column: 1 / -1 !important; }
+}
+
+/* ---------- nav: drop text links, keep brand + actions ---------- */
+@media (max-width: 820px) {
+  .b-nav-links a { display: none !important; }
+  .b-nav-links { gap: 16px !important; }
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 700px) {
+  /* CTA strip stat row: wrap instead of overflowing */
+  #scholars div[style*="gap: 56px"] {
+    flex-wrap: wrap !important;
+    gap: 24px 36px !important;
+  }
+  .b-hero { padding: 130px 20px 80px !important; }
+  #transparency, #mission, #scholars {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-top: 90px !important;
+    padding-bottom: 80px !important;
+  }
+  #trustees { padding: 70px 20px 36px !important; }
+  .b-hero-sub { gap: 32px !important; margin-top: 40px !important; }
+  .b-2col { gap: 32px !important; margin-bottom: 48px !important; }
+  .b-metrics4 { margin-top: 64px !important; }
+  .b-pillars { grid-template-columns: 1fr !important; }
+  .b-pillars > :nth-last-child(2):nth-child(odd) { grid-column: auto !important; }
+  .b-colophon { grid-column: 1 / -1 !important; padding: 34px 22px !important; }
+  .b-portal2 { grid-template-columns: 1fr !important; }
+}
+
+/* ---------- small phones: compact brand ---------- */
+@media (max-width: 480px) {
+  .b-brand-sub { display: none !important; }
+  .b-nav-donate { display: none !important; }
+  .b-nav { gap: 12px !important; }
+  .b-nav-links { gap: 12px !important; }
+  .b-brand { gap: 8px !important; }
+  .b-brand-logo { width: 28px !important; height: 28px !important; }
+  .b-brand-title { font-size: 15px !important; }
+  .b-nav-apply { padding: 8px 13px !important; font-size: 11px !important; }
+  .b-foot { grid-template-columns: 1fr !important; }
+}
+
+/* ============================================================
+   Founder portal on phones — ledgers collapse to 2-col cards,
+   headers hide, form grids stack, detail split stacks.
+   ============================================================ */
+@media (max-width: 760px) {
+  /* wide ledger rows -> 2-col cards (worship, foodland, sales, donations, disbursements, accounts, inbox) */
+  div[style*="grid-template-columns: 1.4fr 1fr 1fr 1.1fr 1fr 24px"],
+  div[style*="grid-template-columns: 1.3fr 0.9fr 0.7fr 1fr 0.7fr 50px"],
+  div[style*="grid-template-columns: 80px 1.6fr 1fr 1.6fr 1.2fr 110px 100px"],
+  div[style*="grid-template-columns: 90px 1.5fr 1.8fr 1.4fr 140px 70px"],
+  div[style*="grid-template-columns: 1.2fr 0.9fr 0.7fr 0.7fr 1fr 0.7fr 50px"],
+  div[style*="grid-template-columns: 1.3fr 0.5fr 0.5fr 0.7fr 1fr 0.7fr 50px"],
+  div[style*="grid-template-columns: 1fr 1.4fr 1fr 0.8fr 32px"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px 16px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  /* hide the column-header row of each ledger (always the card's first child) */
+  div[style*="grid-template-columns: 1.4fr 1fr 1fr 1.1fr 1fr 24px"]:first-child,
+  div[style*="grid-template-columns: 1.3fr 0.9fr 0.7fr 1fr 0.7fr 50px"]:first-child,
+  div[style*="grid-template-columns: 80px 1.6fr 1fr 1.6fr 1.2fr 110px 100px"]:first-child,
+  div[style*="grid-template-columns: 90px 1.5fr 1.8fr 1.4fr 140px 70px"]:first-child,
+  div[style*="grid-template-columns: 1.2fr 0.9fr 0.7fr 0.7fr 1fr 0.7fr 50px"]:first-child,
+  div[style*="grid-template-columns: 1.3fr 0.5fr 0.5fr 0.7fr 1fr 0.7fr 50px"]:first-child {
+    display: none !important;
+  }
+  /* application detail: sidebar + document split -> stacked */
+  div[style*="grid-template-columns: minmax(360px, 440px) 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* admin form grids stack */
+  div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  div[style*="grid-template-columns: 2fr 0.6fr 1fr 1fr"],
+  div[style*="grid-template-columns: 2fr 1fr 0.7fr"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  div[style*="grid-template-columns: 160px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* stat chips: drop fixed minimums so they wrap instead of overflowing */
+  div[style*="min-width: 170px"], div[style*="min-width: 160px"], div[style*="min-width: 150px"] {
+    min-width: 0 !important;
+    flex: 1 1 130px !important;
+  }
+  /* semester mini-table */
+  div[style*="grid-template-columns: 100px 1fr 1fr 80px"] {
+    grid-template-columns: 90px 1fr 1fr 70px !important;
+    gap: 8px !important;
+  }
+  /* scholars card grid: 380px min cards -> single column */
+  div[style*="minmax(380px, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* collapsed ledger rows: children may not force width; password chips wrap */
+  div[style*="grid-template-columns: 90px 1.5fr 1.8fr 1.4fr 140px 70px"] > * {
+    min-width: 0 !important;
+  }
+  div[style*="grid-template-columns: 90px 1.5fr 1.8fr 1.4fr 140px 70px"] div[style*="gap: 8px"] {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ============================================================
+   Generic fallbacks for inner views (donate, library, scholars,
+   student & founder portals) — matches the serialized inline
+   style attribute, so fixed grids stack on phones.
+   ============================================================ */
+@media (max-width: 760px) {
+  html, body { overflow-x: hidden; }
+  /* footer donate band: stack text above the pill */
+  .b-donate-band {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 24px !important;
+    padding: 30px 22px !important;
+  }
+  .b-donate-pill { align-self: stretch !important; text-align: center !important; }
+  /* donate page: wallet + form stack into one column */
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 28px !important;
+  }
+  /* kill min-content expansion so the column can't outgrow the phone screen */
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] > div,
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] form {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] form {
+    padding: 26px 18px !important;
+  }
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] span {
+    overflow-wrap: anywhere;
+  }
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] input,
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] textarea {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  /* donate page recent-gifts ledger rows: 4 cols -> 2x2 */
+  div[style*="grid-template-columns: 1.6fr 0.8fr 1.4fr 120px"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px 18px !important;
+  }
+  div[style*="grid-template-columns: 220px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* application form: section list above the form on phones */
+  div[style*="grid-template-columns: 280px 1fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 20px !important;
+  }
+  div[style*="grid-template-columns: 280px 1fr"] > aside { position: static !important; }
+  div[style*="grid-template-columns: repeat(2, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="grid-template-columns: 1.2fr 1fr"],
+  div[style*="grid-template-columns: 1fr 1.4fr"],
+  div[style*="grid-template-columns: 1.4fr 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  div[style*="grid-template-columns: repeat(4, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  div[style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* wide fixed paddings inside cards → breathe on phones */
+  div[style*="padding: 22px 40px"] { padding: 18px 20px !important; }
+  div[style*="padding: 20px 40px"] { padding: 16px 20px !important; }
+}
+
+/* programme journal cards collapse to a single column on small screens */
+@media (max-width: 760px) {
+  .b-story { grid-template-columns: 1fr !important; }
+  .b-story > div { order: 0 !important; }
+  .b-story .b-story-photo, .b-story-photo { min-height: 220px !important; position: relative !important; }
+}
+
+/* Application progress (5 stages): a vertical list on phones, so long stage names never overlap */
+@media (max-width: 600px) {
+  .bsp-timeline { padding: 22px 20px !important; }
+  .bsp-timeline-row { flex-direction: column !important; gap: 14px !important; }
+  .bsp-tl-line { display: none !important; }
+  .bsp-tl-node { display: grid !important; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: center !important; text-align: left !important; width: 100%; }
+  .bsp-tl-node > :first-child { grid-row: span 2; }
+  .bsp-tl-node > :nth-child(2) { margin-top: 0 !important; align-self: end; }
+  .bsp-tl-node > :nth-child(3) { align-self: start; }
+}
+/* Application form on tablets: the section list sits above the form */
+@media (max-width: 1024px) {
+  div[style*="grid-template-columns: 280px 1fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 20px !important;
+  }
+  div[style*="grid-template-columns: 280px 1fr"] > aside { position: static !important; }
+}
+/* Donate page on tablets: wallet above the form, so the form is never cut off */
+@media (max-width: 900px) {
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 28px !important;
+  }
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] > div,
+  div[style*="grid-template-columns: minmax(320px, 1fr) 1.2fr"] form {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* donate form: two-up fields stack on phones */
+@media (max-width: 600px) { .b-don-2col { grid-template-columns: 1fr !important; gap: 14px !important; } }
+
+/* ---- donate page (Oct 2026 redesign) ---- */
+@media (max-width: 760px) {
+  .b-don-methods { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .b-don-methods button { min-height: 100px !important; padding: 14px 12px 12px !important; }
+  .b-don-methods > button:last-child:nth-child(odd) { grid-column: 1 / -1; min-height: 84px !important; }
+  .b-don-row { grid-template-columns: minmax(0, 1fr) auto !important; gap: 8px 14px !important; padding: 16px 16px !important; }
+  .b-don-row-name { grid-column: 1 / -1; }
+  .b-don-row-amt { font-size: 24px !important; grid-column: 1; grid-row: 2; }
+  .b-don-row-ref { grid-column: 1 / -1; grid-row: 3; }
+  .b-don-row-status { grid-column: 2; grid-row: 2; }
+  div.b-don-stats { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  div.b-don-stats > div { padding: 14px 12px !important; }
+  div.b-don-stats > div > div:first-child { letter-spacing: 0.06em !important; line-height: 1.35 !important; }
+  .b-don-stat-v { font-size: 24px !important; }
+}
+@media (max-width: 600px) {
+  .b-hide-sm { display: none !important; }
+  .b-don-nav { padding: 12px 16px !important; }
+}
+@media (min-width: 761px) { .b-don-record { display: none !important; } }
+@media (max-width: 600px) {
+  .b-portal-gate:has(> .b-portal-back) { flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; padding: 16px 16px 40px !important; gap: 18px !important; }
+  .b-portal-back { position: static !important; align-self: flex-start !important; }
+}
+/* donate page: wire currency choice stays on one row */
+div.b-don-curs { grid-template-columns: none !important; grid-auto-flow: column !important; grid-auto-columns: minmax(0, 1fr) !important; gap: 8px !important; }
+</style>
+<style>/* ============================================================
+   BRIAL — MOTION & VISUAL EFFECTS LAYER · GEN 3 "MAXIMUM"
+   Premium motion design over the existing React app.
+   Applied at runtime by motion-effects.js:
+     .fx-btn        small interactive controls
+     .fx-gold       solid-gold CTAs (shine sweep + halo + magnetic)
+     .fx-idle       gold CTAs that breathe an idle shine when visible
+     .fx-card       large clickable cards (tilt + spotlight + glare)
+     .fx-glowcard   non-interactive framed cards (cursor spotlight)
+     .fx-pre/.fx-in scroll-reveal states (variants via data-fxv)
+     .fx-pre-img    image wipe reveal
+     .fx-view-in    view-mount transition
+     #fx-progress   reading progress hairline
+     .fx-aurora     ambient hero light field
+     #fx-dust       gold dust particle canvas
+   All motion is gated behind prefers-reduced-motion.
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ---------- 0. Scroll progress hairline ---------- */
+  #fx-progress {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    z-index: 240;
+    pointer-events: none;
+    background: linear-gradient(90deg, #C9A961 0%, #E3C98A 55%, #4FD1C5 100%);
+    box-shadow: 0 0 12px rgba(201, 169, 97, 0.55);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  #fx-progress.fx-on { opacity: 1; }
+
+  /* ---------- 1. Ambient hero atmosphere ---------- */
+  .fx-aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .fx-aurora i {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    filter: blur(60px);
+    mix-blend-mode: screen;
+    will-change: transform;
+  }
+  .fx-aurora i:nth-child(1) {
+    width: 56vw; height: 56vw;
+    left: -12vw; top: -18vw;
+    background: radial-gradient(circle, rgba(201, 169, 97, 0.16) 0%, rgba(201, 169, 97, 0.05) 45%, transparent 70%);
+    animation: fxAurora1 26s ease-in-out infinite alternate;
+  }
+  .fx-aurora i:nth-child(2) {
+    width: 44vw; height: 44vw;
+    right: -10vw; top: 8vw;
+    background: radial-gradient(circle, rgba(79, 209, 197, 0.10) 0%, rgba(79, 209, 197, 0.03) 45%, transparent 70%);
+    animation: fxAurora2 34s ease-in-out infinite alternate;
+  }
+  .fx-aurora i:nth-child(3) {
+    width: 38vw; height: 38vw;
+    left: 28vw; bottom: -20vw;
+    background: radial-gradient(circle, rgba(184, 150, 81, 0.12) 0%, transparent 65%);
+    animation: fxAurora1 40s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes fxAurora1 {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(9vw, 6vh, 0) scale(1.18); }
+  }
+  @keyframes fxAurora2 {
+    from { transform: translate3d(0, 0, 0) scale(1.1); }
+    to   { transform: translate3d(-8vw, -5vh, 0) scale(0.94); }
+  }
+
+  #fx-dust {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ---------- 2. Buttons: lift, glow, press ---------- */
+  .fx-btn {
+    transition:
+      transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.32s ease;
+    will-change: transform;
+  }
+  .fx-btn:hover:not(:disabled) {
+    transform: translateY(-1.5px);
+    box-shadow:
+      0 6px 22px rgba(0, 0, 0, 0.28),
+      0 0 14px rgba(201, 169, 97, 0.18);
+  }
+  .fx-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.08s;
+  }
+
+  /* ---------- 3. Gold CTAs: shine sweep + halo + idle breath ---------- */
+  .fx-gold {
+    position: relative;
+    overflow: hidden;
+  }
+  .fx-gold::after {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0;
+    left: -80%;
+    width: 55%;
+    background: linear-gradient(
+      100deg,
+      transparent 8%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 92%
+    );
+    transform: skewX(-22deg);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .fx-gold:hover:not(:disabled) {
+    box-shadow:
+      0 6px 26px rgba(0, 0, 0, 0.3),
+      0 0 26px rgba(201, 169, 97, 0.42),
+      0 0 60px rgba(201, 169, 97, 0.15);
+  }
+  .fx-gold:hover:not(:disabled)::after {
+    animation: fxShine 0.85s cubic-bezier(0.35, 0, 0.25, 1) forwards;
+  }
+  @keyframes fxShine {
+    0%   { left: -80%; opacity: 0; }
+    12%  { opacity: 1; }
+    100% { left: 130%; opacity: 0; }
+  }
+  /* idle shine: a quiet sweep every ~7s while the CTA is on screen */
+  .fx-idle.fx-idle-on:not(:hover)::after {
+    animation: fxIdleShine 7s cubic-bezier(0.35, 0, 0.25, 1) 2.2s infinite;
+  }
+  @keyframes fxIdleShine {
+    0%    { left: -80%; opacity: 0; }
+    1.5%  { opacity: 0.75; }
+    13%   { left: 130%; opacity: 0; }
+    100%  { left: 130%; opacity: 0; }
+  }
+
+  /* ---------- 4. Click ripple ---------- */
+  .fx-ripple {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle,
+      rgba(201, 169, 97, 0.35) 0%,
+      rgba(201, 169, 97, 0.12) 45%,
+      transparent 70%);
+    transform: scale(0);
+    animation: fxRipple 0.65s cubic-bezier(0.2, 0.6, 0.35, 1) forwards;
+    z-index: 3;
+  }
+  @keyframes fxRipple {
+    to { transform: scale(1); opacity: 0; }
+  }
+
+  /* ---------- 5. Cards: cursor spotlight + specular glare ---------- */
+  .fx-card, .fx-glowcard {
+    position: relative;
+  }
+  .fx-card::before, .fx-glowcard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        420px circle at var(--fx-x, 50%) var(--fx-y, 50%),
+        rgba(201, 169, 97, 0.16) 0%,
+        rgba(201, 169, 97, 0.05) 35%,
+        transparent 65%
+      ),
+      radial-gradient(
+        180px circle at var(--fx-x, 50%) var(--fx-y, 50%),
+        rgba(255, 255, 255, 0.055) 0%,
+        transparent 70%
+      );
+    opacity: 0;
+    transition: opacity 0.45s ease;
+    z-index: 1;
+  }
+  .fx-card:hover::before, .fx-glowcard:hover::before { opacity: 1; }
+
+  /* gold hairline that brightens under the cursor */
+  .fx-card::after, .fx-glowcard::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px solid transparent;
+    background:
+      radial-gradient(300px circle at var(--fx-x, 50%) var(--fx-y, 50%),
+        rgba(201, 169, 97, 0.75), rgba(201, 169, 97, 0.1) 55%, transparent 75%)
+      border-box;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+    z-index: 2;
+  }
+  .fx-card:hover::after, .fx-glowcard:hover::after { opacity: 1; }
+
+  .fx-card {
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .fx-card:hover {
+    box-shadow:
+      0 24px 60px rgba(0, 0, 0, 0.4),
+      0 0 44px rgba(201, 169, 97, 0.1);
+  }
+
+  /* icon + arrow micro-motion inside cards */
+  .fx-card svg {
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
+  }
+  .fx-card:hover svg {
+    transform: translateY(-3px) scale(1.06);
+    filter: drop-shadow(0 0 12px rgba(201, 169, 97, 0.55));
+  }
+
+  /* serif title shimmer inside clickable cards */
+  .fx-card h3 { transition: text-shadow 0.4s ease; }
+  .fx-card:hover h3 { text-shadow: 0 0 22px rgba(201, 169, 97, 0.5); }
+
+  /* ---------- 6. Nav polish ---------- */
+  .b-brand svg {
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
+  }
+  .b-brand:hover svg {
+    transform: rotate(22.5deg) scale(1.08);
+    filter: drop-shadow(0 0 12px rgba(201, 169, 97, 0.7));
+  }
+  .b-nav-links a {
+    position: relative;
+    transition: color 0.3s ease;
+  }
+  .b-nav-links a:hover { color: #F2EEE4 !important; }
+  .b-nav-links a::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 100%;
+    bottom: -5px;
+    height: 1px;
+    background: linear-gradient(90deg, #C9A961, rgba(79, 209, 197, 0.8));
+    transition: right 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .b-nav-links a:hover::after { right: 0; }
+
+  /* footer link underline draw */
+  .b-foot a {
+    position: relative;
+    transition: color 0.3s ease;
+  }
+  .b-foot a:hover { color: #E8E4DC !important; }
+  .b-foot a::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 100%;
+    bottom: -3px;
+    height: 1px;
+    background: rgba(201, 169, 97, 0.85);
+    transition: right 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .b-foot a:hover::after { right: 0; }
+
+  /* ---------- 7. Scroll reveal (JS-applied, fail-safe) ---------- */
+  .fx-pre {
+    opacity: 0.001;
+    transform: translateY(26px);
+  }
+  .fx-pre[data-fxv="l"] { transform: translateX(-34px) translateY(10px); }
+  .fx-pre[data-fxv="r"] { transform: translateX(34px) translateY(10px); }
+  .fx-pre[data-fxv="s"] { transform: scale(0.94) translateY(16px); }
+  @media (min-width: 900px) {
+    .fx-pre { filter: blur(7px); }
+  }
+  /* .fx-pre.fx-in[data-fxv] outranks the variant rules above
+     (.fx-pre[data-fxv="l"] etc.); without it the element stayed shifted
+     during the reveal and jumped straight when the classes were removed. */
+  .fx-in,
+  .fx-pre.fx-in,
+  .fx-pre.fx-in[data-fxv] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition:
+      opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--fx-d, 0s);
+  }
+
+  /* headline italics glow once as their section reveals */
+  h1.fx-in em, h2.fx-in em, .fx-in h2 em {
+    animation: fxEmGlow 2s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+  }
+  @keyframes fxEmGlow {
+    0%   { text-shadow: 0 0 0 rgba(201, 169, 97, 0); }
+    40%  { text-shadow: 0 0 34px rgba(201, 169, 97, 0.65); }
+    100% { text-shadow: 0 0 0 rgba(201, 169, 97, 0); }
+  }
+
+  /* image wipe reveal — hide via opacity (clip-path would zero the
+     element's visible area and IntersectionObserver would never fire);
+     the wipe itself is a keyframe animation applied at reveal time */
+  .fx-pre-img { opacity: 0.001; }
+  .fx-in-img {
+    opacity: 1;
+    animation: fxWipe 1.05s cubic-bezier(0.65, 0, 0.35, 1) both;
+    animation-delay: var(--fx-d, 0s);
+  }
+  @keyframes fxWipe {
+    from { clip-path: inset(0 100% 0 0); transform: scale(1.06); }
+    to   { clip-path: inset(0 0 0 0); transform: none; }
+  }
+
+  /* ---------- 8. View-mount transition ---------- */
+  .fx-view-in {
+    animation: fxViewIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes fxViewIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ---------- 9. Count-up numerals: stable digits ---------- */
+  [data-fxc] { font-variant-numeric: tabular-nums; }
+
+  /* ---------- 10. Scroll hint: gentle float ---------- */
+  .fx-scrollhint {
+    animation: fxHintFloat 2.6s ease-in-out infinite;
+    transition: opacity 0.3s ease;
+  }
+  @keyframes fxHintFloat {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(7px); }
+  }
+
+  /* ---------- 11. Inputs: focus glow ---------- */
+  input:focus, textarea:focus, select:focus {
+    box-shadow: 0 0 0 1px rgba(201, 169, 97, 0.45), 0 0 18px rgba(201, 169, 97, 0.12) !important;
+    transition: box-shadow 0.3s ease;
+  }
+}
+
+/* ---------- always on (not motion): keyboard focus ring ---------- */
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid rgba(201, 169, 97, 0.8) !important;
+  outline-offset: 2px !important;
+}
+
+/* print / export: never hide revealed content */
+@media print {
+  .fx-pre, .fx-pre-img { opacity: 1 !important; transform: none !important; filter: none !important; clip-path: none !important; }
+  #fx-progress, .fx-aurora, #fx-dust { display: none !important; }
+}
+</style>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #0A1628; color: #E8E4DC; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { font-family: 'Manrope', sans-serif; overflow-x: hidden; }
+  ::selection { background: #C9A961; color: #0A1628; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #060E1C; }
+  ::-webkit-scrollbar-thumb { background: rgba(201,169,97,0.25); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(201,169,97,0.5); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+  @keyframes ledgerIn {
+    from { opacity: 0; transform: translateY(-12px); background: rgba(79,209,197,0.08); }
+    to { opacity: 1; transform: translateY(0); background: transparent; }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes pulseRing {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201,169,97,0.5); }
+    50%      { box-shadow: 0 0 0 8px rgba(201,169,97,0); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  @keyframes brialFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  button { font-family: inherit; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+<noscript><div style="position:fixed;inset:auto 12px 12px 12px;padding:14px 16px;background:#0A1628;color:#E8E4DC;border:1px solid #C9A961;font:15px/1.5 sans-serif;z-index:10000">This page needs JavaScript to display. Please turn it on in your browser, or write to hello@brialendowment.org.</div></noscript>
+
+<div id="root">
+  <div id="__brial_splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0A1628;gap:28px;">
+    <svg width="72" height="72" viewBox="0 0 36 36" style="animation:pulse 2s ease-in-out infinite;">
+      <g fill="none" stroke="#C9A961" stroke-width="1.2">
+        <path d="M18 3 L20.79 11.26 L28.61 7.39 L24.74 15.21 L33 18 L24.74 20.79 L28.61 28.61 L20.79 24.74 L18 33 L15.21 24.74 L7.39 28.61 L11.26 20.79 L3 18 L11.26 15.21 L7.39 7.39 L15.21 11.26 Z"></path>
+        <circle cx="18" cy="18" r="4" fill="#C9A961" stroke="none"></circle>
+      </g>
+    </svg>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.32em;text-transform:uppercase;color:#C9A961;">The Brial Endowment</div>
+    <div style="width:32px;height:32px;border:2px solid rgba(201,169,97,0.2);border-top-color:#C9A961;border-radius:50%;animation:spin 0.9s linear infinite;"></div>
+  </div>
+</div>
+
+<script src="/vendor/supabase.js?v=96277ec0"></script>
+<script src="/supabase-client.js?v=e8e062c0"></script>
+<script src="/file-store.js?v=a35e2917"></script>
+<script src="/store.js?v=16e64243"></script>
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:" && /(brialendowment\.org|netlify\.app|pages\.dev)$/.test(location.hostname)) {
+  var reg = function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); }; if (document.readyState === "complete") reg(); else addEventListener("load", reg);
+}
+</script>
+<script src="/vendor/qrcode.js?v=bb2365e4"></script>
+<script src="/vendor/react.min.js?v=d949f1c3"></script>
+<script src="/vendor/react-dom.min.js?v=35f4f974"></script>
+<script src="/partner-logos.js?v=d45d4791"></script>
+<script>window.BRIAL_LAZY = { admin: "/admin.compiled.js?v=47fbcb3e" };</script>
+<script src="/student-profile.compiled.js?v=1e58bcbf"></script>
+<script src="/student.compiled.js?v=b5f017c0"></script>
+<script src="/donate.compiled.js?v=ef55e62e"></script>
+<script src="/scholars-showcase.compiled.js?v=2927689d"></script>
+<script src="/ebooks.compiled.js?v=4ed7d8fe"></script>
+<script src="/foodland.compiled.js?v=f5e145b2"></script>
+<script src="/pillar-pages.compiled.js?v=4e97a812"></script>
+<script src="/proof.compiled.js?v=9264f34e"></script>
+<script src="/app.compiled.js?v=d477f1a5"></script>
+<script src="/motion-effects.js?v=453db9f9"></script>
+<script src="/brial-lang.js?v=2cebd54f"></script>
+
+
+<script src="/install-app.js?v=954475aa" defer></script>
+</body></html>

@@ -61,6 +61,7 @@ SEO_PAGES = {
     "worship": ("Houses of Worship", "Mosques raised as waqf with local builders: places that gather a community and endure long after their builders.", None),
     "water": ("Clean Water", "Wells and water systems built with local partners, so clean water is close to home for the villages that need it.", None),
     "transport": ("Transportation", "The enterprise pillar. go2rent cars on the road across Türkiye and Northern Cyprus, and a share of the founder's returns given to the endowment.", "https://brialendowment.org/partners/go2rent/og.jpg"),
+    "venture": ("The Venture", "The pillar that trades: products made and sold under the endowment's name, with a share of the profit returned to support its programmes.", None),
     "hospitals": ("Hospitals", "Care for those who cannot afford to be sick: clinics funded from the endowment, free at the point of need. A pillar in preparation.", None),
     "schools": ("Schools", "Classrooms raised where distance decides who learns, built once and teaching for generations. A pillar in preparation.", None),
     "livestock": ("Livestock & Enterprise", "Herds and small enterprise placed as productive capital in family hands. A pillar in preparation.", None),

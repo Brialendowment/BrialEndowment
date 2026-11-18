@@ -1311,6 +1311,15 @@ const Philosophy = ({
     d: "Cars on the road across T\u00fcrkiye and Northern Cyprus. Our enterprise pillar: a share of the founder's returns from go2rent is given to the endowment, so the other pillars can keep giving.",
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M10 40 L10 32 L16 22 Q18 19 22 19 L42 19 Q46 19 48 22 L54 32 L54 40 Z" }), /*#__PURE__*/React.createElement("path", { d: "M14 32 L50 32" }), /*#__PURE__*/React.createElement("path", { d: "M20 19 L17 32 M44 19 L47 32" }), /*#__PURE__*/React.createElement("circle", { cx: "20", cy: "42", r: "5" }), /*#__PURE__*/React.createElement("circle", { cx: "44", cy: "42", r: "5" }), /*#__PURE__*/React.createElement("line", { x1: "6", y1: "50", x2: "58", y2: "50", strokeWidth: "1.4" }))
   }, {
+    t: "The Venture",
+    k: "venture",
+    action: "venture",
+    cta: "Visit the store \u2192",
+    sub: "Usaha",
+    status: "active",
+    d: "Products made and sold under the endowment's name. Our trading pillar: a share of the profit returns to the endowment, to support its programmes and the work of running it.",
+    icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M14 22 H50 L47 52 Q46.6 55 43.6 55 H20.4 Q17.4 55 17 52 Z" }), /*#__PURE__*/React.createElement("path", { d: "M24 22 V17 Q24 9 32 9 Q40 9 40 17 V22" }), /*#__PURE__*/React.createElement("path", { d: "M25 37 L30 42 L39 32" }))
+  }, {
     t: "Hospitals",
     k: "hospitals",
     action: "hospitals",
@@ -2502,9 +2511,9 @@ const Footer = ({
 // APP
 // ============================================================
 const App = () => {
-  const BRIAL_VIEWS = ["scholars", "donate", "ebooks", "foodland", "foodclothing", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "scholar", "admin", "proof"];
+  const BRIAL_VIEWS = ["scholars", "donate", "ebooks", "foodland", "foodclothing", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "venture", "scholar", "admin", "proof"];
   // Public views have clean addresses (/transport); the portals stay on #/ (/#/scholar, /#/admin).
-  const BRIAL_PATHS = ["scholars", "donate", "ebooks", "foodland", "foodclothing", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "proof"];
+  const BRIAL_PATHS = ["scholars", "donate", "ebooks", "foodland", "foodclothing", "worship", "water", "hospitals", "schools", "livestock", "infra", "transport", "venture", "proof"];
   const parseHashView = () => {
     const m = (location.hash || "").match(/^#\/([a-z]+)/);
     if (m) return BRIAL_VIEWS.indexOf(m[1]) >= 0 ? m[1] : "landing";
@@ -2538,7 +2547,7 @@ const App = () => {
   // Tab title follows the view
   useEffect(() => {
     const setTitle = () => {
-    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
+    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", venture: "The Venture", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
     try { const S = window.BrialStore; if (S && S.getPillarName) Object.keys(T).forEach(v => { const k = v === "ebooks" ? "library" : v; if (S.isRenamablePillar(k)) T[v] = S.getPillarName(k); }); } catch (e) {}
     try { document.title = T[view] ? T[view] + " | The Brial Endowment" : "The Brial Endowment | A Perpetual Philanthropic Endowment"; } catch (e) {}
     };
