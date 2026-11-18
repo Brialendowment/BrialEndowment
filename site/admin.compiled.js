@@ -8367,6 +8367,248 @@ const PillarConsole = ({
 };
 
 // >>> FOUNDER DESK (generated from src/founder-desk.jsx — edit that file, then run scripts/build-founder-desk.py)
+// ============================================================
+// IMPACT CORE: the numbers of the yearly Impact Report.
+// One file, two homes:
+//   * the Founder Portal (copied into admin.compiled.js by scripts/build-founder-desk.py)
+//   * the scheduled worker (copied to supabase/functions/be-impact/impact-core.js by the same script)
+// so the figures the founder approves are exactly the figures published on 1 January.
+// Edit THIS file, then run scripts/build-founder-desk.py.
+// ============================================================
+(function (root) {
+  "use strict";
+  // Report years follow Jakarta time (UTC+7): the year closes at midnight WIB on 31 December.
+  const TZ = "+07:00";
+  const yearStart = y => new Date(y + "-01-01T00:00:00" + TZ);
+  const yearEnd = y => new Date(y + "-12-31T23:59:59.999" + TZ);
+  const yearOf = iso => { const d = new Date(iso); if (isNaN(d)) return null; return new Date(d.getTime() + 7 * 3600e3).getUTCFullYear(); };
+  const normKey = s => String(s || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const isChainTx = h => /^0x[0-9a-f]{64}$/i.test(String(h || "").trim());
+  const ymdOf = iso => { const d = new Date(iso); return isNaN(d) ? "" : new Date(d.getTime() + 7 * 3600e3).toISOString().slice(0, 10); };
+  const isSaleD = d => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
+  const isEntD = d => !!(d.data && d.data.enterprise) || String(d.id || "").indexOf("ENT-") === 0;
+  const id_ = s => String(s == null ? "" : s);
+
+  // Grant label → what one unit is called (trees, wells, mosques)
+  const UNITS = {
+    "Houses of Worship": ["mosque", "mosques"], "Reforestation & Land": ["tree", "trees"], "Food & Clothing": ["kg of food", "kg of food"],
+    "Clean Water": ["well", "wells"], "Hospitals": ["clinic", "clinics"], "Schools": ["school", "schools"],
+    "Livestock & Enterprise": ["placement", "placements"], "Sustainable Infrastructure": ["work", "works"],
+  };
+
+  // One list of movements, built from the same records as the public totals
+  function flows(store, h) {
+    const titleCase = (h && h.titleCase) || id_, instCase = (h && h.instCase) || id_;
+    const PL = x => (store.pillarLabel ? store.pillarLabel(x) : x);
+    const donations = (store.listDonations() || []).filter(d => !(store.isInternalDonation && store.isInternalDonation(d)));
+    const income = donations.map(d => ({
+      id: d.id, dir: "in", date: d.submittedAt || (d.data && d.data.sale && d.data.sale.date) || null,
+      category: isEntD(d) ? "Enterprise" : isSaleD(d) ? "Library sale" : "Gift",
+      title: isEntD(d) ? ((d.data && d.data.enterprise && d.data.enterprise.name) || "Enterprise") + (d.data && d.data.enterprise && d.data.enterprise.period ? " · " + d.data.enterprise.period : "") : isSaleD(d) ? (d.data && d.data.sale ? d.data.sale.title : d.name) : (d.anonymous ? "Anonymous" : d.name || "Donor"),
+      detail: isEntD(d) ? [PL("transport") + " pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? ((d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "")) : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
+      amount: Number(d.amount) || 0, ref: d.txHash || "", settled: !!d.verified, raw: d,
+    }));
+    const scholars = store.listApplicants().filter(a => a.status === "accepted");
+    const tuition = [], due = [];
+    scholars.forEach(sc => (sc.semesters || []).forEach(sem => {
+      if (!sem.bill) return;
+      const row = { scholar: sc, semester: sem };
+      if (sem.paidAt) tuition.push({ id: sc.id + ":" + sem.id, dir: "out", date: sem.paidAt, category: "Tuition", pillar: "Scholarships", title: titleCase(sc.name), detail: [sem.label, instCase(sc.profile && sc.profile.university && sc.profile.university.name)].filter(Boolean).join(" · "), amount: Number(sem.bill.amount) || 0, ref: sem.txHash || "", settled: true, row });
+      else if (sem.status === "bill-uploaded") due.push(row);
+    }));
+    const allGrants = store.getPillarGrants();
+    const grants = allGrants.filter(g => Number(g.amount) > 0).map(g => ({ id: g.id, dir: "out", date: g.date, category: "Grant", pillar: g.pillar, title: g.project || "Grant", detail: [g.partner, g.country].filter(Boolean).join(" · "), amount: Number(g.amount) || 0, ref: g.txRef || "", settled: !g.archived, archived: !!g.archived }));
+    const legacy = store.getLegacy();
+    const legacyRow = Number(legacy.totalFunds) > 0 ? [{ id: "LEGACY", dir: "out", date: null, category: "Founding era", pillar: "Scholarships", title: "Support before the website", detail: `${legacy.count || (legacy.scholars || []).length || 0} scholars, recorded as one total`, amount: Number(legacy.totalFunds) || 0, ref: "", settled: true }] : [];
+    const outflow = [...tuition, ...grants, ...legacyRow];
+    const sum = l => l.reduce((a, x) => a + (Number(x.amount) || 0), 0);
+    const received = income.filter(x => x.settled), pendingIn = income.filter(x => !x.settled);
+    const paidOut = outflow.filter(x => x.settled);
+    const dueSum = due.reduce((a, r) => a + (Number(r.semester.bill && r.semester.bill.amount) || 0), 0);
+    return { income, received, pendingIn, outflow, paidOut, due, dueSum, sum, legacy, scholars };
+  }
+
+  // Food & Clothing per report year: rough totals typed in, plus distributions recorded one by one
+  function foodClothing(store) {
+    const c = store.getPillarContent ? store.getPillarContent("foodclothing") : {};
+    const raw = c && c.counts && typeof c.counts === "object" ? c.counts : {};
+    const byYear = {};
+    const add = (y, kg, g) => { byYear[y] = byYear[y] || { kg: 0, garments: 0 }; byYear[y].kg += kg; byYear[y].garments += g; };
+    Object.keys(raw).forEach(y => { if (!/^\d{4}$/.test(y)) return; const r = raw[y] || {}; add(y, Math.max(0, Number(r.kg) || 0), Math.max(0, Math.round(Number(r.garments) || 0))); });
+    (store.getPillarGrants() || []).filter(g => g && g.pillar === "Food & Clothing" && !g.archived).forEach(g => {
+      const kg = Math.max(0, Number(g.kg) || 0), gar = Math.max(0, Math.round(Number(g.garments) || 0));
+      if (!kg && !gar) return;
+      const y = yearOf(g.date || g.createdAt); if (!y) return;
+      add(String(y), kg, gar);
+    });
+    Object.keys(byYear).forEach(y => { byYear[y].kg = Math.round(byYear[y].kg * 10) / 10; });
+    return { byYear, years: Object.keys(byYear).sort() };
+  }
+
+  function compute(store, rep, h) {
+    const F = flows(store, h);
+    const year = Number(rep.year);
+    const from = rep.founding ? null : yearStart(year);
+    const to = yearEnd(year);
+    const within = iso => { if (!iso) return false; const d = new Date(iso); if (isNaN(d)) return false; return (!from || d >= from) && d <= to; };
+    const PL = x => (store.pillarLabel ? store.pillarLabel(x) : x);
+    // money in
+    const gifts = F.received.filter(x => x.category === "Gift" && within(x.date));
+    const sales = F.received.filter(x => x.category === "Library sale" && within(x.date));
+    const enterprise = F.received.filter(x => x.category === "Enterprise" && within(x.date));
+    const donors = new Set(), countries = new Map();
+    gifts.forEach(x => {
+      const d = x.raw || {};
+      donors.add(normKey(d.email || d.name || x.id));
+      const c = String(d.country || "").trim(); if (c && !countries.has(normKey(c))) countries.set(normKey(c), c);
+    });
+    const copies = sales.reduce((a, x) => a + (Number(x.raw && x.raw.data && x.raw.data.sale && x.raw.data.sale.qty) || 1), 0);
+    // money out
+    const out = F.paidOut.filter(x => (x.id === "LEGACY" ? rep.founding : within(x.date)));
+    const byPillar = {};
+    out.forEach(x => { const k = PL(x.pillar || "Scholarships"); byPillar[k] = byPillar[k] || { amount: 0, count: 0 }; byPillar[k].amount += x.amount; byPillar[k].count += 1; });
+    // what was built: units recorded on pillar grants (trees, wells, mosques)
+    const units = {};
+    store.getPillarGrants().filter(g => !g.archived && within(g.date)).forEach(g => {
+      const n = Math.max(0, Math.round(Number(g.units) || 0));
+      if (!n || g.pillar === "Food & Clothing") return;
+      units[g.pillar] = units[g.pillar] || { n: 0, unit: UNITS[g.pillar] || ["unit", "units"] };
+      units[g.pillar].n += n;
+    });
+    // Food & Clothing: counted per year (kilograms of food, garments), not per grant
+    const fc = foodClothing(store);
+    const fcIn = fc.years.filter(y => Number(y) <= year && (rep.founding || Number(y) === year));
+    const fcKg = Math.round(fcIn.reduce((a, y) => a + fc.byYear[y].kg, 0) * 10) / 10, fcG = fcIn.reduce((a, y) => a + fc.byYear[y].garments, 0);
+    if (fcKg > 0) units["Food & Clothing"] = { n: fcKg, unit: ["kg of food shared", "kg of food shared"] };
+    if (fcG > 0) units["Food & Clothing "] = { n: fcG, unit: ["garment given", "garments given"], pillar: "Food & Clothing" };
+    // people and places
+    const scholars = F.scholars.filter(s => !s.deleted && (!s.acceptedAt || new Date(s.acceptedAt) <= to));
+    const nations = new Map(), insts = new Set();
+    const addNation = c => { c = String(c || "").trim(); if (c && !nations.has(normKey(c))) nations.set(normKey(c), c); };
+    scholars.forEach(s => { const p = s.profile || {}; addNation(p.personal && p.personal.country); const u = String((p.university && p.university.name) || "").trim(); if (u) insts.add(normKey(u)); });
+    const legacy = F.legacy || {};
+    const legacyScholars = rep.founding ? (legacy.scholars || []) : [];
+    legacyScholars.forEach(s => { addNation(s.country); if (s.school) insts.add(normKey(s.school)); });
+    const legacyCount = rep.founding ? (Number(legacy.count) || legacyScholars.length || 0) : 0;
+    store.getPillarGrants().filter(g => !g.archived && within(g.date)).forEach(g => addNation(g.country));
+    const semesters = F.scholars.reduce((a, s) => a + (s.semesters || []).filter(x => x.paidAt && x.bill && within(x.paidAt)).length, 0);
+    const newScholars = F.scholars.filter(s => s.acceptedAt && within(s.acceptedAt)).length;
+    const proofs = [
+      ...gifts.filter(x => isChainTx(x.ref)).map(x => ({ kind: "Gift received", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
+      ...out.filter(x => isChainTx(x.ref)).map(x => ({ kind: x.category === "Tuition" ? "Tuition paid" : PL(x.pillar) + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
+    ].sort((a, b) => (a.date < b.date ? -1 : 1));
+    const pillarNames = Object.keys(byPillar);
+    if ((scholars.length + legacyCount) > 0 && pillarNames.indexOf(PL("scholarships")) < 0) pillarNames.unshift(PL("scholarships"));
+    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf(PL("foodclothing")) < 0) pillarNames.push(PL("foodclothing"));
+    const r2 = n => Math.round(n * 100) / 100;
+    return {
+      computedAt: new Date().toISOString(),
+      period: { label: rep.founding ? "From the beginning to 31 December " + year : "1 January to 31 December " + year, from: from ? year + "-01-01" : null, to: year + "-12-31" },
+      people: { scholars: scholars.length + legacyCount, newScholars, nations: nations.size, nationList: [...nations.values()], institutions: insts.size, semesters },
+      pillars: pillarNames,
+      built: Object.entries(units).map(([pillar, u]) => ({ pillar: PL(u.pillar || pillar), n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
+      gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
+      money: {
+        received: r2(F.sum(gifts)), sales: r2(F.sum(sales)), copies, enterprise: r2(F.sum(enterprise)),
+        given: r2(F.sum(out)), byPillar: Object.entries(byPillar).map(([pillar, v]) => ({ pillar, amount: r2(v.amount), count: v.count })).sort((a, b) => b.amount - a.amount),
+        proofs,
+      },
+    };
+  }
+
+  // What visitors receive: numbers the founder chose to show, nothing else.
+  const publicPart = (snap, rep) => ({
+    computedAt: snap.computedAt, period: snap.period, people: snap.people, pillars: snap.pillars, built: snap.built,
+    gifts: rep.showGifts ? snap.gifts : null,
+    money: rep.showMoney ? snap.money : null,
+  });
+
+  // A fresh report record
+  const newReport = (year, founding) => ({
+    id: "IR-" + year, year: Number(year), founding: !!founding, status: "draft",
+    title: founding ? "Founding Year " + year : "Impact Report " + year,
+    intro: "", cover: "", coverCaption: "", letter: "", signName: "Brial Asif Hayi Paka", signRole: "Founder",
+    stories: [], plans: "", showMoney: false, showGifts: false, mailDonors: true, createdAt: new Date().toISOString(),
+  });
+
+  // Words the system writes when it prepares a report on 20 December. The founder reads,
+  // edits and approves them; nothing is published without that approval.
+  const list = a => (a.length <= 1 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]);
+  const nWord = (n, one, many) => n + " " + (Number(n) === 1 ? one : many);
+  function draftWords(rep, snap) {
+    const P = snap.people, pillars = snap.pillars || [];
+    const yr = Number(rep.year);
+    const works = (snap.built || []).map(b => b.n + " " + String(b.label).replace(/ (shared|given)$/, ""));
+    const people = P.scholars ? nWord(P.scholars, "scholar", "scholars") : "";
+    const nations = P.nations ? ", across " + nWord(P.nations, "nation", "nations") : "";
+    const did = [people ? "supported " + people : "", works.length ? "gave " + list(works) : ""].filter(Boolean);
+    const didLine = did.length ? did.join(" and ") : "took its first quiet steps";
+    const intro = rep.founding
+      ? `The year the endowment stepped into the open. What began as a private promise in 2024 now stands as a public trust: it ${didLine}${nations}, with every movement recorded on a public ledger.`
+      : `A year of giving that does not end. The endowment ${didLine}${nations}, with every movement recorded on a public ledger.`;
+    const letter = [
+      "To everyone who gave, prayed and trusted,",
+      rep.founding
+        ? `This is the first report of The Brial Endowment. It covers everything from the very beginning to 31 December ${yr}: the scholarships we carried privately before there was a website, and the year we opened the endowment to the world.`
+        : `This report covers 1 January to 31 December ${yr}. It is our account to you of what your trust became.`,
+      `Over this period the endowment ${didLine}${pillars.length ? `, working through ${nWord(pillars.length, "pillar", "pillars")}: ${list(pillars)}` : ""}. Every gift went directly to the people and works it was meant for, and every movement is on the public ledger for anyone to check.`,
+      "We do not spend the gift. We plant it, so that it keeps giving after we are gone. Thank you for planting with us.",
+    ].join("\n\n");
+    const plans = `In ${yr + 1} we will keep the principal whole, deepen the pillars already at work, and open new ones only when they can be funded to last.`;
+    return { intro, letter, plans };
+  }
+
+  // ---------------- letters (plain words; the be-mail worker lays them out) ----------------
+  const SITE = "https://brialendowment.org";
+  const links = year => ({ page: SITE + "/impact/" + year, pdf: SITE + "/impact/" + year + "?print=1" });
+  const wibDay = ms => new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
+  const publishAt = y => Date.UTC(Number(y) + 1, 0, 1, 1, 0, 0); // 1 Jan 08:00 WIB of the next year
+  const draftAt = y => Date.UTC(Number(y), 11, 20, 2, 0, 0);       // 20 Dec 09:00 WIB
+
+  // The standard letter to donors; the founder may rewrite subject and message in the console
+  function donorDefaults(rep) {
+    const t = rep.title || "Impact Report " + rep.year;
+    return {
+      subject: `${t}: what your gift became`,
+      body: `Dear {nama},\n\nYour gift helped make this year possible, and we would like you to see what it became. Our ${t} report is published today, with the numbers, the stories and the year ahead.\n\nThank you for trusting us with something meant to outlast us all.\n\nWith gratitude,`,
+    };
+  }
+  // What goes out: the founder's words, with the two links placed before the sign-off
+  function donorLetter(rep) {
+    const d = donorDefaults(rep), L = links(rep.year);
+    const subject = String(rep.mailSubject || "").trim() || d.subject;
+    const body = String(rep.mailBody || "").trim() || d.body;
+    const block = `Read the report: ${L.page}\nDownload the PDF: ${L.pdf}`;
+    if (body.indexOf("/impact/" + rep.year) >= 0) return { subject, body };
+    const parts = body.split(/\n{2,}/);
+    const last = parts[parts.length - 1];
+    if (parts.length > 1 && last.length <= 40) parts.splice(parts.length - 1, 0, block); else parts.push(block);
+    return { subject, body: parts.join("\n\n") };
+  }
+  // Notes to the founder (sent to the founder's alert address)
+  function founderNote(kind, rep, numbers) {
+    const t = rep.title || "Impact Report " + rep.year, when = wibDay(publishAt(rep.year));
+    const n = numbers || null;
+    const usd = v => { const x = Number(v) || 0; return "US$" + x.toLocaleString("en-US", Math.round(x * 100) % 100 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumFractionDigits: 0 }); };
+    const facts = n ? "\n\nThe numbers as of today:\nPeriod: " + n.period + "\nScholars supported: " + n.scholars + "\nNations: " + n.nations +
+      "\nPillars at work: " + ((n.pillars || []).join(", ") || "none yet") + (n.built && n.built.length ? "\nBuilt and given: " + n.built.join(", ") : "") +
+      "\nGifts received: " + n.gifts + " (" + usd(n.received) + ")\nGiven out: " + usd(n.given) : "";
+    if (kind === "ready") return {
+      subject: `Your ${t} report is ready for review`,
+      body: `The system has prepared the ${t} report from your records and written the first words for you. Nothing is public yet.\n\nOpen the Founder Console at ${SITE}/#/admin, then Foundation office, Impact Report. Read it, change anything you like, and press Approve. Once approved, it is published on ${when} at 08:00 WIB and sent to your donors.` + facts + `\n\nThe published report uses the final numbers to 31 December.`,
+    };
+    if (kind === "waiting") return {
+      subject: `${t} is waiting for your approval`,
+      body: `Its publishing day has come, but the report has not been approved, so it is not public yet.\n\nOpen the Founder Console at ${SITE}/#/admin, then Foundation office, Impact Report, and press Approve. It goes live within the hour and is sent to your donors.`,
+    };
+    return {
+      subject: `${t} is published`,
+      body: `Your report is live at ${links(rep.year).page} with the final numbers to 31 December.` + (rep.mailDonors !== false ? `\n\nThe letter to your donors is on its way. Emails go out within the daily sending limit, so a long list can take a day or two.` : "") + facts.replace("as of today", "as published"),
+    };
+  }
+
+  root.BrialImpactCore = { SITE, links, publishAt, draftAt, donorDefaults, donorLetter, founderNote, TZ, yearStart, yearEnd, yearOf, ymdOf, isChainTx, normKey, UNITS, flows, compute, publicPart, newReport, draftWords, foodClothing };
+})(typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : this);
 const FD = (() => {
   const { useState, useEffect, useMemo, useRef, useCallback } = React;
   const money = (n) => "$" + (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -8435,6 +8677,15 @@ const FD = (() => {
 .fd-pillar-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent);color:var(--accent);flex-shrink:0}
 .fd-pillar b{display:block;font-weight:600;font-size:14px;line-height:1.2}
 .fd-pillar small{display:block;font-size:12px;color:var(--faint)}
+.fd-sched{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;counter-reset:st}
+.fd-sched li{position:relative;padding:14px 14px 14px 46px;border:1px solid var(--line);border-radius:12px;counter-increment:st}
+.fd-sched li::before{content:counter(st);position:absolute;left:14px;top:14px;width:22px;height:22px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);font-size:12px;display:flex;align-items:center;justify-content:center}
+.fd-sched li.done::before{content:"✓";background:var(--accent);color:#0A1628}
+.fd-sched li.due{border-color:var(--accent)}
+.fd-sched b{display:block;font-weight:600;font-size:14px}
+.fd-sched span{display:block;font-size:12.5px;color:var(--accent);margin-top:2px}
+.fd-sched small{display:block;font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+@media (max-width:760px){.fd-sched{grid-template-columns:1fr}}
 .fd-pillar>div:nth-child(2){flex:1;min-width:0}
 .fd-rename{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .fd-rename:hover,.fd-rename:focus-visible{color:var(--accent);border-color:var(--accent)}
@@ -10209,41 +10460,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   const isSaleD = (d) => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
   const isEntD = (d) => !!(d.data && d.data.enterprise) || String(d.id || "").indexOf("ENT-") === 0;
   function useFlows(store) {
-    const donations = (store.listDonations() || []).filter((d) => !(store.isInternalDonation && store.isInternalDonation(d)));
-    const income = donations.map((d) => ({
-      id: d.id,
-      dir: "in",
-      date: d.submittedAt || d.data && d.data.sale && d.data.sale.date || null,
-      category: isEntD(d) ? "Enterprise" : isSaleD(d) ? "Library sale" : "Gift",
-      title: isEntD(d) ? (d.data && d.data.enterprise && d.data.enterprise.name || "Enterprise") + (d.data && d.data.enterprise && d.data.enterprise.period ? " · " + d.data.enterprise.period : "") : isSaleD(d) ? d.data && d.data.sale ? d.data.sale.title : d.name : d.anonymous ? "Anonymous" : d.name || "Donor",
-      detail: isEntD(d) ? [(store.pillarLabel ? store.pillarLabel("transport") : "Transportation") + " pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? (d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "") : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
-      amount: Number(d.amount) || 0,
-      ref: d.txHash || "",
-      settled: !!d.verified,
-      raw: d
-    }));
-    const scholars = store.listApplicants().filter((a) => a.status === "accepted");
-    const tuition = [], due = [];
-    scholars.forEach((sc) => (sc.semesters || []).forEach((sem) => {
-      var _a, _b;
-      if (!sem.bill) return;
-      const row = { scholar: sc, semester: sem };
-      if (sem.paidAt) tuition.push({ id: sc.id + ":" + sem.id, dir: "out", date: sem.paidAt, category: "Tuition", pillar: "Scholarships", title: titleCase(sc.name), detail: [sem.label, instCase((_b = (_a = sc.profile) == null ? void 0 : _a.university) == null ? void 0 : _b.name)].filter(Boolean).join(" · "), amount: Number(sem.bill.amount) || 0, ref: sem.txHash || "", settled: true, row });
-      else if (sem.status === "bill-uploaded") due.push(row);
-    }));
-    const allGrants = store.getPillarGrants();
-    const grants = allGrants.filter((g) => Number(g.amount) > 0).map((g) => ({ id: g.id, dir: "out", date: g.date, category: "Grant", pillar: g.pillar, title: g.project || "Grant", detail: [g.partner, g.country].filter(Boolean).join(" · "), amount: Number(g.amount) || 0, ref: g.txRef || "", settled: !g.archived, archived: !!g.archived }));
-    const legacy = store.getLegacy();
-    const legacyRow = Number(legacy.totalFunds) > 0 ? [{ id: "LEGACY", dir: "out", date: null, category: "Founding era", pillar: "Scholarships", title: "Support before the website", detail: `${legacy.count || (legacy.scholars || []).length || 0} scholars, recorded as one total`, amount: Number(legacy.totalFunds) || 0, ref: "", settled: true }] : [];
-    const outflow = [...tuition, ...grants, ...legacyRow];
-    const sum = (l) => l.reduce((a, x) => a + (Number(x.amount) || 0), 0);
-    const received = income.filter((x) => x.settled), pendingIn = income.filter((x) => !x.settled);
-    const paidOut = outflow.filter((x) => x.settled);
-    const dueSum = due.reduce((a, r) => {
-      var _a;
-      return a + (Number((_a = r.semester.bill) == null ? void 0 : _a.amount) || 0);
-    }, 0);
-    return { income, received, pendingIn, outflow, paidOut, due, dueSum, sum, legacy, scholars };
+    return window.BrialImpactCore.flows(store, { titleCase, instCase });
   }
   function InOutChart({ inRows, outRows }) {
     const [hover, setHover] = useState(null);
@@ -11508,128 +11725,63 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const d = new Date(iso);
     return isNaN(d) ? "" : d.toISOString().slice(0, 10);
   };
-  const newReport = (year, founding) => ({
-    id: "IR-" + year,
-    year,
-    founding: !!founding,
-    status: "draft",
-    title: founding ? "Founding Year " + year : "Impact Report " + year,
-    intro: "",
-    cover: "",
-    coverCaption: "",
-    letter: "",
-    signName: "Brial Asif Hayi Paka",
-    signRole: "Founder",
-    stories: [],
-    plans: "",
-    showMoney: false,
-    showGifts: false,
-    createdAt: (/* @__PURE__ */ new Date()).toISOString()
-  });
+  const newReport = (year, founding) => window.BrialImpactCore.newReport(year, founding);
   const newStory = () => ({ id: "st-" + Date.now().toString(36), title: "", text: "", photo: "", caption: "", consent: false });
-  function computeImpact(store, rep) {
-    const F = useFlows(store);
-    const from = rep.founding ? null : /* @__PURE__ */ new Date(rep.year + "-01-01T00:00:00");
-    const to = /* @__PURE__ */ new Date(rep.year + "-12-31T23:59:59");
-    const within = (iso) => {
-      if (!iso) return false;
-      const d = new Date(iso);
-      if (isNaN(d)) return false;
-      return (!from || d >= from) && d <= to;
-    };
-    const gifts = F.received.filter((x) => x.category === "Gift" && within(x.date));
-    const sales = F.received.filter((x) => x.category === "Library sale" && within(x.date));
-    const enterprise = F.received.filter((x) => x.category === "Enterprise" && within(x.date));
-    const donors = /* @__PURE__ */ new Set(), countries = /* @__PURE__ */ new Map();
-    gifts.forEach((x) => {
-      const d = x.raw || {};
-      donors.add(normKey(d.email || d.name || x.id));
-      const c = String(d.country || "").trim();
-      if (c && !countries.has(normKey(c))) countries.set(normKey(c), c);
-    });
-    const copies = sales.reduce((a, x) => a + (Number(x.raw && x.raw.data && x.raw.data.sale && x.raw.data.sale.qty) || 1), 0);
-    const out = F.paidOut.filter((x) => x.id === "LEGACY" ? rep.founding : within(x.date));
-    const byPillar = {};
-    const PL = (x) => store.pillarLabel ? store.pillarLabel(x) : x;
-    out.forEach((x) => {
-      const k = PL(x.pillar || "Scholarships");
-      byPillar[k] = byPillar[k] || { amount: 0, count: 0 };
-      byPillar[k].amount += x.amount;
-      byPillar[k].count += 1;
-    });
-    const units = {};
-    store.getPillarGrants().filter((g) => !g.archived && within(g.date)).forEach((g) => {
-      const cfg = Object.values(PILLARS).find((p) => p.grantName === g.pillar);
-      const n = Math.max(0, Math.round(Number(g.units) || 0));
-      if (!n) return;
-      units[g.pillar] = units[g.pillar] || { n: 0, unit: cfg && cfg.unit ? cfg.unit : ["unit", "units"] };
-      units[g.pillar].n += n;
-    });
-    const fc = store.getFoodClothingCounts ? store.getFoodClothingCounts() : { years: [], byYear: {} };
-    const fcIn = fc.years.filter((y) => Number(y) <= rep.year && (rep.founding || Number(y) === Number(rep.year)));
-    const fcKg = Math.round(fcIn.reduce((a, y) => a + fc.byYear[y].kg, 0) * 10) / 10, fcG = fcIn.reduce((a, y) => a + fc.byYear[y].garments, 0);
-    if (fcKg > 0) units["Food & Clothing"] = { n: fcKg, unit: ["kg of food shared", "kg of food shared"] };
-    if (fcG > 0) units["Food & Clothing "] = { n: fcG, unit: ["garment given", "garments given"], pillar: "Food & Clothing" };
-    const scholars = F.scholars.filter((s) => !s.deleted && (!s.acceptedAt || new Date(s.acceptedAt) <= to));
-    const nations = /* @__PURE__ */ new Map(), insts = /* @__PURE__ */ new Set();
-    const addNation = (c) => {
-      c = String(c || "").trim();
-      if (c && !nations.has(normKey(c))) nations.set(normKey(c), c);
-    };
-    scholars.forEach((s) => {
-      var _a, _b, _c, _d;
-      addNation((_b = (_a = s.profile) == null ? void 0 : _a.personal) == null ? void 0 : _b.country);
-      const u = String(((_d = (_c = s.profile) == null ? void 0 : _c.university) == null ? void 0 : _d.name) || "").trim();
-      if (u) insts.add(normKey(u));
-    });
-    const legacy = F.legacy || {};
-    const legacyScholars = rep.founding ? legacy.scholars || [] : [];
-    legacyScholars.forEach((s) => {
-      addNation(s.country);
-      if (s.school) insts.add(normKey(s.school));
-    });
-    const legacyCount = rep.founding ? Number(legacy.count) || legacyScholars.length || 0 : 0;
-    store.getPillarGrants().filter((g) => !g.archived && within(g.date)).forEach((g) => addNation(g.country));
-    const semesters = F.scholars.reduce((a, s) => a + (s.semesters || []).filter((x) => x.paidAt && x.bill && within(x.paidAt)).length, 0);
-    const newScholars = F.scholars.filter((s) => s.acceptedAt && within(s.acceptedAt)).length;
-    const proofs = [
-      ...gifts.filter((x) => isChainTx(x.ref)).map((x) => ({ kind: "Gift received", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
-      ...out.filter((x) => isChainTx(x.ref)).map((x) => ({ kind: x.category === "Tuition" ? "Tuition paid" : PL(x.pillar) + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() }))
-    ].sort((a, b) => a.date < b.date ? -1 : 1);
-    const pillarNames = Object.keys(byPillar);
-    if (scholars.length + legacyCount > 0 && pillarNames.indexOf(PL("scholarships")) < 0) pillarNames.unshift(PL("scholarships"));
-    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf(PL("foodclothing")) < 0) pillarNames.push(PL("foodclothing"));
-    return {
-      computedAt: (/* @__PURE__ */ new Date()).toISOString(),
-      period: { label: rep.founding ? "From the beginning to 31 December " + rep.year : "1 January to 31 December " + rep.year, from: from ? ymdOf(from) : null, to: rep.year + "-12-31" },
-      people: { scholars: scholars.length + legacyCount, newScholars, nations: nations.size, nationList: [...nations.values()], institutions: insts.size, semesters },
-      pillars: pillarNames,
-      built: Object.entries(units).map(([pillar, u]) => ({ pillar: PL(u.pillar || pillar), n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
-      gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
-      money: {
-        received: F.sum(gifts),
-        sales: F.sum(sales),
-        copies,
-        enterprise: F.sum(enterprise),
-        given: F.sum(out),
-        byPillar: Object.entries(byPillar).map(([pillar, v]) => ({ pillar, amount: v.amount, count: v.count })).sort((a, b) => b.amount - a.amount),
-        proofs
-      }
-    };
-  }
-  const publicPart = (snap, rep) => ({
-    computedAt: snap.computedAt,
-    period: snap.period,
-    people: snap.people,
-    pillars: snap.pillars,
-    built: snap.built,
-    gifts: rep.showGifts ? snap.gifts : null,
-    money: rep.showMoney ? snap.money : null
-  });
+  const computeImpact = (store, rep) => window.BrialImpactCore.compute(store, rep, { titleCase, instCase });
+  const publicPart = (snap, rep) => window.BrialImpactCore.publicPart(snap, rep);
   const reportForPublic = (rep, snap) => {
     const { snapshot, notes, ...rest } = rep;
     return { ...rest, public: publicPart(snap, rep) };
   };
+  const IMPACT_DRAFT = (y) => new Date(window.BrialImpactCore.draftAt(y));
+  const IMPACT_PUBLISH = (y) => new Date(window.BrialImpactCore.publishAt(y));
+  const wibDay = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
+  const IMPACT_STATUS = {
+    draft: ["Draft", "gold", "Only you can see it."],
+    review: ["Ready for your review", "warn", "Prepared by the system. Read it, edit anything, then approve."],
+    approved: ["Approved", "ok", "Scheduled. Nothing else to do."],
+    published: ["Live on the website", "ok", ""]
+  };
+  const impactDefaults = (rep) => window.BrialImpactCore.donorDefaults(rep);
+  function ImpactSchedule({ f, pubAt }) {
+    const y = Number(f.year), now = Date.now();
+    const steps = [
+      { at: IMPACT_DRAFT(y), t: "Prepared", d: "The system gathers the year's numbers, writes the first words and emails you.", done: !!f.autoDraftedAt || f.status !== "draft" },
+      { at: null, t: "You approve", d: "Read it, edit anything, then press Approve.", done: f.status === "approved" },
+      { at: pubAt, t: "Published", d: "Final numbers to 31 December, on the website with a PDF" + (f.mailDonors !== false ? ", and emailed to your donors." : ". Donors are not emailed."), done: false }
+    ];
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Schedule"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Runs on its own. If the report is not approved by ", wibDay(pubAt), ", it waits and you get a reminder every three days."), /* @__PURE__ */ React.createElement("ol", { className: "fd-sched" }, steps.map((x, i) => /* @__PURE__ */ React.createElement("li", { key: i, className: x.done ? "done" : x.at && now >= x.at.getTime() ? "due" : "" }, /* @__PURE__ */ React.createElement("b", null, x.t), /* @__PURE__ */ React.createElement("span", null, x.at ? wibDay(x.at) + (i === 0 ? ", 09:00 WIB" : ", 08:00 WIB") : "Any time before then"), /* @__PURE__ */ React.createElement("small", null, x.d)))));
+  }
+  function ImpactDonorLetter({ store, f, set }) {
+    const def = impactDefaults(f);
+    const on = f.mailDonors !== false;
+    const [extra, setExtra] = useState(null);
+    const [prev, setPrev] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    useEffect(() => {
+      let live = true;
+      store.mailContacts().then((x) => live && setExtra(x)).catch(() => live && setExtra({ contacts: [], unsubscribed: [] }));
+      return () => {
+        live = false;
+      };
+    }, [store]);
+    const count = extra ? audienceList(store, "donor", extra).filter((r) => !r.unsub && (r.verified > 0 || r.manual)).length : null;
+    const preview = async () => {
+      setBusy(true);
+      setErr("");
+      try {
+        setPrev(await store.impactPreviewEmail({ year: f.year, title: f.title, mailSubject: f.mailSubject || "", mailBody: f.mailBody || "" }));
+      } catch (e) {
+        setErr("The preview could not load. Check your connection.");
+      }
+      setBusy(false);
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Letter to donors"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, on ? count === null ? "Sent on publication day to everyone with a verified gift and the donors you added by hand." : `Sent on publication day to ${count} ${plural(count, "donor", "donors")}: everyone with a verified gift and the donors you added by hand. People who unsubscribed are left out.` : "Off. The report is published without emailing anyone. You can still share it by hand afterwards.")), /* @__PURE__ */ React.createElement(Switch, { on, onChange: (v) => set("mailDonors", v) }, on ? "On" : "Off")), on && /* @__PURE__ */ React.createElement("div", { className: "fd-form", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(Field, { label: "Subject" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.mailSubject != null && f.mailSubject !== "" ? f.mailSubject : def.subject, onChange: (e) => set("mailSubject", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Message", hint: "{nama} becomes each donor's first name. The links to read the report and download the PDF are added before your sign-off, followed by your signature." }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { minHeight: 170 }, value: f.mailBody != null && f.mailBody !== "" ? f.mailBody : def.body, onChange: (e) => set("mailBody", e.target.value) })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", disabled: busy, onClick: preview }, busy ? "Loading…" : "Preview the email"), (f.mailSubject || f.mailBody) && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => {
+      set("mailSubject", "");
+      set("mailBody", "");
+    } }, "Use the standard letter"), err && /* @__PURE__ */ React.createElement("span", { className: "fd-msg err" }, err))), prev && /* @__PURE__ */ React.createElement(Modal, { title: "The email your donors receive", sub: "From " + prev.from + " · " + prev.subject, wide: true, onClose: () => setPrev(null) }, /* @__PURE__ */ React.createElement("iframe", { className: "fd-mprev", title: "Email preview", sandbox: "", srcDoc: prev.html })));
+  }
   function ImpactView({ store }) {
     const all = store.getImpactReports ? store.getImpactReports() : [];
     const years = all.map((r) => Number(r.year)).sort((a, b) => b - a);
@@ -11663,8 +11815,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         return;
       }
       const r = newReport(year, founding);
-      store.saveImpactReports([...all, { ...r, updatedAt: r.createdAt }]).catch(() => flash("Could not save. Check your connection.", "err"));
-      setSel(year);
+      store.saveImpactReport({ ...r, rev: 0 }).then(() => setSel(year)).catch((e) => flash(String(e && e.message) === "stale" ? "A report for " + year + " already exists. Refreshing." : "Could not save. Check your connection.", "err"));
     };
     if (!all.length || !f) {
       const first = !all.length;
@@ -11684,32 +11835,47 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     });
     const missingConsent = (f.stories || []).filter((s) => (s.title.trim() || s.text.trim() || s.photo) && !s.consent).length;
     const commit = async (next, msg) => {
-      const list = all.filter((r) => Number(r.year) !== Number(next.year));
-      const rec = { ...next, updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
-      if (rec.status === "published") rec.public = publicPart(rec.snapshot, rec);
+      const rec = { ...next };
+      if (rec.status === "published" && rec.snapshot) rec.public = publicPart(rec.snapshot, rec);
       setBusy("save");
       let ok = false;
       try {
-        await store.saveImpactReports([...list, rec]);
-        setF(rec);
-        setBase(JSON.stringify(rec));
+        const saved2 = await store.saveImpactReport(rec);
+        if (saved2) {
+          setF(saved2);
+          setBase(JSON.stringify(saved2));
+        }
         flash(msg);
         ok = true;
       } catch (e) {
-        flash("Could not save. Check your connection and try again.", "err");
+        if (String(e && e.message) === "stale") {
+          flash("This report was changed elsewhere (by the schedule or in another window). The latest copy is loaded; please make your change again.", "err");
+          try {
+            await store.refresh();
+          } catch (x) {
+          }
+        } else if (String(e && e.message) === "publish_by_schedule") flash("Reports are published by the schedule. Approve it instead.", "err");
+        else flash("Could not save. Check your connection and try again.", "err");
       }
       setBusy("");
       return ok;
     };
-    const save = () => commit(f, published ? "Saved. The public report is updated." : "Draft saved.");
-    const publish = () => {
-      const s = computeImpact(store, f);
-      const first = !f.publishedAt;
-      commit({ ...f, status: "published", snapshot: s, publishedAt: f.publishedAt || (/* @__PURE__ */ new Date()).toISOString() }, "Published. The report is live on the website.").then((ok) => {
-        if (ok && (first || !f.emailedAt)) setAskShare(true);
-      });
+    const pubAt = IMPACT_PUBLISH(Number(f.year));
+    const dueNow = Date.now() >= pubAt.getTime();
+    const save = () => commit(f, published ? "Saved. The public report is updated." : f.status === "approved" ? "Saved. Still approved for " + wibDay(pubAt) + "." : "Saved.");
+    const approve = async () => {
+      const ok = await commit({ ...f, status: "approved", approvedAt: (/* @__PURE__ */ new Date()).toISOString() }, dueNow ? "Approved. Publishing now…" : "Approved. It goes live on " + wibDay(pubAt) + " at 08:00 WIB.");
+      if (ok && dueNow) {
+        try {
+          await store.impactRunNow();
+          flash("Published. The report is live" + (f.mailDonors !== false ? " and the donor emails are on their way." : "."));
+        } catch (e) {
+          flash("Approved. It will be published within the hour.", "ok");
+        }
+      }
     };
-    const unpublish = () => commit({ ...f, status: "draft", public: null, snapshot: null }, "Back to draft. The public page no longer shows this report.");
+    const unapprove = () => commit({ ...f, status: "review", approvedAt: null }, "Approval withdrawn. Edit it and approve again when ready.");
+    const unpublish = () => commit({ ...f, status: "review", public: null, snapshot: null, approvedAt: null }, "Taken off the website. Approve it again to republish.");
     const preview = (print) => {
       try {
         localStorage.setItem("brial-impact-preview", JSON.stringify(reportForPublic(f, snap)));
@@ -11721,12 +11887,12 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Head, { title: "Impact Report", lede: "One report a year, published on the website and as a PDF. The numbers come from the Treasury and the scholar records. You add the words." }, years.length > 1 && /* @__PURE__ */ React.createElement(Seg, { items: years.map((y) => [y, String(y)]), value: Number(sel), onChange: (v) => {
       if (dirty) flash("Save or discard your changes first.", "err");
       else setSel(v);
-    } }), !years.includes(Math.max(nowYear, years[0] + 1)) && published && /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => start(Math.max(nowYear, years[0] + 1), false) }, "Start ", Math.max(nowYear, years[0] + 1))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, f.title || "Untitled report"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, published ? `Published ${fdate(f.publishedAt)}. Numbers frozen on ${fdate(snap.computedAt)}.` : "Draft. Only you can see it until you publish.")), /* @__PURE__ */ React.createElement(Tag, { tone: published ? "ok" : "gold", dot: true }, published ? "Live on the website" : "Draft")), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(Field, { label: "Title" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.title, onChange: (e) => set("title", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Period", hint: published ? "Unpublish to change the period." : null }, /* @__PURE__ */ React.createElement("select", { className: "fd-input", value: f.founding ? "all" : "year", disabled: published, onChange: (e) => set("founding", e.target.value === "all") }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "From the beginning to 31 Dec ", f.year), /* @__PURE__ */ React.createElement("option", { value: "year" }, "1 Jan to 31 Dec ", f.year))))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "The numbers"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, snap.period.label, ". ", published ? "Frozen when you published." : "Updated live from your records until you publish."))), /* @__PURE__ */ React.createElement(Stats, { items: [
+    } }), !years.includes(Math.max(nowYear, years[0] + 1)) && published && /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => start(Math.max(nowYear, years[0] + 1), false) }, "Start ", Math.max(nowYear, years[0] + 1))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, f.title || "Untitled report"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, published ? `Published ${fdate(f.publishedAt)}${f.autoPublished ? " by the schedule" : ""}. Numbers frozen on ${fdate(snap.computedAt)}.` : f.status === "approved" ? `Approved ${fdate(f.approvedAt)}. ${dueNow ? "Publishing within the hour." : "Goes live on " + wibDay(pubAt) + " at 08:00 WIB."}` : (IMPACT_STATUS[f.status] || IMPACT_STATUS.draft)[2])), /* @__PURE__ */ React.createElement(Tag, { tone: (IMPACT_STATUS[f.status] || IMPACT_STATUS.draft)[1], dot: true }, (IMPACT_STATUS[f.status] || IMPACT_STATUS.draft)[0])), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(Field, { label: "Title" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.title, onChange: (e) => set("title", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Period", hint: published ? "Take it off the website to change the period." : null }, /* @__PURE__ */ React.createElement("select", { className: "fd-input", value: f.founding ? "all" : "year", disabled: published, onChange: (e) => set("founding", e.target.value === "all") }, /* @__PURE__ */ React.createElement("option", { value: "all" }, "From the beginning to 31 Dec ", f.year), /* @__PURE__ */ React.createElement("option", { value: "year" }, "1 Jan to 31 Dec ", f.year))))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "The numbers"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, snap.period.label, ". ", published ? "Frozen on publication." : "Live from your records. The published report uses the final numbers to 31 December."))), /* @__PURE__ */ React.createElement(Stats, { items: [
       { label: "Scholars supported", value: String(P2.scholars), sub: `${P2.newScholars} new this period` },
       { label: "Nations", value: String(P2.nations), sub: P2.nationList.join(", ") || "None yet" },
       { label: "Pillars at work", value: String(snap.pillars.length), sub: snap.pillars.join(", ") || "None yet" },
       { label: "Semesters funded", value: String(P2.semesters), sub: `${P2.institutions} ${plural(P2.institutions, "institution", "institutions")}` }
-    ] }), snap.built.length > 0 && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 10 } }, "Built and planted: ", snap.built.map((b) => `${b.n} ${b.label} (${b.pillar})`).join(", "), "."), /* @__PURE__ */ React.createElement("div", { className: "fd-krow", style: { display: "grid", gap: 12, marginTop: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { margin: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Show money amounts"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "2px 0 0" } }, f.showMoney ? `Visible: ${money(M.received)} received, ${money(M.given)} given, ${M.proofs.length} on-chain ${plural(M.proofs.length, "proof", "proofs")}.` : "Hidden. The report shows people, places and pillars, but no dollar figures and no transaction links. The amounts never leave the database.")), /* @__PURE__ */ React.createElement(Switch, { on: !!f.showMoney, onChange: (v) => set("showMoney", v) }, f.showMoney ? "Shown" : "Hidden")), /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { margin: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Show the number of gifts and donors"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "2px 0 0" } }, f.showGifts ? `Visible: ${G.count} ${plural(G.count, "gift", "gifts")} from ${G.donors} ${plural(G.donors, "donor", "donors")}.` : "Hidden.", " Donor names are never shown.")), /* @__PURE__ */ React.createElement(Switch, { on: !!f.showGifts, onChange: (v) => set("showGifts", v) }, f.showGifts ? "Shown" : "Hidden")))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Opening"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "A cover photo and a few lines that set the tone for the year."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, alignItems: "center", margin: "12px 0", flexWrap: "wrap" } }, f.cover ? /* @__PURE__ */ React.createElement(Img, { className: "fd-cover", src: f.cover, style: { width: 180, height: 110, objectFit: "cover" } }) : /* @__PURE__ */ React.createElement("div", { className: "fd-cover", style: { width: 180, height: 110 } }, "No cover"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement(PhotoUpload, { onUploaded: (meta) => set("cover", meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : "")) }, f.cover ? "Replace cover" : "Upload cover"), f.cover && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => set("cover", "") }, "Remove"))), /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, f.cover && /* @__PURE__ */ React.createElement(Field, { label: "Cover caption" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.coverCaption, onChange: (e) => set("coverCaption", e.target.value), placeholder: "Where and when the photo was taken" })), /* @__PURE__ */ React.createElement(Field, { label: "Opening words", hint: "Two or three sentences. Shown under the title." }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: f.intro, onChange: (e) => set("intro", e.target.value) })))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Letter from the founder"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Write to the people who made the year possible. Leave a blank line between paragraphs."), /* @__PURE__ */ React.createElement("div", { className: "fd-form", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { minHeight: 220 }, value: f.letter, onChange: (e) => set("letter", e.target.value), "aria-label": "Letter from the founder" }), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Signed by" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.signName, onChange: (e) => set("signName", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Role" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.signRole, onChange: (e) => set("signRole", e.target.value) }))))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Stories of the year"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "A well, a grove, a first semester. Each story needs the permission of anyone it names or shows.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setF((p) => ({ ...p, stories: [...p.stories || [], newStory()] })) }, "Add a story")), (f.stories || []).length === 0 && /* @__PURE__ */ React.createElement(Empty, { title: "No stories yet." }, "Stories are optional, but they are what people remember."), (f.stories || []).map((s, i) => /* @__PURE__ */ React.createElement("div", { key: s.id, className: "fd-card", style: { background: "rgba(10,22,40,.4)", marginTop: 12 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Field, { label: "Story " + (i + 1) + " title" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: s.title, onChange: (e) => setStory(s.id, { title: e.target.value }), placeholder: "A well for the village" })), /* @__PURE__ */ React.createElement(Field, { label: "Story" }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: s.text, onChange: (e) => setStory(s.id, { text: e.target.value }) })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" } }, s.photo ? /* @__PURE__ */ React.createElement(Img, { className: "fd-cover", src: s.photo, style: { width: 120, height: 80, objectFit: "cover" } }) : null, /* @__PURE__ */ React.createElement(PhotoUpload, { onUploaded: (meta) => setStory(s.id, { photo: meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : "") }) }, s.photo ? "Replace photo" : "Add photo"), s.photo && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setStory(s.id, { photo: "", caption: "" }) }, "Remove photo")), s.photo && /* @__PURE__ */ React.createElement(Field, { label: "Photo caption" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: s.caption, onChange: (e) => setStory(s.id, { caption: e.target.value }) })), /* @__PURE__ */ React.createElement("label", { className: "fd-switch", style: { gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: !!s.consent, onChange: (e) => setStory(s.id, { consent: e.target.checked }), style: { accentColor: "#C9A961" } }), "Everyone this story names or shows has agreed to it being published.")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === 0, onClick: () => moveStory(i, -1) }, "Move up"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === f.stories.length - 1, onClick: () => moveStory(i, 1) }, "Move down"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => setF((p) => ({ ...p, stories: p.stories.filter((x) => x.id !== s.id) })) }, "Remove story"))))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "The year ahead"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "What you hope to plant next."), /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { marginTop: 12 }, value: f.plans, onChange: (e) => set("plans", e.target.value), "aria-label": "The year ahead" })), published && /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Share it"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, reportUrl(f.year), f.emailedAt ? ` · Emailed to ${f.emailedCount} ${plural(f.emailedCount, "donor", "donors")} on ${fdate(f.emailedAt)}.` : "")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("a", { className: "fd-btn ghost sm", href: "/impact/" + f.year, target: "_blank", rel: "noopener noreferrer" }, "Open public page ", ICON.ext), /* @__PURE__ */ React.createElement("a", { className: "fd-btn ghost sm", href: "/impact/" + f.year + "?print=1", target: "_blank", rel: "noopener noreferrer" }, ICON.pdf, " Download PDF"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => copy(reportUrl(f.year)) }, "Copy link"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary sm", onClick: () => setMailOpen(true) }, "Share with donors")))), /* @__PURE__ */ React.createElement("div", { className: "fd-savebar" }, /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, missingConsent ? `${missingConsent} ${plural(missingConsent, "story needs", "stories need")} permission before publishing.` : dirty ? "You have unsaved changes." : published ? "Everything is saved and live." : "Everything is saved.", " ", /* @__PURE__ */ React.createElement(Flash, { m })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, dirty && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet", onClick: () => setF(JSON.parse(base)) }, "Discard"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => preview(false) }, "Preview"), published ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn quiet", armedLabel: "Click again to unpublish", onConfirm: unpublish }, "Unpublish"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !dirty || !!busy || missingConsent > 0, onClick: save }, busy ? "Saving…" : "Save changes")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", disabled: !dirty || !!busy, onClick: save }, "Save draft"), /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn primary", armedLabel: "Click again to publish", disabled: !!busy || missingConsent > 0 || !f.title.trim(), onConfirm: publish }, "Publish")))), askShare && /* @__PURE__ */ React.createElement(Modal, { title: "Your report is live", sub: reportUrl(f.year), onClose: () => setAskShare(false) }, /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { fontSize: 14, lineHeight: 1.6 } }, "Would you like to share it with your donors by email? You choose who receives it and see the email before anything is sent. Nothing goes out unless you confirm."), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => {
+    ] }), snap.built.length > 0 && /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { marginTop: 10 } }, "Built and planted: ", snap.built.map((b) => `${b.n} ${b.label} (${b.pillar})`).join(", "), "."), /* @__PURE__ */ React.createElement("div", { className: "fd-krow", style: { display: "grid", gap: 12, marginTop: 16 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { margin: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Show money amounts"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "2px 0 0" } }, f.showMoney ? `Visible: ${money(M.received)} received, ${money(M.given)} given, ${M.proofs.length} on-chain ${plural(M.proofs.length, "proof", "proofs")}.` : "Hidden. The report shows people, places and pillars, but no dollar figures and no transaction links. The amounts never leave the database.")), /* @__PURE__ */ React.createElement(Switch, { on: !!f.showMoney, onChange: (v) => set("showMoney", v) }, f.showMoney ? "Shown" : "Hidden")), /* @__PURE__ */ React.createElement("div", { className: "fd-card-head", style: { margin: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Show the number of gifts and donors"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { margin: "2px 0 0" } }, f.showGifts ? `Visible: ${G.count} ${plural(G.count, "gift", "gifts")} from ${G.donors} ${plural(G.donors, "donor", "donors")}.` : "Hidden.", " Donor names are never shown.")), /* @__PURE__ */ React.createElement(Switch, { on: !!f.showGifts, onChange: (v) => set("showGifts", v) }, f.showGifts ? "Shown" : "Hidden")))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Opening"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "A cover photo and a few lines that set the tone for the year."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, alignItems: "center", margin: "12px 0", flexWrap: "wrap" } }, f.cover ? /* @__PURE__ */ React.createElement(Img, { className: "fd-cover", src: f.cover, style: { width: 180, height: 110, objectFit: "cover" } }) : /* @__PURE__ */ React.createElement("div", { className: "fd-cover", style: { width: 180, height: 110 } }, "No cover"), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement(PhotoUpload, { onUploaded: (meta) => set("cover", meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : "")) }, f.cover ? "Replace cover" : "Upload cover"), f.cover && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => set("cover", "") }, "Remove"))), /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, f.cover && /* @__PURE__ */ React.createElement(Field, { label: "Cover caption" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.coverCaption, onChange: (e) => set("coverCaption", e.target.value), placeholder: "Where and when the photo was taken" })), /* @__PURE__ */ React.createElement(Field, { label: "Opening words", hint: "Two or three sentences. Shown under the title." }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: f.intro, onChange: (e) => set("intro", e.target.value) })))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Letter from the founder"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "Write to the people who made the year possible. Leave a blank line between paragraphs."), /* @__PURE__ */ React.createElement("div", { className: "fd-form", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { minHeight: 220 }, value: f.letter, onChange: (e) => set("letter", e.target.value), "aria-label": "Letter from the founder" }), /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Signed by" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.signName, onChange: (e) => set("signName", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Role" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: f.signRole, onChange: (e) => set("signRole", e.target.value) }))))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Stories of the year"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "A well, a grove, a first semester. Each story needs the permission of anyone it names or shows.")), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => setF((p) => ({ ...p, stories: [...p.stories || [], newStory()] })) }, "Add a story")), (f.stories || []).length === 0 && /* @__PURE__ */ React.createElement(Empty, { title: "No stories yet." }, "Stories are optional, but they are what people remember."), (f.stories || []).map((s, i) => /* @__PURE__ */ React.createElement("div", { key: s.id, className: "fd-card", style: { background: "rgba(10,22,40,.4)", marginTop: 12 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Field, { label: "Story " + (i + 1) + " title" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: s.title, onChange: (e) => setStory(s.id, { title: e.target.value }), placeholder: "A well for the village" })), /* @__PURE__ */ React.createElement(Field, { label: "Story" }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", value: s.text, onChange: (e) => setStory(s.id, { text: e.target.value }) })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" } }, s.photo ? /* @__PURE__ */ React.createElement(Img, { className: "fd-cover", src: s.photo, style: { width: 120, height: 80, objectFit: "cover" } }) : null, /* @__PURE__ */ React.createElement(PhotoUpload, { onUploaded: (meta) => setStory(s.id, { photo: meta.url || (meta.path ? window.brialSupabase.publicUrl(meta.path) : "") }) }, s.photo ? "Replace photo" : "Add photo"), s.photo && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => setStory(s.id, { photo: "", caption: "" }) }, "Remove photo")), s.photo && /* @__PURE__ */ React.createElement(Field, { label: "Photo caption" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: s.caption, onChange: (e) => setStory(s.id, { caption: e.target.value }) })), /* @__PURE__ */ React.createElement("label", { className: "fd-switch", style: { gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", checked: !!s.consent, onChange: (e) => setStory(s.id, { consent: e.target.checked }), style: { accentColor: "#C9A961" } }), "Everyone this story names or shows has agreed to it being published.")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === 0, onClick: () => moveStory(i, -1) }, "Move up"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", disabled: i === f.stories.length - 1, onClick: () => moveStory(i, 1) }, "Move down"), /* @__PURE__ */ React.createElement(Confirm, { onConfirm: () => setF((p) => ({ ...p, stories: p.stories.filter((x) => x.id !== s.id) })) }, "Remove story"))))), /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "The year ahead"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, "What you hope to plant next."), /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", style: { marginTop: 12 }, value: f.plans, onChange: (e) => set("plans", e.target.value), "aria-label": "The year ahead" })), !published && /* @__PURE__ */ React.createElement(ImpactSchedule, { f, pubAt }), !published && /* @__PURE__ */ React.createElement(ImpactDonorLetter, { store, f, set }), published && /* @__PURE__ */ React.createElement("div", { className: "fd-card" }, /* @__PURE__ */ React.createElement("div", { className: "fd-card-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { className: "fd-h2" }, "Share it"), /* @__PURE__ */ React.createElement("p", { className: "fd-sub" }, reportUrl(f.year), f.emailedAt ? ` · Emailed to ${f.emailedCount} ${plural(f.emailedCount, "donor", "donors")} on ${fdate(f.emailedAt)}.` : "")), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, /* @__PURE__ */ React.createElement("a", { className: "fd-btn ghost sm", href: "/impact/" + f.year, target: "_blank", rel: "noopener noreferrer" }, "Open public page ", ICON.ext), /* @__PURE__ */ React.createElement("a", { className: "fd-btn ghost sm", href: "/impact/" + f.year + "?print=1", target: "_blank", rel: "noopener noreferrer" }, ICON.pdf, " Download PDF"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: () => copy(reportUrl(f.year)) }, "Copy link"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary sm", onClick: () => setMailOpen(true) }, "Share with donors")))), /* @__PURE__ */ React.createElement("div", { className: "fd-savebar" }, /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, missingConsent ? `${missingConsent} ${plural(missingConsent, "story needs", "stories need")} permission before publishing.` : dirty ? f.status === "approved" ? "Unsaved changes. Save to keep the approval with your edits." : "You have unsaved changes." : published ? "Everything is saved and live." : f.status === "approved" ? "Approved and scheduled." : "Everything is saved.", " ", /* @__PURE__ */ React.createElement(Flash, { m })), /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, dirty && /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet", onClick: () => setF(JSON.parse(base)) }, "Discard"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => preview(false) }, "Preview"), published ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn quiet", armedLabel: "Click again to take it down", onConfirm: unpublish }, "Take off the website"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !dirty || !!busy || missingConsent > 0, onClick: save }, busy ? "Saving…" : "Save changes")) : f.status === "approved" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn quiet", armedLabel: "Click again to withdraw", disabled: !!busy, onConfirm: unapprove }, "Withdraw approval"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !dirty || !!busy || missingConsent > 0 || !f.title.trim(), onClick: save }, busy ? "Saving…" : "Save changes")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", disabled: !dirty || !!busy, onClick: save }, busy ? "Saving…" : "Save"), /* @__PURE__ */ React.createElement(Confirm, { className: "fd-btn primary", armedLabel: dueNow ? "Click again to publish now" : "Click again to approve", disabled: !!busy || missingConsent > 0 || !f.title.trim(), onConfirm: approve }, dueNow ? "Approve and publish" : "Approve")))), askShare && /* @__PURE__ */ React.createElement(Modal, { title: "Your report is live", sub: reportUrl(f.year), onClose: () => setAskShare(false) }, /* @__PURE__ */ React.createElement("p", { className: "fd-sub", style: { fontSize: 14, lineHeight: 1.6 } }, "Would you like to share it with your donors by email? You choose who receives it and see the email before anything is sent. Nothing goes out unless you confirm."), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", onClick: () => {
       setAskShare(false);
       setMailOpen(true);
     } }, "Choose donors and preview"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setAskShare(false) }, "Not now"))), mailOpen && /* @__PURE__ */ React.createElement(AnnounceDialog, { store, audience: "donor", preset: { ...impactTemplate(f), from: "hello", title: "Share the report with donors" }, onClose: () => setMailOpen(false), onSent: (n) => commit({ ...f, emailedAt: (/* @__PURE__ */ new Date()).toISOString(), emailedCount: (f.emailedCount || 0) + n }, `Sent to ${n} ${plural(n, "donor", "donors")}.`) }));

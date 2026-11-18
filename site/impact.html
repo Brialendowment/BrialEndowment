@@ -133,7 +133,7 @@ h2 em{font-style:italic;color:var(--gold2)}
 
   function notice(title, text) {
     document.title = title + " | The Brial Endowment";
-    app.innerHTML = '<div class="notice">' + STAR + '<div class="mono" style="color:#7D6431;margin-top:14px">The Brial Endowment</div><h1>' + esc(title) + '</h1><p style="color:#5D6678">' + text + '</p><p><a class="btn" style="color:#7D6431;border-color:#C9A961" href="/">Return to the Endowment</a></p></div>';
+    app.innerHTML = '<div class="notice">' + STAR + '<div class="mono" style="color:#7D6431;margin-top:14px">The Brial Endowment</div><h1>' + esc(title) + '</h1><p style="color:#5D6678">' + text + '</p><p style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a class="btn" style="color:#7D6431;border-color:#C9A961" href="/">Return to the Endowment</a><a class="btn" style="color:#7D6431;border-color:#C9A961" href="/#/proof">Open the public ledger</a></p></div>';
   }
 
   function render(r, isPreview) {
@@ -143,7 +143,7 @@ h2 em{font-style:italic;color:var(--gold2)}
     var h = [];
     if (isPreview) h.push('<div class="banner">Preview. This is how the report will look. It is not published yet.</div>');
     h.push('<header class="bar"><div class="wrap"><a class="brand" href="/">' + STAR + "<span>The Brial Endowment</span></a>" +
-      '<button class="btn noprint" onclick="window.print()">Download PDF</button></div></header>');
+      '<button class="btn noprint" onclick="window.print()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>Download PDF</button></div></header>');
     // cover
     var words = esc(title).split(" ");
     var last = words.length > 1 ? words.pop() : "";
@@ -226,8 +226,12 @@ h2 em{font-style:italic;color:var(--gold2)}
       list = (Array.isArray(list) ? list : []).filter(function (r) { return r && r.public; }).sort(function (a, b) { return (Number(b.year) || 0) - (Number(a.year) || 0); });
       var r = wantYear ? list.filter(function (x) { return Number(x.year) === wantYear; })[0] : list[0];
       if (r) { render(r, false); return; }
-      if (wantYear) notice("The " + wantYear + " report is not out yet", "Each year's report is published at the turn of the year. Until then, every movement of the endowment is on the public ledger.");
-      else notice("Our first report is on its way", "The Founding Year report will be published at the turn of the year. Until then, every movement of the endowment is on the public ledger.");
+      var nowY = new Date(Date.now() + 7 * 3600e3).getUTCFullYear();
+      var y = wantYear || (list.length ? nowY : Math.max(2026, nowY - (new Date(Date.now() + 7 * 3600e3).getUTCMonth() <= 2 ? 1 : 0)));
+      var due = Date.now() < Date.UTC(y + 1, 0, 1, 1) ? "It will be published here on 1 January " + (y + 1) + ", and sent to every donor." : "It is in its final review and will be published here very soon.";
+      if (wantYear && wantYear < 2026) { notice("There is no " + wantYear + " report", "The Founding Year 2026 report covers everything from the very beginning, including " + wantYear + "."); return; }
+      if (wantYear || list.length) notice("The " + y + " report is coming soon", due + " Until then, every movement of the endowment is on the public ledger.");
+      else notice("Our Founding Year report is coming soon", due + " Until then, every movement of the endowment is on the public ledger.");
     })
     .catch(function () { notice("The report could not load", "Please check your connection and try again."); });
 })();

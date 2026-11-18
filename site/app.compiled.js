@@ -719,32 +719,65 @@ const Hero = ({
 // TRANSPARENCY METRICS — public ledger (live store data only)
 // ============================================================
 const fmt = n => "$" + n.toLocaleString("en-US");
-// Link to the latest published annual impact report (hidden until one is published)
-const ImpactReportLink = () => {
+// The yearly Impact Report: download when published, "coming soon" until then.
+// Reports are prepared on 20 December and published on 1 January at 08:00 WIB (see the Founder Console).
+const ImpactReportBand = () => {
   const read = () => window.BrialStore && window.BrialStore.getPublishedImpactReports ? window.BrialStore.getPublishedImpactReports() : [];
   const [list, setList] = useState(read);
   useEffect(() => {
     const h = () => setList(read());
     window.addEventListener("brial:change", h);
-    return () => window.removeEventListener("brial:change", h);
+    window.addEventListener("brial:ready", h);
+    return () => { window.removeEventListener("brial:change", h); window.removeEventListener("brial:ready", h); };
   }, []);
-  const r = list[0];
-  if (!r) return null;
-  return /*#__PURE__*/React.createElement("a", {
-    href: "/impact/" + r.year,
-    style: {
-      display: "inline-block",
-      marginTop: 18,
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 11,
-      letterSpacing: "0.2em",
-      textTransform: "uppercase",
-      color: "#C9A961",
-      textDecoration: "none",
-      borderBottom: "1px solid rgba(201,169,97,0.4)",
-      paddingBottom: 4
-    }
-  }, "Read the " + (r.title || r.year + " report") + " \u2192");
+  const wib = new Date(Date.now() + 7 * 3600e3);
+  const thisYear = wib.getUTCFullYear();
+  const latest = list[0] || null;
+  // the next report still to come: the year just closed if it is not out yet, otherwise this year
+  const done = new Set(list.map(x => Number(x.year)));
+  let nextYear = thisYear;
+  // January to March: last year's report may still be in its final review
+  if (thisYear - 1 >= 2026 && wib.getUTCMonth() <= 2 && !done.has(thisYear - 1)) nextYear = thisYear - 1;
+  while (done.has(nextYear)) nextYear += 1;
+  const nextTitle = list.length ? "Impact Report " + nextYear : "Founding Year " + nextYear;
+  const nextDue = new Date(Date.UTC(nextYear + 1, 0, 1, 1));
+  const nextDueText = Date.now() < nextDue.getTime() ? "1 January " + (nextYear + 1) : "In the final days of review";
+  const r = latest;
+  const title = r ? (r.title || "Impact Report " + r.year) : nextTitle;
+  const words = title.split(" ");
+  const last = words.length > 1 ? words.pop() : "";
+  const mono = { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase" };
+  const h = React.createElement;
+  const btn = (primary) => ({ display: "inline-flex", alignItems: "center", gap: 10, padding: "15px 26px", fontFamily: "'Manrope', sans-serif", fontSize: 13, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", textDecoration: "none", border: "1px solid #C9A961", background: primary ? "#C9A961" : "transparent", color: primary ? "#0A1628" : "#E4C989" });
+  const P = r && r.public ? r.public : null;
+  const facts = P ? [[P.people && P.people.scholars, "scholars"], [P.people && P.people.nations, "nations"], [(P.pillars || []).length, "pillars"]].filter(x => Number(x[0]) > 0) : [];
+  return h("section", { id: "impact-report", className: "b-impact", style: { position: "relative", padding: "clamp(72px, 9vw, 120px) clamp(20px, 5vw, 56px)", background: "linear-gradient(180deg, #0A1628 0%, #0C1C36 100%)", borderTop: "1px solid rgba(201,169,97,0.1)", overflow: "hidden" } },
+    h("style", null, ".b-impact-card{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:center;max-width:1180px;margin:0 auto;padding:clamp(28px,4vw,56px);border:1px solid rgba(201,169,97,.28);background:linear-gradient(135deg,rgba(201,169,97,.07),rgba(10,22,40,.2) 55%);box-shadow:inset 0 0 0 6px rgba(10,22,40,.5),inset 0 0 0 7px rgba(201,169,97,.1)}.b-impact-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.b-impact-actions a:hover{filter:brightness(1.08)}.b-impact-book{justify-self:center;width:min(260px,100%);aspect-ratio:3/4;position:relative;background:linear-gradient(160deg,#16294A,#0A1628 70%);border:1px solid rgba(201,169,97,.45);box-shadow:18px 22px 0 -6px rgba(201,169,97,.12),0 30px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;transform:rotate(-2deg)}.b-impact-book::before{content:'';position:absolute;inset:10px;border:1px solid rgba(201,169,97,.25)}.b-impact-dot{width:8px;height:8px;border-radius:50%;background:#C9A961;display:inline-block;animation:bImpPulse 2.4s ease-in-out infinite}@keyframes bImpPulse{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}@media (prefers-reduced-motion:reduce){.b-impact-dot{animation:none}}@media (max-width:820px){.b-impact-card{grid-template-columns:1fr}.b-impact-book{width:190px;order:-1}}"),
+    h("div", { className: "b-impact-card" },
+      h("div", null,
+        h("div", { style: { ...mono, color: "#C9A961", display: "flex", alignItems: "center", gap: 12 } }, h("span", { style: { width: 28, height: 1, background: "#C9A961", display: "inline-block" } }), "§ Annual Impact Report"),
+        h("h2", { style: { fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: "clamp(40px, 5vw, 68px)", lineHeight: 1.04, letterSpacing: "-0.015em", color: "#F4EFE3", margin: "22px 0 0" } },
+          words.join(" "), last ? " " : "", last ? h("em", { style: { color: "#C9A961", fontStyle: "italic" } }, last) : null),
+        r
+          ? h("p", { style: { fontFamily: "'Manrope', sans-serif", fontWeight: 300, fontSize: 16, lineHeight: 1.7, color: "rgba(232,228,220,0.7)", margin: "18px 0 0", maxWidth: 560 } },
+              r.intro ? String(r.intro).slice(0, 260) + (String(r.intro).length > 260 ? "…" : "") : "What the year's giving became, told in numbers and in stories, and checked against the public ledger.")
+          : h("p", { style: { fontFamily: "'Manrope', sans-serif", fontWeight: 300, fontSize: 16, lineHeight: 1.7, color: "rgba(232,228,220,0.7)", margin: "18px 0 0", maxWidth: 560 } },
+              (list.length ? "Our yearly account to everyone who gave" : "Our first yearly account to everyone who gave") + ": what each gift became, told in numbers and in stories. Until then, every movement is already on the public ledger above."),
+        facts.length ? h("div", { style: { display: "flex", gap: 28, marginTop: 24, flexWrap: "wrap" } }, facts.map(([n, l]) => h("div", { key: l }, h("div", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: 38, lineHeight: 1, color: "#F4EFE3" } }, String(n)), h("div", { style: { ...mono, fontSize: 10, color: "rgba(232,228,220,0.55)", marginTop: 8 } }, l)))) : null,
+        r
+          ? h("div", { className: "b-impact-actions" },
+              h("a", { href: "/impact/" + r.year, style: btn(true) }, "Read the report", h("span", { "aria-hidden": "true" }, "→")),
+              h("a", { href: "/impact/" + r.year + "?print=1", style: btn(false) }, h("svg", { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, "aria-hidden": "true" }, h("path", { d: "M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14" })), "Download PDF"))
+          : h("div", { style: { display: "flex", alignItems: "center", gap: 14, marginTop: 30, flexWrap: "wrap" } },
+              h("span", { style: { ...mono, display: "inline-flex", alignItems: "center", gap: 10, padding: "12px 18px", border: "1px solid rgba(201,169,97,0.45)", color: "#E4C989" } }, h("span", { className: "b-impact-dot", "aria-hidden": "true" }), "Coming soon"),
+              h("span", { style: { ...mono, color: "rgba(232,228,220,0.6)" } }, nextDueText)),
+        r && Number(nextYear) > Number(r.year) ? h("div", { style: { ...mono, fontSize: 10, color: "rgba(232,228,220,0.45)", marginTop: 22 } }, "Next: the " + nextYear + " report · 1 January " + (nextYear + 1)) : null),
+      h("div", { className: "b-impact-book", "aria-hidden": "true" },
+        h("svg", { width: 34, height: 34, viewBox: "0 0 36 36" }, h("g", { fill: "none", stroke: "#C9A961", strokeWidth: "1.2" }, h("path", { d: "M18 3 L20.79 11.26 L28.61 7.39 L24.74 15.21 L33 18 L24.74 20.79 L28.61 28.61 L20.79 24.74 L18 33 L15.21 24.74 L7.39 28.61 L11.26 20.79 L3 18 L11.26 15.21 L7.39 7.39 L15.21 11.26 Z" }), h("circle", { cx: "18", cy: "18", r: "4", fill: "#C9A961", stroke: "none" }))),
+        h("div", { style: { ...mono, fontSize: 9, color: "#C9A961", marginTop: 18 } }, "The Brial Endowment"),
+        h("div", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: 26, lineHeight: 1.1, color: "#F4EFE3", marginTop: 14 } }, "Impact Report"),
+        h("div", { "data-fxc": "", style: { fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic", fontSize: 40, lineHeight: 1, color: "#C9A961", marginTop: 6 } }, String(r ? r.year : nextYear)),
+        h("div", { style: { width: 40, height: 1, background: "rgba(201,169,97,.5)", margin: "18px 0 0" } }))));
 };
 const Transparency = () => {
   const metrics = useMetrics();
@@ -802,7 +835,7 @@ const Transparency = () => {
     style: {
       fontStyle: "italic"
     }
-  }, "directly to the recipient"), " and is recorded here, from tuition paid to a university to a gift for a village. These are the real institutions and amounts the foundation has funded to date."), /*#__PURE__*/React.createElement(ImpactReportLink, null))), /*#__PURE__*/React.createElement("div", {
+  }, "directly to the recipient"), " and is recorded here, from tuition paid to a university to a gift for a village. These are the real institutions and amounts the foundation has funded to date."))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
       gridTemplateColumns: "1.4fr 1fr 1fr",
@@ -2617,7 +2650,7 @@ const App = () => {
     onWater: () => setView("water"),
     onEbooks: () => setView("ebooks"),
     onPillarView: v => setView(v)
-  }), /*#__PURE__*/React.createElement(Transparency, null), /*#__PURE__*/React.createElement(Dedication, null), /*#__PURE__*/React.createElement(CtaStrip, {
+  }), /*#__PURE__*/React.createElement(Transparency, null), /*#__PURE__*/React.createElement(ImpactReportBand, null), /*#__PURE__*/React.createElement(Dedication, null), /*#__PURE__*/React.createElement(CtaStrip, {
     onApply: () => goToScholar("signup")
   }), /*#__PURE__*/React.createElement(Footer, {
     onAdmin: () => setView("admin"),

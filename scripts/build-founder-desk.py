@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Compile src/founder-desk.jsx and inject it into site/admin.compiled.js.
 
+  * src/impact-core.js (the Impact Report numbers) is placed in front of it, and copied
+    to supabase/functions/be-impact/impact-core.js for the scheduled worker.
+
 Usage:  python3 scripts/build-founder-desk.py /path/to/esbuild [--bundle]
 
   * The compiled block sits between the START/END markers just before the
@@ -205,7 +208,11 @@ def inject(code):
 
 
 if __name__ == "__main__":
-    inject(compile_jsx(sys.argv[1]))
+    # The Impact Report numbers live in one file shared with the email worker
+    core = (ROOT / "src" / "impact-core.js").read_text(encoding="utf-8")
+    (ROOT / "supabase" / "functions" / "be-impact" / "impact-core.js").write_text(
+        "// GENERATED from src/impact-core.js by scripts/build-founder-desk.py. Do not edit here.\n" + core, encoding="utf-8")
+    inject(core.strip() + "\n" + compile_jsx(sys.argv[1]))
     print("injected founder desk")
     if "--bundle" in sys.argv:
         print("--bundle ignored: bundles no longer exist")

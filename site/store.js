@@ -794,6 +794,34 @@ window.BrialClipboard = { copy: copyToClipboard };
       return Store.getImpactReports().filter(r => r && r.status === "published" && r.public)
         .sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
     },
+    // One report, saved through the database so the yearly schedule (which prepares the report on
+    // 20 December and publishes it on 1 January) and this screen never overwrite each other.
+    // Resolves with the saved report; rejects with message "stale" when the copy on screen is old.
+    async saveImpactReport(rep) {
+      const { rev, updatedAt, ...body } = rep || {};
+      const data = await Store._mailRpc("be_impact_save", { p_report: body, p_rev: Number(rev) || 0 });
+      const reports = Array.isArray(data) ? data : [];
+      const rec = { id: "IMPACT-REPORTS", name: "__impact__", amount: 0, data: { reports } };
+      const idx = _donations.findIndex(x => x.id === "IMPACT-REPORTS");
+      if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
+      saveCache(); notify({ key: "impact" });
+      return reports.find(r => Number(r.year) === Number(body.year)) || null;
+    },
+    // The founder approved after the publishing day: run the schedule now (be-impact) instead of within the hour
+    async impactRunNow() {
+      const c = sbAuth();
+      if (!c || !_founderMode) throw new Error("forbidden");
+      const { data, error } = await c.functions.invoke("be-impact", { body: { action: "tick_now" } });
+      if (error) throw error;
+      if (data && data.error) throw new Error(data.error);
+      await refreshAll();
+      return data;
+    },
+    // The letter donors receive with the report, as it will look (laid out by the email worker)
+    impactPreviewEmail(report, previewName) {
+      const L = window.BrialImpactCore ? window.BrialImpactCore.donorLetter(report) : { subject: report.title, body: "" };
+      return Store.previewAnnouncement({ audience: "donor", from: "hello", subject: L.subject, body: L.body, sign: true, previewName: previewName || "Aisyah" });
+    },
     saveImpactReports(reports) {
       const rec = { id: "IMPACT-REPORTS", name: "__impact__", amount: 0, data: { reports } };
       const idx = _donations.findIndex(x => x.id === "IMPACT-REPORTS");

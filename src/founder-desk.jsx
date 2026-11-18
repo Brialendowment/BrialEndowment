@@ -62,6 +62,15 @@ const FD = (() => {
 .fd-pillar-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent);color:var(--accent);flex-shrink:0}
 .fd-pillar b{display:block;font-weight:600;font-size:14px;line-height:1.2}
 .fd-pillar small{display:block;font-size:12px;color:var(--faint)}
+.fd-sched{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;counter-reset:st}
+.fd-sched li{position:relative;padding:14px 14px 14px 46px;border:1px solid var(--line);border-radius:12px;counter-increment:st}
+.fd-sched li::before{content:counter(st);position:absolute;left:14px;top:14px;width:22px;height:22px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);font-size:12px;display:flex;align-items:center;justify-content:center}
+.fd-sched li.done::before{content:"✓";background:var(--accent);color:#0A1628}
+.fd-sched li.due{border-color:var(--accent)}
+.fd-sched b{display:block;font-weight:600;font-size:14px}
+.fd-sched span{display:block;font-size:12.5px;color:var(--accent);margin-top:2px}
+.fd-sched small{display:block;font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+@media (max-width:760px){.fd-sched{grid-template-columns:1fr}}
 .fd-pillar>div:nth-child(2){flex:1;min-width:0}
 .fd-rename{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .fd-rename:hover,.fd-rename:focus-visible{color:var(--accent);border-color:var(--accent)}
@@ -2520,35 +2529,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   const isSaleD = d => !!(d.data && d.data.sale) || String(d.id || "").indexOf("SALE-") === 0;
   const isEntD = d => !!(d.data && d.data.enterprise) || String(d.id || "").indexOf("ENT-") === 0;
 
-  // One list of movements, built from the same records as the public totals
-  function useFlows(store) {
-    const donations = (store.listDonations() || []).filter(d => !(store.isInternalDonation && store.isInternalDonation(d)));
-    const income = donations.map(d => ({
-      id: d.id, dir: "in", date: d.submittedAt || (d.data && d.data.sale && d.data.sale.date) || null,
-      category: isEntD(d) ? "Enterprise" : isSaleD(d) ? "Library sale" : "Gift",
-      title: isEntD(d) ? ((d.data && d.data.enterprise && d.data.enterprise.name) || "Enterprise") + (d.data && d.data.enterprise && d.data.enterprise.period ? " · " + d.data.enterprise.period : "") : isSaleD(d) ? (d.data && d.data.sale ? d.data.sale.title : d.name) : (d.anonymous ? "Anonymous" : d.name || "Donor"),
-      detail: isEntD(d) ? [(store.pillarLabel ? store.pillarLabel("transport") : "Transportation") + " pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? ((d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "")) : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
-      amount: Number(d.amount) || 0, ref: d.txHash || "", settled: !!d.verified, raw: d,
-    }));
-    const scholars = store.listApplicants().filter(a => a.status === "accepted");
-    const tuition = [], due = [];
-    scholars.forEach(sc => (sc.semesters || []).forEach(sem => {
-      if (!sem.bill) return;
-      const row = { scholar: sc, semester: sem };
-      if (sem.paidAt) tuition.push({ id: sc.id + ":" + sem.id, dir: "out", date: sem.paidAt, category: "Tuition", pillar: "Scholarships", title: titleCase(sc.name), detail: [sem.label, instCase(sc.profile?.university?.name)].filter(Boolean).join(" · "), amount: Number(sem.bill.amount) || 0, ref: sem.txHash || "", settled: true, row });
-      else if (sem.status === "bill-uploaded") due.push(row);
-    }));
-    const allGrants = store.getPillarGrants();
-    const grants = allGrants.filter(g => Number(g.amount) > 0).map(g => ({ id: g.id, dir: "out", date: g.date, category: "Grant", pillar: g.pillar, title: g.project || "Grant", detail: [g.partner, g.country].filter(Boolean).join(" · "), amount: Number(g.amount) || 0, ref: g.txRef || "", settled: !g.archived, archived: !!g.archived }));
-    const legacy = store.getLegacy();
-    const legacyRow = Number(legacy.totalFunds) > 0 ? [{ id: "LEGACY", dir: "out", date: null, category: "Founding era", pillar: "Scholarships", title: "Support before the website", detail: `${legacy.count || (legacy.scholars || []).length || 0} scholars, recorded as one total`, amount: Number(legacy.totalFunds) || 0, ref: "", settled: true }] : [];
-    const outflow = [...tuition, ...grants, ...legacyRow];
-    const sum = l => l.reduce((a, x) => a + (Number(x.amount) || 0), 0);
-    const received = income.filter(x => x.settled), pendingIn = income.filter(x => !x.settled);
-    const paidOut = outflow.filter(x => x.settled);
-    const dueSum = due.reduce((a, r) => a + (Number(r.semester.bill?.amount) || 0), 0);
-    return { income, received, pendingIn, outflow, paidOut, due, dueSum, sum, legacy, scholars };
-  }
+  // One list of movements, built from the same records as the public totals (src/impact-core.js)
+  function useFlows(store) { return window.BrialImpactCore.flows(store, { titleCase, instCase }); }
 
   function InOutChart({ inRows, outRows }) {
     const [hover, setHover] = useState(null);
@@ -3979,93 +3961,92 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   const normKey = s => String(s || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const isChainTx = h => /^0x[0-9a-f]{64}$/i.test(String(h || "").trim());
   const ymdOf = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.toISOString().slice(0, 10); };
-  const newReport = (year, founding) => ({
-    id: "IR-" + year, year, founding: !!founding, status: "draft",
-    title: founding ? "Founding Year " + year : "Impact Report " + year,
-    intro: "", cover: "", coverCaption: "", letter: "", signName: "Brial Asif Hayi Paka", signRole: "Founder",
-    stories: [], plans: "", showMoney: false, showGifts: false, createdAt: new Date().toISOString(),
-  });
+  const newReport = (year, founding) => window.BrialImpactCore.newReport(year, founding);
   const newStory = () => ({ id: "st-" + Date.now().toString(36), title: "", text: "", photo: "", caption: "", consent: false });
-
-  function computeImpact(store, rep) {
-    const F = useFlows(store);
-    const from = rep.founding ? null : new Date(rep.year + "-01-01T00:00:00");
-    const to = new Date(rep.year + "-12-31T23:59:59");
-    const within = iso => { if (!iso) return false; const d = new Date(iso); if (isNaN(d)) return false; return (!from || d >= from) && d <= to; };
-    // money in
-    const gifts = F.received.filter(x => x.category === "Gift" && within(x.date));
-    const sales = F.received.filter(x => x.category === "Library sale" && within(x.date));
-    const enterprise = F.received.filter(x => x.category === "Enterprise" && within(x.date));
-    const donors = new Set(), countries = new Map();
-    gifts.forEach(x => {
-      const d = x.raw || {};
-      donors.add(normKey(d.email || d.name || x.id));
-      const c = String(d.country || "").trim(); if (c && !countries.has(normKey(c))) countries.set(normKey(c), c);
-    });
-    const copies = sales.reduce((a, x) => a + (Number(x.raw && x.raw.data && x.raw.data.sale && x.raw.data.sale.qty) || 1), 0);
-    // money out
-    const out = F.paidOut.filter(x => (x.id === "LEGACY" ? rep.founding : within(x.date)));
-    const byPillar = {};
-    const PL = x => (store.pillarLabel ? store.pillarLabel(x) : x);
-    out.forEach(x => { const k = PL(x.pillar || "Scholarships"); byPillar[k] = byPillar[k] || { amount: 0, count: 0 }; byPillar[k].amount += x.amount; byPillar[k].count += 1; });
-    // what was built: units recorded on pillar grants (trees, wells, mosques)
-    const units = {};
-    store.getPillarGrants().filter(g => !g.archived && within(g.date)).forEach(g => {
-      const cfg = Object.values(PILLARS).find(p => p.grantName === g.pillar);
-      const n = Math.max(0, Math.round(Number(g.units) || 0));
-      if (!n) return;
-      units[g.pillar] = units[g.pillar] || { n: 0, unit: cfg && cfg.unit ? cfg.unit : ["unit", "units"] };
-      units[g.pillar].n += n;
-    });
-    // Food & Clothing: counted per year (kilograms of food, garments), not per grant
-    const fc = store.getFoodClothingCounts ? store.getFoodClothingCounts() : { years: [], byYear: {} };
-    const fcIn = fc.years.filter(y => Number(y) <= rep.year && (rep.founding || Number(y) === Number(rep.year)));
-    const fcKg = Math.round(fcIn.reduce((a, y) => a + fc.byYear[y].kg, 0) * 10) / 10, fcG = fcIn.reduce((a, y) => a + fc.byYear[y].garments, 0);
-    if (fcKg > 0) units["Food & Clothing"] = { n: fcKg, unit: ["kg of food shared", "kg of food shared"] };
-    if (fcG > 0) units["Food & Clothing "] = { n: fcG, unit: ["garment given", "garments given"], pillar: "Food & Clothing" };
-    // people and places
-    const scholars = F.scholars.filter(s => !s.deleted && (!s.acceptedAt || new Date(s.acceptedAt) <= to));
-    const nations = new Map(), insts = new Set();
-    const addNation = c => { c = String(c || "").trim(); if (c && !nations.has(normKey(c))) nations.set(normKey(c), c); };
-    scholars.forEach(s => { addNation(s.profile?.personal?.country); const u = String(s.profile?.university?.name || "").trim(); if (u) insts.add(normKey(u)); });
-    const legacy = F.legacy || {};
-    const legacyScholars = rep.founding ? (legacy.scholars || []) : [];
-    legacyScholars.forEach(s => { addNation(s.country); if (s.school) insts.add(normKey(s.school)); });
-    const legacyCount = rep.founding ? (Number(legacy.count) || legacyScholars.length || 0) : 0;
-    store.getPillarGrants().filter(g => !g.archived && within(g.date)).forEach(g => addNation(g.country));
-    const semesters = F.scholars.reduce((a, s) => a + (s.semesters || []).filter(x => x.paidAt && x.bill && within(x.paidAt)).length, 0);
-    const newScholars = F.scholars.filter(s => s.acceptedAt && within(s.acceptedAt)).length;
-    const proofs = [
-      ...gifts.filter(x => isChainTx(x.ref)).map(x => ({ kind: "Gift received", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
-      ...out.filter(x => isChainTx(x.ref)).map(x => ({ kind: x.category === "Tuition" ? "Tuition paid" : PL(x.pillar) + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
-    ].sort((a, b) => (a.date < b.date ? -1 : 1));
-    const pillarNames = Object.keys(byPillar);
-    if ((scholars.length + legacyCount) > 0 && pillarNames.indexOf(PL("scholarships")) < 0) pillarNames.unshift(PL("scholarships"));
-    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf(PL("foodclothing")) < 0) pillarNames.push(PL("foodclothing"));
-    return {
-      computedAt: new Date().toISOString(),
-      period: { label: rep.founding ? "From the beginning to 31 December " + rep.year : "1 January to 31 December " + rep.year, from: from ? ymdOf(from) : null, to: rep.year + "-12-31" },
-      people: { scholars: scholars.length + legacyCount, newScholars, nations: nations.size, nationList: [...nations.values()], institutions: insts.size, semesters },
-      pillars: pillarNames,
-      built: Object.entries(units).map(([pillar, u]) => ({ pillar: PL(u.pillar || pillar), n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
-      gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
-      money: {
-        received: F.sum(gifts), sales: F.sum(sales), copies, enterprise: F.sum(enterprise),
-        given: F.sum(out), byPillar: Object.entries(byPillar).map(([pillar, v]) => ({ pillar, amount: v.amount, count: v.count })).sort((a, b) => b.amount - a.amount),
-        proofs,
-      },
-    };
-  }
-  // What visitors receive: numbers the founder chose to show, nothing else.
-  const publicPart = (snap, rep) => ({
-    computedAt: snap.computedAt, period: snap.period, people: snap.people, pillars: snap.pillars, built: snap.built,
-    gifts: rep.showGifts ? snap.gifts : null,
-    money: rep.showMoney ? snap.money : null,
-  });
+  // The numbers: src/impact-core.js, shared with the email worker that publishes on 1 January
+  const computeImpact = (store, rep) => window.BrialImpactCore.compute(store, rep, { titleCase, instCase });
+  const publicPart = (snap, rep) => window.BrialImpactCore.publicPart(snap, rep);
   const reportForPublic = (rep, snap) => {
     const { snapshot, notes, ...rest } = rep;
     return { ...rest, public: publicPart(snap, rep) };
   };
+
+  // The yearly schedule (run by the email worker, supabase/functions/be-mail/impact.ts)
+  const IMPACT_DRAFT = y => new Date(window.BrialImpactCore.draftAt(y));     // 20 Dec 09:00 WIB
+  const IMPACT_PUBLISH = y => new Date(window.BrialImpactCore.publishAt(y)); // 1 Jan 08:00 WIB of the next year
+  const wibDay = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" });
+  const IMPACT_STATUS = {
+    draft: ["Draft", "gold", "Only you can see it."],
+    review: ["Ready for your review", "warn", "Prepared by the system. Read it, edit anything, then approve."],
+    approved: ["Approved", "ok", "Scheduled. Nothing else to do."],
+    published: ["Live on the website", "ok", ""],
+  };
+  const impactDefaults = rep => window.BrialImpactCore.donorDefaults(rep);
+
+  // When things happen, at a glance
+  function ImpactSchedule({ f, pubAt }) {
+    const y = Number(f.year), now = Date.now();
+    const steps = [
+      { at: IMPACT_DRAFT(y), t: "Prepared", d: "The system gathers the year's numbers, writes the first words and emails you.", done: !!f.autoDraftedAt || f.status !== "draft" },
+      { at: null, t: "You approve", d: "Read it, edit anything, then press Approve.", done: f.status === "approved" },
+      { at: pubAt, t: "Published", d: "Final numbers to 31 December, on the website with a PDF" + (f.mailDonors !== false ? ", and emailed to your donors." : ". Donors are not emailed."), done: false },
+    ];
+    return (
+      <div className="fd-card">
+        <h2 className="fd-h2">Schedule</h2>
+        <p className="fd-sub">Runs on its own. If the report is not approved by {wibDay(pubAt)}, it waits and you get a reminder every three days.</p>
+        <ol className="fd-sched">
+          {steps.map((x, i) => (
+            <li key={i} className={x.done ? "done" : x.at && now >= x.at.getTime() ? "due" : ""}>
+              <b>{x.t}</b><span>{x.at ? wibDay(x.at) + (i === 0 ? ", 09:00 WIB" : ", 08:00 WIB") : "Any time before then"}</span><small>{x.d}</small>
+            </li>
+          ))}
+        </ol>
+      </div>
+    );
+  }
+
+  // The letter that goes to donors on publication day
+  function ImpactDonorLetter({ store, f, set }) {
+    const def = impactDefaults(f);
+    const on = f.mailDonors !== false;
+    const [extra, setExtra] = useState(null);
+    const [prev, setPrev] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    useEffect(() => { let live = true; store.mailContacts().then(x => live && setExtra(x)).catch(() => live && setExtra({ contacts: [], unsubscribed: [] })); return () => { live = false; }; }, [store]);
+    const count = extra ? audienceList(store, "donor", extra).filter(r => !r.unsub && (r.verified > 0 || r.manual)).length : null;
+    const preview = async () => {
+      setBusy(true); setErr("");
+      try { setPrev(await store.impactPreviewEmail({ year: f.year, title: f.title, mailSubject: f.mailSubject || "", mailBody: f.mailBody || "" })); }
+      catch (e) { setErr("The preview could not load. Check your connection."); }
+      setBusy(false);
+    };
+    return (
+      <div className="fd-card">
+        <div className="fd-card-head" style={{ alignItems: "flex-start" }}>
+          <div><h2 className="fd-h2">Letter to donors</h2><p className="fd-sub">{on ? (count === null ? "Sent on publication day to everyone with a verified gift and the donors you added by hand." : `Sent on publication day to ${count} ${plural(count, "donor", "donors")}: everyone with a verified gift and the donors you added by hand. People who unsubscribed are left out.`) : "Off. The report is published without emailing anyone. You can still share it by hand afterwards."}</p></div>
+          <Switch on={on} onChange={v => set("mailDonors", v)}>{on ? "On" : "Off"}</Switch>
+        </div>
+        {on && (
+          <div className="fd-form" style={{ marginTop: 12 }}>
+            <Field label="Subject"><input className="fd-input" value={f.mailSubject != null && f.mailSubject !== "" ? f.mailSubject : def.subject} onChange={e => set("mailSubject", e.target.value)} /></Field>
+            <Field label="Message" hint="{nama} becomes each donor's first name. The links to read the report and download the PDF are added before your sign-off, followed by your signature."><textarea className="fd-input" style={{ minHeight: 170 }} value={f.mailBody != null && f.mailBody !== "" ? f.mailBody : def.body} onChange={e => set("mailBody", e.target.value)} /></Field>
+            <div className="fd-actions">
+              <button className="fd-btn ghost sm" disabled={busy} onClick={preview}>{busy ? "Loading…" : "Preview the email"}</button>
+              {(f.mailSubject || f.mailBody) && <button className="fd-btn quiet sm" onClick={() => { set("mailSubject", ""); set("mailBody", ""); }}>Use the standard letter</button>}
+              {err && <span className="fd-msg err">{err}</span>}
+            </div>
+          </div>
+        )}
+        {prev && (
+          <Modal title="The email your donors receive" sub={"From " + prev.from + " · " + prev.subject} wide onClose={() => setPrev(null)}>
+            <iframe className="fd-mprev" title="Email preview" sandbox="" srcDoc={prev.html} />
+          </Modal>
+        )}
+      </div>
+    );
+  }
 
   function ImpactView({ store }) {
     const all = store.getImpactReports ? store.getImpactReports() : [];
@@ -4090,8 +4071,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const start = (year, founding) => {
       if (all.some(r => Number(r.year) === year)) { setSel(year); return; }
       const r = newReport(year, founding);
-      store.saveImpactReports([...all, { ...r, updatedAt: r.createdAt }]).catch(() => flash("Could not save. Check your connection.", "err"));
-      setSel(year);
+      store.saveImpactReport({ ...r, rev: 0 }).then(() => setSel(year)).catch(e => flash(String(e && e.message) === "stale" ? "A report for " + year + " already exists. Refreshing." : "Could not save. Check your connection.", "err"));
     };
     if (!all.length || !f) {
       const first = !all.length;
@@ -4118,24 +4098,31 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const moveStory = (i, d) => setF(p => { const n = p.stories.slice(); const j = i + d; if (j < 0 || j >= n.length) return p; [n[i], n[j]] = [n[j], n[i]]; return { ...p, stories: n }; });
     const missingConsent = (f.stories || []).filter(s => (s.title.trim() || s.text.trim() || s.photo) && !s.consent).length;
     const commit = async (next, msg) => {
-      const list = all.filter(r => Number(r.year) !== Number(next.year));
-      const rec = { ...next, updatedAt: new Date().toISOString() };
-      if (rec.status === "published") rec.public = publicPart(rec.snapshot, rec);
+      const rec = { ...next };
+      if (rec.status === "published" && rec.snapshot) rec.public = publicPart(rec.snapshot, rec);
       setBusy("save");
       let ok = false;
-      try { await store.saveImpactReports([...list, rec]); setF(rec); setBase(JSON.stringify(rec)); flash(msg); ok = true; }
-      catch (e) { flash("Could not save. Check your connection and try again.", "err"); }
+      try { const saved = await store.saveImpactReport(rec); if (saved) { setF(saved); setBase(JSON.stringify(saved)); } flash(msg); ok = true; }
+      catch (e) {
+        if (String(e && e.message) === "stale") { flash("This report was changed elsewhere (by the schedule or in another window). The latest copy is loaded; please make your change again.", "err"); try { await store.refresh(); } catch (x) {} }
+        else if (String(e && e.message) === "publish_by_schedule") flash("Reports are published by the schedule. Approve it instead.", "err");
+        else flash("Could not save. Check your connection and try again.", "err");
+      }
       setBusy("");
       return ok;
     };
-    const save = () => commit(f, published ? "Saved. The public report is updated." : "Draft saved.");
-    const publish = () => {
-      const s = computeImpact(store, f);
-      const first = !f.publishedAt;
-      commit({ ...f, status: "published", snapshot: s, publishedAt: f.publishedAt || new Date().toISOString() }, "Published. The report is live on the website.")
-        .then(ok => { if (ok && (first || !f.emailedAt)) setAskShare(true); });
+    const pubAt = IMPACT_PUBLISH(Number(f.year));
+    const dueNow = Date.now() >= pubAt.getTime();
+    const save = () => commit(f, published ? "Saved. The public report is updated." : f.status === "approved" ? "Saved. Still approved for " + wibDay(pubAt) + "." : "Saved.");
+    const approve = async () => {
+      const ok = await commit({ ...f, status: "approved", approvedAt: new Date().toISOString() }, dueNow ? "Approved. Publishing now…" : "Approved. It goes live on " + wibDay(pubAt) + " at 08:00 WIB.");
+      if (ok && dueNow) {
+        try { await store.impactRunNow(); flash("Published. The report is live" + (f.mailDonors !== false ? " and the donor emails are on their way." : ".")); }
+        catch (e) { flash("Approved. It will be published within the hour.", "ok"); }
+      }
     };
-    const unpublish = () => commit({ ...f, status: "draft", public: null, snapshot: null }, "Back to draft. The public page no longer shows this report.");
+    const unapprove = () => commit({ ...f, status: "review", approvedAt: null }, "Approval withdrawn. Edit it and approve again when ready.");
+    const unpublish = () => commit({ ...f, status: "review", public: null, snapshot: null, approvedAt: null }, "Taken off the website. Approve it again to republish.");
     const preview = print => {
       try { localStorage.setItem("brial-impact-preview", JSON.stringify(reportForPublic(f, snap))); } catch (e) {}
       window.open("/impact/" + f.year + "?preview=1" + (print ? "&print=1" : ""), "_blank", "noopener");
@@ -4153,13 +4140,13 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <div className="fd-card-head">
             <div>
               <h2 className="fd-h2">{f.title || "Untitled report"}</h2>
-              <p className="fd-sub">{published ? `Published ${fdate(f.publishedAt)}. Numbers frozen on ${fdate(snap.computedAt)}.` : "Draft. Only you can see it until you publish."}</p>
+              <p className="fd-sub">{published ? `Published ${fdate(f.publishedAt)}${f.autoPublished ? " by the schedule" : ""}. Numbers frozen on ${fdate(snap.computedAt)}.` : f.status === "approved" ? `Approved ${fdate(f.approvedAt)}. ${dueNow ? "Publishing within the hour." : "Goes live on " + wibDay(pubAt) + " at 08:00 WIB."}` : (IMPACT_STATUS[f.status] || IMPACT_STATUS.draft)[2]}</p>
             </div>
-            <Tag tone={published ? "ok" : "gold"} dot>{published ? "Live on the website" : "Draft"}</Tag>
+            <Tag tone={(IMPACT_STATUS[f.status] || IMPACT_STATUS.draft)[1]} dot>{(IMPACT_STATUS[f.status] || IMPACT_STATUS.draft)[0]}</Tag>
           </div>
           <div className="fd-grid2" style={{ marginTop: 12 }}>
             <Field label="Title"><input className="fd-input" value={f.title} onChange={e => set("title", e.target.value)} /></Field>
-            <Field label="Period" hint={published ? "Unpublish to change the period." : null}>
+            <Field label="Period" hint={published ? "Take it off the website to change the period." : null}>
               <select className="fd-input" value={f.founding ? "all" : "year"} disabled={published} onChange={e => set("founding", e.target.value === "all")}>
                 <option value="all">From the beginning to 31 Dec {f.year}</option>
                 <option value="year">1 Jan to 31 Dec {f.year}</option>
@@ -4169,7 +4156,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         </div>
 
         <div className="fd-card">
-          <div className="fd-card-head"><div><h2 className="fd-h2">The numbers</h2><p className="fd-sub">{snap.period.label}. {published ? "Frozen when you published." : "Updated live from your records until you publish."}</p></div></div>
+          <div className="fd-card-head"><div><h2 className="fd-h2">The numbers</h2><p className="fd-sub">{snap.period.label}. {published ? "Frozen on publication." : "Live from your records. The published report uses the final numbers to 31 December."}</p></div></div>
           <Stats items={[
             { label: "Scholars supported", value: String(P.scholars), sub: `${P.newScholars} new this period` },
             { label: "Nations", value: String(P.nations), sub: P.nationList.join(", ") || "None yet" },
@@ -4251,6 +4238,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
           <textarea className="fd-input" style={{ marginTop: 12 }} value={f.plans} onChange={e => set("plans", e.target.value)} aria-label="The year ahead" />
         </div>
 
+        {!published && <ImpactSchedule f={f} pubAt={pubAt} />}
+        {!published && <ImpactDonorLetter store={store} f={f} set={set} />}
+
         {published && (
           <div className="fd-card">
             <div className="fd-card-head">
@@ -4266,19 +4256,24 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         )}
 
         <div className="fd-savebar">
-          <div className="fd-sub" style={{ margin: 0 }}>{missingConsent ? `${missingConsent} ${plural(missingConsent, "story needs", "stories need")} permission before publishing.` : dirty ? "You have unsaved changes." : published ? "Everything is saved and live." : "Everything is saved."} <Flash m={m} /></div>
+          <div className="fd-sub" style={{ margin: 0 }}>{missingConsent ? `${missingConsent} ${plural(missingConsent, "story needs", "stories need")} permission before publishing.` : dirty ? (f.status === "approved" ? "Unsaved changes. Save to keep the approval with your edits." : "You have unsaved changes.") : published ? "Everything is saved and live." : f.status === "approved" ? "Approved and scheduled." : "Everything is saved."} <Flash m={m} /></div>
           <div className="fd-actions">
             {dirty && <button className="fd-btn quiet" onClick={() => setF(JSON.parse(base))}>Discard</button>}
             <button className="fd-btn ghost" onClick={() => preview(false)}>Preview</button>
             {published ? (
               <>
-                <Confirm className="fd-btn quiet" armedLabel="Click again to unpublish" onConfirm={unpublish}>Unpublish</Confirm>
+                <Confirm className="fd-btn quiet" armedLabel="Click again to take it down" onConfirm={unpublish}>Take off the website</Confirm>
                 <button className="fd-btn primary" disabled={!dirty || !!busy || missingConsent > 0} onClick={save}>{busy ? "Saving…" : "Save changes"}</button>
+              </>
+            ) : f.status === "approved" ? (
+              <>
+                <Confirm className="fd-btn quiet" armedLabel="Click again to withdraw" disabled={!!busy} onConfirm={unapprove}>Withdraw approval</Confirm>
+                <button className="fd-btn primary" disabled={!dirty || !!busy || missingConsent > 0 || !f.title.trim()} onClick={save}>{busy ? "Saving…" : "Save changes"}</button>
               </>
             ) : (
               <>
-                <button className="fd-btn ghost" disabled={!dirty || !!busy} onClick={save}>Save draft</button>
-                <Confirm className="fd-btn primary" armedLabel="Click again to publish" disabled={!!busy || missingConsent > 0 || !f.title.trim()} onConfirm={publish}>Publish</Confirm>
+                <button className="fd-btn ghost" disabled={!dirty || !!busy} onClick={save}>{busy ? "Saving…" : "Save"}</button>
+                <Confirm className="fd-btn primary" armedLabel={dueNow ? "Click again to publish now" : "Click again to approve"} disabled={!!busy || missingConsent > 0 || !f.title.trim()} onConfirm={approve}>{dueNow ? "Approve and publish" : "Approve"}</Confirm>
               </>
             )}
           </div>

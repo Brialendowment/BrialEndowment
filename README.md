@@ -49,3 +49,16 @@ Backup data sebelum perubahan: skema privat `backup_20261011` di Supabase.
 - The 45 old files (16 used by scholar records + 29 unused uploads) were copied to the private bucket
   under new names, the records were re-pointed, and the old public copies were deleted.
   Bookkeeping: `be_private.file_moves`. Unused uploads are kept under `docs/orphans/` (founder-only).
+
+## Impact Report on a schedule (18 Nov 2026, migration 20261118_01)
+- **20 December 09:00 WIB**: the edge function `be-impact` (hourly via pg_cron `be-impact-tick`) prepares that
+  year's report (status `review`), writes the first words from the numbers, and emails the founder.
+- The founder reads it in Founder Console → Impact Report, edits anything, and presses **Approve**.
+- **1 January 08:00 WIB**: an approved report is published with the final numbers to 31 December and the
+  donor letter is queued (verified donors + donors added by hand, minus unsubscribes). Not approved yet:
+  nothing is published, the founder gets a reminder every three days for a month.
+- The numbers live in `src/impact-core.js`, shared by the portal and `be-impact` (the build script copies it),
+  so the figures approved are the figures published. Edit that file, then run `scripts/build-founder-desk.py`.
+- Every write to the reports goes through `be_impact_save` / `be_impact_server_put`, which refuse a write
+  from an out-of-date copy, so the schedule and the founder's screen never overwrite each other.
+- Emails use the existing outbox: founder notes as `message`, donor letters as `announcement` (sent by `be-mail`).
