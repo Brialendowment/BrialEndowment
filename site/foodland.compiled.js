@@ -61,7 +61,7 @@
         h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", minHeight: 40, flexShrink: 0 }, "aria-label": "Return to the Endowment" }, "\u2190", h("span", { className: "b-hide-sm" }, " Return to the Endowment")),
         h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
           h(Seal, { size: 26 }),
-          h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)" } }, "PILLAR \u00b7 REFORESTATION & LAND"))),
+          h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)" } }, "PILLAR \u00b7 " + ((window.BrialStore && window.BrialStore.getPillarName ? window.BrialStore.getPillarName("foodland") : "") || "Reforestation & Land").toUpperCase()))),
 
       // ---- hero ----
       h("div", { style: { padding: "clamp(60px, 9vw, 110px) clamp(20px, 4vw, 56px) clamp(50px, 7vw, 80px)", maxWidth: 1280, margin: "0 auto" } },

@@ -62,6 +62,10 @@ const FD = (() => {
 .fd-pillar-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent);color:var(--accent);flex-shrink:0}
 .fd-pillar b{display:block;font-weight:600;font-size:14px;line-height:1.2}
 .fd-pillar small{display:block;font-size:12px;color:var(--faint)}
+.fd-pillar>div:nth-child(2){flex:1;min-width:0}
+.fd-rename{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.fd-rename:hover,.fd-rename:focus-visible{color:var(--accent);border-color:var(--accent)}
+.fd-rename svg{width:15px;height:15px}
 .fd-nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:9px;border:0;background:none;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:background .15s,color .15s}
 .fd-nav:hover{background:rgba(239,233,220,.04);color:var(--text)}
 .fd-nav[aria-current=page]{background:var(--giltsoft);color:var(--text)}
@@ -522,6 +526,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // ---------------- icons ----------------
   const I = (d, s = 18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>;
   const ICON = {
+    edit: I(<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13.5 6.5l4 4" /></>),
     inbox: I(<><path d="M3 13h5l1.5 3h5L16 13h5" /><path d="M5 5h14l2 8v6H3v-6z" /></>),
     pay: I(<><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h3" /></>),
     cap: I(<><path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c3 2 9 2 12 0v-5" /></>),
@@ -626,9 +631,52 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     return <span className="fd-upload"><span className="fd-btn ghost sm">{ICON.up}{busy ? "Uploading…" : children}</span><input type="file" accept={accept} onChange={pick} disabled={busy} aria-label={children} /></span>;
   }
 
+  // ---------------- rename a pillar ----------------
+  // Only the shown name changes. Grants keep their stored label, so totals,
+  // the ledger and old records stay linked to the pillar.
+  function RenamePillar({ store, pillarKey, current, cfg, onClose }) {
+    const def = store.PILLAR_DEFAULT_NAMES ? store.PILLAR_DEFAULT_NAMES[pillarKey] : current;
+    const [v, setV] = useState(current);
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const clean = v.replace(/\s+/g, " ").trim();
+    const ok = clean.length > 0 && clean.length <= 60 && clean !== current;
+    const save = async () => {
+      if (!ok || busy) return;
+      setBusy(true); setErr("");
+      try {
+        // the programme page title follows the pillar name when it still matches the old name
+        if (cfg && typeof cfg.get === "function" && typeof cfg.save === "function") {
+          const c = cfg.get(store);
+          if (c && typeof c === "object" && (!c.programme || c.programme === current)) cfg.save(store, { ...c, programme: clean });
+        }
+        await store.savePillarName(pillarKey, clean);
+        onClose();
+      } catch (e) { setErr((e && e.message) || "The name could not be saved."); setBusy(false); }
+    };
+    return (
+      <Modal title="Rename pillar" sub="The new name appears everywhere this pillar is shown: here in the portal and on the public site. Records and totals stay linked." onClose={onClose}>
+        <div className="fd-form">
+          <Field label="Pillar name" hint={def && clean !== def ? `Original name: ${def}` : null}>
+            <input className="fd-input" value={v} maxLength={60} autoFocus onChange={e => setV(e.target.value)} onKeyDown={e => { if (e.key === "Enter") save(); }} />
+          </Field>
+          {err && <div className="fd-msg err" role="alert">{err}</div>}
+        </div>
+        <div className="fd-actions" style={{ marginTop: 20 }}>
+          <button className="fd-btn primary" disabled={!ok || busy} onClick={save}>{busy ? "Saving…" : "Save name"}</button>
+          {def && current !== def && <button className="fd-btn ghost" disabled={busy} onClick={() => setV(def)}>Use original name</button>}
+          <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
+        </div>
+      </Modal>
+    );
+  }
+
   // ---------------- shell ----------------
   function Shell({ store, pillarKey, meta, nav, active, onNav, onBack, onExit, founderEmail, onLogout, children, noVisibility }) {
     const visible = store.getPillarActive ? store.getPillarActive(pillarKey) : true;
+    const canRename = !!(store.isRenamablePillar && store.isRenamablePillar(pillarKey));
+    const [renaming, setRenaming] = useState(false);
+    const renameBtn = canRename ? <button className="fd-rename" onClick={() => setRenaming(true)} title="Rename pillar" aria-label={"Rename " + meta.name}>{ICON.edit}</button> : null;
     return (
       <div className="fd" style={{ "--accent": meta.accent }}>
         <header className="fd-top">
@@ -650,6 +698,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             <div className="fd-pillar">
               <div className="fd-pillar-ic">{ICON[pillarKey] || ICON.grant}</div>
               <div><b>{meta.name}</b><small>{noVisibility ? meta.sub : visible ? "Live on the public site" : "Hidden from the public site"}</small></div>
+              {renameBtn}
             </div>
             {nav.map(n => (
               <button key={n.id} className="fd-nav" aria-current={active === n.id ? "page" : undefined} onClick={() => onNav(n.id)}>
@@ -662,7 +711,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>}
           </aside>
           <main className="fd-main">{children}
-            {!noVisibility && <div className="fd-mvis fd-card"><div><b style={{ fontWeight: 600 }}>{meta.name}</b><div className="fd-sub" style={{ margin: 0 }}>{visible ? "Live on the public site" : "Hidden from the public site"}</div></div><Switch on={visible} onChange={v => store.savePillarActive(pillarKey, v)}>Show</Switch></div>}
+            {!noVisibility && <div className="fd-mvis fd-card"><div style={{ flex: 1, minWidth: 0 }}><b style={{ fontWeight: 600 }}>{meta.name}</b><div className="fd-sub" style={{ margin: 0 }}>{visible ? "Live on the public site" : "Hidden from the public site"}</div></div>{renameBtn}<Switch on={visible} onChange={v => store.savePillarActive(pillarKey, v)}>Show</Switch></div>}
+            {renaming && <RenamePillar store={store} pillarKey={pillarKey} current={meta.name} cfg={PILLARS[pillarKey]} onClose={() => setRenaming(false)} />}
           </main>
         </div>
       </div>
@@ -2477,7 +2527,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       id: d.id, dir: "in", date: d.submittedAt || (d.data && d.data.sale && d.data.sale.date) || null,
       category: isEntD(d) ? "Enterprise" : isSaleD(d) ? "Library sale" : "Gift",
       title: isEntD(d) ? ((d.data && d.data.enterprise && d.data.enterprise.name) || "Enterprise") + (d.data && d.data.enterprise && d.data.enterprise.period ? " · " + d.data.enterprise.period : "") : isSaleD(d) ? (d.data && d.data.sale ? d.data.sale.title : d.name) : (d.anonymous ? "Anonymous" : d.name || "Donor"),
-      detail: isEntD(d) ? ["Transportation pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? ((d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "")) : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
+      detail: isEntD(d) ? [(store.pillarLabel ? store.pillarLabel("transport") : "Transportation") + " pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? ((d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "")) : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
       amount: Number(d.amount) || 0, ref: d.txHash || "", settled: !!d.verified, raw: d,
     }));
     const scholars = store.listApplicants().filter(a => a.status === "accepted");
@@ -3698,7 +3748,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const F = useFlows(store);
     const pub = store.getPublicMetrics ? store.getPublicMetrics() : null;
     const byPillar = {};
-    F.paidOut.forEach(x => { byPillar[x.pillar] = (byPillar[x.pillar] || 0) + x.amount; });
+    const PL = x => (store.pillarLabel ? store.pillarLabel(x) : x);
+    F.paidOut.forEach(x => { const k = PL(x.pillar); byPillar[k] = (byPillar[k] || 0) + x.amount; });
     const pillars = Object.entries(byPillar).sort((a, b) => b[1] - a[1]);
     const maxP = Math.max(1, ...pillars.map(p => p[1]));
     const outTotal = F.sum(F.paidOut);
@@ -3955,7 +4006,8 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     // money out
     const out = F.paidOut.filter(x => (x.id === "LEGACY" ? rep.founding : within(x.date)));
     const byPillar = {};
-    out.forEach(x => { const k = x.pillar || "Scholarships"; byPillar[k] = byPillar[k] || { amount: 0, count: 0 }; byPillar[k].amount += x.amount; byPillar[k].count += 1; });
+    const PL = x => (store.pillarLabel ? store.pillarLabel(x) : x);
+    out.forEach(x => { const k = PL(x.pillar || "Scholarships"); byPillar[k] = byPillar[k] || { amount: 0, count: 0 }; byPillar[k].amount += x.amount; byPillar[k].count += 1; });
     // what was built: units recorded on pillar grants (trees, wells, mosques)
     const units = {};
     store.getPillarGrants().filter(g => !g.archived && within(g.date)).forEach(g => {
@@ -3985,17 +4037,17 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const newScholars = F.scholars.filter(s => s.acceptedAt && within(s.acceptedAt)).length;
     const proofs = [
       ...gifts.filter(x => isChainTx(x.ref)).map(x => ({ kind: "Gift received", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
-      ...out.filter(x => isChainTx(x.ref)).map(x => ({ kind: x.category === "Tuition" ? "Tuition paid" : x.pillar + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
+      ...out.filter(x => isChainTx(x.ref)).map(x => ({ kind: x.category === "Tuition" ? "Tuition paid" : PL(x.pillar) + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
     ].sort((a, b) => (a.date < b.date ? -1 : 1));
     const pillarNames = Object.keys(byPillar);
-    if ((scholars.length + legacyCount) > 0 && pillarNames.indexOf("Scholarships") < 0) pillarNames.unshift("Scholarships");
-    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf("Food & Clothing") < 0) pillarNames.push("Food & Clothing");
+    if ((scholars.length + legacyCount) > 0 && pillarNames.indexOf(PL("scholarships")) < 0) pillarNames.unshift(PL("scholarships"));
+    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf(PL("foodclothing")) < 0) pillarNames.push(PL("foodclothing"));
     return {
       computedAt: new Date().toISOString(),
       period: { label: rep.founding ? "From the beginning to 31 December " + rep.year : "1 January to 31 December " + rep.year, from: from ? ymdOf(from) : null, to: rep.year + "-12-31" },
       people: { scholars: scholars.length + legacyCount, newScholars, nations: nations.size, nationList: [...nations.values()], institutions: insts.size, semesters },
       pillars: pillarNames,
-      built: Object.entries(units).map(([pillar, u]) => ({ pillar: u.pillar || pillar, n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
+      built: Object.entries(units).map(([pillar, u]) => ({ pillar: PL(u.pillar || pillar), n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
       gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
       money: {
         received: F.sum(gifts), sales: F.sum(sales), copies, enterprise: F.sum(enterprise),
@@ -4248,7 +4300,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // ============================================================
   // SECURITY: two-step verification, recovery codes, activity log
   // ============================================================
-  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Reforestation & Land page", "PILLAR-CONTENT-FOODCLOTHING": "Food & Clothing page and counts", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
+  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility and names", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Reforestation & Land page", "PILLAR-CONTENT-FOODCLOTHING": "Food & Clothing page and counts", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
   const ACT_WORD = {
     "security.signed_in": "Signed in", "security.signed_out": "Signed out", "security.authenticator_added": "Turned on two-step verification",
     "security.authenticator_removed": "Turned off two-step verification", "security.recovery_codes_created": "Created new recovery codes",
@@ -5802,7 +5854,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
                 <div className="fd-grid2">
                   <Field label="Contributed by"><input className="fd-input" value={ack.name} onChange={e => setA("name", e.target.value)} placeholder="Full name" /></Field>
                   <Field label="Amount (USD)"><input className="fd-input" inputMode="decimal" value={ack.amount} onChange={e => setA("amount", e.target.value)} placeholder="35" /></Field>
-                  <Field label="Programme"><input className="fd-input" list="fd-programmes" value={ack.programme} onChange={e => setA("programme", e.target.value)} placeholder="Reforestation & Land · …" /><datalist id="fd-programmes">{PROGRAMMES.map(x => <option key={x} value={x} />)}</datalist></Field>
+                  <Field label="Programme"><input className="fd-input" list="fd-programmes" value={ack.programme} onChange={e => setA("programme", e.target.value)} placeholder="Reforestation & Land · …" /><datalist id="fd-programmes">{PROGRAMMES.map(x => x.replace(/^[^·]+?(?= ·|$)/, n => (store.pillarLabel ? store.pillarLabel(n.trim()) : n))).map(x => <option key={x} value={x} />)}</datalist></Field>
                   <Field label="Date of contribution"><input className="fd-input" type="date" value={ack.date} onChange={e => setA("date", e.target.value)} /></Field>
                   <Field label="Reference (optional)"><input className="fd-input" value={ack.reference} onChange={e => setA("reference", e.target.value)} placeholder="Bank or grant reference" /></Field>
                   <div style={{ display: "flex", alignItems: "flex-end" }}><Switch on={ack.pdf} onChange={v => setA("pdf", v)}>Attach PDF</Switch></div>
@@ -6229,7 +6281,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const [tab, setTabS] = useNav(key, () => { try { return sessionStorage.getItem(key) || ""; } catch (e) { return ""; } });
     const [focus, setFocus] = useState(null);
     const setTab = t => { setTabS(t); try { sessionStorage.setItem(key, t); } catch (e) {} window.scrollTo({ top: 0 }); };
-    const meta = PILLARS[pillar] || { name: pillar, accent: "#C9A961" };
+    const shownName = store.getPillarName && store.isRenamablePillar && store.isRenamablePillar(pillar) ? store.getPillarName(pillar) : "";
+    const named = c => (c && shownName ? { ...c, name: shownName } : c);
+    const meta = named(PILLARS[pillar] || { name: pillar, accent: "#C9A961" });
     let nav, view;
     if (pillar === "scholarships") {
       const apps = store.listApplicants();
@@ -6257,7 +6311,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         : t === "scholars" ? <ScholarsView store={store} scholars={scholars} openRecord={openRecord} />
         : t === "gifts" ? <DonationsView store={store} donations={donations} />
         : t === "help" ? <HelpDeskView store={store} reports={reports} />
-        : t === "partners" ? <PillarPartnersView store={store} pillarKey="scholarships" name="Scholarships" />
+        : t === "partners" ? <PillarPartnersView store={store} pillarKey="scholarships" name={meta.name} />
         : <AccountsView store={store} apps={apps} deleted={store.listDeleted()} openRecord={openRecord} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
@@ -6268,7 +6322,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         { id: "partners", label: "Partners", icon: ICON.users, count: store.getPillarPartners ? store.getPillarPartners("library").length : 0 },
       ];
       const t = nav.some(n => n.id === tab) ? tab : "catalog";
-      view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <PillarPartnersView store={store} pillarKey="library" name="Library" />;
+      view = t === "catalog" ? <CatalogView store={store} /> : t === "sales" ? <SalesView store={store} /> : <PillarPartnersView store={store} pillarKey="library" name={meta.name} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     if (pillar === "treasury") {
@@ -6313,7 +6367,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active="email" onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout} noVisibility>{view}</Shell>;
     }
     if (pillar === "transport") {
-      const cfg = PILLARS.transport;
+      const cfg = named(PILLARS.transport);
       nav = [
         { id: "contrib", label: "Contributions", icon: ICON.inflow, count: store.listEnterpriseIncome ? store.listEnterpriseIncome("go2rent").length : 0 },
         { id: "story", label: "Programme page", icon: ICON.story },
@@ -6325,7 +6379,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
     if (pillar === "foodclothing") {
-      const cfg = PILLARS.foodclothing;
+      const cfg = named(PILLARS.foodclothing);
       nav = [
         { id: "grants", label: "Distributions", icon: ICON.grant, count: store.getPillarGrants().filter(g => g.pillar === cfg.grantName && !g.archived).length },
         { id: "counts", label: "Rough totals", icon: ICON.overview },
@@ -6337,7 +6391,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       view = t === "counts" ? <CountsView store={store} /> : t === "grants" ? <DistributionsView store={store} cfg={cfg} /> : t === "story" ? <ProgrammeView key={pillar} store={store} cfg={cfg} /> : t === "partners" ? <PillarPartnersView store={store} pillarKey={pillar} name={cfg.name} /> : <LinkView store={store} pillarKey={pillar} cfg={cfg} />;
       return <Shell store={store} pillarKey={pillar} meta={meta} nav={nav} active={t} onNav={setTab} onBack={onBack} onExit={onExit} founderEmail={founderEmail} onLogout={onLogout}>{view}</Shell>;
     }
-    const cfg = PILLARS[pillar];
+    const cfg = named(PILLARS[pillar]);
     if (!cfg) return null;
     nav = [
       { id: "grants", label: "Grants", icon: ICON.grant, count: store.getPillarGrants().filter(g => g.pillar === cfg.grantName && !g.archived).length },

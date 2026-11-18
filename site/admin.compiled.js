@@ -8435,6 +8435,10 @@ const FD = (() => {
 .fd-pillar-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent);color:var(--accent);flex-shrink:0}
 .fd-pillar b{display:block;font-weight:600;font-size:14px;line-height:1.2}
 .fd-pillar small{display:block;font-size:12px;color:var(--faint)}
+.fd-pillar>div:nth-child(2){flex:1;min-width:0}
+.fd-rename{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.fd-rename:hover,.fd-rename:focus-visible{color:var(--accent);border-color:var(--accent)}
+.fd-rename svg{width:15px;height:15px}
 .fd-nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:9px;border:0;background:none;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:background .15s,color .15s}
 .fd-nav:hover{background:rgba(239,233,220,.04);color:var(--text)}
 .fd-nav[aria-current=page]{background:var(--giltsoft);color:var(--text)}
@@ -8893,6 +8897,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   }
   const I = (d, s = 18) => /* @__PURE__ */ React.createElement("svg", { width: s, height: s, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.6", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, d);
   const ICON = {
+    edit: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M4 20h4L19 9l-4-4L4 16z" }), /* @__PURE__ */ React.createElement("path", { d: "M13.5 6.5l4 4" }))),
     inbox: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M3 13h5l1.5 3h5L16 13h5" }), /* @__PURE__ */ React.createElement("path", { d: "M5 5h14l2 8v6H3v-6z" }))),
     pay: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "6", width: "18", height: "13", rx: "2" }), /* @__PURE__ */ React.createElement("path", { d: "M3 10h18M7 15h3" }))),
     cap: I(/* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("path", { d: "M2 9l10-5 10 5-10 5z" }), /* @__PURE__ */ React.createElement("path", { d: "M6 11v5c3 2 9 2 12 0v-5" }))),
@@ -9017,9 +9022,39 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     };
     return /* @__PURE__ */ React.createElement("span", { className: "fd-upload" }, /* @__PURE__ */ React.createElement("span", { className: "fd-btn ghost sm" }, ICON.up, busy ? "Uploading…" : children), /* @__PURE__ */ React.createElement("input", { type: "file", accept, onChange: pick, disabled: busy, "aria-label": children }));
   }
+  function RenamePillar({ store, pillarKey, current, cfg, onClose }) {
+    const def = store.PILLAR_DEFAULT_NAMES ? store.PILLAR_DEFAULT_NAMES[pillarKey] : current;
+    const [v, setV] = useState(current);
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState("");
+    const clean = v.replace(/\s+/g, " ").trim();
+    const ok = clean.length > 0 && clean.length <= 60 && clean !== current;
+    const save = async () => {
+      if (!ok || busy) return;
+      setBusy(true);
+      setErr("");
+      try {
+        if (cfg && typeof cfg.get === "function" && typeof cfg.save === "function") {
+          const c = cfg.get(store);
+          if (c && typeof c === "object" && (!c.programme || c.programme === current)) cfg.save(store, { ...c, programme: clean });
+        }
+        await store.savePillarName(pillarKey, clean);
+        onClose();
+      } catch (e) {
+        setErr(e && e.message || "The name could not be saved.");
+        setBusy(false);
+      }
+    };
+    return /* @__PURE__ */ React.createElement(Modal, { title: "Rename pillar", sub: "The new name appears everywhere this pillar is shown: here in the portal and on the public site. Records and totals stay linked.", onClose }, /* @__PURE__ */ React.createElement("div", { className: "fd-form" }, /* @__PURE__ */ React.createElement(Field, { label: "Pillar name", hint: def && clean !== def ? `Original name: ${def}` : null }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: v, maxLength: 60, autoFocus: true, onChange: (e) => setV(e.target.value), onKeyDown: (e) => {
+      if (e.key === "Enter") save();
+    } })), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", role: "alert" }, err)), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !ok || busy, onClick: save }, busy ? "Saving…" : "Save name"), def && current !== def && /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", disabled: busy, onClick: () => setV(def) }, "Use original name"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel")));
+  }
   function Shell({ store, pillarKey, meta, nav, active, onNav, onBack, onExit, founderEmail, onLogout, children, noVisibility }) {
     const visible = store.getPillarActive ? store.getPillarActive(pillarKey) : true;
-    return /* @__PURE__ */ React.createElement("div", { className: "fd", style: { "--accent": meta.accent } }, /* @__PURE__ */ React.createElement("header", { className: "fd-top" }, /* @__PURE__ */ React.createElement("div", { className: "fd-brand" }, ICON.star, /* @__PURE__ */ React.createElement("span", null, "Founder Portal")), /* @__PURE__ */ React.createElement("nav", { className: "fd-crumb", "aria-label": "Breadcrumb" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("button", { onClick: onBack }, "Pillars"), /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("b", null, meta.name)), /* @__PURE__ */ React.createElement("div", { className: "fd-top-r" }, /* @__PURE__ */ React.createElement("span", { className: "fd-email" }, founderEmail), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: onExit }, "Public site"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: onLogout }, "Sign out"))), /* @__PURE__ */ React.createElement("div", { className: "fd-body" }, /* @__PURE__ */ React.createElement("aside", { className: "fd-side", "aria-label": meta.name + " sections" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar-ic" }, ICON[pillarKey] || ICON.grant), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, meta.name), /* @__PURE__ */ React.createElement("small", null, noVisibility ? meta.sub : visible ? "Live on the public site" : "Hidden from the public site"))), nav.map((n) => /* @__PURE__ */ React.createElement("button", { key: n.id, className: "fd-nav", "aria-current": active === n.id ? "page" : void 0, onClick: () => onNav(n.id) }, /* @__PURE__ */ React.createElement("span", { className: "fd-nav-ic" }, n.icon), n.label, typeof n.count === "number" && /* @__PURE__ */ React.createElement("span", { className: "fd-count" + (n.hot ? " hot" : "") }, n.count))), !noVisibility && /* @__PURE__ */ React.createElement("div", { className: "fd-side-foot" }, /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show pillar on public site"))), /* @__PURE__ */ React.createElement("main", { className: "fd-main" }, children, !noVisibility && /* @__PURE__ */ React.createElement("div", { className: "fd-mvis fd-card" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, meta.name), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, visible ? "Live on the public site" : "Hidden from the public site")), /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show")))));
+    const canRename = !!(store.isRenamablePillar && store.isRenamablePillar(pillarKey));
+    const [renaming, setRenaming] = useState(false);
+    const renameBtn = canRename ? /* @__PURE__ */ React.createElement("button", { className: "fd-rename", onClick: () => setRenaming(true), title: "Rename pillar", "aria-label": "Rename " + meta.name }, ICON.edit) : null;
+    return /* @__PURE__ */ React.createElement("div", { className: "fd", style: { "--accent": meta.accent } }, /* @__PURE__ */ React.createElement("header", { className: "fd-top" }, /* @__PURE__ */ React.createElement("div", { className: "fd-brand" }, ICON.star, /* @__PURE__ */ React.createElement("span", null, "Founder Portal")), /* @__PURE__ */ React.createElement("nav", { className: "fd-crumb", "aria-label": "Breadcrumb" }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("button", { onClick: onBack }, "Pillars"), /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, "/"), /* @__PURE__ */ React.createElement("b", null, meta.name)), /* @__PURE__ */ React.createElement("div", { className: "fd-top-r" }, /* @__PURE__ */ React.createElement("span", { className: "fd-email" }, founderEmail), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: onExit }, "Public site"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost sm", onClick: onLogout }, "Sign out"))), /* @__PURE__ */ React.createElement("div", { className: "fd-body" }, /* @__PURE__ */ React.createElement("aside", { className: "fd-side", "aria-label": meta.name + " sections" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar" }, /* @__PURE__ */ React.createElement("div", { className: "fd-pillar-ic" }, ICON[pillarKey] || ICON.grant), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, meta.name), /* @__PURE__ */ React.createElement("small", null, noVisibility ? meta.sub : visible ? "Live on the public site" : "Hidden from the public site")), renameBtn), nav.map((n) => /* @__PURE__ */ React.createElement("button", { key: n.id, className: "fd-nav", "aria-current": active === n.id ? "page" : void 0, onClick: () => onNav(n.id) }, /* @__PURE__ */ React.createElement("span", { className: "fd-nav-ic" }, n.icon), n.label, typeof n.count === "number" && /* @__PURE__ */ React.createElement("span", { className: "fd-count" + (n.hot ? " hot" : "") }, n.count))), !noVisibility && /* @__PURE__ */ React.createElement("div", { className: "fd-side-foot" }, /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show pillar on public site"))), /* @__PURE__ */ React.createElement("main", { className: "fd-main" }, children, !noVisibility && /* @__PURE__ */ React.createElement("div", { className: "fd-mvis fd-card" }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("b", { style: { fontWeight: 600 } }, meta.name), /* @__PURE__ */ React.createElement("div", { className: "fd-sub", style: { margin: 0 } }, visible ? "Live on the public site" : "Hidden from the public site")), renameBtn, /* @__PURE__ */ React.createElement(Switch, { on: visible, onChange: (v) => store.savePillarActive(pillarKey, v) }, "Show")), renaming && /* @__PURE__ */ React.createElement(RenamePillar, { store, pillarKey, current: meta.name, cfg: PILLARS[pillarKey], onClose: () => setRenaming(false) }))));
   }
   const Head = ({ title, lede, children }) => /* @__PURE__ */ React.createElement("div", { className: "fd-head" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h1", { className: "fd-h1" }, title), lede && /* @__PURE__ */ React.createElement("p", { className: "fd-lede" }, lede)), children && /* @__PURE__ */ React.createElement("div", { className: "fd-actions" }, children));
   const PILLARS = {
@@ -10181,7 +10216,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       date: d.submittedAt || d.data && d.data.sale && d.data.sale.date || null,
       category: isEntD(d) ? "Enterprise" : isSaleD(d) ? "Library sale" : "Gift",
       title: isEntD(d) ? (d.data && d.data.enterprise && d.data.enterprise.name || "Enterprise") + (d.data && d.data.enterprise && d.data.enterprise.period ? " · " + d.data.enterprise.period : "") : isSaleD(d) ? d.data && d.data.sale ? d.data.sale.title : d.name : d.anonymous ? "Anonymous" : d.name || "Donor",
-      detail: isEntD(d) ? ["Transportation pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? (d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "") : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
+      detail: isEntD(d) ? [(store.pillarLabel ? store.pillarLabel("transport") : "Transportation") + " pillar", d.message].filter(Boolean).join(" · ") : isSaleD(d) ? (d.data && d.data.sale && d.data.sale.qty > 1 ? d.data.sale.qty + " copies" : "1 copy") + (d.message ? " · " + d.message : "") : [d.country, d.message ? "“" + d.message + "”" : ""].filter(Boolean).join(" · "),
       amount: Number(d.amount) || 0,
       ref: d.txHash || "",
       settled: !!d.verified,
@@ -11315,8 +11350,10 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const F = useFlows(store);
     const pub = store.getPublicMetrics ? store.getPublicMetrics() : null;
     const byPillar = {};
+    const PL = (x) => store.pillarLabel ? store.pillarLabel(x) : x;
     F.paidOut.forEach((x) => {
-      byPillar[x.pillar] = (byPillar[x.pillar] || 0) + x.amount;
+      const k = PL(x.pillar);
+      byPillar[k] = (byPillar[k] || 0) + x.amount;
     });
     const pillars = Object.entries(byPillar).sort((a, b) => b[1] - a[1]);
     const maxP = Math.max(1, ...pillars.map((p) => p[1]));
@@ -11513,8 +11550,9 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const copies = sales.reduce((a, x) => a + (Number(x.raw && x.raw.data && x.raw.data.sale && x.raw.data.sale.qty) || 1), 0);
     const out = F.paidOut.filter((x) => x.id === "LEGACY" ? rep.founding : within(x.date));
     const byPillar = {};
+    const PL = (x) => store.pillarLabel ? store.pillarLabel(x) : x;
     out.forEach((x) => {
-      const k = x.pillar || "Scholarships";
+      const k = PL(x.pillar || "Scholarships");
       byPillar[k] = byPillar[k] || { amount: 0, count: 0 };
       byPillar[k].amount += x.amount;
       byPillar[k].count += 1;
@@ -11556,17 +11594,17 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const newScholars = F.scholars.filter((s) => s.acceptedAt && within(s.acceptedAt)).length;
     const proofs = [
       ...gifts.filter((x) => isChainTx(x.ref)).map((x) => ({ kind: "Gift received", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() })),
-      ...out.filter((x) => isChainTx(x.ref)).map((x) => ({ kind: x.category === "Tuition" ? "Tuition paid" : x.pillar + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() }))
+      ...out.filter((x) => isChainTx(x.ref)).map((x) => ({ kind: x.category === "Tuition" ? "Tuition paid" : PL(x.pillar) + " grant", date: ymdOf(x.date), amount: x.amount, hash: x.ref.trim() }))
     ].sort((a, b) => a.date < b.date ? -1 : 1);
     const pillarNames = Object.keys(byPillar);
-    if (scholars.length + legacyCount > 0 && pillarNames.indexOf("Scholarships") < 0) pillarNames.unshift("Scholarships");
-    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf("Food & Clothing") < 0) pillarNames.push("Food & Clothing");
+    if (scholars.length + legacyCount > 0 && pillarNames.indexOf(PL("scholarships")) < 0) pillarNames.unshift(PL("scholarships"));
+    if ((fcKg > 0 || fcG > 0) && pillarNames.indexOf(PL("foodclothing")) < 0) pillarNames.push(PL("foodclothing"));
     return {
       computedAt: (/* @__PURE__ */ new Date()).toISOString(),
       period: { label: rep.founding ? "From the beginning to 31 December " + rep.year : "1 January to 31 December " + rep.year, from: from ? ymdOf(from) : null, to: rep.year + "-12-31" },
       people: { scholars: scholars.length + legacyCount, newScholars, nations: nations.size, nationList: [...nations.values()], institutions: insts.size, semesters },
       pillars: pillarNames,
-      built: Object.entries(units).map(([pillar, u]) => ({ pillar: u.pillar || pillar, n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
+      built: Object.entries(units).map(([pillar, u]) => ({ pillar: PL(u.pillar || pillar), n: u.n, label: u.n === 1 ? u.unit[0] : u.unit[1] })),
       gifts: { count: gifts.length, donors: donors.size, countries: countries.size },
       money: {
         received: F.sum(gifts),
@@ -11693,7 +11731,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       setMailOpen(true);
     } }, "Choose donors and preview"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: () => setAskShare(false) }, "Not now"))), mailOpen && /* @__PURE__ */ React.createElement(AnnounceDialog, { store, audience: "donor", preset: { ...impactTemplate(f), from: "hello", title: "Share the report with donors" }, onClose: () => setMailOpen(false), onSent: (n) => commit({ ...f, emailedAt: (/* @__PURE__ */ new Date()).toISOString(), emailedCount: (f.emailedCount || 0) + n }, `Sent to ${n} ${plural(n, "donor", "donors")}.`) }));
   }
-  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Reforestation & Land page", "PILLAR-CONTENT-FOODCLOTHING": "Food & Clothing page and counts", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
+  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility and names", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Reforestation & Land page", "PILLAR-CONTENT-FOODCLOTHING": "Food & Clothing page and counts", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
   const ACT_WORD = {
     "security.signed_in": "Signed in",
     "security.signed_out": "Signed out",
@@ -14373,7 +14411,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     } }, "Thank-you letter"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn quiet sm", onClick: () => set("body", "") }, "Blank")), /* @__PURE__ */ React.createElement(Field, { label: "Message", hint: "Leave an empty line between paragraphs." }, /* @__PURE__ */ React.createElement("textarea", { className: "fd-input", rows: 10, maxLength: 1e4, value: f.body, onChange: (e) => set("body", e.target.value), placeholder: "Dear …," })), /* @__PURE__ */ React.createElement("div", { className: "fd-krow", style: { borderTop: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Sign with my name"), /* @__PURE__ */ React.createElement("small", null, 'Adds "Brial Asif Hayi Paka · Founder, The Brial Endowment" under the message.')), /* @__PURE__ */ React.createElement(Switch, { on: f.sign, onChange: (v) => set("sign", v) }, f.sign ? "On" : "Off")), /* @__PURE__ */ React.createElement("div", { className: "fd-krow" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Acknowledge a contribution"), /* @__PURE__ */ React.createElement("small", null, "Adds the amount and programme to the email, with a PDF acknowledgement. It does not change the public ledger.")), /* @__PURE__ */ React.createElement(Switch, { on: ackOn, onChange: (v) => {
       setAckOn(v);
       setPrev(null);
-    } }, ackOn ? "On" : "Off")), ackOn && /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { background: "rgba(10,22,40,.4)", marginTop: 6 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Contributed by" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: ack.name, onChange: (e) => setA("name", e.target.value), placeholder: "Full name" })), /* @__PURE__ */ React.createElement(Field, { label: "Amount (USD)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: ack.amount, onChange: (e) => setA("amount", e.target.value), placeholder: "35" })), /* @__PURE__ */ React.createElement(Field, { label: "Programme" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", list: "fd-programmes", value: ack.programme, onChange: (e) => setA("programme", e.target.value), placeholder: "Reforestation & Land · …" }), /* @__PURE__ */ React.createElement("datalist", { id: "fd-programmes" }, PROGRAMMES.map((x) => /* @__PURE__ */ React.createElement("option", { key: x, value: x })))), /* @__PURE__ */ React.createElement(Field, { label: "Date of contribution" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "date", value: ack.date, onChange: (e) => setA("date", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Reference (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: ack.reference, onChange: (e) => setA("reference", e.target.value), placeholder: "Bank or grant reference" })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement(Switch, { on: ack.pdf, onChange: (v) => setA("pdf", v) }, "Attach PDF"))), ackBad && /* @__PURE__ */ React.createElement("small", { className: "fd-bad" }, "Enter the amount.")), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 12 } }, err), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !ready || !!busy, onClick: preview }, busy === "prev" ? "Preparing…" : "Preview"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel"), !ready && /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { margin: 0 } }, "Fill in who it's to, a subject and the message."))), prev && err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 12 } }, err));
+    } }, ackOn ? "On" : "Off")), ackOn && /* @__PURE__ */ React.createElement("div", { className: "fd-card", style: { background: "rgba(10,22,40,.4)", marginTop: 6 } }, /* @__PURE__ */ React.createElement("div", { className: "fd-grid2" }, /* @__PURE__ */ React.createElement(Field, { label: "Contributed by" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: ack.name, onChange: (e) => setA("name", e.target.value), placeholder: "Full name" })), /* @__PURE__ */ React.createElement(Field, { label: "Amount (USD)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", inputMode: "decimal", value: ack.amount, onChange: (e) => setA("amount", e.target.value), placeholder: "35" })), /* @__PURE__ */ React.createElement(Field, { label: "Programme" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", list: "fd-programmes", value: ack.programme, onChange: (e) => setA("programme", e.target.value), placeholder: "Reforestation & Land · …" }), /* @__PURE__ */ React.createElement("datalist", { id: "fd-programmes" }, PROGRAMMES.map((x) => x.replace(/^[^·]+?(?= ·|$)/, (n) => store.pillarLabel ? store.pillarLabel(n.trim()) : n)).map((x) => /* @__PURE__ */ React.createElement("option", { key: x, value: x })))), /* @__PURE__ */ React.createElement(Field, { label: "Date of contribution" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", type: "date", value: ack.date, onChange: (e) => setA("date", e.target.value) })), /* @__PURE__ */ React.createElement(Field, { label: "Reference (optional)" }, /* @__PURE__ */ React.createElement("input", { className: "fd-input", value: ack.reference, onChange: (e) => setA("reference", e.target.value), placeholder: "Bank or grant reference" })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement(Switch, { on: ack.pdf, onChange: (v) => setA("pdf", v) }, "Attach PDF"))), ackBad && /* @__PURE__ */ React.createElement("small", { className: "fd-bad" }, "Enter the amount.")), err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 12 } }, err), /* @__PURE__ */ React.createElement("div", { className: "fd-actions", style: { marginTop: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "fd-btn primary", disabled: !ready || !!busy, onClick: preview }, busy === "prev" ? "Preparing…" : "Preview"), /* @__PURE__ */ React.createElement("button", { className: "fd-btn ghost", onClick: onClose }, "Cancel"), !ready && /* @__PURE__ */ React.createElement("small", { className: "fd-sub", style: { margin: 0 } }, "Fill in who it's to, a subject and the message."))), prev && err && /* @__PURE__ */ React.createElement("div", { className: "fd-msg err", style: { marginTop: 12 } }, err));
   }
   const TYPO_DOMAINS = { "gmial.com": "gmail.com", "gamil.com": "gmail.com", "gmai.com": "gmail.com", "gmail.co": "gmail.com", "gmail.con": "gmail.com", "gnail.com": "gmail.com", "yahoo.con": "yahoo.com", "yaho.com": "yahoo.com", "hotmial.com": "hotmail.com", "hotmail.con": "hotmail.com", "outlok.com": "outlook.com" };
   const emailDoubt = (e) => {
@@ -14758,7 +14796,9 @@ With gratitude,`, sign: true });
       }
       window.scrollTo({ top: 0 });
     };
-    const meta = PILLARS[pillar] || { name: pillar, accent: "#C9A961" };
+    const shownName = store.getPillarName && store.isRenamablePillar && store.isRenamablePillar(pillar) ? store.getPillarName(pillar) : "";
+    const named = (c) => c && shownName ? { ...c, name: shownName } : c;
+    const meta = named(PILLARS[pillar] || { name: pillar, accent: "#C9A961" });
     let nav, view;
     if (pillar === "scholarships") {
       const apps = store.listApplicants();
@@ -14784,7 +14824,7 @@ With gratitude,`, sign: true });
         setFocus(id);
         setTab("apps");
       };
-      view = t2 === "apps" ? /* @__PURE__ */ React.createElement(ApplicationsView, { store, apps, focus, clearFocus: () => setFocus(null) }) : t2 === "pay" ? /* @__PURE__ */ React.createElement(DisbursementsView, { store, scholars }) : t2 === "scholars" ? /* @__PURE__ */ React.createElement(ScholarsView, { store, scholars, openRecord }) : t2 === "gifts" ? /* @__PURE__ */ React.createElement(DonationsView, { store, donations }) : t2 === "help" ? /* @__PURE__ */ React.createElement(HelpDeskView, { store, reports }) : t2 === "partners" ? /* @__PURE__ */ React.createElement(PillarPartnersView, { store, pillarKey: "scholarships", name: "Scholarships" }) : /* @__PURE__ */ React.createElement(AccountsView, { store, apps, deleted: store.listDeleted(), openRecord });
+      view = t2 === "apps" ? /* @__PURE__ */ React.createElement(ApplicationsView, { store, apps, focus, clearFocus: () => setFocus(null) }) : t2 === "pay" ? /* @__PURE__ */ React.createElement(DisbursementsView, { store, scholars }) : t2 === "scholars" ? /* @__PURE__ */ React.createElement(ScholarsView, { store, scholars, openRecord }) : t2 === "gifts" ? /* @__PURE__ */ React.createElement(DonationsView, { store, donations }) : t2 === "help" ? /* @__PURE__ */ React.createElement(HelpDeskView, { store, reports }) : t2 === "partners" ? /* @__PURE__ */ React.createElement(PillarPartnersView, { store, pillarKey: "scholarships", name: meta.name }) : /* @__PURE__ */ React.createElement(AccountsView, { store, apps, deleted: store.listDeleted(), openRecord });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
     }
     if (pillar === "library") {
@@ -14794,7 +14834,7 @@ With gratitude,`, sign: true });
         { id: "partners", label: "Partners", icon: ICON.users, count: store.getPillarPartners ? store.getPillarPartners("library").length : 0 }
       ];
       const t2 = nav.some((n) => n.id === tab) ? tab : "catalog";
-      view = t2 === "catalog" ? /* @__PURE__ */ React.createElement(CatalogView, { store }) : t2 === "sales" ? /* @__PURE__ */ React.createElement(SalesView, { store }) : /* @__PURE__ */ React.createElement(PillarPartnersView, { store, pillarKey: "library", name: "Library" });
+      view = t2 === "catalog" ? /* @__PURE__ */ React.createElement(CatalogView, { store }) : t2 === "sales" ? /* @__PURE__ */ React.createElement(SalesView, { store }) : /* @__PURE__ */ React.createElement(PillarPartnersView, { store, pillarKey: "library", name: meta.name });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
     }
     if (pillar === "treasury") {
@@ -14835,7 +14875,7 @@ With gratitude,`, sign: true });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: "email", onNav: setTab, onBack, onExit, founderEmail, onLogout, noVisibility: true }, view);
     }
     if (pillar === "transport") {
-      const cfg2 = PILLARS.transport;
+      const cfg2 = named(PILLARS.transport);
       nav = [
         { id: "contrib", label: "Contributions", icon: ICON.inflow, count: store.listEnterpriseIncome ? store.listEnterpriseIncome("go2rent").length : 0 },
         { id: "story", label: "Programme page", icon: ICON.story },
@@ -14847,7 +14887,7 @@ With gratitude,`, sign: true });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
     }
     if (pillar === "foodclothing") {
-      const cfg2 = PILLARS.foodclothing;
+      const cfg2 = named(PILLARS.foodclothing);
       nav = [
         { id: "grants", label: "Distributions", icon: ICON.grant, count: store.getPillarGrants().filter((g) => g.pillar === cfg2.grantName && !g.archived).length },
         { id: "counts", label: "Rough totals", icon: ICON.overview },
@@ -14859,7 +14899,7 @@ With gratitude,`, sign: true });
       view = t2 === "counts" ? /* @__PURE__ */ React.createElement(CountsView, { store }) : t2 === "grants" ? /* @__PURE__ */ React.createElement(DistributionsView, { store, cfg: cfg2 }) : t2 === "story" ? /* @__PURE__ */ React.createElement(ProgrammeView, { key: pillar, store, cfg: cfg2 }) : t2 === "partners" ? /* @__PURE__ */ React.createElement(PillarPartnersView, { store, pillarKey: pillar, name: cfg2.name }) : /* @__PURE__ */ React.createElement(LinkView, { store, pillarKey: pillar, cfg: cfg2 });
       return /* @__PURE__ */ React.createElement(Shell, { store, pillarKey: pillar, meta, nav, active: t2, onNav: setTab, onBack, onExit, founderEmail, onLogout }, view);
     }
-    const cfg = PILLARS[pillar];
+    const cfg = named(PILLARS[pillar]);
     if (!cfg) return null;
     nav = [
       { id: "grants", label: "Grants", icon: ICON.grant, count: store.getPillarGrants().filter((g) => g.pillar === cfg.grantName && !g.archived).length },
@@ -15144,6 +15184,8 @@ const PillarChooser = ({
       strokeWidth: "1.1"
     }, /*#__PURE__*/React.createElement("path", { d: "M32 10 L32 38 M22 28 L32 38 L42 28" }), /*#__PURE__*/React.createElement("path", { d: "M14 42 L14 52 L50 52 L50 42" }))
   }];
+  // Founder-chosen pillar names (Founder Portal → pillar → rename)
+  if (store && store.isRenamablePillar && store.getPillarName) cards.forEach(c => { if (store.isRenamablePillar(c.id)) c.label = store.getPillarName(c.id) || c.label; });
   return /*#__PURE__*/React.createElement("div", {
     style: bare ? {} : {
       maxWidth: 1000,

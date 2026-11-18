@@ -495,32 +495,6 @@ const Hero = ({
       zIndex: 2
     }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "b-basmala",
-    style: {
-      textAlign: "center",
-      marginBottom: 56,
-      opacity: 0,
-      animation: "fadeIn 1s 0.1s forwards"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    lang: "ar",
-    dir: "rtl",
-    style: {
-      fontFamily: "'Amiri', 'Scheherazade New', serif",
-      fontSize: 34,
-      lineHeight: 1.6,
-      color: "#E4C989"
-    }
-  }, "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u064e\u0647\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
-      letterSpacing: "0.24em",
-      textTransform: "uppercase",
-      color: "rgba(244,239,227,0.55)",
-      marginTop: 4
-    }
-  }, "In the name of God, the Most Gracious, the Most Merciful")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       justifyContent: "space-between",
@@ -1388,6 +1362,8 @@ const Philosophy = ({
     d: "Bridges, power and public works, the quiet foundations that let a community stand, trade, and endure on its own.",
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("line", { x1: "8", y1: "44", x2: "56", y2: "44" }), /*#__PURE__*/React.createElement("path", { d: "M14 44 Q32 18 50 44" }), /*#__PURE__*/React.createElement("line", { x1: "22", y1: "44", x2: "22", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "32", y1: "44", x2: "32", y2: "31" }), /*#__PURE__*/React.createElement("line", { x1: "42", y1: "44", x2: "42", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "10", y1: "52", x2: "54", y2: "52", strokeWidth: "1.4" }))
   }];
+  // Founder-chosen pillar names (Founder Portal → rename)
+  if (window.BrialStore && window.BrialStore.getPillarName) pillars.forEach(p => { if (p.k && window.BrialStore.isRenamablePillar(p.k)) p.t = window.BrialStore.getPillarName(p.k); });
   return /*#__PURE__*/React.createElement("section", {
     id: "mission",
     style: {
@@ -1850,7 +1826,31 @@ const Dedication = () => {
       maxWidth: 880,
       margin: "0 auto"
     }
-  }, /*#__PURE__*/React.createElement(Eyebrow, null, "Dedicated to God"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "b-basmala",
+    style: {
+      textAlign: "center",
+      marginBottom: 44
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    lang: "ar",
+    dir: "rtl",
+    style: {
+      fontFamily: "'Amiri', 'Scheherazade New', serif",
+      fontSize: 34,
+      lineHeight: 1.6,
+      color: "#E4C989"
+    }
+  }, "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u064e\u0647\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 10,
+      letterSpacing: "0.24em",
+      textTransform: "uppercase",
+      color: "rgba(244,239,227,0.55)",
+      marginTop: 4
+    }
+  }, "In the name of God, the Most Gracious, the Most Merciful")), /*#__PURE__*/React.createElement(Eyebrow, null, "Dedicated to God"), /*#__PURE__*/React.createElement("div", {
     className: "b-ikh"
   }, /*#__PURE__*/React.createElement("div", {
     className: "b-ikh-row"
@@ -2504,8 +2504,15 @@ const App = () => {
 
   // Tab title follows the view
   useEffect(() => {
+    const setTitle = () => {
     const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
+    try { const S = window.BrialStore; if (S && S.getPillarName) Object.keys(T).forEach(v => { const k = v === "ebooks" ? "library" : v; if (S.isRenamablePillar(k)) T[v] = S.getPillarName(k); }); } catch (e) {}
     try { document.title = T[view] ? T[view] + " | The Brial Endowment" : "The Brial Endowment | A Perpetual Philanthropic Endowment"; } catch (e) {}
+    };
+    setTitle();
+    window.addEventListener("brial:ready", setTitle);
+    window.addEventListener("brial:change", setTitle);
+    return () => { window.removeEventListener("brial:ready", setTitle); window.removeEventListener("brial:change", setTitle); };
   }, [view]);
   // Always start a new view at the top (fixes landing on previous scroll position)
   useEffect(() => {

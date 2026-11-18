@@ -109,7 +109,17 @@
           }))));
   };
 
-  const PillarPage = ({ onExit, onDonate, cfg }) => {
+  // Founder-chosen pillar name (Founder Portal → rename); "" when unchanged
+  const renamed = key => {
+    const S = window.BrialStore;
+    if (!S || !S.getPillarName || !S.isRenamablePillar || !S.isRenamablePillar(key)) return "";
+    const nm = S.getPillarName(key), def = (S.PILLAR_DEFAULT_NAMES || {})[key];
+    return nm && nm !== def ? nm : "";
+  };
+  const PillarPage = ({ onExit, onDonate, cfg: cfg0 }) => {
+    const nm = renamed(cfg0.shareKey), def = nm ? window.BrialStore.PILLAR_DEFAULT_NAMES[cfg0.shareKey] : "";
+    const cfg = nm ? { ...cfg0, topTag: "PILLAR \u00b7 " + nm.toUpperCase(), title: cfg0.title === def ? nm : cfg0.title,
+      partnerStrip: typeof cfg0.partnerStrip === "string" ? cfg0.partnerStrip.replace(def.toUpperCase(), nm.toUpperCase()) : cfg0.partnerStrip } : cfg0;
     useEffect(() => { window.scrollTo(0, 0); if (cfg.shareKey) BrialDeepScroll(cfg.shareKey); }, []);
     const articles = (cfg.articles || []).filter(a => a && (a.title || a.body));
     return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both" }, "data-screen-label": cfg.screenLabel },
@@ -476,13 +486,13 @@
         h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", minHeight: 40, flexShrink: 0 }, "aria-label": "Return to the Endowment" }, "\u2190", h("span", { className: "b-hide-sm" }, " Return to the Endowment")),
         h("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
           h(Seal, { size: 26 }),
-          h("span", { className: "b-tr-tag", style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)" } }, "PILLAR · TRANSPORTATION"))),
+          h("span", { className: "b-tr-tag", style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)" } }, "PILLAR · " + (renamed("transport") || "Transportation").toUpperCase()))),
 
       // Hero
       h("div", { style: { padding: "clamp(56px, 8vw, 100px) " + pad + " clamp(50px, 7vw, 80px)", maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(420px, 100%), 1fr))", gap: "clamp(36px, 5vw, 70px)", alignItems: "center" } },
         h("div", { style: { minWidth: 0 } },
           eyebrow("§ The Enterprise Pillar · Transportasi"),
-          h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(50px, 7.4vw, 100px)", lineHeight: 0.98, letterSpacing: "-0.02em", margin: "26px 0 0" } }, (c.programme || "Transportation") + "."),
+          h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(50px, 7.4vw, 100px)", lineHeight: 0.98, letterSpacing: "-0.02em", margin: "26px 0 0" } }, (c.programme || renamed("transport") || "Transportation") + "."),
           h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(20px, 2.3vw, 27px)", color: "rgba(232,228,220,0.75)", margin: "24px 0 0", maxWidth: 560, lineHeight: 1.45 } }, "The pillar that earns. Cars on the road across Türkiye, and a share of what they return comes home to the endowment."),
           h("div", { style: { display: "inline-flex", alignItems: "center", gap: 18, marginTop: 40, padding: "16px 22px", background: "rgba(232,228,220,0.06)", border: "1px solid rgba(201,169,97,0.3)", flexWrap: "wrap", maxWidth: "100%" } },
             h("span", { style: { fontFamily: serif, fontSize: 17, fontStyle: "italic", color: GOLD } }, "The Brial Endowment"),

@@ -1354,11 +1354,46 @@ window.BrialClipboard = { copy: copyToClipboard };
     savePillarActive(key, flag) {
       const prev = _donations.find(x => x.id === "PILLAR-STATUS");
       const active = { ...((prev && prev.data && prev.data.active) || {}), [key]: !!flag };
-      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { active } };
+      const names = (prev && prev.data && prev.data.names) || {};
+      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { active, names } };
       const idx = _donations.findIndex(x => x.id === "PILLAR-STATUS");
       if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
       saveCache(); notify({ key: "pillars" });
       upsertDonation(rec).catch(e => console.error(e));
+    },
+
+    // ----- Pillar names: the founder can rename a pillar; the record key and the
+    // grant label stored on each grant stay the same, only the shown name changes -----
+    PILLAR_DEFAULT_NAMES: { scholarships: "Scholarships", worship: "Houses of Worship", library: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", water: "Clean Water", transport: "Transportation", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure" },
+    isRenamablePillar(key) { return Object.prototype.hasOwnProperty.call(Store.PILLAR_DEFAULT_NAMES, key); },
+    getPillarName(key) {
+      const def = Store.PILLAR_DEFAULT_NAMES[key];
+      if (def === undefined) return "";
+      const d = _donations.find(x => x.id === "PILLAR-STATUS");
+      const v = d && d.data && d.data.names && d.data.names[key];
+      return typeof v === "string" && v.trim() ? v.trim() : def;
+    },
+    // Shown name for a pillar key OR a stored grant label ("Clean Water", "Food & Land" …)
+    pillarLabel(x) {
+      if (!x) return x;
+      if (Store.isRenamablePillar(x)) return Store.getPillarName(x);
+      const label = Store.PILLAR_RENAMES[x] || x;
+      const k = Object.keys(Store.PILLAR_DEFAULT_NAMES).find(k => Store.PILLAR_DEFAULT_NAMES[k] === label);
+      return k ? Store.getPillarName(k) : x;
+    },
+    savePillarName(key, name) {
+      if (!Store.isRenamablePillar(key)) throw new Error("This section cannot be renamed.");
+      const clean = String(name || "").replace(/\s+/g, " ").trim().slice(0, 60);
+      if (!clean) throw new Error("Please enter a name.");
+      const prev = _donations.find(x => x.id === "PILLAR-STATUS");
+      const active = (prev && prev.data && prev.data.active) || {};
+      const names = { ...((prev && prev.data && prev.data.names) || {}) };
+      if (clean === Store.PILLAR_DEFAULT_NAMES[key]) delete names[key]; else names[key] = clean;
+      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { active, names } };
+      const idx = _donations.findIndex(x => x.id === "PILLAR-STATUS");
+      if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
+      saveCache(); notify({ key: "pillars" });
+      return upsertDonation(rec);
     },
 
     // ----- Pillar redirect links (founder-managed: where a public pillar sends its audience) -----

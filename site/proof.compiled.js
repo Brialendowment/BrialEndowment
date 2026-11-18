@@ -17,13 +17,15 @@
   const fmtX = n => { const v = Number(n) || 0; return "$" + v.toLocaleString("en-US", Math.round(v * 100) % 100 === 0 ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   const yearOf = g => { if (g.dateUnknown) return ""; const d = new Date(g.date); return isNaN(d) ? "" : String(d.getFullYear()); };
   // A grant filed under a pillar this page does not list still belongs on the ledger
+  // Shown name of a pillar (the founder can rename a pillar; grants keep their stored label)
+  const PL = x => (x && x !== "Other grants" && window.BrialStore && window.BrialStore.pillarLabel ? window.BrialStore.pillarLabel(x) : x);
   const pillarOf = g => (PILLAR_ORDER.indexOf(g.pillar) >= 0 ? g.pillar : "Other grants");
-  const hay = g => [g.project, g.partner, g.country, g.note, g.txRef, g.pillar].filter(Boolean).join(" ").toLowerCase();
+  const hay = g => [g.project, g.partner, g.country, g.note, g.txRef, g.pillar, PL(g.pillar)].filter(Boolean).join(" ").toLowerCase();
   // CSV for auditors and donors. Cells that a spreadsheet could run as a formula are neutralised.
   const csvCell = v => { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const ledgerCsv = rows => {
     const head = ["Date", "Pillar", "Project", "Partner", "Country", "Amount (USD)", "Paid currency", "Paid amount", "Units", "Food (kg)", "Garments", "Reference", "Note"];
-    const lines = rows.map(g => [g.dateUnknown ? "" : String(g.date || "").slice(0, 10), g.pillar || "", g.project || "", g.partner || "", g.country || "",
+    const lines = rows.map(g => [g.dateUnknown ? "" : String(g.date || "").slice(0, 10), PL(g.pillar) || "", g.project || "", g.partner || "", g.country || "",
       (Number(g.amount) || 0).toFixed(2), g.paid && g.paid.currency ? g.paid.currency : "USD", g.paid && g.paid.value != null ? g.paid.value : (Number(g.amount) || 0).toFixed(2),
       Number(g.units) || "", Number(g.kg) || "", Number(g.garments) || "", g.txRef || "", g.note || ""].map(csvCell).join(","));
     return "\uFEFF" + [head.join(",")].concat(lines).join("\r\n") + "\r\n";
@@ -110,7 +112,7 @@
             h("button", { type: "button", className: "b-ledger-btn", onClick: () => downloadCsv(shown.slice().sort(byDate)), style: tool, title: "Download these grants as a spreadsheet (CSV)" }, "\u2193 Download CSV"),
             h("button", { type: "button", className: "b-ledger-btn", onClick: () => { try { window.print(); } catch (e) {} }, style: tool, title: "Print, or save as PDF" }, "Print")),
           pillarsPresent.length > 1 ? h("div", { role: "group", "aria-label": "Filter by pillar", style: { display: "flex", gap: 8, flexWrap: "wrap" } },
-            [["all", "All pillars"]].concat(pillarsPresent.map(p => [p, p])).map(([k, label]) => h("button", { key: k, type: "button", className: "b-ledger-chip", "aria-pressed": fPillar === k, onClick: () => setFPillar(k), style: chip(fPillar === k) }, label))) : null,
+            [["all", "All pillars"]].concat(pillarsPresent.map(p => [p, PL(p)])).map(([k, label]) => h("button", { key: k, type: "button", className: "b-ledger-chip", "aria-pressed": fPillar === k, onClick: () => setFPillar(k), style: chip(fPillar === k) }, label))) : null,
           h("div", { role: "status", "aria-live": "polite", style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)" } },
             filtered ? "Showing " + shown.length + " of " + st.grants.length + " grants \u00b7 " + fmtX(shownTotal) : st.grants.length + " grants \u00b7 " + fmtX(shownTotal),
             filtered ? h("button", { type: "button", className: "b-ledger-chip", onClick: () => { setQ(""); setFPillar("all"); setFYear("all"); }, style: { marginLeft: 12, background: "transparent", border: "none", color: GOLD, cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", textDecoration: "underline", textUnderlineOffset: 3, padding: "6px 0" } }, "Clear filters") : null)) : null,
@@ -119,7 +121,7 @@
         groups.length === 0 ? h("div", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 22, color: "rgba(232,228,220,0.66)", marginTop: 56, textAlign: "center" } }, "The first pillar entries are being written.") :
         groups.map(gr => h("section", { key: gr.pillar, style: { marginTop: "clamp(44px, 6vw, 64px)" } },
           h("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, flexWrap: "wrap", borderBottom: "1px solid rgba(201,169,97,0.35)", paddingBottom: 14 } },
-            h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(26px, 3.2vw, 38px)", margin: 0 } }, gr.pillar),
+            h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(26px, 3.2vw, 38px)", margin: 0 } }, PL(gr.pillar)),
             h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", color: "rgba(232,228,220,0.66)" } },
               fmtX(gr.rows.reduce((a, g) => a + (Number(g.amount) || 0), 0)),
               (u => u ? " \u00b7 " + gr.rows.reduce((a, g) => a + (Number(g.units) || 0), 0) + " " + u[1] : "")(UNIT_NOUN[gr.pillar]))),
