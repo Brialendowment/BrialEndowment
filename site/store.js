@@ -157,6 +157,24 @@ window.BrialClipboard = { copy: copyToClipboard };
   // Default e-books shown until the founder edits the catalog.
   const DEFAULT_EBOOKS = [
     {
+      id: "cti-vol1", lang: "English", langCode: "EN",
+      title: "Concrete Technology Illustrated", subtitle: "2027 Edition \u00B7 Volume 1: Materials, Mix Design, Fresh and Hardened Concrete",
+      accent: "#C9A961", cover: "/library/cti-vol1-cover.jpg", coverRatio: "1 / 1.6",
+      link: "", links: {},
+      getLabel: "Get the book",
+      supportNote: "Published by The Brial Endowment: every purchase supports its scholarships and programmes.",
+      desc: "A visual guide to concrete materials, mix design, and fresh and hardened concrete. Every idea is drawn before it is calculated, every method is worked one numbered step at a time in SI units with US values in brackets, and US (ACI, ASTM) and European (EN 206, BRE) methods sit side by side. Volume 2 is coming soon.",
+      points: [
+        "Two complete mix design methods: ACI absolute volume and EN 206 with BRE (DoE)",
+        "204 problems in three levels, every one fully solved at the back",
+        "112 figures and 112 tables that show each idea before the numbers",
+        "Formula sheet, glossary, standards list and a 447 entry index",
+      ],
+      featured: true, badge: "New \u00B7 Flagship title",
+      stats: [["234", "pages"], ["204", "solved problems"], ["53", "worked examples"], ["112", "figures"]],
+      tool: { label: "CTI Mix Design Calculator", url: "/calculator", desc: "The free companion to this book: required strength, ACI and BRE mix design, moisture correction and EN 206 checks, step by step with the book's own tables and rounding." },
+    },
+    {
       id: "en", lang: "English", langCode: "EN",
       title: "Scholarship Hunter", subtitle: "The Ultimate Guide",
       accent: "#C9A961", cover: "https://sdlrjqdbxxzddgivnjws.supabase.co/storage/v1/object/public/brial-files/uploads/f_mr2cboz8_zqnd3c0.jpg",
@@ -950,6 +968,12 @@ window.BrialClipboard = { copy: copyToClipboard };
         supportNote: (b.supportNote || "").trim(),
         accent: b.accent || "#C9A961",
         points: Array.isArray(b.points) ? b.points.filter(Boolean) : [],
+        // optional showcase fields (flagship titles): kept as given, never required
+        ...(b.featured ? { featured: true } : {}),
+        ...(b.badge ? { badge: String(b.badge).trim() } : {}),
+        ...(Array.isArray(b.stats) && b.stats.length ? { stats: b.stats.filter(x => Array.isArray(x) && x.length === 2).map(x => [String(x[0]), String(x[1])]) } : {}),
+        ...(b.coverRatio ? { coverRatio: String(b.coverRatio) } : {}),
+        ...(b.tool && b.tool.url ? { tool: { label: String(b.tool.label || "").trim(), url: String(b.tool.url).trim(), desc: String(b.tool.desc || "").trim() } } : {}),
       }));
       const rec = { id: "EBOOKS-CATALOG", name: "__ebooks__", amount: 0, data: { books: clean } };
       const idx = _donations.findIndex(x => x.id === "EBOOKS-CATALOG");

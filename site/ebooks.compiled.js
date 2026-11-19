@@ -16,6 +16,50 @@ const partnerChip = (p, href, key, accent) => /*#__PURE__*/React.createElement(h
   style: { display: "inline-flex", alignItems: "center", gap: 9, padding: "7px 13px 7px 7px", border: "1px solid " + (href ? (accent || "#C9A961") + "66" : "rgba(232,228,220,0.16)"), background: "rgba(232,228,220,0.05)", color: href ? "#E8E4DC" : "rgba(232,228,220,0.55)", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 500, whiteSpace: "nowrap" }
 }, (() => { const src = window.BrialStore && window.BrialStore.partnerLogo ? window.BrialStore.partnerLogo(p) : ""; return src ? /*#__PURE__*/React.createElement("span", { style: { display: "inline-flex", alignItems: "center", justifyContent: "center", height: 26, minWidth: 26, padding: "0 5px", background: "#fff", borderRadius: 2 } }, /*#__PURE__*/React.createElement("img", { src, alt: "", style: { height: 18, maxWidth: 76, width: "auto", display: "block" } })) : null; })(), p.name, href ? /*#__PURE__*/React.createElement("span", { style: { fontFamily: "serif", fontSize: 15, opacity: 0.8 } }, "\u2197") : /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.7 } }, "Soon"));
 
+// ---------- Buy button: live store link, or "Coming soon" until the founder adds one ----------
+const ctaButton = book => {
+  const href = primaryLink(book), acc = book.accent || "#C9A961";
+  const base = { display: "inline-flex", alignItems: "center", gap: 14, fontFamily: "'Manrope', sans-serif", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 500, padding: "16px 30px", textDecoration: "none" };
+  if (href) return /*#__PURE__*/React.createElement("a", { href, target: "_blank", rel: "noopener noreferrer", style: { ...base, background: acc, color: "#0A1628", boxShadow: `0 18px 40px -18px ${acc}` } }, book.getLabel || "Get the E-Book", /*#__PURE__*/React.createElement("span", { style: { fontFamily: "serif", fontSize: 20 } }, "↗"));
+  return /*#__PURE__*/React.createElement("span", { "aria-disabled": "true", style: { ...base, border: `1px solid ${acc}`, color: acc, background: "rgba(201,169,97,0.07)", cursor: "default" } }, /*#__PURE__*/React.createElement("span", { style: { width: 7, height: 7, borderRadius: "50%", background: acc, boxShadow: `0 0 0 4px ${acc}33` } }), "Coming soon");
+};
+const soonChips = book => {
+  const S = window.BrialStore; const parts = S && S.getLibraryPartners ? S.getLibraryPartners().filter(x => x.shown !== false) : [];
+  if (!parts.length) return null;
+  return /*#__PURE__*/React.createElement("div", { style: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 16, maxWidth: 640 } }, /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)", marginRight: 4 } }, "Arriving on"), parts.map((p, i) => partnerChip(p, "", i, book.accent)));
+};
+
+// ---------- Flagship title: framed showcase with its companion tool ----------
+const FeaturedBook = ({ book }) => {
+  const acc = book.accent || "#C9A961", href = primaryLink(book);
+  const stats = Array.isArray(book.stats) ? book.stats : [];
+  return /*#__PURE__*/React.createElement("section", { "aria-label": "Featured title", style: { position: "relative", margin: "8px 0 18px", padding: 1, background: `linear-gradient(135deg, ${acc}, rgba(201,169,97,0.15) 40%, rgba(201,169,97,0.05) 60%, ${acc}AA)`, boxShadow: `0 40px 90px -40px ${acc}88` } },
+    /*#__PURE__*/React.createElement("style", null, "@media (max-width: 860px){.be-feat-grid{grid-template-columns:minmax(0,1fr)!important;gap:28px!important}.be-feat-grid>a{max-width:230px!important;margin:0 auto;transform:none!important}.be-feat-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.be-feat-grid div[style*=\"grid-template-columns: 1fr 1fr\"]{grid-template-columns:1fr!important}}"),
+    /*#__PURE__*/React.createElement("div", { style: { background: "radial-gradient(120% 90% at 0% 0%, #16294A 0%, #0B1A31 55%, #091427 100%)", padding: "clamp(24px, 4vw, 48px)" } },
+      /*#__PURE__*/React.createElement("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 26 } },
+        /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "#0A1628", background: `linear-gradient(120deg, #EAD9A8, ${acc} 55%, #B08F4C)`, padding: "6px 12px" } }, book.badge || "New"),
+        /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: acc, border: `1px solid ${acc}66`, padding: "5px 10px" } }, book.langCode, " \xB7 ", book.lang)),
+      /*#__PURE__*/React.createElement("div", { style: { display: "grid", gridTemplateColumns: "280px 1fr", gap: 48, alignItems: "center" }, className: "be-feat-grid" },
+        /*#__PURE__*/React.createElement("a", { href: href || undefined, target: href ? "_blank" : undefined, rel: href ? "noopener noreferrer" : undefined, style: { display: "block", position: "relative", width: "100%", maxWidth: 280, aspectRatio: book.coverRatio || "1 / 1.414", overflow: "hidden", boxShadow: "0 40px 70px -30px rgba(0,0,0,0.85), 0 0 0 1px rgba(201,169,97,0.35)", transform: "perspective(1200px) rotateY(-6deg)", transformOrigin: "left center", background: "#0A1628" } },
+          book.cover ? /*#__PURE__*/React.createElement("img", { src: book.cover, alt: book.title + " cover", loading: "eager", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : null,
+          /*#__PURE__*/React.createElement("span", { "aria-hidden": "true", style: { position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(255,255,255,0.10), rgba(255,255,255,0) 30%)" } })),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("h2", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(34px, 4.2vw, 56px)", fontWeight: 400, lineHeight: 1.02, letterSpacing: "-0.02em", color: "#E8E4DC", margin: 0 } }, book.title),
+          /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(19px, 1.8vw, 23px)", fontStyle: "italic", color: acc, marginTop: 8, lineHeight: 1.3 } }, book.subtitle),
+          stats.length ? /*#__PURE__*/React.createElement("div", { style: { display: "grid", gridTemplateColumns: `repeat(${Math.min(stats.length, 4)}, minmax(0, 1fr))`, gap: 1, margin: "24px 0 4px", background: "rgba(201,169,97,0.22)", border: "1px solid rgba(201,169,97,0.22)", maxWidth: 640 }, className: "be-feat-stats" }, stats.map((x, i) => /*#__PURE__*/React.createElement("div", { key: i, style: { background: "#0B1A31", padding: "14px 12px", textAlign: "center" } }, /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: 34, lineHeight: 1, color: acc } }, x[0]), /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,228,220,0.62)", marginTop: 6 } }, x[1])))) : null,
+          /*#__PURE__*/React.createElement("p", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 15.5, lineHeight: 1.7, fontWeight: 300, color: "rgba(232,228,220,0.78)", margin: "18px 0 0", maxWidth: 640 } }, book.desc),
+          /*#__PURE__*/React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px", margin: "20px 0 26px", maxWidth: 640 } }, (book.points || []).map((p, i) => /*#__PURE__*/React.createElement("div", { key: i, style: { display: "flex", gap: 10, alignItems: "baseline" } }, /*#__PURE__*/React.createElement("span", { style: { color: acc, fontFamily: "serif", fontSize: 14, flexShrink: 0 } }, "✦"), /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 13.5, lineHeight: 1.5, color: "rgba(232,228,220,0.82)" } }, p)))),
+          ctaButton(book),
+          storeLinks(book).length === 0 ? soonChips(book) : storeLinks(book).length > 1 ? /*#__PURE__*/React.createElement("div", { style: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 16, maxWidth: 640 } }, /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)", marginRight: 4 } }, "Also on"), storeLinks(book).slice(1).map((x, i) => partnerChip(x.partner, x.url, i, acc))) : null,
+          book.supportNote ? /*#__PURE__*/React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginTop: 18, maxWidth: 560 } }, /*#__PURE__*/React.createElement("span", { style: { color: acc, fontSize: 14 } }, "♥"), /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 12.5, lineHeight: 1.5, fontStyle: "italic", color: "rgba(232,228,220,0.62)" } }, book.supportNote)) : null)),
+      book.tool && book.tool.url ? /*#__PURE__*/React.createElement("a", { href: book.tool.url, style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 18, marginTop: 36, padding: "20px 24px", borderTop: "1px solid rgba(201,169,97,0.3)", background: "linear-gradient(90deg, rgba(201,169,97,0.10), rgba(201,169,97,0.02))", textDecoration: "none" } },
+        /*#__PURE__*/React.createElement("span", { "aria-hidden": "true", style: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 48, height: 48, border: `1px solid ${acc}`, color: acc, fontFamily: "'JetBrains Mono', monospace", fontSize: 18, flexShrink: 0 } }, "∑"),
+        /*#__PURE__*/React.createElement("div", { style: { flex: "1 1 300px" } },
+          /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, letterSpacing: "0.2em", textTransform: "uppercase", color: acc } }, "Free companion tool \xB7 included with this book"),
+          /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: 26, color: "#E8E4DC", lineHeight: 1.15, marginTop: 4 } }, book.tool.label),
+          book.tool.desc ? /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 13.5, lineHeight: 1.55, fontWeight: 300, color: "rgba(232,228,220,0.72)", marginTop: 4 } }, book.tool.desc) : null),
+        /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "#131A33", background: `linear-gradient(120deg, #EAD9A8, ${acc} 55%, #B08F4C)`, padding: "14px 22px", whiteSpace: "nowrap" } }, "Open the calculator →")) : null));
+};
 // ---------- Real cover image ----------
 const BookCover = ({
   book
@@ -151,31 +195,7 @@ const EBookSection = ({
     lineHeight: 1.5,
     color: "rgba(232,228,220,0.8)"
   }
-}, p)))), /*#__PURE__*/React.createElement("a", {
-  href: primaryLink(book),
-  target: "_blank",
-  rel: "noopener noreferrer",
-  style: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 14,
-    fontFamily: "'Manrope', sans-serif",
-    fontSize: 13,
-    letterSpacing: "0.18em",
-    textTransform: "uppercase",
-    fontWeight: 500,
-    padding: "16px 30px",
-    background: book.accent,
-    color: "#0A1628",
-    textDecoration: "none",
-    boxShadow: `0 18px 40px -18px ${book.accent}`
-  }
-}, book.getLabel || "Get the E-Book", /*#__PURE__*/React.createElement("span", {
-  style: {
-    fontFamily: "serif",
-    fontSize: 20
-  }
-}, "\u2197")), storeLinks(book).length > 1 && /*#__PURE__*/React.createElement("div", {
+}, p)))), ctaButton(book), storeLinks(book).length === 0 && soonChips(book), storeLinks(book).length > 1 && /*#__PURE__*/React.createElement("div", {
   style: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 16, maxWidth: 640 }
 }, /*#__PURE__*/React.createElement("span", {
   style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)", marginRight: 4 }
@@ -296,7 +316,7 @@ const EBooksPage = ({
       color: "#C9A961",
       marginTop: 2
     }
-  }, "GLOBAL SCHOLARSHIP E-BOOKS")))), /*#__PURE__*/React.createElement("main", {
+  }, "THE LIBRARY")))), /*#__PURE__*/React.createElement("main", {
     style: {
       position: "relative",
       maxWidth: 1120,
@@ -326,7 +346,7 @@ const EBooksPage = ({
       background: "#C9A961",
       opacity: 0.6
     }
-  }), "Global Scholarship E-Books"), /*#__PURE__*/React.createElement("h1", {
+  }), "The Brial Endowment Library"), /*#__PURE__*/React.createElement("h1", {
     style: {
       fontFamily: "'Cormorant Garamond', serif",
       fontSize: "clamp(42px, 6vw, 76px)",
@@ -336,12 +356,12 @@ const EBooksPage = ({
       color: "#E8E4DC",
       margin: "20px 0 22px"
     }
-  }, "The knowledge to win a ", /*#__PURE__*/React.createElement("em", {
+  }, "Knowledge that ", /*#__PURE__*/React.createElement("em", {
     style: {
       fontStyle: "italic",
       color: "#C9A961"
     }
-  }, "scholarship"), "."), /*#__PURE__*/React.createElement("p", {
+  }, "lasts"), "."), /*#__PURE__*/React.createElement("p", {
     style: {
       fontFamily: "'Manrope', sans-serif",
       fontSize: 17,
@@ -350,14 +370,17 @@ const EBooksPage = ({
       color: "rgba(232,228,220,0.72)",
       margin: 0
     }
-  }, "Three complete master guides for scholarship hunters, in English, Bahasa Indonesia, and Fran\xE7ais. Everything you need to find, apply for, and secure fully-funded education abroad. Proceeds support the mission of The Brial Endowment."), (() => { const S = window.BrialStore; const parts = S && S.getLibraryPartners ? S.getLibraryPartners().filter(x => x.shown !== false) : []; if (parts.length) return /*#__PURE__*/React.createElement("div", { style: { marginTop: 30 } }, /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A961", marginBottom: 12 } }, "Find all our books on"), /*#__PURE__*/React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, parts.map((x, i) => partnerChip(x, x.link, i)))); const libLink = S?.getPillarLink?.("library") || ""; const libHidden = S?.getPillarLinkHidden?.("library") || false; return libLink && !libHidden ? /*#__PURE__*/React.createElement("a", { href: libLink, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 12, marginTop: 30, padding: "16px 30px", background: "linear-gradient(120deg, #EAD9A8, #C9A961 55%, #B08F4C)", color: "#131A33", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "View all books in our library \u2197") : null; })()), /*#__PURE__*/React.createElement("a", { href: "/calculator", style: { display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 18, marginTop: 44, padding: "22px 26px", border: "1px solid rgba(201,169,97,0.45)", background: "rgba(201,169,97,0.06)", textDecoration: "none" } }, /*#__PURE__*/React.createElement("div", { style: { flex: "1 1 320px" } }, /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A961", marginBottom: 8 } }, "Free tool \xB7 Civil engineering"), /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: "#E8E4DC", lineHeight: 1.15 } }, "CTI Mix Design Calculator"), /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 14.5, lineHeight: 1.6, fontWeight: 300, color: "rgba(232,228,220,0.72)", marginTop: 6 } }, "The free companion to Concrete Technology Illustrated (2027 Edition), Volume 1: required strength, ACI and BRE mix design, moisture correction and EN 206 checks, step by step.")), /*#__PURE__*/React.createElement("span", { style: { fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "#131A33", background: "linear-gradient(120deg, #EAD9A8, #C9A961 55%, #B08F4C)", padding: "14px 24px", whiteSpace: "nowrap" } }, "Open the calculator \u2192")), /*#__PURE__*/React.createElement("div", {
+  }, "Illustrated engineering references and complete scholarship guides, in English, Bahasa Indonesia and Fran\xE7ais. Every purchase supports the mission of The Brial Endowment."), (() => { const S = window.BrialStore; const parts = S && S.getLibraryPartners ? S.getLibraryPartners().filter(x => x.shown !== false) : []; if (parts.length) return /*#__PURE__*/React.createElement("div", { style: { marginTop: 30 } }, /*#__PURE__*/React.createElement("div", { style: { fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "#C9A961", marginBottom: 12 } }, "Find all our books on"), /*#__PURE__*/React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, parts.map((x, i) => partnerChip(x, x.link, i)))); const libLink = S?.getPillarLink?.("library") || ""; const libHidden = S?.getPillarLinkHidden?.("library") || false; return libLink && !libHidden ? /*#__PURE__*/React.createElement("a", { href: libLink, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-flex", alignItems: "center", gap: 12, marginTop: 30, padding: "16px 30px", background: "linear-gradient(120deg, #EAD9A8, #C9A961 55%, #B08F4C)", color: "#131A33", textDecoration: "none", fontFamily: "'Manrope', sans-serif", fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "View all books in our library \u2197") : null; })()), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 30
     }
-  }, books.map((b, i) => /*#__PURE__*/React.createElement(EBookSection, {
+  }, books.map((b, i) => b.featured ? /*#__PURE__*/React.createElement(FeaturedBook, {
+    key: b.id || i,
+    book: b
+  }) : /*#__PURE__*/React.createElement(EBookSection, {
     key: b.id || i,
     book: b,
-    index: i
+    index: books[i - 1] && books[i - 1].featured ? 0 : i
   })))), /*#__PURE__*/React.createElement("footer", {
     style: {
       background: "#060E1C",
