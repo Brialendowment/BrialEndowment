@@ -24,10 +24,10 @@
   // CSV for auditors and donors. Cells that a spreadsheet could run as a formula are neutralised.
   const csvCell = v => { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const ledgerCsv = rows => {
-    const head = ["Date", "Pillar", "Project", "Partner", "Country", "Amount (USD)", "Paid currency", "Paid amount", "Units", "Food (kg)", "Garments", "Reference", "Note"];
+    const head = ["Date", "Pillar", "Project", "Partner", "Country", "Amount (USD)", "Paid currency", "Paid amount", "Units", "Food (kg)", "Reference", "Note"];
     const lines = rows.map(g => [g.dateUnknown ? "" : String(g.date || "").slice(0, 10), PL(g.pillar) || "", g.project || "", g.partner || "", g.country || "",
       (Number(g.amount) || 0).toFixed(2), g.paid && g.paid.currency ? g.paid.currency : "USD", g.paid && g.paid.value != null ? g.paid.value : (Number(g.amount) || 0).toFixed(2),
-      Number(g.units) || "", Number(g.kg) || "", Number(g.garments) || "", g.txRef || "", g.note || ""].map(csvCell).join(","));
+      Number(g.units) || "", Number(g.kg) || "", g.txRef || "", g.note || ""].map(csvCell).join(","));
     return "\uFEFF" + [head.join(",")].concat(lines).join("\r\n") + "\r\n";
   };
   const downloadCsv = rows => {
@@ -131,8 +131,7 @@
               h("div", { style: { fontFamily: serif, fontSize: 20 } }, g.project || "\u2014"),
               h("div", { style: { fontFamily: sans, fontSize: 12.5, fontWeight: 300, color: "rgba(232,228,220,0.66)", marginTop: 4 } },
                 [g.partner, g.country, Number(g.units) > 0 && UNIT_NOUN[gr.pillar] ? g.units + " " + UNIT_NOUN[gr.pillar][Number(g.units) === 1 ? 0 : 1] : null,
-                 Number(g.kg) > 0 ? Number(g.kg).toLocaleString("en-US", { maximumFractionDigits: 1 }) + " kg of food" : null,
-                 Number(g.garments) > 0 ? g.garments + (Number(g.garments) === 1 ? " garment" : " garments") : null].filter(Boolean).join(" \u00b7 ")),
+                 Number(g.kg) > 0 ? Number(g.kg).toLocaleString("en-US", { maximumFractionDigits: 1 }) + " kg of food" : null].filter(Boolean).join(" \u00b7 ")),
               g.note ? h("div", { style: { fontFamily: sans, fontSize: 12.5, fontWeight: 300, fontStyle: "italic", color: "rgba(232,228,220,0.66)", marginTop: 4 } }, g.note) : null),
             h("div", { style: { fontFamily: serif, fontSize: 22, color: GOLD, fontVariantNumeric: "tabular-nums" } }, Number(g.amount) > 0 ? fmtX(g.amount) : "\u2014")))))),
 

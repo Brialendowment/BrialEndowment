@@ -1253,13 +1253,13 @@ const Philosophy = ({
       strokeWidth: "1.3"
     }))
   }, {
-    t: "Food & Clothing",
+    t: "Food",
     k: "foodclothing",
-    sub: "Sandang & Pangan",
+    sub: "Pangan",
     status: "active",
     action: "foodclothing",
     cta: "Share the table \u2192",
-    d: "Staple food and clothing in good condition, shared with orphanages, families and people in need. Every kilogram and every garment is counted in the open.",
+    d: "Staple food shared with orphanages, families and people in need, at Ramadan and through the year. Every kilogram is weighed and counted in the open.",
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("path", { d: "M10 34 H54 Q52 50 32 52 Q12 50 10 34 Z" }), /*#__PURE__*/React.createElement("path", { d: "M25 27 Q22 23 25 19 Q28 15 25 11 M32 27 Q29 23 32 19 Q35 15 32 11 M39 27 Q36 23 39 19 Q42 15 39 11" }), /*#__PURE__*/React.createElement("line", { x1: "20", y1: "57", x2: "44", y2: "57", strokeWidth: "1.4" }))
   }, {
     t: "Clean Water",
@@ -1405,7 +1405,14 @@ const Philosophy = ({
     icon: /*#__PURE__*/React.createElement("svg", { viewBox: "0 0 64 64", width: "56", height: "56", fill: "none", stroke: "currentColor", strokeWidth: "1.1" }, /*#__PURE__*/React.createElement("line", { x1: "8", y1: "44", x2: "56", y2: "44" }), /*#__PURE__*/React.createElement("path", { d: "M14 44 Q32 18 50 44" }), /*#__PURE__*/React.createElement("line", { x1: "22", y1: "44", x2: "22", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "32", y1: "44", x2: "32", y2: "31" }), /*#__PURE__*/React.createElement("line", { x1: "42", y1: "44", x2: "42", y2: "34" }), /*#__PURE__*/React.createElement("line", { x1: "10", y1: "52", x2: "54", y2: "52", strokeWidth: "1.4" }))
   }];
   // Founder-chosen pillar names (Founder Portal → rename)
-  if (window.BrialStore && window.BrialStore.getPillarName) pillars.forEach(p => { if (p.k && window.BrialStore.isRenamablePillar(p.k)) p.t = window.BrialStore.getPillarName(p.k); });
+  if (window.BrialStore && window.BrialStore.getPillarName) pillars.forEach(p => {
+    const S = window.BrialStore;
+    if (!p.k || !S.isRenamablePillar(p.k)) return;
+    p.t = S.getPillarName(p.k);
+    if (S.getPillarSub) p.sub = S.getPillarSub(p.k) || p.sub;
+    const ic = S.getPillarIcon ? S.getPillarIcon(p.k) : "";
+    if (ic && window.BrialPillarIcons) p.icon = window.BrialPillarIcons.render(ic, { size: 56, strokeWidth: 1.1 }) || p.icon;
+  });
   return /*#__PURE__*/React.createElement("section", {
     id: "mission",
     style: {
@@ -2547,7 +2554,7 @@ const App = () => {
   // Tab title follows the view
   useEffect(() => {
     const setTitle = () => {
-    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", venture: "The Venture", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
+    const T = { scholars: "Brial Scholars", donate: "Give", ebooks: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food", worship: "Houses of Worship", water: "Clean Water", transport: "Transportation", venture: "The Venture", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure", proof: "The Open Ledger", scholar: "Scholar Portal", admin: "Founder Portal" };
     try { const S = window.BrialStore; if (S && S.getPillarName) Object.keys(T).forEach(v => { const k = v === "ebooks" ? "library" : v; if (S.isRenamablePillar(k)) T[v] = S.getPillarName(k); }); } catch (e) {}
     try { document.title = T[view] ? T[view] + " | The Brial Endowment" : "The Brial Endowment | A Perpetual Philanthropic Endowment"; } catch (e) {}
     };

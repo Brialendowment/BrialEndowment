@@ -763,7 +763,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         date: obj.date || now(),
         createdAt: now(),
       };
-      // Food & Clothing distributions: kilograms, garments, the date if known, and what was paid in which currency
+      // Food distributions: kilograms, the date if known, and what was paid in which currency
       if (obj.kg !== undefined) g.kg = Math.max(0, Math.round((Number(obj.kg) || 0) * 10) / 10);
       if (obj.garments !== undefined) g.garments = Math.max(0, Math.round(Number(obj.garments) || 0));
       if (obj.dateUnknown) g.dateUnknown = true;
@@ -1112,7 +1112,7 @@ window.BrialClipboard = { copy: copyToClipboard };
         schools: { programme: "Schools", intro: "Distance and fees decide who learns; a school nearby changes the arithmetic. The endowment funds classrooms with local partners, grounded where children walk farthest, raised and staffed to teach well, and open to every child of the village." },
         livestock: { programme: "Livestock & Enterprise", intro: "Charity that multiplies. The endowment places productive capital (herds, tools and small enterprise) in the hands of families who tend it: the offspring and the profits stay with them, the dignity of earning returns, and the gift funds itself again." },
         infra: { programme: "Sustainable Infrastructure", intro: "The quiet foundations. The endowment funds bridges, power and public works with local partners, surveyed with the community that will use them, built to endure, and maintained so a village can stand, trade and grow on its own." },
-        foodclothing: { programme: "Food & Clothing", intro: "Food on the table and clothes to wear, given where the need is plain to see. The endowment shares staple food (rice, pasta, cooking oil) and clothing in good condition with orphanages, families and people on the street, at Ramadan and through the year. Every kilogram and every garment is counted, and the people who receive them are never named or photographed." },
+        foodclothing: { programme: "Food", intro: "Food on the table, given where the need is plain to see. The endowment buys staple food (rice, flour, cooking oil, dates) and shares it with orphanages, families and people living on the street, at Ramadan and through the year. Every kilogram is weighed and counted in the open, and the people who receive it are never named or photographed." },
         transport: { programme: "Transportation", partnerLine: "go2rent", location: "T\u00fcrkiye and Northern Cyprus", fleet: "730+", regions: "9", airports: "9", support: "24/7", factsNote: "Fleet figures from go2rent, July 2026: 730 to 985 vehicles, growing for the summer season and smaller in winter.", intro: "Not every pillar gives. Some pillars earn, so that the others can keep giving. go2rent is a car rental company that serves travellers, families and companies across T\u00fcrkiye and Northern Cyprus. The founder of the Brial Endowment is a co-founder of go2rent, and a share of his returns from the company is given to the endowment. Every contribution is recorded on the open ledger, like every other gift." },
         venture: { programme: "The Venture", location: "Online, delivered worldwide", partnerLine: "", products: [], hideAmounts: false,
           intro: "The pillar that trades. The Venture makes and sells products under the endowment's name, honestly priced and honestly described. A share of the profit returns to the endowment, to support its programmes and the work of running it, so that giving does not depend on giving alone." },
@@ -1388,8 +1388,8 @@ window.BrialClipboard = { copy: copyToClipboard };
     savePillarActive(key, flag) {
       const prev = _donations.find(x => x.id === "PILLAR-STATUS");
       const active = { ...((prev && prev.data && prev.data.active) || {}), [key]: !!flag };
-      const names = (prev && prev.data && prev.data.names) || {};
-      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { active, names } };
+      const keep = (prev && prev.data) || {};
+      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { ...keep, active } };
       const idx = _donations.findIndex(x => x.id === "PILLAR-STATUS");
       if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
       saveCache(); notify({ key: "pillars" });
@@ -1398,7 +1398,36 @@ window.BrialClipboard = { copy: copyToClipboard };
 
     // ----- Pillar names: the founder can rename a pillar; the record key and the
     // grant label stored on each grant stay the same, only the shown name changes -----
-    PILLAR_DEFAULT_NAMES: { scholarships: "Scholarships", worship: "Houses of Worship", library: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food & Clothing", water: "Clean Water", transport: "Transportation", venture: "The Venture", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure" },
+    PILLAR_DEFAULT_NAMES: { scholarships: "Scholarships", worship: "Houses of Worship", library: "Library & Knowledge Center", foodland: "Reforestation & Land", foodclothing: "Food", water: "Clean Water", transport: "Transportation", venture: "The Venture", hospitals: "Hospitals", schools: "Schools", livestock: "Livestock & Enterprise", infra: "Sustainable Infrastructure" },
+    // The Indonesian word under each pillar's name on the homepage
+    PILLAR_DEFAULT_SUBS: { scholarships: "Beasiswa", worship: "Masjid", library: "Pustaka", foodland: "Penghijauan", foodclothing: "Pangan", water: "Sumur", transport: "Transportasi", venture: "Usaha", hospitals: "Rumah Sakit", schools: "Sekolah", livestock: "Ternak", infra: "Prasarana" },
+    _pillarField(field, key) {
+      const d = _donations.find(x => x.id === "PILLAR-STATUS");
+      const v = d && d.data && d.data[field] && d.data[field][key];
+      return typeof v === "string" && v.trim() ? v.trim() : "";
+    },
+    getPillarSub(key) { return Store._pillarField("subs", key) || Store.PILLAR_DEFAULT_SUBS[key] || ""; },
+    // The chosen icon id (site/pillar-icons.js), or "" for the pillar's original drawing
+    getPillarIcon(key) { return Store._pillarField("icons", key); },
+    // Name, Indonesian subtitle and icon in one save (Founder Portal → pillar → pencil)
+    savePillarIdentity(key, { name, sub, icon } = {}) {
+      if (!Store.isRenamablePillar(key)) throw new Error("This section cannot be renamed.");
+      const clean = (v, n) => String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, n);
+      const nm = clean(name, 60), sb = clean(sub, 40), ic = clean(icon, 24);
+      if (!nm) throw new Error("Please enter a name.");
+      if (ic && !/^[a-z0-9]+$/.test(ic)) throw new Error("Unknown icon.");
+      const prev = _donations.find(x => x.id === "PILLAR-STATUS");
+      const keep = (prev && prev.data) || {};
+      const names = { ...(keep.names || {}) }, subs = { ...(keep.subs || {}) }, icons = { ...(keep.icons || {}) };
+      if (nm === Store.PILLAR_DEFAULT_NAMES[key]) delete names[key]; else names[key] = nm;
+      if (!sb || sb === Store.PILLAR_DEFAULT_SUBS[key]) delete subs[key]; else subs[key] = sb;
+      if (!ic) delete icons[key]; else icons[key] = ic;
+      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { ...keep, active: keep.active || {}, names, subs, icons } };
+      const idx = _donations.findIndex(x => x.id === "PILLAR-STATUS");
+      if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
+      saveCache(); notify({ key: "pillars" });
+      return upsertDonation(rec);
+    },
     isRenamablePillar(key) { return Object.prototype.hasOwnProperty.call(Store.PILLAR_DEFAULT_NAMES, key); },
     getPillarName(key) {
       const def = Store.PILLAR_DEFAULT_NAMES[key];
@@ -1412,9 +1441,11 @@ window.BrialClipboard = { copy: copyToClipboard };
       if (!x) return x;
       if (Store.isRenamablePillar(x)) return Store.getPillarName(x);
       const label = Store.PILLAR_RENAMES[x] || x;
-      const k = Object.keys(Store.PILLAR_DEFAULT_NAMES).find(k => Store.PILLAR_DEFAULT_NAMES[k] === label);
+      // grants keep the label they were recorded under ("Food & Clothing" stays the data label of the Food pillar)
+      const k = Store.PILLAR_GRANT_KEYS[label] || Object.keys(Store.PILLAR_DEFAULT_NAMES).find(k => Store.PILLAR_DEFAULT_NAMES[k] === label);
       return k ? Store.getPillarName(k) : x;
     },
+    PILLAR_GRANT_KEYS: { "Food & Clothing": "foodclothing" },
     savePillarName(key, name) {
       if (!Store.isRenamablePillar(key)) throw new Error("This section cannot be renamed.");
       const clean = String(name || "").replace(/\s+/g, " ").trim().slice(0, 60);
@@ -1423,7 +1454,7 @@ window.BrialClipboard = { copy: copyToClipboard };
       const active = (prev && prev.data && prev.data.active) || {};
       const names = { ...((prev && prev.data && prev.data.names) || {}) };
       if (clean === Store.PILLAR_DEFAULT_NAMES[key]) delete names[key]; else names[key] = clean;
-      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { active, names } };
+      const rec = { id: "PILLAR-STATUS", name: "__pillars__", amount: 0, data: { ...((prev && prev.data) || {}), active, names } };
       const idx = _donations.findIndex(x => x.id === "PILLAR-STATUS");
       if (idx >= 0) _donations[idx] = rec; else _donations.push(rec);
       saveCache(); notify({ key: "pillars" });

@@ -75,6 +75,18 @@ const FD = (() => {
 .fd-rename{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .fd-rename:hover,.fd-rename:focus-visible{color:var(--accent);border-color:var(--accent)}
 .fd-rename svg{width:15px;height:15px}
+.fd-pid-preview{display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:rgba(201,169,97,.05);margin-bottom:16px}
+.fd-pid-ic{width:64px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--accent);border:1px solid var(--line);border-radius:12px}
+.fd-pid-preview b{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-size:26px;font-weight:500;line-height:1.1}
+.fd-pid-preview small{display:block;margin-top:6px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent)}
+.fd-icgroups{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.fd-icgroup{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:5px 11px;font-size:12px;cursor:pointer}
+.fd-icgroup.on,.fd-icgroup:hover{color:var(--text);border-color:var(--accent)}
+.fd-icgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;max-height:300px;overflow:auto;padding:2px}
+.fd-icopt{position:relative;aspect-ratio:1;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--muted);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.fd-icopt:hover{color:var(--text);border-color:rgba(201,169,97,.5)}
+.fd-icopt.on{color:var(--accent);border-color:var(--accent);background:rgba(201,169,97,.1);box-shadow:0 0 0 1px var(--accent) inset}
+.fd-icdef{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-style:normal;font-size:9px;letter-spacing:.06em;color:var(--faint)}
 .fd-nav{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:9px;border:0;background:none;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;text-align:left;transition:background .15s,color .15s}
 .fd-nav:hover{background:rgba(239,233,220,.04);color:var(--text)}
 .fd-nav[aria-current=page]{background:var(--giltsoft);color:var(--text)}
@@ -646,35 +658,72 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // the ledger and old records stay linked to the pillar.
   function RenamePillar({ store, pillarKey, current, cfg, onClose }) {
     const def = store.PILLAR_DEFAULT_NAMES ? store.PILLAR_DEFAULT_NAMES[pillarKey] : current;
+    const defSub = store.PILLAR_DEFAULT_SUBS ? store.PILLAR_DEFAULT_SUBS[pillarKey] || "" : "";
+    const IC = window.BrialPillarIcons;
+    const curSub = store.getPillarSub ? store.getPillarSub(pillarKey) : defSub;
+    const curIcon = store.getPillarIcon ? store.getPillarIcon(pillarKey) : "";
+    const defIcon = IC && IC.defaults ? IC.defaults[pillarKey] || "" : "";
     const [v, setV] = useState(current);
+    const [sub, setSub] = useState(curSub);
+    const [icon, setIcon] = useState(curIcon || defIcon);
+    const [group, setGroup] = useState("all");
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState("");
     const clean = v.replace(/\s+/g, " ").trim();
-    const ok = clean.length > 0 && clean.length <= 60 && clean !== current;
+    const cleanSub = sub.replace(/\s+/g, " ").trim();
+    const chosen = icon === defIcon && !curIcon ? "" : icon; // the original drawing stays until another icon is picked
+    const changed = clean !== current || cleanSub !== curSub || chosen !== curIcon;
+    const ok = clean.length > 0 && clean.length <= 60 && cleanSub.length <= 40 && changed;
     const save = async () => {
       if (!ok || busy) return;
       setBusy(true); setErr("");
       try {
         // the programme page title follows the pillar name when it still matches the old name
-        if (cfg && typeof cfg.get === "function" && typeof cfg.save === "function") {
+        if (clean !== current && cfg && typeof cfg.get === "function" && typeof cfg.save === "function") {
           const c = cfg.get(store);
           if (c && typeof c === "object" && (!c.programme || c.programme === current)) cfg.save(store, { ...c, programme: clean });
         }
-        await store.savePillarName(pillarKey, clean);
+        if (store.savePillarIdentity) await store.savePillarIdentity(pillarKey, { name: clean, sub: cleanSub, icon: chosen });
+        else await store.savePillarName(pillarKey, clean);
         onClose();
-      } catch (e) { setErr((e && e.message) || "The name could not be saved."); setBusy(false); }
+      } catch (e) { setErr((e && e.message) || "The changes could not be saved."); setBusy(false); }
     };
+    const shown = IC ? IC.list.filter(x => group === "all" || x.group === group) : [];
     return (
-      <Modal title="Rename pillar" sub="The new name appears everywhere this pillar is shown: here in the portal and on the public site. Records and totals stay linked." onClose={onClose}>
+      <Modal title="Edit pillar" sub="Name, the Indonesian word under it, and its icon. Changes appear everywhere the pillar is shown: in the portal and on the public site. Records and totals stay linked." wide onClose={onClose}>
         <div className="fd-form">
-          <Field label="Pillar name" hint={def && clean !== def ? `Original name: ${def}` : null}>
-            <input className="fd-input" value={v} maxLength={60} autoFocus onChange={e => setV(e.target.value)} onKeyDown={e => { if (e.key === "Enter") save(); }} />
-          </Field>
+          <div className="fd-pid-preview" aria-hidden="true">
+            <div className="fd-pid-ic">{IC ? IC.render(icon || defIcon, { size: 46 }) : null}</div>
+            <div><b>{clean || "Pillar name"}</b><small>{cleanSub || " "}</small></div>
+          </div>
+          <div className="fd-grid2">
+            <Field label="Pillar name" hint={def && clean !== def ? `Original name: ${def}` : null}>
+              <input className="fd-input" value={v} maxLength={60} autoFocus onChange={e => setV(e.target.value)} onKeyDown={e => { if (e.key === "Enter") save(); }} />
+            </Field>
+            <Field label="Indonesian name (under the title)" hint={defSub && cleanSub !== defSub ? `Original: ${defSub}` : "Shown in small capitals under the pillar's name."}>
+              <input className="fd-input" value={sub} maxLength={40} placeholder={defSub} onChange={e => setSub(e.target.value)} onKeyDown={e => { if (e.key === "Enter") save(); }} />
+            </Field>
+          </div>
+          {IC && (
+            <Field label="Icon">
+              <div className="fd-icgroups" role="tablist" aria-label="Icon groups">
+                {[["all", "All"]].concat(IC.groups).map(([id, label]) => <button key={id} type="button" role="tab" aria-selected={group === id} className={"fd-icgroup" + (group === id ? " on" : "")} onClick={() => setGroup(id)}>{label}</button>)}
+              </div>
+              <div className="fd-icgrid" role="radiogroup" aria-label="Choose an icon">
+                {shown.map(x => (
+                  <button key={x.id} type="button" role="radio" aria-checked={icon === x.id} title={x.label} aria-label={x.label} className={"fd-icopt" + (icon === x.id ? " on" : "")} onClick={() => setIcon(x.id)}>
+                    {IC.render(x.id, { size: 34, strokeWidth: 1.6 })}
+                    {defIcon === x.id && <i className="fd-icdef">original</i>}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          )}
           {err && <div className="fd-msg err" role="alert">{err}</div>}
         </div>
         <div className="fd-actions" style={{ marginTop: 20 }}>
-          <button className="fd-btn primary" disabled={!ok || busy} onClick={save}>{busy ? "Saving…" : "Save name"}</button>
-          {def && current !== def && <button className="fd-btn ghost" disabled={busy} onClick={() => setV(def)}>Use original name</button>}
+          <button className="fd-btn primary" disabled={!ok || busy} onClick={save}>{busy ? "Saving…" : "Save changes"}</button>
+          {(clean !== def || cleanSub !== defSub || icon !== defIcon) && <button className="fd-btn ghost" disabled={busy} onClick={() => { setV(def); setSub(defSub); setIcon(defIcon); }}>Use the originals</button>}
           <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
         </div>
       </Modal>
@@ -686,7 +735,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const visible = store.getPillarActive ? store.getPillarActive(pillarKey) : true;
     const canRename = !!(store.isRenamablePillar && store.isRenamablePillar(pillarKey));
     const [renaming, setRenaming] = useState(false);
-    const renameBtn = canRename ? <button className="fd-rename" onClick={() => setRenaming(true)} title="Rename pillar" aria-label={"Rename " + meta.name}>{ICON.edit}</button> : null;
+    const renameBtn = canRename ? <button className="fd-rename" onClick={() => setRenaming(true)} title="Edit name, Indonesian name and icon" aria-label={"Edit " + meta.name}>{ICON.edit}</button> : null;
     return (
       <div className="fd" style={{ "--accent": meta.accent }}>
         <header className="fd-top">
@@ -706,7 +755,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         <div className="fd-body">
           <aside className="fd-side" aria-label={meta.name + " sections"}>
             <div className="fd-pillar">
-              <div className="fd-pillar-ic">{ICON[pillarKey] || ICON.grant}</div>
+              <div className="fd-pillar-ic">{(store.getPillarIcon && store.getPillarIcon(pillarKey) && window.BrialPillarIcons && window.BrialPillarIcons.render(store.getPillarIcon(pillarKey), { size: 22, strokeWidth: 2.6 })) || ICON[pillarKey] || ICON.grant}</div>
               <div><b>{meta.name}</b><small>{noVisibility ? meta.sub : visible ? "Live on the public site" : "Hidden from the public site"}</small></div>
               {renameBtn}
             </div>
@@ -738,7 +787,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   const PILLARS = {
     worship: { name: "Houses of Worship", grantName: "Houses of Worship", accent: "#C9A961", unit: ["mosque", "mosques"], unitLabel: "Mosques built", get: s => s.getWorship(), save: (s, v) => s.saveWorship(v), unitField: "mosques", partner: "Minang Bandung Foundation", project: "e.g. Masjid Al-Ikhlas construction", note: "the site", firstEntry: "The first mosque", linkMode: "pillar", linkHelp: "Usually the partner foundation's construction or donation page (for example, Minang Bandung's mosque project page)." },
     foodland: { name: "Reforestation & Land", grantName: "Reforestation & Land", accent: "#A8C97F", unit: ["tree", "trees"], unitLabel: "Trees planted", get: s => s.getFoodland(), save: (s, v) => s.saveFoodland(v), unitField: "trees", partner: "", project: "e.g. Trees for Life olive saplings", firstEntry: "The first five trees", linkMode: "partner", linkHelp: "Usually Zaytoun's Trees for Life page (https://zaytoun.uk/plant-a-tree/)." },
-    foodclothing: { name: "Food & Clothing", grantName: "Food & Clothing", accent: "#D9A97A", unit: ["kg of food", "kg of food"], unitLabel: "Food shared (kg)", noUnits: true,
+    foodclothing: { name: "Food", grantName: "Food & Clothing", accent: "#D9A97A", unit: ["kg of food", "kg of food"], unitLabel: "Food shared (kg)", noUnits: true,
       get: s => s.getPillarContent("foodclothing"), save: (s, v) => { const cur = s.getPillarContent("foodclothing"); s.savePillarContent("foodclothing", { ...v, counts: cur.counts, countsUpdatedAt: cur.countsUpdatedAt }); },
       partner: "", project: "e.g. Ramadan 2027, Panti Asuhan Bandung", firstEntry: "The first Ramadan table", note: "the table", linkMode: "partner", linkHelp: "A partner's programme page, if you give through one. Hide the button while there is no partner." },
     water: { name: "Clean Water", grantName: "Clean Water", accent: "#7FB8C9", unit: ["well", "wells"], unitLabel: "Wells built", get: s => s.getWater(), save: (s, v) => s.saveWater(v), unitField: "trees", partner: "", project: "e.g. Village well, phase I", firstEntry: "The first well", linkMode: "partner", linkHelp: "The drilling or water partner's programme page. Hide the button while there is no active partner." },
@@ -813,7 +862,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         <Head title="Grants" lede={`Every payment to a ${cfg.name} partner. Archived grants stay on record but leave the public totals.`}>
           <button className="fd-btn primary" onClick={() => setEdit("new")}>Record a grant</button>
         </Head>
-        {cfg.noUnits && <p className="fd-sub" style={{ marginTop: -6, marginBottom: 16 }}>Kilograms and garments are kept on the Counts tab. A grant here records the money spent.</p>}
+        {cfg.noUnits && <p className="fd-sub" style={{ marginTop: -6, marginBottom: 16 }}>Kilograms are kept on the Counts tab. A grant here records the money spent.</p>}
         <Stats items={[{ label: "Total granted", value: money(total) }, ...(cfg.noUnits ? [] : [{ label: cfg.unitLabel, value: units }]), { label: "Countries", value: nations }, { label: "Grants on record", value: all.length, sub: all.length - live.length ? `${all.length - live.length} archived` : null }]} />
         <div className="fd-toolbar"><Seg value={filter} onChange={setFilter} items={[["live", "Counted", live.length], ["archived", "Archived", all.length - live.length], ["all", "All", all.length]]} /><div style={{ marginLeft: "auto" }}><Flash m={m} /></div></div>
         <div className="fd-table">
@@ -931,7 +980,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   }
 
   // ============================================================
-  // COUNTS (Food & Clothing): kilograms of food shared, garments given, per year
+  // COUNTS (Food): kilograms of food shared, per year
   // ============================================================
   const fmtCount = n => (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 1 });
   function Counter({ label, unit, value, decimals, onCommit, hint }) {
@@ -965,14 +1014,14 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     const years = Array.from(new Set([...n.years, thisYear])).sort().reverse();
     const [year, setYear] = useState(thisYear);
     const [m, flash] = useFlash();
-    const row = n.manual[year] || { kg: 0, garments: 0 };
+    const row = n.manual[year] || { kg: 0 };
     const logged = n.logged[year];
     const commit = field => v => { store.setFoodClothingCount(year, field, v); flash("Saved. The public page shows the new total."); };
     const nextBack = String(Number(years[years.length - 1]) - 1);
     return (
       <>
         <Head title="Rough totals" lede="For giving you did not record one by one: a rough total per year from your notes. Tap plus or minus, or type the number. Distributions you record one by one are added on top." />
-        <Stats items={[{ label: "Food shared, all years", value: fmtCount(n.kg) + " kg", sub: "rough totals and distributions" }, { label: "Garments given, all years", value: fmtCount(n.garments) }, { label: "Counting since", value: n.since || thisYear }]} />
+        <Stats items={[{ label: "Food shared, all years", value: fmtCount(n.kg) + " kg", sub: "rough totals and distributions" }, { label: "In " + year, value: fmtCount((n.byYear[year] || { kg: 0 }).kg) + " kg" }, { label: "Counting since", value: n.since || thisYear }]} />
         <div className="fd-toolbar">
           <Seg value={year} onChange={setYear} items={years.map(y => [y, y])} />
           <button className="fd-btn quiet sm" onClick={() => setYear(nextBack)}>Add {nextBack}</button>
@@ -980,17 +1029,16 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         </div>
         <div className="fd-ctrs">
           <Counter key={year + "-kg"} label={"Food shared in " + year} unit="kg" decimals value={row.kg} onCommit={commit("kg")} hint="Rice, pasta, cooking oil and other staples, by weight. Half kilograms are fine (2.5)." />
-          <Counter key={year + "-g"} label={"Clothing given in " + year} unit="garments" value={row.garments} onCommit={commit("garments")} hint="Each piece once: a shirt, a pair of trousers, a headscarf, a pair of shoes." />
         </div>
-        {logged && <p className="fd-sub" style={{ marginTop: 14 }}>Also recorded under Distributions in {year}: {fmtCount(logged.kg)} kg of food and {fmtCount(logged.garments)} {logged.garments === 1 ? "garment" : "garments"} ({logged.entries} {logged.entries === 1 ? "entry" : "entries"}). Do not count those here again.</p>}
+        {logged && <p className="fd-sub" style={{ marginTop: 14 }}>Also recorded under Distributions in {year}: {fmtCount(logged.kg)} kg of food ({logged.entries} {logged.entries === 1 ? "entry" : "entries"}). Do not count those here again.</p>}
         <p className="fd-sub" style={{ marginTop: 18 }}>Each year is kept apart, so the Impact Report for {year} shows only what was given in {year}, while the public page shows the total of every year. Names and photographs of the people who receive are never asked for or shown.</p>
       </>
     );
   }
 
   // ============================================================
-  // DISTRIBUTIONS (Food & Clothing): one entry per day of giving.
-  // Every field is optional except one of money, kilograms or garments.
+  // DISTRIBUTIONS (Food): one entry per day of giving.
+  // Every field is optional except one of money or kilograms.
   // ============================================================
   const CURS = [["USD", "$"], ["IDR", "Rp"], ["TRY", "\u20BA"], ["EUR", "\u20AC"], ["SGD", "S$"], ["BTC", "\u20BF"]];
   const curSym = c => (CURS.find(x => x[0] === c) || ["", c + " "])[1];
@@ -1002,24 +1050,23 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   }
   function DistributionForm({ store, initial, onSave, onClose }) {
     const fx = useFx(store);
-    const [f, setF] = useState(() => initial || { project: "", partner: "", country: "", date: today(), noDate: false, cur: "USD", paid: "", kg: "", garments: "", note: "" });
+    const [f, setF] = useState(() => initial || { project: "", partner: "", country: "", date: today(), noDate: false, cur: "USD", paid: "", kg: "", note: "" });
     const set = (k, v) => setF(p => ({ ...p, [k]: v }));
     const rate = f.cur === "USD" ? 1 : fx && fx[f.cur] ? fx[f.cur] : null;
     const usd = (parseFloat(f.paid) || 0) / (rate || 1);
-    const ok = (parseFloat(f.paid) > 0 && (f.cur === "USD" || rate)) || parseFloat(f.kg) > 0 || parseInt(f.garments, 10) > 0;
+    const ok = (parseFloat(f.paid) > 0 && (f.cur === "USD" || rate)) || parseFloat(f.kg) > 0;
     const save = () => onSave({
-      project: f.project.trim() || "Food & clothing", partner: f.partner, country: f.country, note: f.note,
+      project: f.project.trim() || "Food", partner: f.partner, country: f.country, note: f.note,
       date: f.noDate || !f.date ? new Date().toISOString() : new Date(f.date + "T12:00:00").toISOString(), dateUnknown: !!(f.noDate || !f.date),
       amount: Math.round(usd * 100) / 100, paid: f.cur !== "USD" && parseFloat(f.paid) > 0 ? { currency: f.cur, value: parseFloat(f.paid), rate } : null,
-      kg: parseFloat(f.kg) || 0, garments: parseInt(f.garments, 10) || 0,
+      kg: parseFloat(f.kg) || 0,
     });
     return (
-      <Modal title={initial ? "Edit distribution" : "Record a distribution"} sub="One day of giving. Fill in what you know: the money, the kilograms, the garments, or any of them." onClose={onClose}>
+      <Modal title={initial ? "Edit distribution" : "Record a distribution"} sub="One day of giving. Fill in what you know: the money, the kilograms, or both." onClose={onClose}>
         <div className="fd-form">
           <Field label="What and where (optional)"><input className="fd-input" value={f.project} onChange={e => set("project", e.target.value)} placeholder="e.g. Rice for Panti Asuhan Al-Ikhlas, Bandung" autoFocus /></Field>
-          <div className="fd-grid3">
+          <div className="fd-grid2">
             <Field label="Food (kg)"><input className="fd-input" inputMode="decimal" value={f.kg} onChange={e => set("kg", e.target.value.replace(",", "."))} placeholder="0" /></Field>
-            <Field label="Clothing (pieces)"><input className="fd-input" inputMode="numeric" value={f.garments} onChange={e => set("garments", e.target.value.replace(/\D/g, ""))} placeholder="0" /></Field>
             <Field label="Date">{f.noDate ? <button type="button" className="fd-input fd-nodate" onClick={() => set("noDate", false)}>Not known · set a date</button> : <input className="fd-input" type="date" value={f.date} onChange={e => set("date", e.target.value)} />}</Field>
           </div>
           <label className="fd-check"><input type="checkbox" checked={!!f.noDate} onChange={e => set("noDate", e.target.checked)} /> I don't remember the date</label>
@@ -1036,7 +1083,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
         <div className="fd-actions" style={{ marginTop: 20 }}>
           <button className="fd-btn primary" disabled={!ok} onClick={() => { save(); onClose(); }}>{initial ? "Save changes" : "Record"}</button>
           <button className="fd-btn ghost" onClick={onClose}>Cancel</button>
-          {!ok && <small className="fd-sub" style={{ margin: 0 }}>Enter at least the money, the kilograms or the garments.</small>}
+          {!ok && <small className="fd-sub" style={{ margin: 0 }}>Enter at least the money or the kilograms.</small>}
         </div>
       </Modal>
     );
@@ -1054,23 +1101,22 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
       if (edit && edit !== "new") { store.updatePillarGrant(edit.id, f); flash("Saved."); }
       else { store.addPillarGrant({ ...f, pillar: cfg.grantName }); flash("Recorded. The public page shows the new totals."); }
     };
-    const toForm = g => ({ project: g.project === "Food & clothing" ? "" : g.project || "", partner: g.partner || "", country: g.country || "", date: g.date && !g.dateUnknown ? String(g.date).slice(0, 10) : today(), noDate: !!g.dateUnknown,
-      cur: g.paid && g.paid.currency ? g.paid.currency : "USD", paid: g.paid && g.paid.currency ? String(g.paid.value || "") : g.amount ? String(g.amount) : "", kg: g.kg ? String(g.kg) : "", garments: g.garments ? String(g.garments) : "", note: g.note || "" });
-    const G = "minmax(0,2fr) minmax(0,.8fr) minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr) auto";
+    const toForm = g => ({ project: g.project === "Food & clothing" || g.project === "Food" ? "" : g.project || "", partner: g.partner || "", country: g.country || "", date: g.date && !g.dateUnknown ? String(g.date).slice(0, 10) : today(), noDate: !!g.dateUnknown,
+      cur: g.paid && g.paid.currency ? g.paid.currency : "USD", paid: g.paid && g.paid.currency ? String(g.paid.value || "") : g.amount ? String(g.amount) : "", kg: g.kg ? String(g.kg) : "", note: g.note || "" });
+    const G = "minmax(0,2.2fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,1fr) auto";
     return (
       <>
-        <Head title="Distributions" lede="Each day of giving: what it cost, how much food, how many garments, and when. Every field is optional except one of money, kilograms or garments.">
+        <Head title="Distributions" lede="Each day of giving: what it cost, how much food, and when. Every field is optional except one of money or kilograms.">
           <button className="fd-btn primary" onClick={() => setEdit("new")}>Record a distribution</button>
         </Head>
-        <Stats items={[{ label: "Food shared", value: fmtCount(n.kg) + " kg", sub: "with your rough totals" }, { label: "Garments given", value: fmtCount(n.garments) }, { label: "Money spent", value: money(spent) }, { label: "Distributions", value: live.length, sub: all.length - live.length ? `${all.length - live.length} archived` : null }]} />
+        <Stats items={[{ label: "Food shared", value: fmtCount(n.kg) + " kg", sub: "with your rough totals" }, { label: "Money spent", value: money(spent) }, { label: "Distributions", value: live.length, sub: all.length - live.length ? `${all.length - live.length} archived` : null }]} />
         <div className="fd-toolbar"><Seg value={filter} onChange={setFilter} items={[["live", "Counted", live.length], ["archived", "Archived", all.length - live.length], ["all", "All", all.length]]} /><div style={{ marginLeft: "auto" }}><Flash m={m} /></div></div>
         <div className="fd-table">
-          <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>What and where</div><div>Food</div><div>Clothing</div><div>Spent</div><div>Date</div><div /></div>
+          <div className="fd-tr fd-th" style={{ gridTemplateColumns: G }}><div>What and where</div><div>Food</div><div>Spent</div><div>Date</div><div /></div>
           {shown.length === 0 ? <Empty title="Nothing recorded yet.">Record the first day of giving.</Empty> : shown.map(g => (
             <div key={g.id} className={"fd-tr" + (g.archived ? " dim" : "")} style={{ gridTemplateColumns: G }}>
-              <div className="fd-td full"><b>{g.project || "Food & clothing"}</b>{(g.partner || g.country) && <small>{[g.partner, g.country].filter(Boolean).join(" · ")}</small>}{g.note && <small>{g.note}</small>}{g.archived && <Tag>Archived</Tag>}</div>
+              <div className="fd-td full"><b>{g.project && g.project !== "Food & clothing" ? g.project : "Food"}</b>{(g.partner || g.country) && <small>{[g.partner, g.country].filter(Boolean).join(" · ")}</small>}{g.note && <small>{g.note}</small>}{g.archived && <Tag>Archived</Tag>}</div>
               <div className="fd-td" data-l="Food"><span className="num">{Number(g.kg) > 0 ? fmtCount(g.kg) + " kg" : "—"}</span></div>
-              <div className="fd-td" data-l="Clothing"><span className="num">{Number(g.garments) > 0 ? fmtCount(g.garments) : "—"}</span></div>
               <div className="fd-td" data-l="Spent"><span className="num">{Number(g.amount) > 0 ? money(g.amount) : "—"}</span>{g.paid && g.paid.currency && <small>{fmtCur(g.paid.currency, g.paid.value)}</small>}</div>
               <div className="fd-td" data-l="Date">{g.dateUnknown ? <small>Date not known</small> : fdate(g.date)}</div>
               <div className="fd-td full"><div className="fd-actions" style={{ justifyContent: "flex-end" }}>
@@ -1081,7 +1127,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
             </div>
           ))}
         </div>
-        <p className="fd-sub" style={{ marginTop: 12 }}>Money spent counts in the endowment's totals and the open ledger. Kilograms and garments go to the public Food & Clothing page and, by year, to the Impact Report.</p>
+        <p className="fd-sub" style={{ marginTop: 12 }}>Money spent counts in the endowment's totals and the open ledger. Kilograms go to the public {cfg.name} page and, by year, to the Impact Report.</p>
         {edit && <DistributionForm store={store} initial={edit === "new" ? null : edit.initial} onSave={save} onClose={() => setEdit(null)} />}
       </>
     );
@@ -4395,7 +4441,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
   // ============================================================
   // SECURITY: two-step verification, recovery codes, activity log
   // ============================================================
-  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility and names", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Reforestation & Land page", "PILLAR-CONTENT-FOODCLOTHING": "Food & Clothing page and counts", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
+  const ACT_TARGET = { "PILLAR-GRANTS": "Pillar grants", "PILLAR-LINKS": "Pillar links", "PILLAR-STATUS": "Pillar visibility and names", "PAYMENT-CONFIG": "Payment channels", "EBOOKS-CATALOG": "Library catalogue", "FOODLAND-CONTENT": "Reforestation & Land page", "PILLAR-CONTENT-FOODCLOTHING": "Food page and counts", "WORSHIP-CONTENT": "Houses of Worship page", "WATER-CONTENT": "Clean Water page", "SITE-CONTACT": "Contact & social", "IMPACT-REPORTS": "Impact Report", "LEGACY-SUMMARY": "Founding era records" };
   const ACT_WORD = {
     "security.signed_in": "Signed in", "security.signed_out": "Signed out", "security.authenticator_added": "Turned on two-step verification",
     "security.authenticator_removed": "Turned off two-step verification", "security.recovery_codes_created": "Created new recovery codes",
@@ -5886,7 +5932,7 @@ button.fd-mlog-i:hover,button.fd-mlog-i:focus-visible{background:rgba(201,169,97
     ["hello", "The Brial Endowment", "hello@brialendowment.org", "The foundation's general address"],
     ["receipts", "The Brial Endowment", "receipts@brialendowment.org", "For anything about gifts and receipts"],
   ];
-  const PROGRAMMES = ["The Brial Endowment · general endowment fund", "Scholarships", "Clean Water · wells and water systems", "Reforestation & Land · Trees for Life, olive trees in Palestine", "Food & Clothing · staple food and clothing for people in need", "Houses of Worship", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure", "Library"];
+  const PROGRAMMES = ["The Brial Endowment · general endowment fund", "Scholarships", "Clean Water · wells and water systems", "Reforestation & Land · Trees for Life, olive trees in Palestine", "Food · staple food for people in need", "Houses of Worship", "Hospitals", "Schools", "Livestock & Enterprise", "Sustainable Infrastructure", "Library"];
   const THANKS = "Dear …,\n\nThank you for your generous contribution of $… to …. Because of you, …\n\n…\n\nMay God accept it from you and multiply its reward.\n\nWith heartfelt thanks,";
   const splitTo = s => String(s || "").split(/[\s,;]+/).map(x => x.trim()).filter(Boolean);
   function Composer({ store, onClose, onSent }) {

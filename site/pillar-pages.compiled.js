@@ -116,7 +116,16 @@
     const nm = S.getPillarName(key), def = (S.PILLAR_DEFAULT_NAMES || {})[key];
     return nm && nm !== def ? nm : "";
   };
-  const PillarPage = ({ onExit, onDonate, cfg: cfg0 }) => {
+  // Founder-chosen Indonesian word for a pillar; "" when unchanged
+  const resubbed = key => {
+    const S = window.BrialStore;
+    if (!S || !S.getPillarSub || !S.PILLAR_DEFAULT_SUBS) return "";
+    const v = S.getPillarSub(key);
+    return v && v !== S.PILLAR_DEFAULT_SUBS[key] ? v : "";
+  };
+  const PillarPage = ({ onExit, onDonate, cfg: cfgIn }) => {
+    const sb = resubbed(cfgIn.shareKey);
+    const cfg0 = sb && typeof cfgIn.eyebrow === "string" ? { ...cfgIn, eyebrow: cfgIn.eyebrow.replace(/\u00b7 [^\u00b7]+$/, "\u00b7 " + sb) } : cfgIn;
     const nm = renamed(cfg0.shareKey), def = nm ? window.BrialStore.PILLAR_DEFAULT_NAMES[cfg0.shareKey] : "";
     const cfg = nm ? { ...cfg0, topTag: "PILLAR \u00b7 " + nm.toUpperCase(), title: cfg0.title === def ? nm : cfg0.title,
       partnerStrip: typeof cfg0.partnerStrip === "string" ? cfg0.partnerStrip.replace(def.toUpperCase(), nm.toUpperCase()) : cfg0.partnerStrip } : cfg0;
@@ -368,16 +377,19 @@
   const LivestockPage = makeGenericPage("livestock");
   const InfraPage = makeGenericPage("infra");
 
-  // ---- Food & Clothing: staple food and clothing shared with people in need ----
-  // Counts: BrialStore.getFoodClothingCounts() (kilograms of food, garments; kept per year).
-  // Recipients are never named or photographed on this page.
+  // ---- Food: staple food shared with people in need ----
+  // Counts: BrialStore.getFoodClothingCounts() (kilograms of food per year: rough totals plus
+  // distributions recorded one by one). Days of giving: pillar grants labelled "Food & Clothing"
+  // (the pillar's data label, kept so old records stay linked). Recipients are never named or
+  // photographed on this page.
   const fmtNum = n => (Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 1 });
   const FoodClothingPage = ({ onExit, onDonate }) => {
     const read = () => {
       const S = window.BrialStore;
       return {
         c: S && S.getPillarContent ? S.getPillarContent("foodclothing") : null,
-        n: S && S.getFoodClothingCounts ? S.getFoodClothingCounts() : { kg: 0, garments: 0, since: "" },
+        n: S && S.getFoodClothingCounts ? S.getFoodClothingCounts() : { kg: 0, byYear: {}, years: [], since: "" },
+        days: S && S.getPillarGrants ? S.getPillarGrants().filter(g => g && g.pillar === "Food & Clothing" && !g.archived && (Number(g.kg) > 0 || Number(g.amount) > 0)) : [],
         link: S && S.getPillarLink ? S.getPillarLink("foodclothing") : "",
         hidden: S && S.getPillarLinkHidden ? S.getPillarLinkHidden("foodclothing") : false
       };
@@ -389,41 +401,131 @@
       window.addEventListener("brial:ready", f);
       return () => { window.removeEventListener("brial:change", f); window.removeEventListener("brial:ready", f); };
     }, []);
+    useEffect(() => { window.scrollTo(0, 0); BrialDeepScroll("foodclothing"); }, []);
     const c = st.c;
     if (!c) return null;
+    const S = window.BrialStore;
+    const name = c.programme && c.programme !== "Food & Clothing" ? c.programme : (renamed("foodclothing") || "Food");
+    const tag = (renamed("foodclothing") || "Food").toUpperCase();
+    const sub = (S && S.getPillarSub ? S.getPillarSub("foodclothing") : "") || "Pangan";
+    const kg = Number(st.n.kg) || 0;
     const since = st.n.since || String(new Date().getFullYear());
-    return h(PillarPage, { onExit, onDonate, cfg: {
-      screenLabel: "Food & Clothing Programme",
-      shareKey: "foodclothing",
-      topTag: "PILLAR \u00b7 FOOD & CLOTHING",
-      eyebrow: "\u00a7 The Pillar of Provision \u00b7 Sandang & Pangan",
-      title: c.programme || "Food & Clothing",
-      tagline: "Food on the table and clothes to wear, shared at Ramadan and through the year.",
-      lockup: c.partnerLine ? { logo: null, name: c.partnerLine, sub: "programme partner" } : null,
-      stats: [
-        { label: "Shared so far", value: fmtNum(st.n.kg), unit: "Kilograms of food \u00b7 shared" },
-        { label: "Given so far", value: fmtNum(st.n.garments), unit: "Garments \u00b7 given" }
-      ],
-      location: c.location || "Wherever the need is plain to see.",
-      locationNote: (c.partnerLine || "Given directly and with local partners,") + " counted since " + since + ", and never with the names or faces of those who receive.",
-      quote: ["\u201cThey give food, despite their love for it, to the poor, the orphan and the captive: ", h("em", { key: 1, style: { color: GOLD } }, "we feed you only for the sake of Allah"), "; we want no reward from you, nor thanks.\u201d"],
-      quoteAttr: "Qur'an \u00b7 al-Insan 76:8-9",
-      intro: c.intro,
-      steps: [
-        { n: "01", t: "Gather", d: "Staple food is bought and clothing in good condition is collected, then weighed and counted before it leaves." },
-        { n: "02", t: "Give", d: "Shared with orphanages, families and people in need, quietly, without names or photographs of those who receive." },
-        { n: "03", t: "Count", d: "Every kilogram and every garment is added to the open count on this page, year by year." }
-      ],
-      notesTitle: "Word from the tables.",
-      articles: c.articles,
-      ctaEyebrow: "Share the table",
-      ctaLine1: "Meet the people",
-      ctaLine2: "who share with us.",
-      showPartner: !!st.link && !st.hidden,
-      link: st.link,
-      partnerStrip: (c.partnerLine || "FOOD & CLOTHING \u00b7 SHARED WITH PEOPLE IN NEED").toUpperCase(),
-      proverb: "They fed us so we may grow; we share so none go without."
-    }});
+    const years = (st.n.years || []).slice().sort();
+    const maxKg = Math.max(1, ...years.map(y => Number((st.n.byYear[y] || {}).kg) || 0));
+    const days = st.days.slice().sort((x, y) => new Date(y.date || 0) - new Date(x.date || 0));
+    const link = !st.hidden && /^https?:\/\//i.test(String(st.link || "").trim()) ? String(st.link).trim() : "";
+    const pad = "clamp(20px, 4vw, 56px)";
+    const IC = window.BrialPillarIcons;
+    const ic = (id, size) => (IC ? IC.render(id, { size: size || 40, strokeWidth: 1.6 }) : null);
+    const eyebrow = t => h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.24em", textTransform: "uppercase" } }, t);
+    const h2 = t => h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(32px, 4.4vw, 54px)", lineHeight: 1.08, margin: "18px 0 0", color: CREAM } }, t);
+    const goLedger = () => { try { history.pushState({ brialView: "proof" }, "", "/proof"); window.dispatchEvent(new PopStateEvent("popstate", { state: { brialView: "proof" } })); } catch (e) { location.href = "/proof"; } };
+    const staples = [
+      { i: "sack", t: "Rice", d: "The heart of most tables we sit at. Bought in 5 and 10 kg sacks so a family can cook for days." },
+      { i: "wheat", t: "Flour and bread", d: "For homes that bake, and bread bought fresh where an oven is out of reach." },
+      { i: "pot", t: "Cooking oil and staples", d: "Oil, sugar, eggs and the small things that turn rice into a meal." },
+      { i: "dates", t: "Dates at Ramadan", d: "To break the fast at sunset, shared before and through the holy month." }
+    ];
+    const vows = [
+      { n: "01", t: "Dignity first", d: "No names, no faces, no queues for the camera. Food is handed over quietly, as one neighbour to another." },
+      { n: "02", t: "Food that keeps", d: "Staples that last and feed a whole household, chosen with the people who cook them." },
+      { n: "03", t: "Counted in the open", d: "Every kilogram is weighed and added to this page; every rupiah spent is on the open ledger." }
+    ];
+    return h("div", { style: { minHeight: "100vh", background: NAVY, color: CREAM, fontFamily: sans, animation: "fadeIn 0.5s ease both", overflowX: "hidden" }, "data-screen-label": "Food Programme" },
+      h("style", null, ".b-fd-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(30px,5vw,70px);align-items:end}@media (max-width:860px){.b-fd-hero{grid-template-columns:1fr}}.b-fd-bar{transform-origin:left;animation:bFdGrow 1.1s cubic-bezier(.2,.7,.2,1) both}@keyframes bFdGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}@media (prefers-reduced-motion:reduce){.b-fd-bar{animation:none}}"),
+      h("div", { style: { position: "sticky", top: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "16px " + pad, background: "rgba(10,22,40,0.88)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderBottom: "1px solid rgba(201,169,97,0.18)" } },
+        h("button", { onClick: onExit, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.25)", color: "rgba(232,228,220,0.8)", padding: "9px 16px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", minHeight: 40, flexShrink: 0 }, "aria-label": "Return to the Endowment" }, "←", h("span", { className: "b-hide-sm" }, " Return to the Endowment")),
+        h("div", { style: { display: "flex", alignItems: "center", gap: 12, minWidth: 0 } },
+          h(Seal, { size: 26 }),
+          h("span", { className: "b-tr-tag", style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.2em", color: "rgba(232,228,220,0.7)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "PILLAR · " + tag))),
+
+      // Hero with the living count
+      h("div", { style: { padding: "clamp(56px, 8vw, 110px) " + pad + " clamp(56px, 8vw, 90px)", maxWidth: 1280, margin: "0 auto" } },
+        h("div", { className: "b-fd-hero" },
+          h("div", null,
+            eyebrow("§ The Pillar of Provision · " + sub),
+            h("h1", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(56px, 8vw, 116px)", lineHeight: 0.96, letterSpacing: "-0.02em", margin: "26px 0 0" } }, name + "."),
+            h("p", { style: { fontFamily: serif, fontStyle: "italic", fontSize: "clamp(20px, 2.3vw, 27px)", color: "rgba(232,228,220,0.75)", margin: "24px 0 0", maxWidth: 600, lineHeight: 1.45 } }, "Rice in the pot and bread on the table, given quietly and counted in the open.")),
+          h("div", { style: { border: "1px solid rgba(201,169,97,0.35)", background: "linear-gradient(150deg, rgba(201,169,97,0.12), rgba(20,36,66,0.4) 60%)", padding: "clamp(26px, 3vw, 38px)" } },
+            h("div", { style: { fontFamily: mono, fontSize: 10.5, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)" } }, "Shared so far"),
+            h("div", { style: { display: "flex", alignItems: "baseline", gap: 12, marginTop: 12, flexWrap: "wrap" } },
+              h("span", { style: { fontFamily: serif, fontSize: "clamp(64px, 8vw, 104px)", lineHeight: 0.9, color: CREAM } }, fmtNum(kg)),
+              h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 26, color: GOLD } }, "kg of food")),
+            h("div", { style: { height: 1, background: "rgba(201,169,97,0.25)", margin: "22px 0 18px" } }),
+            h("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } },
+              h("div", null, h("div", { style: { fontFamily: serif, fontSize: 30, color: CREAM, lineHeight: 1 } }, String(days.length)), h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)", marginTop: 8 } }, days.length === 1 ? "Day of giving recorded" : "Days of giving recorded")),
+              h("div", null, h("div", { style: { fontFamily: serif, fontSize: 30, color: CREAM, lineHeight: 1 } }, since), h("div", { style: { fontFamily: mono, fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)", marginTop: 8 } }, "Counting since")))))),
+
+      // Intro and what we give
+      h("div", { style: { padding: "0 " + pad + " clamp(70px, 9vw, 100px)" } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto", borderTop: "1px solid rgba(201,169,97,0.18)", paddingTop: "clamp(50px, 7vw, 80px)" } },
+          eyebrow("§ What we give"),
+          h2("Staples that feed a household."),
+          c.intro ? h("p", { style: { fontFamily: sans, fontSize: 15, fontWeight: 300, lineHeight: 1.8, color: "rgba(232,228,220,0.75)", maxWidth: 720, margin: "22px 0 0", textWrap: "pretty" } }, c.intro) : null,
+          h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(230px, 100%), 1fr))", gap: 14, marginTop: 44 } },
+            staples.map(x => h("div", { key: x.t, style: { border: "1px solid rgba(201,169,97,0.22)", background: "rgba(232,228,220,0.04)", padding: "26px 24px" } },
+              h("div", { style: { color: GOLD } }, ic(x.i, 42)),
+              h("div", { style: { fontFamily: serif, fontSize: 24, marginTop: 14 } }, x.t),
+              h("div", { style: { fontFamily: sans, fontSize: 13, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.65)", marginTop: 8 } }, x.d)))))),
+
+      // The three vows
+      h("div", { style: { background: "rgba(232,228,220,0.02)", borderTop: "1px solid rgba(201,169,97,0.14)", borderBottom: "1px solid rgba(201,169,97,0.14)", padding: "clamp(60px, 8vw, 100px) " + pad } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto" } },
+          eyebrow("§ How we give"),
+          h2("Three promises at every table."),
+          h("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: "clamp(24px, 4vw, 48px)", marginTop: 44 } },
+            vows.map(v => h("div", { key: v.n, style: { borderTop: "1px solid " + GOLD, paddingTop: 22 } },
+              h("div", { style: { fontFamily: mono, fontSize: 11, color: GOLD, letterSpacing: "0.14em" } }, v.n),
+              h("div", { style: { fontFamily: serif, fontSize: 28, marginTop: 10 } }, v.t),
+              h("p", { style: { fontFamily: sans, fontSize: 14, fontWeight: 300, lineHeight: 1.75, color: "rgba(232,228,220,0.7)", margin: "10px 0 0" } }, v.d)))))),
+
+      // Year by year
+      years.length ? h("div", { style: { padding: "clamp(70px, 9vw, 100px) " + pad + " 0" } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto" } },
+          eyebrow("§ Year by year"),
+          h2("Every kilogram, by the year it was given."),
+          h("div", { style: { marginTop: 40, display: "grid", gap: 14 } },
+            years.slice().reverse().map(y => { const v = Number((st.n.byYear[y] || {}).kg) || 0; return h("div", { key: y, style: { display: "grid", gridTemplateColumns: "64px minmax(0,1fr) auto", gap: 18, alignItems: "center" } },
+              h("span", { style: { fontFamily: mono, fontSize: 12, letterSpacing: "0.14em", color: "rgba(232,228,220,0.75)" } }, y),
+              h("div", { style: { height: 12, background: "rgba(232,228,220,0.06)", position: "relative" } }, h("div", { className: "b-fd-bar", style: { position: "absolute", inset: 0, width: Math.max(2, v / maxKg * 100) + "%", background: "linear-gradient(90deg, #B08F4C, " + GOLD + " 70%, #EAD9A8)" } })),
+              h("span", { style: { fontFamily: serif, fontSize: 22, color: CREAM, minWidth: 90, textAlign: "right" } }, fmtNum(v) + " kg")); })))) : null,
+
+      // Recent days of giving
+      h("div", { style: { padding: "clamp(70px, 9vw, 100px) " + pad } },
+        h("div", { style: { maxWidth: 1280, margin: "0 auto", border: "1px solid rgba(201,169,97,0.3)", background: "rgba(20,36,66,0.45)", padding: "clamp(28px, 4vw, 48px)" } },
+          h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "end", gap: 24, flexWrap: "wrap" } },
+            h("div", null, eyebrow("§ Recent days of giving"), h("div", { style: { fontFamily: serif, fontSize: "clamp(28px, 3.4vw, 40px)", marginTop: 14 } }, "Where the food went.")),
+            h("button", { onClick: goLedger, style: { background: "transparent", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, padding: "13px 22px", cursor: "pointer", fontFamily: mono, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase" } }, "Open ledger →")),
+          days.length
+            ? h("div", { style: { marginTop: 26, borderTop: "1px solid rgba(201,169,97,0.18)" } },
+                days.slice(0, 10).map(g => h("div", { key: g.id, style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: "6px 18px", padding: "16px 0", borderBottom: "1px solid rgba(201,169,97,0.12)" } },
+                  h("div", { style: { minWidth: 0 } },
+                    h("div", { style: { fontFamily: sans, fontSize: 15, color: CREAM } }, g.project && g.project !== "Food & clothing" && g.project !== "Food & Clothing" ? g.project : "Staple food shared"),
+                    h("div", { style: { fontFamily: mono, fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(232,228,220,0.6)", marginTop: 6 } }, [g.dateUnknown ? "Date not recorded" : fmtDate(g.date), g.country, g.partner].filter(Boolean).join(" · "))),
+                  h("div", { style: { fontFamily: serif, fontSize: 24, color: GOLD, alignSelf: "center", whiteSpace: "nowrap" } }, Number(g.kg) > 0 ? fmtNum(g.kg) + " kg" : "—"))))
+            : h("p", { style: { fontFamily: sans, fontSize: 14, fontWeight: 300, color: "rgba(232,228,220,0.6)", margin: "22px 0 0", maxWidth: 620, lineHeight: 1.7 } }, "Each day of giving will be listed here as it is recorded."))),
+
+      // Verse
+      h("div", { style: { padding: "0 " + pad + " clamp(70px, 9vw, 110px)" } },
+        h("div", { style: { maxWidth: 900, margin: "0 auto", textAlign: "center" } },
+          h(Seal, { size: 34 }),
+          h("blockquote", { style: { fontFamily: serif, fontStyle: "italic", fontWeight: 300, fontSize: "clamp(22px, 3vw, 34px)", lineHeight: 1.55, color: CREAM, margin: "34px 0 0" } }, "“They give food, despite their love for it, to the poor, the orphan and the captive: ", h("em", { style: { color: GOLD } }, "we feed you only for the sake of God"), "; we want no reward from you, nor thanks.”"),
+          h("div", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(232,228,220,0.66)", marginTop: 30 } }, "Qur'an · al-Insan 76:8-9"))),
+
+      h(Stories, { articles: c.articles, title: "Word from the tables.", shareKey: "foodclothing" }),
+
+      // Call to action
+      h("div", { style: { padding: "clamp(70px, 10vw, 120px) " + pad, textAlign: "center", borderTop: "1px solid rgba(201,169,97,0.14)" } },
+        eyebrow("Share the table"),
+        h("h2", { style: { fontFamily: serif, fontWeight: 400, fontSize: "clamp(30px, 4.4vw, 52px)", margin: "20px 0 0", lineHeight: 1.1 } }, "Fund the next sack.", h("br", null), h("em", { style: { fontStyle: "italic", color: GOLD } }, "Feed a family this week.")),
+        h("div", { style: { display: "flex", justifyContent: "center", gap: 20, marginTop: 44, flexWrap: "wrap" } },
+          onDonate ? h("button", { onClick: onDonate, style: { background: "linear-gradient(120deg, #EAD9A8, " + GOLD + " 55%, #B08F4C)", color: "#131A33", border: 0, padding: "17px 34px", cursor: "pointer", fontFamily: sans, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Give to the table") : null,
+          link ? h("a", { href: link, target: "_blank", rel: "noopener noreferrer", style: { display: "inline-block", border: "1px solid rgba(232,228,220,0.3)", color: CREAM, textDecoration: "none", padding: "17px 34px", fontFamily: sans, fontSize: 12.5, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" } }, "Meet our partner ↗") : null),
+        h("p", { style: { fontFamily: sans, fontSize: 12, fontWeight: 300, lineHeight: 1.7, color: "rgba(232,228,220,0.66)", maxWidth: 600, margin: "34px auto 0" } }, (c.location ? c.location + ". " : "") + "Given directly and with local partners, and never with the names or faces of those who receive.")),
+
+      h("div", { style: { borderTop: "1px solid rgba(201,169,97,0.2)", padding: "26px " + pad, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+        h("span", { style: { fontFamily: mono, fontSize: 11, letterSpacing: "0.16em", color: "rgba(232,228,220,0.66)" } }, "© MMXXVI · THE BRIAL ENDOWMENT"),
+        h("span", { style: { fontFamily: serif, fontStyle: "italic", fontSize: 14, color: "rgba(232,228,220,0.66)" } }, "They fed us so we may grow; we share so none go without.")));
   };
 
   // ---- Transportation: the enterprise pillar (go2rent) ----

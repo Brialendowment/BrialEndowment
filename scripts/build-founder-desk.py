@@ -108,9 +108,9 @@ VENTURE_TILE = ("  }, {\n    id: \"venture\",\n    label: \"The Venture\",\n    
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M25 37 L30 42 L39 32\" }))\n")
 # Food & Clothing tile (Pillars), placed after Reforestation & Land: counts of food and clothing shared
 FOODCLOTHING_ANCHOR = "  }, {\n    id: \"water\",\n"
-FOODCLOTHING_TILE = ("  }, {\n    id: \"foodclothing\",\n    label: \"Food & Clothing\",\n    sub: \"Sandang & Pangan\",\n    accent: \"#D9A97A\",\n"
-    "    d: \"Count the food and clothing shared, by year, with plus and minus. Record what it cost, and curate the public Food & Clothing page.\",\n"
-    "    meta: (n => (n.kg || 0).toLocaleString(\"en-US\", { maximumFractionDigits: 1 }) + \" kg of food \\u00b7 \" + (n.garments || 0).toLocaleString(\"en-US\") + \" garment\" + (n.garments === 1 ? \"\" : \"s\"))(store && store.getFoodClothingCounts ? store.getFoodClothingCounts() : { kg: 0, garments: 0 }),\n"
+FOODCLOTHING_TILE = ("  }, {\n    id: \"foodclothing\",\n    label: \"Food\",\n    sub: \"Pangan\",\n    accent: \"#D9A97A\",\n"
+    "    d: \"Count the food shared, by year, with plus and minus. Record each day of giving and what it cost, and curate the public Food page.\",\n"
+    "    meta: (n => (n.kg || 0).toLocaleString(\"en-US\", { maximumFractionDigits: 1 }) + \" kg of food shared\")(store && store.getFoodClothingCounts ? store.getFoodClothingCounts() : { kg: 0 }),\n"
     "    icon: /*#__PURE__*/React.createElement(\"svg\", { viewBox: \"0 0 64 64\", width: \"52\", height: \"52\", fill: \"none\", stroke: \"currentColor\", strokeWidth: \"1.1\" }, "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M10 34 H54 Q52 50 32 52 Q12 50 10 34 Z\" }), "
     "/*#__PURE__*/React.createElement(\"path\", { d: \"M25 27 Q22 23 25 19 Q28 15 25 11 M32 27 Q29 23 32 19 Q35 15 32 11 M39 27 Q36 23 39 19 Q42 15 39 11\" }), "
@@ -198,7 +198,7 @@ def inject(code):
     if "id: \"email\",\n    label: \"Email\"," not in s:  # the desk itself also has id: "email"
         assert s.count(TREASURY_ANCHOR) == 1, "email tile anchor not found"
         s = s.replace(TREASURY_ANCHOR, EMAIL_TILE + TREASURY_ANCHOR)
-    if "id: \"foodclothing\",\n    label: \"Food & Clothing\"," not in s:
+    if "id: \"foodclothing\"," not in s:
         assert s.count(FOODCLOTHING_ANCHOR) == 1, "food & clothing tile anchor not found"
         s = s.replace(FOODCLOTHING_ANCHOR, FOODCLOTHING_TILE + FOODCLOTHING_ANCHOR)
     if "id: \"transport\",\n    label: \"Transportation\"," not in s:

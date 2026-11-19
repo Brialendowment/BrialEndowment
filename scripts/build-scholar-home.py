@@ -57,7 +57,7 @@ SEO_PAGES = {
     "donate": ("Give", "Give to a perpetual endowment. Every gift is recorded on the open ledger and serves scholarships, clean water, houses of worship, olive groves and more.", None),
     "ebooks": ("Library & Knowledge Center", "Scholarship guides in English, Bahasa Indonesia and French. Every copy sold returns to the endowment.", None),
     "foodland": ("Reforestation & Land", "Trees planted where the land needs them most, beginning with olive groves on Palestinian family land through Zaytoun's Trees for Life programme.", None),
-    "foodclothing": ("Food & Clothing", "Staple food and clothing in good condition, shared with orphanages, families and people in need. Every kilogram and every garment counted in the open.", None),
+    "foodclothing": ("Food", "Staple food shared with orphanages, families and people in need, at Ramadan and through the year. Every kilogram is weighed and counted in the open.", None),
     "worship": ("Houses of Worship", "Mosques raised as waqf with local builders: places that gather a community and endure long after their builders.", None),
     "water": ("Clean Water", "Wells and water systems built with local partners, so clean water is close to home for the villages that need it.", None),
     "transport": ("Transportation", "The enterprise pillar. go2rent cars on the road across Türkiye and Northern Cyprus, and a share of the founder's returns given to the endowment.", "https://brialendowment.org/partners/go2rent/og.jpg"),
