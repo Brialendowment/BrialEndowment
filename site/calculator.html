@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTI Mix Design Calculator | The Brial Endowment Library</title>
+<meta name="description" content="Free companion calculator for Concrete Technology Illustrated (2027 Edition), Volume 1: required average strength, ACI absolute volume mix, BRE (DoE) mix, moisture correction and EN 206 checks.">
+<style>
+:root{--bg:#0B1A33;--bg2:#0F2342;--card:#13294C;--line:#2B4673;--gold:#C8A24A;--gold2:#E0C37A;--tx:#EEF2F9;--mut:#B3C0D8;--in:#0A1730;--ok:#7FD6A0;--bad:#FF9C8F;--serif:"Cormorant Garamond","Cormorant",Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 var(--sans)}
+a{color:var(--gold2)}a:hover{color:#fff}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--gold);color:#0B1A33;padding:.5rem 1rem;z-index:9}.skip:focus{left:0}
+header.top{border-bottom:1px solid var(--line);background:var(--bg2)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 1rem}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none;color:var(--tx)}
+.brand svg{width:34px;height:34px;flex:none}
+.brand span{font-family:var(--serif);font-size:1.3rem;letter-spacing:.02em}
+.brand b{color:var(--gold);font-weight:600}
+.back{font-size:.92rem}
+.hero{padding:1.6rem 0 1rem}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.5vw,2.8rem);line-height:1.1;margin:0 0 .5rem;color:#fff}
+h1 em{color:var(--gold);font-style:normal}
+.promo{margin:0;color:var(--mut);max-width:62ch}
+.promo b{color:var(--tx)}
+nav.tabs{display:flex;gap:.35rem;overflow-x:auto;padding:.2rem 0 0;margin-top:1.1rem;border-bottom:1px solid var(--line);scrollbar-width:thin}
+nav.tabs button{flex:none;background:none;border:1px solid transparent;border-bottom:none;color:var(--mut);font:600 .92rem var(--sans);padding:.65rem .9rem;border-radius:8px 8px 0 0;cursor:pointer;min-height:44px}
+nav.tabs button:hover{color:#fff}
+nav.tabs button[aria-selected=true]{background:var(--card);color:var(--gold2);border-color:var(--line);box-shadow:inset 0 2px 0 var(--gold)}
+main{padding:1.2rem 0 2.5rem}
+.panel[hidden]{display:none}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem}
+h2{font-family:var(--serif);font-weight:600;font-size:1.7rem;margin:0 0 .15rem;color:#fff}
+h3{font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:0 0 .6rem;color:var(--gold2)}
+.ref{margin:0;font-size:.88rem;color:var(--gold2);font-style:italic}
+.btn{background:transparent;color:var(--gold2);border:1px solid var(--gold);border-radius:8px;padding:.55rem 1rem;font:600 .9rem var(--sans);cursor:pointer;min-height:44px}
+.btn:hover{background:var(--gold);color:#0B1A33}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:1.2rem;align-items:start;margin-bottom:1.4rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.1rem}
+.card.out{min-width:0}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:.7rem .8rem}
+.f{display:flex;flex-direction:column;gap:.25rem;min-width:0}
+.f.full{grid-column:1/-1}
+label{font-size:.86rem;color:var(--mut)}
+label .u{color:var(--gold2)}
+input,select,textarea{width:100%;background:var(--in);color:var(--tx);border:1px solid #4A6694;border-radius:7px;padding:.55rem .6rem;font:1rem var(--sans);min-height:44px}
+input[type=checkbox]{width:22px;height:22px;min-height:0;accent-color:var(--gold)}
+.chk{flex-direction:row;align-items:center;gap:.6rem}
+.chk label{color:var(--tx);font-size:.95rem}
+small.h{color:var(--mut);font-size:.78rem;line-height:1.3}
+fieldset{border:1px solid var(--line);border-radius:8px;margin:.8rem 0 0;padding:.6rem .7rem .8rem}
+legend{color:var(--gold2);font-size:.85rem;padding:0 .4rem}
+.xgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:.3rem .5rem}
+.xgrid label{display:flex;gap:.4rem;align-items:center;color:var(--tx);font-size:.9rem;min-height:36px}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{padding:.45rem .55rem;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--gold2);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em}
+tr.tot td{font-weight:700;color:#fff;border-top:2px solid var(--gold)}
+.tw{overflow-x:auto}
+ol.steps{list-style:none;counter-reset:s;margin:1rem 0 0;padding:0}
+ol.steps>li{counter-increment:s;position:relative;padding:.1rem 0 .9rem 2.6rem}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:1.9rem;height:1.9rem;border-radius:50%;border:1px solid var(--gold);color:var(--gold2);display:grid;place-items:center;font:700 .85rem var(--sans)}
+ol.steps b{display:block;color:#fff}
+.eq{font:.88rem/1.5 var(--mono);color:var(--tx);background:var(--in);border-left:3px solid var(--gold);padding:.25rem .6rem;margin:.25rem 0;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.big{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 .8rem}
+.kpi{background:var(--in);border:1px solid var(--line);border-radius:10px;padding:.55rem .8rem;min-width:7.5rem}
+.kpi span{display:block;font-size:.76rem;color:var(--mut)}
+.kpi strong{font:600 1.5rem var(--serif);color:var(--gold2)}
+.ok{color:var(--ok)}.no{color:var(--bad)}
+.note{font-size:.86rem;color:var(--mut);margin:.5rem 0 0}
+.err{background:#3A1F28;border:1px solid #C4695F;color:#FFD9D3;border-radius:8px;padding:.7rem .9rem;margin:0}
+.sub{margin-top:1.2rem}
+footer{border-top:1px solid var(--line);background:var(--bg2);padding:1.4rem 0 2rem;color:var(--mut);font-size:.86rem}
+footer p{margin:.3rem 0;max-width:90ch}
+.pr-only{display:none}
+@media (max-width:860px){.grid{grid-template-columns:1fr}.fields{grid-template-columns:1fr 1fr}}
+@media (max-width:420px){.fields{grid-template-columns:1fr}.card{padding:.85rem}}
+@media print{
+ :root{--bg:#fff;--bg2:#fff;--card:#fff;--line:#999;--tx:#000;--mut:#333;--gold:#7a5c10;--gold2:#5c4408;--in:#f3f3f3}
+ body{background:#fff;color:#000;font-size:11pt}
+ nav.tabs,.btn,.back,.skip,.hero .promo,.noprint{display:none!important}
+ header.top{border:none}.brand svg polygon{stroke:#000}.brand span,h1,h2{color:#000}
+ .panel[hidden]{display:none}.grid{grid-template-columns:1fr}.card{border:1px solid #999;break-inside:avoid-page}
+ input,select,textarea{border:1px solid #999;color:#000;background:#fff}
+ .eq{background:#f3f3f3;color:#000}.kpi strong{color:#000}.ok,.no{color:#000}
+ .pr-only{display:block}footer{border-top:1px solid #999;color:#000}
+ a{color:#000;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the calculator</a>
+<header class="top"><div class="wrap">
+ <div class="bar">
+  <a class="brand" href="https://brialendowment.org/" aria-label="The Brial Endowment, home">
+   <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><polygon points="32.0,2.0 36.8,20.5 53.2,10.8 43.5,27.2 62.0,32.0 43.5,36.8 53.2,53.2 36.8,43.5 32.0,62.0 27.2,43.5 10.8,53.2 20.5,36.8 2.0,32.0 20.5,27.2 10.8,10.8 27.2,20.5" fill="none" stroke="#C8A24A" stroke-width="2.4" stroke-linejoin="round"/><circle cx="32" cy="32" r="7" fill="#C8A24A"/></svg>
+   <span>The Brial Endowment <b>&middot; Library</b></span>
+  </a>
+  <a class="back" href="https://brialendowment.org/ebooks">&larr; Back to the eBooks</a>
+ </div>
+ <div class="hero">
+  <h1>CTI Mix Design <em>Calculator</em></h1>
+  <p class="promo">A free companion to <b>Concrete Technology Illustrated (2027 Edition), Volume 1</b>. It follows the book's methods, tables and rounding step by step, so you can check the worked examples and try your own numbers.</p>
+  <p class="pr-only">Printed from brialendowment.org/calculator</p>
+ </div>
+ <nav class="tabs" role="tablist" aria-label="Calculator modules">
+  <button role="tab" id="t1" aria-controls="p1" aria-selected="true">1 Required strength</button>
+  <button role="tab" id="t2" aria-controls="p2" aria-selected="false" tabindex="-1">2 ACI mix</button>
+  <button role="tab" id="t3" aria-controls="p3" aria-selected="false" tabindex="-1">3 BRE (DoE) mix</button>
+  <button role="tab" id="t4" aria-controls="p4" aria-selected="false" tabindex="-1">4 Moisture correction</button>
+  <button role="tab" id="t5" aria-controls="p5" aria-selected="false" tabindex="-1">5 EN 206 checks</button>
+ </nav>
+</div></header>
+<main id="main" class="wrap">
+ <noscript><p class="err">This calculator needs JavaScript. Nothing is sent anywhere: all calculations run in your browser.</p></noscript>
+ <section class="panel" id="p1" role="tabpanel" aria-labelledby="t1"></section>
+ <section class="panel" id="p2" role="tabpanel" aria-labelledby="t2" hidden></section>
+ <section class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden></section>
+ <section class="panel" id="p4" role="tabpanel" aria-labelledby="t4" hidden></section>
+ <section class="panel" id="p5" role="tabpanel" aria-labelledby="t5" hidden></section>
+</main>
+<footer><div class="wrap">
+ <p><b>Educational tool.</b> This calculator is not a substitute for the standards, the project specification or a qualified engineer. Every mix it produces must be proved by trial batches before use. Results follow the rounding rules of the book and are only as good as the data entered.</p>
+ <p>Not affiliated with ACI, ASTM or CEN. Tables are the author's reproductions as printed in Concrete Technology Illustrated; check the current editions of the standards for design work. Runs entirely in your browser: no cookies, no tracking, no data leaves this page.</p>
+ <p>&copy; The Brial Endowment. <a href="https://brialendowment.org/ebooks">Back to the eBooks</a></p>
+</div></footer>
+
+<script id="calc-core">
+const CTI = (function () {
+'use strict';
+const T = {"sizes_mm":[9.5,12.5,19,25,37.5,50,75,150],"sizes_in":["3/8","1/2","3/4","1","1½","2","3","6"],"slump":[["Reinforced foundation walls and footings",75,25,3,1],["Plain footings, caissons, substructure walls",75,25,3,1],["Beams and reinforced walls",100,25,4,1],["Building columns",100,25,4,1],["Pavements and slabs",75,25,3,1],["Mass concrete",50,25,2,1]],"w_non":{"25-50":[207,199,190,179,166,154,130,113],"75-100":[228,216,205,193,181,169,145,124],"150-175":[243,228,216,202,190,178,160,null]},"w_non_us":{"25-50":[350,335,315,300,275,260,220,190],"75-100":[385,365,340,325,300,285,245,210],"150-175":[410,385,360,340,315,300,270,null]},"air_trap":[3.0,2.5,2.0,1.5,1.0,0.5,0.3,0.2],"w_ae":{"25-50":[181,175,168,160,148,142,122,107],"75-100":[202,193,184,175,165,157,133,119],"150-175":[216,205,197,184,174,166,154,null]},"w_ae_us":{"25-50":[305,295,280,270,250,240,205,180],"75-100":[340,325,305,295,275,265,225,200],"150-175":[365,345,325,310,290,280,260,null]},"air_ae":{"Mild":[4.5,4.0,3.5,3.0,2.5,2.0,1.5,1.0],"Moderate":[6.0,5.5,5.0,4.5,4.5,4.0,3.5,3.0],"Severe":[7.5,7.0,6.0,6.0,5.5,5.0,4.5,4.0]},"wc_si":[[40,0.42,null],[35,0.47,0.39],[30,0.54,0.45],[25,0.61,0.52],[20,0.69,0.6],[15,0.79,0.7]],"wc_us":[[6000,0.41,null],[5000,0.48,0.4],[4000,0.57,0.48],[3000,0.68,0.59],[2000,0.82,0.74]],"bb0":{"9.5":[0.5,0.48,0.46,0.44],"12.5":[0.59,0.57,0.55,0.53],"19":[0.66,0.64,0.62,0.6],"25":[0.71,0.69,0.67,0.65],"37.5":[0.75,0.73,0.71,0.69],"50":[0.78,0.76,0.74,0.72],"75":[0.82,0.8,0.78,0.76],"150":[0.87,0.85,0.83,0.81]},"fms":[2.4,2.6,2.8,3.0],"dens":[[9.5,2280,2200,3840,3710],[12.5,2310,2230,3890,3760],[19,2345,2275,3960,3840],[25,2380,2290,4010,3850],[37.5,2410,2350,4070,3910],[50,2445,2345,4120,3950],[75,2490,2405,4200,4040],[150,2530,2435,4260,4110]],"expo":[["F0",null,2500,17.2],["F1",0.55,3500,24.1],["F2",0.45,4500,31.0],["F3 (318-19 only)",0.4,5000,34.5],["S0",null,null,null],["S1",0.5,4000,27.6],["S2",0.45,4500,31.0],["S3 (a)",0.45,4500,31.0],["S3 (b)",0.4,5000,34.5],["W0, W1",null,2500,17.2],["W2",0.5,4000,27.6],["C0, C1",null,2500,17.2],["C2",0.4,5000,34.5]],"air318":{"3/8":[6.0,7.5],"1/2":[5.5,7.0],"3/4":[5.0,6.0],"1":[4.5,6.0],"1½":[4.5,5.5],"2":[4.0,5.0],"3":[3.5,4.5]},"ktab":[[15,1.16],[20,1.08],[25,1.03],[30,1.0]],"classes":[[8,10],[12,15],[16,20],[20,25],[25,30],[30,37],[35,45],[40,50],[45,55],[50,60],[55,67],[60,75],[70,85],[80,95],[90,105],[100,115]],"F1":{"X0":{"wc":null,"cls":"C12/15","cmin":null,"air":null,"cmin_us":null},"XC1":{"wc":0.65,"cls":"C20/25","cmin":260,"air":null,"cmin_us":438},"XC2":{"wc":0.6,"cls":"C25/30","cmin":280,"air":null,"cmin_us":472},"XC3":{"wc":0.55,"cls":"C30/37","cmin":280,"air":null,"cmin_us":472},"XC4":{"wc":0.5,"cls":"C30/37","cmin":300,"air":null,"cmin_us":506},"XS1":{"wc":0.5,"cls":"C30/37","cmin":300,"air":null,"cmin_us":506},"XS2":{"wc":0.45,"cls":"C35/45","cmin":320,"air":null,"cmin_us":539},"XS3":{"wc":0.45,"cls":"C35/45","cmin":340,"air":null,"cmin_us":573},"XD1":{"wc":0.55,"cls":"C30/37","cmin":300,"air":null,"cmin_us":506},"XD2":{"wc":0.55,"cls":"C30/37","cmin":300,"air":null,"cmin_us":506},"XD3":{"wc":0.45,"cls":"C35/45","cmin":320,"air":null,"cmin_us":539},"XF1":{"wc":0.55,"cls":"C30/37","cmin":300,"air":null,"cmin_us":506},"XF2":{"wc":0.55,"cls":"C25/30","cmin":300,"air":4.0,"cmin_us":506},"XF3":{"wc":0.5,"cls":"C30/37","cmin":320,"air":4.0,"cmin_us":539},"XF4":{"wc":0.45,"cls":"C30/37","cmin":340,"air":4.0,"cmin_us":573},"XA1":{"wc":0.55,"cls":"C30/37","cmin":300,"air":null,"cmin_us":506},"XA2":{"wc":0.5,"cls":"C30/37","cmin":320,"air":null,"cmin_us":539},"XA3":{"wc":0.45,"cls":"C35/45","cmin":360,"air":null,"cmin_us":607}},"T2":{"42.5|uncrushed":42,"42.5|crushed":49,"52.5|uncrushed":48,"52.5|crushed":55},"T3":{"10|u":[150,180,205,225],"10|c":[180,205,230,250],"20|u":[135,160,180,195],"20|c":[170,190,210,225],"40|u":[115,140,160,175],"40|c":[155,175,190,205]},"WD":{"100":[2725,2645,2560,2475,2390,2310],"120":[2690,2615,2530,2445,2365,2290],"140":[2660,2585,2500,2420,2345,2275],"160":[2630,2555,2470,2395,2325,2255],"180":[2600,2525,2440,2370,2300,2235],"200":[2570,2495,2410,2345,2280,2215],"220":[2540,2465,2380,2320,2260,2195],"240":[2510,2435,2350,2295,2240,2175],"260":[2480,2405,2320,2270,2220,2155]},"RDS":[2.9,2.8,2.7,2.6,2.5,2.4],"F6":{"20":{"30-60":{"0.2":[41,32,27,23.5,20],"0.4":[46.5,36,30.5,26,22.5],"0.6":[51.5,40,33.5,28.5,24.5],"0.8":[57.5,44.5,37,31,26.5]},"60-180":{"0.2":[47,37.5,30,25.5,22.5],"0.4":[52.5,42.5,33.5,28,25],"0.6":[58.5,46.5,37,31,27.5],"0.8":[64,50.5,40.5,34,30]},"10-30":{"0.2":[37,29.5,24,20.5,17.5],"0.4":[43,34.5,27.5,23,20],"0.6":[47.5,38,31,25.5,22.5],"0.8":[53,42.5,34.5,28,25]}},"40":{"30-60":{"0.2":[33.5,27.5,22,19,16],"0.4":[39.5,32,25.5,22,18.5],"0.6":[45.5,36,29,25,21],"0.8":[50,39.5,32,27.5,23.5]},"60-180":{"0.2":[39.5,32,25.5,22,19],"0.4":[46,37,29,25.5,22],"0.6":[52,41,32.5,28.5,24.5],"0.8":[57,45,36,31.5,27]}}},"T9":{"10":[5,5,5,10],"20":[10,10,10,15],"30":[15,15,20,20],"40":[20,20,25,25],"50":[25,25,30,30]},"LNB":2.92,"KDEF":[[10,1.28],[5,1.64],[2.5,1.96],[1,2.33]],"PASS":[15,40,60,80,100],"BANDS":["0-10","10-30","30-60","60-180"],"CONS":{"slump":[["S1",10,40,0.4,1.6],["S2",50,90,2.0,3.5],["S3",100,150,3.9,5.9],["S4",160,210,6.3,8.3],["S5",220,null,8.7,null]],"flow":[["F1",null,340,null,13.4],["F2",350,410,13.8,16.1],["F3",420,480,16.5,18.9],["F4",490,550,19.3,21.7],["F5",560,620,22.0,24.4],["F6",630,null,24.8,null]],"sf":[["SF1",550,650,21.7,25.6],["SF2",660,750,26.0,29.5],["SF3",760,850,29.9,33.5]],"disch":{"S1":[0,60],"S2":[30,110],"S3":[80,170],"S4":[140,230],"F2":[330,430],"F3":[400,500],"F4":[470,570],"F5":[540,640]}}};
+const PSI = 145.038, KG = 1.68555, RHO_W = 1000, RHO_W_US = 62.4;
+// ---- rounding (the book's policy, see ch06_verify.py and ch07_verify.py) ----
+const hu = (v, n) => { const s = Math.pow(10, n); return (v < 0 ? -1 : 1) * Math.floor(Math.abs(v) * s + 0.5 + 1e-9) / s; };
+const py = (v, n) => { n = n || 0; const s = Math.pow(10, n), x = v * s, fl = Math.floor(x), d = x - fl;
+  const r = Math.abs(d - 0.5) < 1e-9 ? (fl % 2 === 0 ? fl : fl + 1) : Math.round(x); return r / s; };
+const rE = (v, n) => { const s = Math.pow(10, n || 0); return Math.floor((v + 1e-9) * s + 0.5) / s; };
+const r5m = v => 5 * Math.floor(v / 5 + 0.5);
+const ceil0 = v => Math.ceil(v - 1e-9);
+const floor2 = v => Math.floor(v * 100 + 1e-9) / 100;
+const ceil10 = v => Math.ceil(v / 10 - 1e-9) * 10;
+const sum = a => a.reduce((x, y) => x + y, 0);
+const fail = m => { throw new Error(m); };
+
+// ---- 1. required average strength ----
+function kfac(n) {
+  if (n >= 30) return 1.00;
+  const K = T.ktab;
+  for (let i = 0; i < K.length - 1; i++) { const [n1, k1] = K[i], [n2, k2] = K[i + 1];
+    if (n >= n1 && n <= n2) return py(k1 + (n - n1) / (n2 - n1) * (k2 - k1), 2); }
+  return null;
+}
+function fcrSI(fc, s, n) {
+  const k = kfac(n); if (k == null) fail('Fewer than 15 test results: use the values for no data (Table 6.2).');
+  const ks = py(k * s, 2), u1 = fc + 1.34 * ks, u2 = fc <= 35 ? fc + 2.33 * ks - 3.5 : 0.90 * fc + 2.33 * ks;
+  const e1 = hu(u1, 1), e2 = hu(u2, 1);
+  return { fc, s, n, k, ks, e1, e2, fcr: Math.max(e1, e2), gov: u1 >= u2 ? 1 : 2 };
+}
+function fcrUS(fc, s, n) {
+  const k = kfac(n); if (k == null) fail('Fewer than 15 test results: use the values for no data (Table 6.2).');
+  const ks = py(k * s, 0), e1 = py(fc + 1.34 * ks, 0);
+  const e2 = py(fc <= 5000 ? fc + 2.33 * ks - 500 : 0.90 * fc + 2.33 * ks, 0);
+  return { fc, s, n, k, ks, e1, e2, fcr: ceil10(Math.max(e1, e2)), gov: e1 >= e2 ? 1 : 2 };
+}
+function fcrNoData(fc, units) {
+  if (units === 'us') { const eq = fc < 3000 ? 'f′c + 1000' : fc <= 5000 ? 'f′c + 1200' : '1.10 f′c + 700';
+    return { fcr: py(fc < 3000 ? fc + 1000 : fc <= 5000 ? fc + 1200 : 1.10 * fc + 700, 0), eq }; }
+  const eq = fc < 21 ? 'f′c + 6.9' : fc <= 35 ? 'f′c + 8.3' : '1.10 f′c + 4.8';
+  return { fcr: hu(fc < 21 ? fc + 6.9 : fc <= 35 ? fc + 8.3 : 1.10 * fc + 4.8, 1), eq };
+}
+function fcrEN(fck, s, k) { const M = rE(k * s); return { fck, s, k, M, fm: fck + M }; }
+
+// ---- 2. ACI 211.1 absolute volume ----
+function wcInterp(tab, f, col) {
+  const rows = tab.map(r => [r[0], col === 1 ? r[1] : r[2]]).filter(r => r[1] != null).sort((a, b) => a[0] - b[0]);
+  for (let i = 0; i < rows.length - 1; i++) { const [f1, w1] = rows[i], [f2, w2] = rows[i + 1];
+    if (f1 <= f && f <= f2) return { wc: py(w1 + (f - f1) / (f2 - f1) * (w2 - w1), 3), br: [f1, w1, f2, w2] }; }
+  return fail('The required strength ' + f + ' is outside the range of Table 6.6 (' + rows[0][0] + ' to ' + rows[rows.length - 1][0] + ') for this column.');
+}
+function bb0(size, fm) {
+  const row = T.bb0[String(size)]; if (!row) fail('No b/b0 row for this size.');
+  if (fm < 2.40 || fm > 3.00) fail('Fineness modulus outside 2.40 to 3.00: the table does not apply, blend the sand.');
+  for (let i = 0; i < 3; i++) { const a = T.fms[i], b = T.fms[i + 1];
+    if (a <= fm && fm <= b) return { raw: py(row[i] + (fm - a) / (b - a) * (row[i + 1] - row[i]), 3), row, i }; }
+}
+function expoRow(c) { return T.expo.find(r => r[0] === c) || null; }
+function design(p) {
+  const us = p.units === 'us', o = { units: p.units, p };
+  const dens = us ? RHO_W_US : RHO_W, col = p.ae ? 2 : 1;
+  const idx = T.sizes_mm.indexOf(p.size); if (idx < 0) fail('Unknown maximum aggregate size.');
+  // strength
+  if (p.strength === 'nodata') { const nd = fcrNoData(p.fc, p.units); o.fcrObj = { nodata: true, eq: nd.eq, fcr: nd.fcr }; }
+  else o.fcrObj = us ? fcrUS(p.fc, p.s, p.n) : fcrSI(p.fc, p.s, p.n);
+  o.fcr = o.fcrObj.fcr;
+  const wi = wcInterp(us ? T.wc_us : T.wc_si, o.fcr, col); o.wc_raw = wi.wc; o.wc_br = wi.br;
+  let wcm = p.wcm != null ? p.wcm : floor2(wi.wc); o.wcm_str = wcm; o.wcm_given = p.wcm != null; o.wcmGov = 'strength';
+  const ex = p.exposure ? expoRow(p.exposure) : null; o.expo = ex;
+  if (ex && ex[1] != null && wcm > ex[1]) { wcm = ex[1]; o.wcmGov = 'durability'; }
+  o.wcm = wcm;
+  if (ex) { o.fcMin = us ? ex[2] : ex[3]; o.fcMinOk = p.fc >= o.fcMin; }
+  // water and air
+  const slump = p.slump, wt = (p.ae ? (us ? T.w_ae_us : T.w_ae) : (us ? T.w_non_us : T.w_non))[slump];
+  const water0 = wt[idx]; if (water0 == null) fail('Table 6.5 has no water value for this size and slump.');
+  let air;
+  if (!p.ae) air = T.air_trap[idx];
+  else { const a = T.air318[T.sizes_in[idx]]; air = a ? a[p.airLevel === 'severe' ? 1 : 0] : T.air_ae[p.airLevel === 'severe' ? 'Severe' : 'Moderate'][idx]; }
+  o.water0 = water0; o.air = air;
+  const scm = p.scm && p.scm.pct > 0 ? p.scm : null; o.scm = scm;
+  o.water = scm && scm.red ? py(water0 * (1 - scm.red), 0) : water0;
+  // cementitious content
+  o.cm = ceil0(o.water / wcm); o.cm_raw = hu(o.water / wcm, 1);
+  if (scm) { o.scmMass = py(scm.pct / 100 * o.cm, 0); o.cem = o.cm - o.scmMass; } else { o.cem = o.cm; o.scmMass = 0; }
+  // coarse aggregate
+  const b = bb0(p.size, p.FM); o.bb0_raw = b.raw; o.bb0 = py(b.raw, 2); o.bbRow = b;
+  o.coarse = py(o.bb0 * (us ? 27 : 1) * p.DRUW, 0);
+  const rdCem = p.rdCem || 3.15, rd = x => us ? py(x + 1e-9, 2) : py(x, 4);
+  const V = us
+    ? { w: rd(o.water / dens), c: rd(o.cem / (rdCem * dens)), a: rd(air / 100 * 27), g: rd(o.coarse / (p.RDc * dens)) }
+    : { w: py(o.water / RHO_W, 4), c: py(o.cem / (rdCem * 1000), 4), a: py(air / 100, 4), g: py(o.coarse / (p.RDc * RHO_W), 4) };
+  if (scm) V.f = us ? rd(o.scmMass / (scm.rd * dens)) : py(o.scmMass / (scm.rd * RHO_W), 4);
+  V.sum = us ? rd(sum(Object.values(V))) : py(sum(Object.values(V)), 4);
+  V.s = us ? rd(27 - V.sum) : py(1 - V.sum, 4);
+  o.V = V; o.Vtot = us ? 27 : 1;
+  if (V.s <= 0) fail('The volumes of water, cement, air and coarse aggregate already fill the m³: check the inputs.');
+  o.fine = py(V.s * p.RDf * dens, 0);
+  o.total = o.water + o.cem + o.scmMass + o.coarse + o.fine;
+  o.paste = py(V.w + V.c + (V.f || 0), us ? 2 : 4);
+  o.coarse_ssd = py(o.coarse * (1 + p.absc / 100), 0); o.fine_ssd = py(o.fine * (1 + p.absf / 100), 0);
+  // conversions as in the book tables
+  const cv = x => us ? py(x / KG, 0) : py(x * KG, 0);
+  o.conv = { water: cv(o.water), cem: cv(o.cem), scm: cv(o.scmMass), coarse: cv(o.coarse), fine: cv(o.fine) };
+  o.conv.total = o.conv.water + o.conv.cem + o.conv.scm + o.conv.coarse + o.conv.fine;
+  // cross-check by the mass method (Table 6.9), no SCM
+  if (!scm) { const d = T.dens[idx], d0 = us ? (p.ae ? d[4] : d[3]) : (p.ae ? d[2] : d[1]);
+    const fs = d0 - o.water - o.cem - o.coarse_ssd, fo = py(fs / (1 + p.absf / 100), 0);
+    o.mass = { dens: d0, fine_ssd: fs, fine_od: fo, diff: fo - o.fine, pct: hu(100 * (fo - o.fine) / o.fine, 1) }; }
+  return o;
+}
+
+// ---- 4. moisture correction (Equation 4.3 of the book) ----
+function moisture(p) {
+  const sd = p.stockDp == null ? 1 : p.stockDp, fd = p.freeDp == null ? 1 : p.freeDp, mode = p.mode || 'od';
+  const rows = p.agg.map(a => {
+    const r = { name: a.name, mass: a.mass, mc: a.mc, abs: a.abs };
+    if (mode === 'ssd_simple') { r.freePct = rE(a.mc - a.abs, 1); r.stock = rE(a.mass * (1 + r.freePct / 100)); r.free = rE(a.mass * r.freePct / 100); }
+    else { r.od = mode === 'ssd' ? py(a.mass / (1 + a.abs / 100), 2) : a.mass; r.stock = hu(r.od * (1 + a.mc / 100), sd); r.free = hu(r.od * (a.mc - a.abs) / 100, fd); }
+    return r; });
+  const free = sum(rows.map(r => r.free)), wb = hu(p.water - free, 1);
+  const v = p.volume || 1, sc = x => hu(x * v, 1);
+  const o = { rows, free, water: p.water, wb, netExtra: hu(free, 1), volume: v };
+  o.batch = { water: sc(wb), others: (p.others || []).map(x => ({ name: x.name, mass: sc(x.mass) })), agg: rows.map(r => ({ name: r.name, mass: sc(r.stock) })) };
+  o.total = hu(sum(rows.map(r => r.stock)) + wb + sum((p.others || []).map(x => x.mass)), 1);
+  if (p.cement) o.wc_if_skipped = py((p.water + free) / p.cement, 3);
+  return o;
+}
+
+// ---- 3. BRE (DoE) method ----
+const LNB = T.LNB;
+const wcFrom = (fm, f05) => py(0.5 - Math.log(fm / f05) / LNB, 2);
+function wdens(W, rd) {
+  const ks = Object.keys(T.WD).map(Number).sort((a, b) => a - b);
+  if (W < ks[0] || W > ks[ks.length - 1]) fail('Free water ' + W + ' kg/m³ is outside the wet density table (100 to 260).');
+  if (rd < 2.4 || rd > 2.9) fail('Aggregate particle density outside 2.4 to 2.9 (wet density table).');
+  const lo = Math.max(...ks.filter(k => k <= W)), hi = Math.min(...ks.filter(k => k >= W)), R = T.RDS;
+  const at = k => { const row = T.WD[k]; let i = 0; for (let j = 0; j < 5; j++) if (R[j] >= rd && rd >= R[j + 1]) { i = j; break; }
+    return row[i] + (row[i + 1] - row[i]) * (R[i] - rd) / (R[i] - R[i + 1]); };
+  const v = lo === hi ? at(lo) : at(lo) + (at(hi) - at(lo)) * (W - lo) / (hi - lo);
+  return r5m(v);
+}
+function sandp(dmax, band, wc, p600) {
+  const tab = T.F6[String(dmax)] && T.F6[String(dmax)][band]; if (!tab) fail('No sand proportion chart for this maximum size and slump band.');
+  const xs = Object.keys(tab).map(Number).sort((a, b) => a - b);
+  if (wc < xs[0] || wc > xs[xs.length - 1]) fail('Free w/c ' + wc + ' is outside the range of the sand chart (0.2 to 0.8).');
+  const lo = Math.max(...xs.filter(x => x <= wc)), hi = Math.min(...xs.filter(x => x >= wc)), j = T.PASS.indexOf(p600);
+  if (j < 0) fail('Use 15, 40, 60, 80 or 100 % passing 600 µm.');
+  const g = x => tab[String(x)][j];
+  return rE(lo === hi ? g(lo) : g(lo) + (g(hi) - g(lo)) * (wc - lo) / (hi - lo));
+}
+const kdefOf = pct => { const r = T.KDEF.find(x => x[0] === pct); return r ? r[1] : fail('Unknown defective percentage.'); };
+const usv = v => rE(v * KG);
+function bre(p) {
+  const o = { p, fc: p.fc, s: p.s, k: p.k };
+  o.M = rE(p.k * p.s); o.fm = p.fc + o.M;
+  const crushed = p.agg === 'crushed' || p.agg === 'mixed';
+  o.f05 = T.T2[p.cem + '|' + (crushed ? 'crushed' : 'uncrushed')];
+  o.wc_s = wcFrom(o.fm, o.f05); o.wc = Math.min(o.wc_s, p.wcmax); o.gov = o.wc_s <= p.wcmax ? 'strength' : 'durability';
+  const bi = T.BANDS.indexOf(p.band), t3 = c => T.T3[p.dmax + '|' + c];
+  if (!t3('u')) fail('Table 3 has no row for this maximum size.');
+  if (p.agg === 'mixed') { o.Wf = t3('u')[bi]; o.Wc = t3('c')[bi]; o.W = rE(2 / 3 * o.Wf + 1 / 3 * o.Wc); }
+  else o.W = t3(p.agg === 'crushed' ? 'c' : 'u')[bi];
+  o.C = rE(o.W / o.wc); o.C_ok = o.C >= p.cmin;
+  o.D = wdens(o.W, p.rd); o.TA = o.D - o.C - o.W;
+  o.sp = sandp(p.dmax, p.band, o.wc, p.p600); o.FA = rE(o.TA * o.sp / 100); o.CA = o.TA - o.FA;
+  const sp = p.split || (p.dmax === 20 ? [1, 2] : [1, 1.5, 3]), tot = sum(sp);
+  o.split = sp; o.CAs = sp.map(x => rE(o.CA * x / tot));
+  o.final = { C: r5m(o.C), W: r5m(o.W), FA: r5m(o.FA), CAs: o.CAs.map(r5m) };
+  o.final.sum = o.final.C + o.final.W + o.final.FA + sum(o.final.CAs);
+  o.final_us = { C: usv(o.final.C), W: usv(o.final.W), FA: usv(o.final.FA), CAs: o.final.CAs.map(usv) };
+  o.final_us.sum = o.final_us.C + o.final_us.W + o.final_us.FA + sum(o.final_us.CAs);
+  o.wc_final = rE(o.final.W / o.final.C, 2);
+  return o;
+}
+function breFA(p) {
+  const o = { p, fc: p.fc, s: p.s, pct: p.pct }, bi = T.BANDS.indexOf(p.band);
+  o.M = rE(p.k * p.s); o.fm = p.fc + o.M; o.f05 = T.T2[(p.cem || '42.5') + '|uncrushed']; o.r = wcFrom(o.fm, o.f05);
+  const t3 = T.T3[p.dmax + '|u']; if (!t3) fail('Table 3 has no row for this maximum size.');
+  const t9 = T.T9[String(p.pct)]; if (!t9) fail('Table 9 gives reductions for 10, 20, 30, 40 or 50 % fly ash.');
+  o.W0 = t3[bi]; o.dW = t9[bi]; o.W = o.W0 - o.dW;
+  o.Wr = rE(o.W / o.r, 1); o.den = rE(100 - 0.7 * p.pct);
+  o.C = rE(o.Wr * (100 - p.pct) / o.den); o.F = rE(o.Wr * p.pct / o.den); o.CF = o.C + o.F;
+  o.fcount = rE(0.33 * o.C, 1); o.fuse = Math.min(o.F, o.fcount); o.eqEN = rE(o.C + 0.4 * o.fuse, 1);
+  o.wbEN = rE(o.W / o.eqEN, 2); o.ok_wc = o.wbEN <= p.wcmax; o.ok_c = o.eqEN >= p.cmin;
+  o.red = rE(0.4 * (p.cmin - 200)); o.c_low = p.cmin - o.red; o.ok_red = o.C >= o.c_low;
+  o.wcf = rE(o.W / o.CF, 2); o.D = wdens(o.W, p.rd); o.TA = o.D - o.CF - o.W;
+  o.sp = sandp(p.dmax, p.band, o.wcf, p.p600); o.FA = rE(o.TA * o.sp / 100); o.CA = o.TA - o.FA;
+  const c1 = rE(o.CA / 3); o.CAs = [c1, o.CA - c1];
+  o.final = { C: r5m(o.C), F: r5m(o.F), W: r5m(o.W), FA: r5m(o.FA), CAs: o.CAs.map(r5m) };
+  o.final.sum = o.final.C + o.final.F + o.final.W + o.final.FA + sum(o.final.CAs);
+  o.final_us = { C: usv(o.final.C), F: usv(o.final.F), W: usv(o.final.W), FA: usv(o.final.FA), CAs: o.final.CAs.map(usv) };
+  o.wcm_us = rE(o.final_us.W / (o.final_us.C + o.final_us.F), 2);
+  o.chk_ratio = rE(o.W / o.CF, 2);
+  return o;
+}
+
+// ---- 5. EN 206 ----
+const cubeOf = c => { const m = /^C(\d+)\/(\d+)$/.exec(c); return m ? +m[2] : null; };
+function enLimits(exposures, structural) {
+  const rows = exposures.map(e => ({ cls: e, wc: T.F1[e].wc, cmin: T.F1[e].cmin, mincls: T.F1[e].cls, air: T.F1[e].air }));
+  const wcs = rows.map(r => r.wc).filter(x => x != null), cms = rows.map(r => r.cmin).filter(x => x != null), airs = rows.map(r => r.air).filter(x => x != null);
+  const classes = rows.map(r => r.mincls).concat(structural ? [structural] : []);
+  const gov = classes.reduce((a, b) => cubeOf(b) > cubeOf(a) ? b : a);
+  const cmin = cms.length ? Math.max(...cms) : null;
+  return { rows, wc: wcs.length ? Math.min(...wcs) : null, cmin, cmin_us: cmin ? usv(cmin) : null, cls_gov: gov, fc_cube: cubeOf(gov),
+    air: airs.length ? Math.max(...airs) : null };
+}
+function kvalue(c, f, w, opt) {
+  opt = opt || {}; const k = opt.k == null ? 0.4 : opt.k, cap = opt.cap == null ? 0.33 : opt.cap;
+  const fmax = rE(cap * c, 1), fcount = Math.min(f, fmax), eq = rE(c + k * fcount, 1);
+  const o = { c, f, w, k, cap, fmax, fcount, excess: rE(f - fcount, 1), eq, wb: rE(w / eq, 2), ratio: py(w / eq, 3), naive: rE(w / (c + f), 2) };
+  if (opt.cmin != null) { o.red = rE(0.4 * (opt.cmin - 200)); o.c_low = opt.cmin - o.red; }
+  if (opt.wcmax != null) o.ok_wc = o.wb <= opt.wcmax;
+  if (opt.cmin != null) o.ok_c = eq >= opt.cmin;
+  return o;
+}
+function conformInitial(fck, res) {
+  const mean = rE(sum(res) / res.length, 1);
+  return { fck, res, mean, crit_m: fck + 4, crit_i: fck - 4, mn: Math.min(...res), ok_m: mean >= fck + 4, ok_i: Math.min(...res) >= fck - 4 };
+}
+function conformContinuous(fck, res, sigma) {
+  const n = res.length, tot = sum(res), mean = rE(tot / n, 1);
+  const s = rE(Math.sqrt(sum(res.map(x => (x - tot / n) * (x - tot / n))) / (n - 1)), 2);
+  const lo = rE(0.63 * sigma, 2), hi = rE(1.37 * sigma, 2), crit_m = rE(fck + 1.48 * sigma, 1);
+  return { fck, res, n, sum: rE(tot, 1), mean, s, sigma, lo, hi, s_ok: lo <= s && s <= hi, M: rE(1.48 * sigma, 1), crit_m, ok_m: mean >= crit_m,
+    crit_i: fck - 4, mn: Math.min(...res), ok_i: Math.min(...res) >= fck - 4 };
+}
+return { T, PSI, KG, round: { hu, py, rE, r5m, ceil0, floor2, ceil10 }, kfac, fcrSI, fcrUS, fcrNoData, fcrEN, wcInterp, bb0, design, moisture,
+  wcFrom, wdens, sandp, kdefOf, bre, breFA, enLimits, kvalue, conformInitial, conformContinuous, cubeOf, usv,
+  psi: v => 10 * Math.floor(v * PSI / 10 + 0.5), mpa: v => hu(v / PSI, 1) };
+})();
+
+</script>
+<script id="app">
+(function () {
+'use strict';
+const C = CTI, T = C.T, $ = id => document.getElementById(id);
+const nf = (v, d) => (d == null ? String(v) : Number(v).toFixed(d)).replace('-', '−');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const EQ = s => '<div class="eq">' + s + '</div>';
+const ok = (b, y, n) => '<span class="' + (b ? 'ok' : 'no') + '">' + (b ? '✓ ' + y : '✗ ' + n) + '</span>';
+const KG = C.KG;
+
+// ---------- form helpers ----------
+function F(id, label, val, o) {
+  o = o || {};
+  const hint = o.hint ? '<small class="h">' + o.hint + '</small>' : '', cls = 'f' + (o.full ? ' full' : '') + (o.type === 'checkbox' ? ' chk' : '');
+  if (o.opts) return '<div class="' + cls + '"><label for="' + id + '">' + label + '</label><select id="' + id + '">' +
+    o.opts.map(x => '<option value="' + esc(x[0]) + '"' + (String(x[0]) === String(val) ? ' selected' : '') + '>' + x[1] + '</option>').join('') + '</select>' + hint + '</div>';
+  if (o.type === 'checkbox') return '<div class="' + cls + '"><input type="checkbox" id="' + id + '"' + (val ? ' checked' : '') + '><label for="' + id + '">' + label + '</label></div>';
+  if (o.type === 'text') return '<div class="' + cls + '"><label for="' + id + '">' + label + '</label><input type="text" id="' + id + '" value="' + esc(val) + '" autocomplete="off">' + hint + '</div>';
+  return '<div class="' + cls + '"><label for="' + id + '">' + label + (o.unit ? ' <span class="u">(' + o.unit + ')</span>' : '') + '</label><input type="number" id="' + id + '" value="' + val + '" step="' + (o.step || 'any') + '" inputmode="decimal">' + hint + '</div>';
+}
+function num(id) { const el = $(id), v = parseFloat(el.value); if (!isFinite(v)) { const l = document.querySelector('label[for=' + id + ']'); throw new Error('Enter a number for "' + (l ? l.textContent.replace(/\s+/g, ' ').trim() : id) + '".'); } return v; }
+function list(id, min) { const a = $(id).value.split(/[\s,;]+/).filter(Boolean).map(Number); if (a.some(x => !isFinite(x)) || a.length < min) throw new Error('Enter at least ' + min + ' numbers separated by commas.'); return a; }
+function stepsHTML(st) { return '<ol class="steps">' + st.map(s => '<li><b>' + s[0] + '</b>' + s[1].map(x => x.indexOf('<') === 0 ? x : EQ(x)).join('') + '</li>').join('') + '</ol>'; }
+function wrap(panel, fn) { // run with error display
+  return function () { const out = $(panel + 'out'); try { out.innerHTML = fn(); } catch (e) { out.innerHTML = '<p class="err" role="alert">' + esc(e.message) + '</p>'; } };
+}
+function head(title, ref) { return '<div class="ph"><div><h2>' + title + '</h2><p class="ref">Book reference: ' + ref + '</p></div><button class="btn noprint" type="button" data-print>Print results</button></div>'; }
+const opt = a => a.map(x => [x, x]);
+const fcLabel = us => us ? 'psi' : 'MPa';
+
+// ---------- Module 1: required average strength ----------
+const D1 = { si: { fc: 35, s: 3.6, n: 22 }, us: { fc: 6000, s: 520, n: 30 } };
+function mod1() {
+  const p = $('p1');
+  p.innerHTML = head('Required average strength', 'Chapter 6, Section 6.1, Worked Examples 6.1 and 6.2 (ACI); Chapter 7, Section 7.3, Worked Examples 7.3 and 7.4 (EN margin)') +
+  '<div class="grid"><div class="card"><h3>ACI 318 and 214 (f′cr)</h3><div class="fields">' +
+   F('a_u', 'Units', 'si', { opts: [['si', 'SI (MPa)'], ['us', 'US (psi)']] }) +
+   F('a_m', 'Standard deviation', 'data', { opts: [['data', 'From test records'], ['nodata', 'No records (Table 6.2)']] }) +
+   F('a_fc', 'Specified strength f′c <span class="u" id="a_fcu">(MPa)</span>', D1.si.fc, { }) +
+   F('a_s', 'Standard deviation s <span class="u" id="a_su">(MPa)</span>', D1.si.s, {}) +
+   F('a_n', 'Number of tests n', D1.si.n, { hint: 'Fewer than 15: use the no records option.' }) +
+  '</div></div><div class="card out" id="p1aout" aria-live="polite"></div></div>' +
+  '<div class="grid"><div class="card"><h3>EN 206 and BRE (target mean)</h3><div class="fields">' +
+   F('e_c', 'Strength class', 'C25/30', { opts: T.classes.map(c => ['C' + c[0] + '/' + c[1], 'C' + c[0] + '/' + c[1]]) }) +
+   F('e_k', 'Defective rate', '5', { opts: T.KDEF.map(k => [k[0], k[0] + ' % (k = ' + k[1] + ')']), hint: 'The book uses 5 % (k = 1.64).' }) +
+   F('e_s', 'Standard deviation s <span class="u">(MPa)</span>', 8, { hint: 'Use 8 MPa when there are no records (Worked Example 7.3).' }) +
+  '</div></div><div class="card out" id="p1eout" aria-live="polite"></div></div>';
+  $('a_u').addEventListener('change', () => { const u = $('a_u').value, d = D1[u]; $('a_fc').value = d.fc; $('a_s').value = d.s; $('a_n').value = d.n; $('a_fcu').textContent = '(' + fcLabel(u === 'us') + ')'; $('a_su').textContent = '(' + fcLabel(u === 'us') + ')'; });
+  const ra = function () { const out = $('p1aout'); try { out.innerHTML = aci1(); } catch (e) { out.innerHTML = '<p class="err" role="alert">' + esc(e.message) + '</p>'; } };
+  const re = function () { const out = $('p1eout'); try { out.innerHTML = en1(); } catch (e) { out.innerHTML = '<p class="err" role="alert">' + esc(e.message) + '</p>'; } };
+  p.addEventListener('input', () => { ra(); re(); }); p.addEventListener('change', () => { ra(); re(); }); ra(); re();
+}
+function aci1() {
+  const us = $('a_u').value === 'us', fc = num('a_fc'), u = fcLabel(us);
+  if ($('a_m').value === 'nodata') {
+    const r = C.fcrNoData(fc, us ? 'us' : 'si');
+    return '<h3>Result</h3><div class="big"><div class="kpi"><span>f′cr</span><strong>' + nf(r.fcr, us ? 0 : 1) + ' ' + u + '</strong></div></div>' + stepsHTML([['No records', ['f′cr = ' + r.eq + ' = ' + nf(r.fcr, us ? 0 : 1) + ' ' + u, '<p class="note">Used when fewer than 15 tests are available. It is conservative: with a good record the margin is much smaller (Table 6.3).</p>']]]);
+  }
+  const s = num('a_s'), n = num('a_n'), r = us ? C.fcrUS(fc, s, n) : C.fcrSI(fc, s, n), d = us ? 0 : 1;
+  const e2 = us ? (fc <= 5000 ? 'f′c + 2.33 ks − 500 = ' + fc + ' + 2.33 × ' + r.ks + ' − 500' : '0.90 f′c + 2.33 ks = 0.90 × ' + fc + ' + 2.33 × ' + r.ks) : (fc <= 35 ? 'f′c + 2.33 ks − 3.5 = ' + fc + ' + 2.33 × ' + nf(r.ks, 2) + ' − 3.5' : '0.90 f′c + 2.33 ks = 0.90 × ' + fc + ' + 2.33 × ' + nf(r.ks, 2));
+  const conv = us ? '<p class="note">= ' + nf(C.mpa(r.fcr), 1) + ' MPa</p>' : '<p class="note">= ' + C.psi(r.fcr) + ' psi</p>';
+  return '<h3>Result</h3><div class="big"><div class="kpi"><span>f′cr</span><strong>' + nf(r.fcr, d) + ' ' + u + '</strong></div><div class="kpi"><span>Governs</span><strong>Eq. ' + (r.gov === 1 ? '6.1' : '6.2') + '</strong></div></div>' + conv +
+    stepsHTML([['Modification factor for the number of tests', ['k = ' + nf(r.k, 2) + ' for n = ' + n + ' (Table 6.1, interpolated, 1.00 from 30 tests)', 'ks = ' + nf(r.k, 2) + ' × ' + s + ' = ' + nf(r.ks, us ? 0 : 2) + ' ' + u]],
+      ['Equation 6.1', ['f′cr = f′c + 1.34 ks = ' + fc + ' + 1.34 × ' + nf(r.ks, us ? 0 : 2) + ' = ' + nf(r.e1, d) + ' ' + u]],
+      ['Equation 6.2', ['f′cr = ' + e2 + ' = ' + nf(r.e2, d) + ' ' + u]],
+      ['Required average strength', ['The larger value governs: f′cr = ' + nf(r.fcr, d) + ' ' + u + (us ? ' (rounded up to 10 psi)' : '')]]]);
+}
+function en1() {
+  const cl = $('e_c').value, m = /^C(\d+)\/(\d+)$/.exec(cl), cyl = +m[1], cube = +m[2], s = num('e_s'), kd = +$('e_k').value, k = C.kdefOf(kd), r = C.fcrEN(cube, s, k);
+  return '<h3>Result</h3><div class="big"><div class="kpi"><span>Target mean, cube</span><strong>' + (cube + r.M) + ' MPa</strong></div><div class="kpi"><span>Target mean, cylinder</span><strong>' + (cyl + r.M) + ' MPa</strong></div><div class="kpi"><span>Margin M</span><strong>' + r.M + ' MPa</strong></div></div>' +
+    '<p class="note">' + C.psi(cube + r.M) + ' psi (cube) and ' + C.psi(cyl + r.M) + ' psi (cylinder).</p>' +
+    stepsHTML([['Characteristic strengths', [cl + ': f<sub>ck,cyl</sub> = ' + cyl + ' MPa, f<sub>ck,cube</sub> = ' + cube + ' MPa. The BRE method of module 3 works with the cube value.']],
+      ['Margin', ['M = k × s = ' + k + ' × ' + s + ' = ' + nf(k * s, 2) + ', rounded to ' + r.M + ' MPa (' + kd + ' % defectives)']],
+      ['Target mean strength', ['f<sub>m</sub> = f<sub>ck</sub> + M = ' + cube + ' + ' + r.M + ' = ' + r.fm + ' MPa (cube)', 'f<sub>m</sub> = ' + cyl + ' + ' + r.M + ' = ' + (cyl + r.M) + ' MPa (cylinder)']]]);
+}
+
+// ---------- Module 2: ACI absolute volume ----------
+const D2 = {
+  si: { fc: 30, s: 3.0, n: 35, slump: '75-100', size: 25, ae: false, FM: 2.91, DRUW: 1605, RDc: 2.61, absc: 1.56, RDf: 2.60, absf: 1.2 },
+  us: { fc: 3500, s: 400, n: 20, slump: '75-100', size: 25, ae: true, FM: 2.80, DRUW: 100.2, RDc: 2.61, absc: 1.56, RDf: 2.60, absf: 1.2 } };
+const SLU = { '25-50': ['25 to 50 mm', '1 to 2 in.'], '75-100': ['75 to 100 mm', '3 to 4 in.'], '150-175': ['150 to 175 mm', '6 to 7 in.'] };
+function mod2() {
+  const p = $('p2'), d = D2.si, slOpts = u => Object.keys(SLU).map(k => [k, SLU[k][u]]);
+  p.innerHTML = head('ACI absolute volume mix', 'Chapter 6, Section 6.2, Worked Example 6.3 (SI); Section 6.5, Worked Example 6.8 (fly ash); Section 6.6, Worked Example 6.9 (air-entrained); Section 6.7, Worked Example 6.10 (US)') +
+  '<div class="grid"><div class="card"><div class="fields">' +
+   F('m_u', 'Units', 'si', { opts: [['si', 'SI (kg, m³, MPa)'], ['us', 'US (lb, yd³, psi)']] }) +
+   F('m_m', 'Standard deviation', 'data', { opts: [['data', 'From test records'], ['nodata', 'No records']] }) +
+   F('m_fc', 'Specified strength f′c <span class="u" id="m_fcu">(MPa)</span>', d.fc) +
+   F('m_s', 'Standard deviation s <span class="u" id="m_su">(MPa)</span>', d.s) +
+   F('m_n', 'Number of tests n', d.n) +
+   F('m_sl', 'Slump (Table 6.5)', d.slump, { opts: slOpts(0) }) +
+   F('m_size', 'Nominal maximum size D', d.size, { opts: T.sizes_mm.map((mm, i) => [mm, mm + ' mm (' + T.sizes_in[i] + ' in.)']) }) +
+   F('m_ex', 'Exposure class (ACI 318)', '', { opts: [['', 'None selected']].concat(T.expo.filter(e => e[1] != null).map(e => [e[0], e[0] + ' (max w/cm ' + e[1] + ')'])) }) +
+   F('m_ae', 'Air-entrained concrete', d.ae, { type: 'checkbox' }) +
+   F('m_al', 'Air exposure level', 'moderate', { opts: [['moderate', 'Moderate (F1)'], ['severe', 'Severe (F2, F3)']] }) +
+   F('m_fm', 'Fineness modulus of sand', d.FM, { step: '0.01' }) +
+   F('m_dr', 'Dry-rodded unit weight of gravel <span class="u" id="m_dru">(kg/m³)</span>', d.DRUW) +
+   F('m_rc', 'Gravel relative density (OD)', d.RDc, { step: '0.01' }) +
+   F('m_ac', 'Gravel absorption <span class="u">(%)</span>', d.absc, { step: '0.01' }) +
+   F('m_rf', 'Sand relative density (OD)', d.RDf, { step: '0.01' }) +
+   F('m_af', 'Sand absorption <span class="u">(%)</span>', d.absf, { step: '0.01' }) +
+   F('m_rcem', 'Cement relative density', 3.15, { step: '0.01' }) +
+   F('m_wcm', 'w/cm from trial batches (optional)', '', { type: 'text', hint: 'Leave empty to take it from Table 6.6.' }) +
+   F('m_scm', 'Add fly ash or another SCM', false, { type: 'checkbox' }) +
+   F('m_sp', 'SCM share of cementitious mass <span class="u">(%)</span>', 25) +
+   F('m_sr', 'SCM relative density', 2.30, { step: '0.01' }) +
+   F('m_wr', 'Water reduction by admixture <span class="u">(%)</span>', 8, { hint: 'Worked Example 6.8 uses 8 %.' }) +
+  '</div><p class="note">Inputs are the sand and gravel of Chapter 4. Masses are oven-dry (OD), as in the book.</p></div><div class="card out" id="p2out" aria-live="polite"></div></div>';
+  const upd = () => { const u = $('m_u').value === 'us', cur = $('m_sl').value; $('m_sl').innerHTML = slOpts(u ? 1 : 0).map(x => '<option value="' + x[0] + '"' + (x[0] === cur ? ' selected' : '') + '>' + x[1] + '</option>').join('');
+    $('m_fcu').textContent = $('m_su').textContent = '(' + fcLabel(u) + ')'; $('m_dru').textContent = u ? '(lb/ft³)' : '(kg/m³)'; };
+  $('m_u').addEventListener('change', () => { const u = $('m_u').value, d = D2[u]; upd();
+    $('m_fc').value = d.fc; $('m_s').value = d.s; $('m_n').value = d.n; $('m_sl').value = d.slump; $('m_size').value = d.size; $('m_ae').checked = d.ae; $('m_fm').value = d.FM; $('m_dr').value = d.DRUW;
+    if (u === 'us') { $('m_ex').value = 'F1'; $('m_al').value = 'moderate'; } else { $('m_ex').value = ''; } });
+  $('m_ex').addEventListener('change', () => { const v = $('m_ex').value; if (v === 'F1') $('m_al').value = 'moderate'; else if (v === 'F2' || v.indexOf('F3') === 0) $('m_al').value = 'severe'; });
+  const run = wrap('p2', mod2run); p.addEventListener('input', run); p.addEventListener('change', run); run();
+  p.addEventListener('click', e => { const b = e.target.closest('[data-send]'); if (b) sendToMoisture(); });
+}
+let lastDesign = null;
+function mod2run() {
+  const us = $('m_u').value === 'us', sc = $('m_scm').checked, ae = $('m_ae').checked, wt = $('m_wcm').value.trim();
+  const prm = { units: us ? 'us' : 'si', strength: $('m_m').value, fc: num('m_fc'), s: $('m_m').value === 'data' ? num('m_s') : 0, n: $('m_m').value === 'data' ? num('m_n') : 0, slump: $('m_sl').value, size: +$('m_size').value, ae, airLevel: $('m_al').value,
+    exposure: $('m_ex').value || null, FM: num('m_fm'), DRUW: num('m_dr'), RDc: num('m_rc'), absc: num('m_ac'), RDf: num('m_rf'), absf: num('m_af'), rdCem: num('m_rcem') };
+  if (wt) { const v = parseFloat(wt); if (!isFinite(v) || v <= 0 || v > 1) throw new Error('w/cm must be between 0 and 1.'); prm.wcm = v; }
+  if (sc) prm.scm = { pct: num('m_sp'), rd: num('m_sr'), red: num('m_wr') / 100 };
+  const o = C.design(prm); lastDesign = o;
+  const u = fcLabel(us), m = us ? 'lb/yd³' : 'kg/m³', m2 = us ? 'kg/m³' : 'lb/yd³', vu = us ? 'ft³' : 'm³', dd = us ? 0 : 1, vd = us ? 2 : 4, W = us ? 62.4 : 1000;
+  const st = [];
+  // 1 strength
+  const f = o.fcrObj;
+  if (f.nodata) st.push(['Required average strength (no records)', ['f′cr = ' + f.eq + ' = ' + nf(f.fcr, dd) + ' ' + u]]);
+  else { const e2 = us ? (prm.fc <= 5000 ? 'f′c + 2.33 ks − 500' : '0.90 f′c + 2.33 ks') : (prm.fc <= 35 ? 'f′c + 2.33 ks − 3.5' : '0.90 f′c + 2.33 ks');
+    st.push(['Required average strength', ['k = ' + nf(f.k, 2) + ' (n = ' + f.n + '), ks = ' + nf(f.ks, us ? 0 : 2) + ' ' + u, 'f′c + 1.34 ks = ' + nf(f.e1, dd) + ';  ' + e2 + ' = ' + nf(f.e2, dd), 'f′cr = ' + nf(f.fcr, dd) + ' ' + u + ' (larger)']]); }
+  // 2 size
+  const si = T.sizes_mm.indexOf(prm.size);
+  st.push(['Maximum aggregate size and slump', ['D = ' + prm.size + ' mm (' + T.sizes_in[si] + ' in.); slump ' + SLU[prm.slump][0] + ' (' + SLU[prm.slump][1] + ')', '<p class="note">Check D against the limits of Figure 6.4: one fifth of the narrowest form width, three quarters of the clear bar spacing, one third of the slab depth.</p>']]);
+  // 3 water, air
+  const l3 = ['Table 6.5: water = ' + o.water0 + ' ' + m + (prm.ae ? ' (air-entrained)' : ' (non-air-entrained)'), 'Air ' + (prm.ae ? 'content (' + prm.airLevel + ' exposure)' : 'entrapped') + ' = ' + o.air + ' %'];
+  if (o.scm && o.scm.red) l3.push('Admixture lowers the water by ' + nf(o.scm.red * 100, 0) + ' %: ' + o.water0 + ' × (1 − ' + o.scm.red + ') = ' + o.water + ' ' + m);
+  st.push(['Water and air (Table 6.5)', l3]);
+  // 4 wcm
+  const br = o.wc_br, l4 = ['Table 6.6 between ' + br[0] + ' and ' + br[2] + ' ' + u + ': w/cm = ' + br[1] + ' + (' + nf(o.fcr, dd) + ' − ' + br[0] + ')/(' + br[2] + ' − ' + br[0] + ') × (' + br[3] + ' − ' + br[1] + ') = ' + nf(o.wc_raw, 3), 'Rounded down to 0.01 (safe side): ' + nf(o.wcm_str, 2) + (o.wcm_given ? ' (your trial-batch value)' : '')];
+  if (o.expo) { l4.push('Exposure ' + o.expo[0] + ': maximum w/cm ' + o.expo[1] + '; ' + (o.wcmGov === 'durability' ? 'durability governs, use ' + o.wcm : 'strength governs, ' + o.wcm_str + ' is within the limit')); l4.push('Minimum f′c for ' + o.expo[0] + ' is ' + (us ? o.expo[2] + ' psi' : o.expo[3] + ' MPa') + ': ' + (o.fcMinOk ? 'met' : 'NOT met by the specified f′c, raise it')); }
+  st.push(['Water-cementitious ratio (Table 6.6)', l4]);
+  // 5 cement
+  const nm = o.scm ? 'cementitious material' : 'cement';
+  const l5 = [nm + ' = ' + o.water + ' / ' + nf(o.wcm, 2) + ' = ' + nf(o.cm_raw, 1) + ', rounded up to ' + o.cm + ' ' + m];
+  if (o.scm) l5.push('SCM = ' + nf(o.scm.pct, 0) + ' % × ' + o.cm + ' = ' + o.scmMass + ' ' + m + ';  cement = ' + o.cm + ' − ' + o.scmMass + ' = ' + o.cem + ' ' + m, 'ACI counts all cementitious material in w/cm: no efficiency factor.');
+  st.push(['Cement content', l5]);
+  // 6 coarse
+  const b = o.bbRow, fm = prm.FM;
+  st.push(['Coarse aggregate (Table 6.7)', ['b/b₀ = ' + b.row[b.i] + ' + (' + nf(fm, 2) + ' − ' + T.fms[b.i].toFixed(2) + ')/(' + T.fms[b.i + 1].toFixed(2) + ' − ' + T.fms[b.i].toFixed(2) + ') × (' + b.row[b.i + 1] + ' − ' + b.row[b.i] + ') = ' + nf(o.bb0_raw, 3) + ', rounded to ' + nf(o.bb0, 2),
+    'Gravel = ' + nf(o.bb0, 2) + (us ? ' × 27 × ' : ' × ') + prm.DRUW + ' = ' + o.coarse + ' ' + m + ' (OD)']]);
+  // 7 volumes
+  const V = o.V, l7 = ['water  ' + nf(o.water, 0) + '/' + (us ? '62.4' : '1000') + ' = ' + nf(V.w, vd) + ' ' + vu, 'cement ' + o.cem + '/' + (us ? '(' + prm.rdCem + ' × 62.4)' : (prm.rdCem * 1000)) + ' = ' + nf(V.c, vd) + ' ' + vu];
+  if (V.f != null) l7.push('SCM    ' + o.scmMass + '/' + (us ? '(' + o.scm.rd + ' × 62.4)' : (o.scm.rd * 1000)) + ' = ' + nf(V.f, vd) + ' ' + vu);
+  l7.push('air    ' + o.air + ' % = ' + nf(V.a, vd) + ' ' + vu, 'gravel ' + o.coarse + '/(' + prm.RDc + ' × ' + W + ') = ' + nf(V.g, vd) + ' ' + vu, 'sum    = ' + nf(V.sum, vd) + ' ' + vu, 'sand volume = ' + o.Vtot + ' − ' + nf(V.sum, vd) + ' = ' + nf(V.s, vd) + ' ' + vu, 'sand mass = ' + nf(V.s, vd) + ' × ' + prm.RDf + ' × ' + W + ' = ' + o.fine + ' ' + m + ' (OD)');
+  st.push(['Absolute volume and sand', l7]);
+  // checks
+  const l8 = ['Volumes add to ' + o.Vtot + ' ' + vu + ' by construction; paste (water + cementitious) = ' + nf(o.paste, vd) + ' ' + vu + ' (' + nf(100 * o.paste / o.Vtot, 0) + ' % of the volume, about a third)'];
+  if (o.mass) l8.push('Mass method (Table 6.9): ' + o.mass.dens + ' − ' + o.water + ' − ' + o.cem + ' − ' + o.coarse_ssd + ' = ' + o.mass.fine_ssd + ' ' + m + ' SSD sand, ' + o.mass.fine_od + ' OD; difference to the absolute volume sand ' + (o.mass.diff >= 0 ? '+' : '') + o.mass.diff + ' (' + nf(o.mass.pct, 1) + ' %). Use it only as a cross-check.');
+  st.push(['Quick checks', l8]);
+  // result table
+  const rows = [['Water', o.water, o.conv.water], ['Cement', o.cem, o.conv.cem]]; if (o.scm) rows.push(['SCM (' + nf(o.scm.pct, 0) + ' %)', o.scmMass, o.conv.scm]);
+  rows.push(['Gravel (OD)', o.coarse, o.conv.coarse], ['Sand (OD)', o.fine, o.conv.fine]);
+  const tab = '<div class="tw"><table><thead><tr><th>Material</th><th>' + m + '</th><th>' + m2 + '</th><th>SSD ' + m + '</th></tr></thead><tbody>' + rows.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + (r[0].indexOf('Gravel') === 0 ? o.coarse_ssd : r[0].indexOf('Sand') === 0 ? o.fine_ssd : '') + '</td></tr>').join('') +
+    '<tr class="tot"><td>Total</td><td>' + o.total + '</td><td>' + o.conv.total + '</td><td></td></tr></tbody></table></div>';
+  return '<h3>Batch masses per ' + (us ? 'yd³' : 'm³') + '</h3><div class="big"><div class="kpi"><span>f′cr</span><strong>' + nf(o.fcr, dd) + ' ' + u + '</strong></div><div class="kpi"><span>w/cm</span><strong>' + nf(o.wcm, 2) + '</strong></div><div class="kpi"><span>Cementitious</span><strong>' + o.cm + '</strong></div></div>' + tab +
+    '<p class="note">The ' + m2 + ' column is a conversion (1 kg/m³ = ' + KG + ' lb/yd³), not a second design. Aggregates are oven-dry: correct for moisture before batching.</p>' +
+    '<p><button class="btn noprint" type="button" data-send>Send this mix to the moisture correction</button></p>' + stepsHTML(st);
+}
+function sendToMoisture() {
+  const o = lastDesign; if (!o) return; const us = o.units === 'us';
+  $('w_u').value = us ? 'us' : 'si'; $('w_mode').value = 'od'; $('w_w').value = o.water; $('w_c').value = o.cem + o.scmMass;
+  $('w_1n').value = 'Gravel'; $('w_1m').value = o.coarse; $('w_1c').value = 0.5; $('w_1a').value = o.p.absc;
+  $('w_2n').value = 'Sand'; $('w_2m').value = o.fine; $('w_2c').value = 5.0; $('w_2a').value = o.p.absf; $('w_3m').value = '';
+  $('w_v').value = 1; $('w_vu').textContent = us ? '(yd³)' : '(m³)'; $('p4').dispatchEvent(new Event('change')); show(4);
+}
+
+// ---------- Module 3: BRE (DoE) ----------
+function mod3() {
+  const p = $('p3'), bands = ['10-30', '30-60', '60-180'];
+  p.innerHTML = head('BRE (DoE) mix', 'Chapter 7, Section 7.3, Worked Examples 7.3, 7.4 and 7.5') +
+  '<div class="grid"><div class="card"><div class="fields">' +
+   F('b_c', 'Strength class', 'C25/30', { opts: T.classes.map(c => ['C' + c[0] + '/' + c[1], 'C' + c[0] + '/' + c[1]]), hint: 'The method uses the characteristic cube strength.' }) +
+   F('b_s', 'Standard deviation s <span class="u">(MPa)</span>', 8, { hint: '8 MPa with no records.' }) +
+   F('b_k', 'Defective rate', '5', { opts: T.KDEF.map(k => [k[0], k[0] + ' % (k = ' + k[1] + ')']) }) +
+   F('b_cem', 'Cement strength class', '42.5', { opts: [['42.5', 'CEM 42.5'], ['52.5', 'CEM 52.5']] }) +
+   F('b_agg', 'Aggregates', 'uncrushed', { opts: [['uncrushed', 'Uncrushed coarse and fine'], ['crushed', 'Crushed coarse and fine'], ['mixed', 'Crushed coarse, uncrushed fine']] }) +
+   F('b_d', 'Maximum aggregate size', 20, { opts: [[20, '20 mm'], [40, '40 mm']] }) +
+   F('b_band', 'Slump', '60-180', { opts: bands.map(b => [b, b.replace('-', ' to ') + ' mm']) }) +
+   F('b_p6', 'Passing the 600 µm sieve <span class="u">(%)</span>', 60, { opts: T.PASS.map(x => [x, x + ' %']) }) +
+   F('b_rd', 'Aggregate particle density (SSD)', 2.6, { step: '0.01', hint: 'Between 2.4 and 2.9.' }) +
+   F('b_ex', 'Exposure class (fills the limits)', '', { opts: [['', 'Enter limits below']].concat(Object.keys(T.F1).filter(k => T.F1[k].wc != null).map(k => [k, k + ' (' + T.F1[k].wc + ', ' + T.F1[k].cmin + ' kg/m³)'])) }) +
+   F('b_wc', 'Maximum w/c', 0.60, { step: '0.01' }) +
+   F('b_cm', 'Minimum cement <span class="u">(kg/m³)</span>', 280) +
+   F('b_fa', 'Fly ash as share of cement plus fly ash', 0, { opts: [[0, 'None'], [10, '10 %'], [20, '20 %'], [30, '30 %'], [40, '40 %'], [50, '50 %']], hint: 'Worked Example 7.5 (uncrushed aggregate, CEM 42.5).' }) +
+   F('b_sp', 'Coarse fractions (proportions)', '', { type: 'text', hint: 'Optional, e.g. 1:2. Default 1:2 for 20 mm and 1:1.5:3 for 40 mm.' }) +
+  '</div></div><div class="card out" id="p3out" aria-live="polite"></div></div>';
+  $('b_ex').addEventListener('change', () => { const v = $('b_ex').value; if (v) { $('b_wc').value = T.F1[v].wc; $('b_cm').value = T.F1[v].cmin; } });
+  const run = wrap('p3', mod3run); p.addEventListener('input', run); p.addEventListener('change', run); run();
+}
+function mod3run() {
+  const cl = $('b_c').value, cube = +/^C\d+\/(\d+)$/.exec(cl)[1], s = num('b_s'), kd = +$('b_k').value, k = C.kdefOf(kd), pct = +$('b_fa').value;
+  const base = { fc: cube, s, k, cem: $('b_cem').value, agg: $('b_agg').value, dmax: +$('b_d').value, band: $('b_band').value, rd: num('b_rd'), p600: +$('b_p6').value, wcmax: num('b_wc'), cmin: num('b_cm') };
+  const sp = $('b_sp').value.trim(); if (sp) { base.split = sp.split(/[:,\s]+/).filter(Boolean).map(Number); if (base.split.some(x => !(x > 0))) throw new Error('Coarse fractions: use positive numbers such as 1:2.'); }
+  return pct > 0 ? bre5(cl, base, pct) : bre3(cl, base);
+}
+function wcStep(o, cl) { return ['Free water-cement ratio (Figure 4 curve, constructed)', ['Table 2: strength at free w/c 0.5 = ' + o.f05 + ' MPa.', 'The curve through that point reaches ' + o.fm + ' MPa at free w/c = ' + nf(o.wc_s != null ? o.wc_s : o.r, 2), '<p class="note">The book plots the Figure 4 family from a fitted curve of the Abrams form, not from the printed BRE chart, so the last digit can differ from a chart reading.</p>']]; }
+function bre3(cl, p) {
+  const o = C.bre(p), bi = T.BANDS.indexOf(p.band), ag = p.agg;
+  const st = [];
+  st.push(['Target mean strength', ['M = k × s = ' + p.k + ' × ' + p.s + ' = ' + nf(p.k * p.s, 2) + ', rounded to ' + o.M + ' MPa', 'f<sub>m</sub> = ' + cl + ' (cube ' + p.fc + ') + ' + o.M + ' = ' + o.fm + ' MPa']]);
+  st.push(wcStep(o, cl));
+  st.push(['Free w/c to use', ['Strength gives ' + nf(o.wc_s, 2) + '; durability limit ' + nf(p.wcmax, 2) + '. Use ' + nf(o.wc, 2) + ' (' + o.gov + ' governs).']]);
+  st.push(['Free water (Table 3)', [ag === 'mixed' ? 'Uncrushed ' + o.Wf + ', crushed ' + o.Wc + ' kg/m³: W = 2/3 × ' + o.Wf + ' + 1/3 × ' + o.Wc + ' = ' + o.W + ' kg/m³' : 'W = ' + o.W + ' kg/m³ (' + p.dmax + ' mm ' + ag + ', slump ' + p.band + ' mm)']]);
+  st.push(['Cement content', ['C = ' + o.W + ' / ' + nf(o.wc, 2) + ' = ' + o.C + ' kg/m³', 'Minimum ' + p.cmin + ': ' + ok(o.C_ok, 'satisfied', 'too low, raise it to ' + p.cmin + ' and reduce w/c')]]);
+  st.push(['Wet density and total aggregate (Figure 5)', ['D = ' + o.D + ' kg/m³ for W = ' + o.W + ' and particle density ' + p.rd, 'Total aggregate = ' + o.D + ' − ' + o.C + ' − ' + o.W + ' = ' + o.TA + ' kg/m³']]);
+  st.push(['Sand proportion (Figure 6)', ['Fine aggregate = ' + o.sp + ' % of total aggregate (' + p.dmax + ' mm, w/c ' + nf(o.wc, 2) + ', ' + p.p600 + ' % passing 600 µm)', 'Sand = ' + o.TA + ' × ' + o.sp + ' / 100 = ' + o.FA + ' kg/m³; coarse = ' + o.CA + ' kg/m³ split ' + o.split.join(':') + ' = ' + o.CAs.join(', ')]]);
+  const f = o.final, fu = o.final_us;
+  const rows = [['Cement', o.C, f.C, fu.C], ['Free water', o.W, f.W, fu.W], ['Fine aggregate', o.FA, f.FA, fu.FA]].concat(o.CAs.map((x, i) => ['Coarse ' + (i + 1), x, f.CAs[i], fu.CAs[i]]));
+  return '<h3>Mix per m³</h3><div class="big"><div class="kpi"><span>Free w/c</span><strong>' + nf(o.wc, 2) + '</strong></div><div class="kpi"><span>Cement</span><strong>' + f.C + '</strong></div><div class="kpi"><span>Wet density</span><strong>' + o.D + '</strong></div></div>' +
+    '<div class="tw"><table><thead><tr><th>Material</th><th>Calculated kg/m³</th><th>To 5 kg/m³</th><th>lb/yd³</th></tr></thead><tbody>' + rows.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>').join('') +
+    '<tr class="tot"><td>Total</td><td>' + o.D + '</td><td>' + f.sum + '</td><td>' + fu.sum + '</td></tr></tbody></table></div>' +
+    '<p class="note">Final w/c with the rounded masses: ' + nf(o.wc_final, 2) + '. Masses assume SSD aggregates; correct for moisture in module 4 (SSD basis).</p>' + stepsHTML(st);
+}
+function bre5(cl, p, pct) {
+  const o = C.breFA(Object.assign({}, p, { pct })), st = [], f = o.final, fu = o.final_us;
+  st.push(['Target mean and free w/c', ['M = ' + o.M + ' MPa, f<sub>m</sub> = ' + p.fc + ' + ' + o.M + ' = ' + o.fm + ' MPa (' + cl + ')', 'Table 2: ' + o.f05 + ' MPa at 0.5, so the free w/c to reach ' + o.fm + ' MPa is ' + nf(o.r, 2) + ' (constructed curve)']]);
+  st.push(['Free water with fly ash (Tables 3 and 9)', ['W = ' + o.W0 + ' − ' + o.dW + ' = ' + o.W + ' kg/m³ (' + pct + ' % fly ash, slump ' + p.band + ' mm)']]);
+  st.push(['Cement and fly ash', ['Cement plus 0.7 fly ash weight: W/r = ' + o.W + ' / ' + nf(o.r, 2) + ' = ' + nf(o.Wr, 1) + ' kg/m³', 'C = ' + nf(o.Wr, 1) + ' × (100 − ' + pct + ') / ' + o.den + ' = ' + o.C + ';  F = ' + nf(o.Wr, 1) + ' × ' + pct + ' / ' + o.den + ' = ' + o.F, 'W/(C + F) = ' + nf(o.wcf, 2)]]);
+  st.push(['EN 206 k-value check', ['Counted fly ash ≤ 0.33 C = ' + nf(o.fcount, 1) + '; equivalent binder = ' + o.C + ' + 0.4 × ' + nf(o.fuse, 1) + ' = ' + nf(o.eqEN, 1), 'W/(C + 0.4F) = ' + nf(o.wbEN, 2) + ' (limit ' + nf(p.wcmax, 2) + '): ' + ok(o.ok_wc, 'met', 'exceeds the limit'), 'Binder ' + nf(o.eqEN, 1) + ' (minimum ' + p.cmin + '): ' + ok(o.ok_c, 'met', 'too low'), 'Reduced cement minimum ' + p.cmin + ' − 0.4 (' + p.cmin + ' − 200) = ' + o.c_low + ': C = ' + o.C + ' ' + ok(o.ok_red, 'above it', 'below it')]]);
+  st.push(['Wet density, aggregate and sand', ['D = ' + o.D + ';  total aggregate = ' + o.D + ' − ' + o.CF + ' − ' + o.W + ' = ' + o.TA + ' kg/m³', 'Sand ' + o.sp + ' % = ' + o.FA + ';  coarse ' + o.CA + ' (1:2 = ' + o.CAs.join(', ') + ')']]);
+  const rows = [['Cement', o.C, f.C, fu.C], ['Fly ash', o.F, f.F, fu.F], ['Free water', o.W, f.W, fu.W], ['Fine aggregate', o.FA, f.FA, fu.FA], ['Coarse 1', o.CAs[0], f.CAs[0], fu.CAs[0]], ['Coarse 2', o.CAs[1], f.CAs[1], fu.CAs[1]]];
+  return '<h3>Mix per m³ with ' + pct + ' % fly ash</h3><div class="big"><div class="kpi"><span>Free w/c</span><strong>' + nf(o.r, 2) + '</strong></div><div class="kpi"><span>W/(C+F)</span><strong>' + nf(o.wcf, 2) + '</strong></div><div class="kpi"><span>Cement</span><strong>' + f.C + '</strong></div></div>' +
+    '<div class="tw"><table><thead><tr><th>Material</th><th>Calculated kg/m³</th><th>To 5 kg/m³</th><th>lb/yd³</th></tr></thead><tbody>' + rows.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[3] + '</td></tr>').join('') +
+    '<tr class="tot"><td>Total</td><td>' + o.D + '</td><td>' + f.sum + '</td><td></td></tr></tbody></table></div>' +
+    '<p class="note">US w/cm with the rounded lb/yd³ masses: ' + nf(o.wcm_us, 2) + '. The fly ash route is printed in the book for uncrushed aggregate and CEM 42.5; crushed or mixed aggregates are not offered here.</p>' + stepsHTML(st);
+}
+
+// ---------- Module 4: moisture ----------
+function mod4() {
+  const p = $('p4'), row = (i, n, m, c, a) => F('w_' + i + 'n', 'Aggregate ' + i, n, { type: 'text' }) + F('w_' + i + 'm', 'Design mass', m) + F('w_' + i + 'c', 'Moisture <span class="u">(%)</span>', c, { step: '0.1' }) + F('w_' + i + 'a', 'Absorption <span class="u">(%)</span>', a, { step: '0.01' });
+  p.innerHTML = head('Moisture correction of a batch', 'Chapter 4, Section 4.4, Worked Example 4.3; Chapter 6, Section 6.3, Worked Example 6.5; Chapter 7, Worked Example 7.6') +
+  '<div class="grid"><div class="card"><div class="fields">' +
+   F('w_u', 'Units', 'si', { opts: [['si', 'SI (kg/m³)'], ['us', 'US (lb/yd³)']] }) +
+   F('w_mode', 'Basis of the design masses', 'od', { opts: [['od', 'Oven-dry (ACI absolute volume)'], ['ssd', 'SSD (EN practice, Worked Example 4.3)'], ['ssd_simple', 'SSD, free-water method (Worked Example 7.6)']] }) +
+   F('w_w', 'Design water', 193) + F('w_c', 'Cement (and SCM)', 403) +
+   row(1, 'Gravel', 1059, 0.5, 1.56) + row(2, 'Sand', 672, 5.0, 1.2) + row(3, '', '', 0, 0) +
+   F('w_v', 'Batch size <span class="u" id="w_vu">(m³)</span>', 1, { step: '0.01' }) +
+  '</div><p class="note">Moisture is the total moisture content of the stockpile on an oven-dry basis. Leave the design mass of aggregate 3 empty if unused.</p></div><div class="card out" id="p4out" aria-live="polite"></div></div>';
+  $('w_u').addEventListener('change', () => { $('w_vu').textContent = $('w_u').value === 'us' ? '(yd³)' : '(m³)'; });
+  const run = wrap('p4', mod4run); p.addEventListener('input', run); p.addEventListener('change', run); run();
+}
+function mod4run() {
+  const us = $('w_u').value === 'us', mode = $('w_mode').value, agg = [];
+  for (let i = 1; i <= 3; i++) { const mv = $('w_' + i + 'm').value.trim(); if (mv === '') continue; agg.push({ name: $('w_' + i + 'n').value || 'Aggregate ' + i, mass: num('w_' + i + 'm'), mc: num('w_' + i + 'c'), abs: num('w_' + i + 'a') }); }
+  if (!agg.length) throw new Error('Enter the design mass of at least one aggregate.');
+  const water = num('w_w'), cem = num('w_c'), v = num('w_v'), m = us ? 'lb' : 'kg';
+  const o = C.moisture({ mode, stockDp: us || mode === 'ssd_simple' ? 0 : 1, water, cement: cem, volume: v, others: [{ name: 'Cement and SCM', mass: cem }], agg });
+  const sd = us || mode === 'ssd_simple' ? 0 : 1, bd = v % 1 ? 1 : sd;
+  const rows = o.rows.map((r, i) => '<tr><td>' + esc(r.name) + '</td><td>' + (r.od != null && mode === 'ssd' ? r.od : r.mass) + '</td><td>' + nf(r.mc, 1) + ' / ' + nf(r.abs, 2) + '</td><td>' + nf(r.free, mode === 'ssd_simple' ? 0 : 1) + '</td><td>' + nf(r.stock, 1) + '</td><td>' + nf(o.batch.agg[i].mass, 1) + '</td></tr>').join('');
+  const st = [];
+  st.push(['Free water in each stockpile', o.rows.map(r => mode === 'ssd_simple' ? esc(r.name) + ': free % = ' + nf(r.mc, 1) + ' − ' + nf(r.abs, 2) + ' = ' + nf(r.freePct, 1) + ' %; free water = ' + r.mass + ' × ' + nf(r.freePct, 1) + '/100 = ' + nf(r.free, 0) + ' ' + m : esc(r.name) + ': ' + (mode === 'ssd' ? 'OD = ' + r.mass + ' / (1 + ' + r.abs + '/100) = ' + nf(r.od, 2) + ';  ' : '') + 'free = ' + (r.od) + ' × (' + nf(r.mc, 1) + ' − ' + nf(r.abs, 2) + ')/100 = ' + nf(r.free, 1) + ' ' + m), '<p class="note">A negative value means the aggregate is drier than SSD and will take water from the mix.</p>']);
+  st.push(['Mass to weigh from the stockpile', o.rows.map(r => mode === 'ssd_simple' ? esc(r.name) + ' = ' + r.mass + ' × (1 + ' + nf(r.freePct, 1) + '/100) = ' + nf(r.stock, 0) + ' ' + m : esc(r.name) + ' = ' + r.od + ' × (1 + ' + nf(r.mc, 1) + '/100) = ' + nf(r.stock, 1) + ' ' + m)]);
+  st.push(['Water to add', ['Batch water = ' + water + ' − (' + o.rows.map(r => nf(r.free, mode === 'ssd_simple' ? 0 : 1)).join(') − (') + ') = ' + nf(o.wb, 1) + ' ' + m]]);
+  const tot = o.rows.reduce((a, r) => a + r.stock, 0) + o.wb + cem;
+  const skip = o.wc_if_skipped;
+  return '<h3>Masses to weigh</h3><div class="big"><div class="kpi"><span>Water to add</span><strong>' + nf(o.wb, 1) + '</strong></div><div class="kpi"><span>Free water in aggregates</span><strong>' + nf(o.free, 1) + '</strong></div><div class="kpi"><span>Fresh density</span><strong>' + nf(o.total, 1) + '</strong></div></div>' +
+    '<div class="tw"><table><thead><tr><th>Material</th><th>Design ' + m + '</th><th>Moisture / absorption %</th><th>Free water ' + m + '</th><th>Weigh ' + m + '</th><th>Batch of ' + v + ' ' + (us ? 'yd³' : 'm³') + '</th></tr></thead><tbody>' + rows +
+    '<tr><td>Water</td><td>' + water + '</td><td></td><td></td><td>' + nf(o.wb, 1) + '</td><td>' + nf(o.batch.water, bd) + '</td></tr><tr><td>Cement and SCM</td><td>' + cem + '</td><td></td><td></td><td>' + cem + '</td><td>' + nf(o.batch.others[0].mass, bd) + '</td></tr></tbody></table></div>' +
+    '<p class="note">Fresh density with the corrected masses: ' + nf(o.total, 1) + ' ' + m + '/' + (us ? 'yd³' : 'm³') + '. If the correction were skipped, the effective w/cm would be about ' + nf(skip, 3) + ' instead of ' + nf(water / cem, 3) + '.</p>' + stepsHTML(st);
+}
+
+// ---------- Module 5: EN 206 ----------
+const EXG = ['X0', 'XC1', 'XC2', 'XC3', 'XC4', 'XS1', 'XS2', 'XS3', 'XD1', 'XD2', 'XD3', 'XF1', 'XF2', 'XF3', 'XF4', 'XA1', 'XA2', 'XA3'];
+function mod5() {
+  const p = $('p5');
+  p.innerHTML = head('EN 206 checks and k-value', 'Chapter 7, Section 7.2, Worked Examples 7.1 and 7.2; Chapter 3, Worked Example 3.4 (k-value); Section 7.4, Worked Examples 7.7 and 7.8 (conformity)') +
+  '<div class="grid"><div class="card"><h3>Limiting values (Annex F)</h3><fieldset><legend>Exposure classes that apply</legend><div class="xgrid">' + EXG.map(x => '<label><input type="checkbox" class="xc" value="' + x + '"' + (['XC4', 'XD3', 'XF2'].indexOf(x) >= 0 ? ' checked' : '') + '>' + x + '</label>').join('') + '</div></fieldset>' +
+   '<div class="fields" style="margin-top:.8rem">' + F('x_s', 'Class required by the structure', 'C25/30', { opts: T.classes.map(c => ['C' + c[0] + '/' + c[1], 'C' + c[0] + '/' + c[1]]) }) + '</div></div><div class="card out" id="p5aout" aria-live="polite"></div></div>' +
+  '<div class="grid"><div class="card"><h3>k-value (fly ash)</h3><div class="fields">' +
+   F('k_c', 'Cement <span class="u">(kg/m³)</span>', 280) + F('k_f', 'Fly ash <span class="u">(kg/m³)</span>', 100) + F('k_w', 'Water <span class="u">(kg/m³)</span>', 150) +
+   F('k_k', 'k-value', 0.4, { step: '0.05' }) + F('k_cap', 'Maximum counted share of cement', 0.33, { step: '0.01' }) +
+   F('k_wc', 'Limit: maximum w/b', 0.50, { step: '0.01' }) + F('k_cm', 'Limit: minimum cement <span class="u">(kg/m³)</span>', 300) +
+  '</div><p class="note noprint"><button class="btn" type="button" id="k_use">Use the governing limits from above</button></p></div><div class="card out" id="p5bout" aria-live="polite"></div></div>' +
+  '<div class="grid"><div class="card"><h3>Conformity of strength</h3><div class="fields">' +
+   F('c_f', 'Characteristic cube strength f<sub>ck</sub> <span class="u">(MPa)</span>', 37, { hint: 'C30/37: 37 MPa. C25/30: 30 MPa.' }) +
+   F('c_sg', 'Assumed standard deviation σ <span class="u">(MPa)</span>', 4.0, { step: '0.1' }) +
+   F('c_i', 'Initial production: three results <span class="u">(MPa)</span>', '43.5, 41.0, 39.5', { type: 'text', full: true }) +
+   F('c_n', 'Continuous production: fifteen results <span class="u">(MPa)</span>', '36.5, 41.0, 33.5, 38.0, 35.5, 40.5, 31.0, 37.5, 39.0, 34.5, 42.0, 36.0, 33.0, 38.5, 35.0', { type: 'text', full: true, hint: 'Worked Example 7.8 uses C25/30, so set f<sub>ck</sub> to 30.' }) +
+  '</div></div><div class="card out" id="p5cout" aria-live="polite"></div></div>';
+  const mk = (id, fn) => () => { const out = $(id); try { out.innerHTML = fn(); } catch (e) { out.innerHTML = '<p class="err" role="alert">' + esc(e.message) + '</p>'; } };
+  const ra = mk('p5aout', en5a), rb = mk('p5bout', en5b), rc = mk('p5cout', en5c), all = () => { ra(); rb(); rc(); };
+  p.addEventListener('input', all); p.addEventListener('change', all); all();
+  $('k_use').addEventListener('click', () => { const g = C.enLimits(sel(), $('x_s').value); if (g.wc != null) $('k_wc').value = g.wc; if (g.cmin != null) $('k_cm').value = g.cmin; all(); });
+}
+const sel = () => Array.prototype.slice.call(document.querySelectorAll('.xc:checked')).map(x => x.value);
+function en5a() {
+  const ex = sel(); if (!ex.length) throw new Error('Tick at least one exposure class.');
+  const g = C.enLimits(ex, $('x_s').value), d = x => x == null ? '–' : x;
+  return '<h3>Governing limits</h3><div class="big"><div class="kpi"><span>Max w/c</span><strong>' + d(g.wc) + '</strong></div><div class="kpi"><span>Min cement</span><strong>' + d(g.cmin) + '</strong></div><div class="kpi"><span>Min class</span><strong>' + g.cls_gov + '</strong></div><div class="kpi"><span>Min air</span><strong>' + (g.air != null ? g.air + ' %' : '–') + '</strong></div></div>' +
+    '<div class="tw"><table><thead><tr><th>Class</th><th>Max w/c</th><th>Min class</th><th>Min cement kg/m³</th><th>Min air %</th></tr></thead><tbody>' + g.rows.map(r => '<tr><td>' + r.cls + '</td><td>' + d(r.wc) + '</td><td>' + r.mincls + '</td><td>' + d(r.cmin) + '</td><td>' + d(r.air) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p class="note">The strictest value of each column governs. Minimum cement ' + d(g.cmin) + ' kg/m³' + (g.cmin ? ' = ' + g.cmin_us + ' lb/yd³' : '') + '. The minimum class is the higher of the exposure classes and the structural class: ' + g.cls_gov + ' (cube ' + g.fc_cube + ' MPa). These are recommended values; the national provisions in force prevail.</p>';
+}
+function en5b() {
+  const c = num('k_c'), f = num('k_f'), w = num('k_w'), r = C.kvalue(c, f, w, { k: num('k_k'), cap: num('k_cap'), cmin: num('k_cm'), wcmax: num('k_wc') });
+  return '<h3>Equivalent binder</h3><div class="big"><div class="kpi"><span>c + k f</span><strong>' + nf(r.eq, 1) + '</strong></div><div class="kpi"><span>w/(c + k f)</span><strong>' + nf(r.wb, 2) + '</strong></div><div class="kpi"><span>Without k</span><strong>' + nf(r.naive, 2) + '</strong></div></div>' +
+    stepsHTML([['Fly ash that may be counted', ['Maximum counted = ' + r.cap + ' × ' + c + ' = ' + nf(r.fmax, 1) + ' kg/m³', 'Counted = min(' + f + ', ' + nf(r.fmax, 1) + ') = ' + nf(r.fcount, 1) + (r.excess > 0 ? ';  the other ' + nf(r.excess, 1) + ' does not count towards w/b or cement' : '')]],
+      ['Equivalent binder and ratio', ['c + k f = ' + c + ' + ' + r.k + ' × ' + nf(r.fcount, 1) + ' = ' + nf(r.eq, 1) + ' kg/m³', 'w/(c + k f) = ' + w + ' / ' + nf(r.eq, 1) + ' = ' + nf(r.wb, 2) + ' (' + nf(r.ratio, 3) + ')', 'Counting all binder, as ACI does: ' + w + ' / ' + (c + f) + ' = ' + nf(r.naive, 2)]],
+      ['Check against the limits', ['w/b ' + nf(r.wb, 2) + ' ≤ ' + nf(num('k_wc'), 2) + ': ' + ok(r.ok_wc, 'met', 'not met'), 'c + k f = ' + nf(r.eq, 1) + ' ≥ ' + num('k_cm') + ': ' + ok(r.ok_c, 'met', 'not met'), 'The minimum cement may be reduced by k (' + num('k_cm') + ' − 200) = ' + r.red + ', to ' + r.c_low + ' kg/m³ of cement, when the national provisions allow it.']]]);
+}
+function en5c() {
+  const fck = num('c_f'), sg = num('c_sg'), a = C.conformInitial(fck, list('c_i', 3)), b = C.conformContinuous(fck, list('c_n', 15), sg);
+  return '<h3>Initial production (3 results)</h3>' + stepsHTML([['Criteria 1 and 2', ['Mean = ' + nf(a.mean, 1) + ' MPa; required ≥ f<sub>ck</sub> + 4 = ' + a.crit_m + ': ' + ok(a.ok_m, 'met', 'not met'), 'Lowest = ' + a.mn + ' MPa; required ≥ f<sub>ck</sub> − 4 = ' + a.crit_i + ': ' + ok(a.ok_i, 'met', 'not met')]]]) +
+    '<h3 class="sub">Continuous production (' + b.n + ' results)</h3>' + stepsHTML([['Standard deviation', ['Mean = ' + nf(b.mean, 1) + ' MPa, s = ' + nf(b.s, 2) + ' MPa', 'Accepted range for σ = ' + sg + ': ' + nf(b.lo, 2) + ' to ' + nf(b.hi, 2) + ': ' + ok(b.s_ok, 'within, σ stays', 'outside, σ must be re-estimated')]],
+      ['Criteria 1 and 2', ['Mean ≥ f<sub>ck</sub> + 1.48 σ = ' + fck + ' + ' + b.M + ' = ' + nf(b.crit_m, 1) + ': ' + ok(b.ok_m, 'met', 'not met'), 'Lowest = ' + b.mn + ' ≥ f<sub>ck</sub> − 4 = ' + b.crit_i + ': ' + ok(b.ok_i, 'met', 'not met')]]]) +
+    '<p class="note">Simplified from EN 206 as printed in the book: the cube criteria for initial and continuous production only.</p>';
+}
+
+// ---------- tabs ----------
+function show(n) {
+  for (let i = 1; i <= 5; i++) { const t = $('t' + i), on = i === n; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; $('p' + i).hidden = !on; }
+  $('t' + n).scrollIntoView && $('t' + n).scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+document.querySelector('nav.tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) show(+b.id.slice(1)); });
+document.querySelector('nav.tabs').addEventListener('keydown', e => {
+  const cur = +document.querySelector('nav.tabs [aria-selected=true]').id.slice(1); let n = cur;
+  if (e.key === 'ArrowRight') n = cur % 5 + 1; else if (e.key === 'ArrowLeft') n = (cur + 3) % 5 + 1; else if (e.key === 'Home') n = 1; else if (e.key === 'End') n = 5; else return;
+  e.preventDefault(); show(n); $('t' + n).focus();
+});
+document.addEventListener('click', e => { if (e.target.closest('[data-print]')) window.print(); });
+mod1(); mod2(); mod3(); mod4(); mod5();
+const h = /^#t?([1-5])$/.exec(location.hash); if (h) show(+h[1]);
+})();
+
+</script>
+</body>
+</html>
