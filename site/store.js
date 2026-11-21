@@ -158,20 +158,20 @@ window.BrialClipboard = { copy: copyToClipboard };
   const DEFAULT_EBOOKS = [
     {
       id: "cti-vol1", lang: "English", langCode: "EN",
-      title: "Concrete Technology Illustrated", subtitle: "2027 Edition \u00B7 Volume 1: Materials, Mix Design, Fresh and Hardened Concrete",
-      accent: "#C9A961", cover: "/library/cti-vol1-cover.jpg", coverRatio: "1 / 1.6",
+      title: "Concrete Technology Illustrated", subtitle: "2027 Edition \u00B7 Volume 1: From Portland Cement to Geopolymer Concrete",
+      accent: "#C9A961", cover: "/library/cti-vol1-cover.jpg?v=258", coverRatio: "1 / 1.6",
       link: "", links: {},
       getLabel: "Get the book",
       supportNote: "Published by The Brial Endowment: every purchase supports its scholarships and programmes.",
-      desc: "A visual guide to concrete materials, mix design, and fresh and hardened concrete. Every idea is drawn before it is calculated, every method is worked one numbered step at a time in SI units with US values in brackets, and US (ACI, ASTM) and European (EN 206, BRE) methods sit side by side. Volume 2 is coming soon.",
+      desc: "A visual guide that takes you from Portland cement to geopolymer concrete: the materials, two complete mix design methods, fresh and hardened concrete, and a full chapter on geopolymer and alkali-activated concrete. Every idea is drawn before it is calculated, every method is worked one numbered step at a time in SI units with US values in brackets, and US (ACI, ASTM) and European (EN 206, BRE) methods sit side by side. Volume 2 is coming soon.",
       points: [
         "Two complete mix design methods: ACI absolute volume and EN 206 with BRE (DoE)",
-        "204 problems in three levels, every one fully solved at the back",
-        "112 figures and 112 tables that show each idea before the numbers",
-        "Formula sheet, glossary, standards list and a 447 entry index",
+        "A full chapter on geopolymer and alkali-activated concrete",
+        "220 problems in three levels, every one fully solved at the back",
+        "124 figures and 123 tables that show each idea before the numbers",
       ],
       featured: true, badge: "New \u00B7 Flagship title",
-      stats: [["234", "pages"], ["204", "solved problems"], ["53", "worked examples"], ["112", "figures"]],
+      stats: [["258", "pages"], ["220", "solved problems"], ["56", "worked examples"], ["124", "figures"]],
       tool: { label: "CTI Mix Design Calculator", url: "/calculator", desc: "The free companion to this book: required strength, ACI and BRE mix design, moisture correction and EN 206 checks, step by step with the book's own tables and rounding." },
     },
     {
